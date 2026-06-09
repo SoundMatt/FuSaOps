@@ -27,9 +27,11 @@ jobs:
           go-version: ${{ matrix.go }}
 
       - name: go vet
+        shell: bash
         run: go vet ./...
 
       - name: go test (-race)
+        shell: bash
         run: go test -race -count=1 -coverprofile=coverage.out ./...
 
       - name: Coverage gate (>= 80%)
