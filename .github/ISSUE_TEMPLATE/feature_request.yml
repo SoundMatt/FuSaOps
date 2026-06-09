@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a new capability, adapter, or report improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement to FuSaOps.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can't you do today, or what is harder than it should be?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New language adapter (a new x-FuSa tool)
+        - Evidence aggregation (trace / coverage / SBOM roll-up)
+        - Standards roll-up (ISO 26262 / IEC 61508 / DO-178C / ISO 21434)
+        - Web dashboard
+        - CLI / configuration
+        - Docker / distribution
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like FuSaOps to do? Reference ROADMAP.md items where relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

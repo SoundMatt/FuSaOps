@@ -1,0 +1,397 @@
+{
+  "generatedAt": "2026-06-09T22:51:58.474079Z",
+  "projectRoot": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps",
+  "goVersion": "go1.26.3",
+  "results": [
+    {
+      "name": "TestSeverityRank",
+      "package": "github.com/SoundMatt/FuSaOps",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestSeverityString",
+      "package": "github.com/SoundMatt/FuSaOps",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestLanguageString",
+      "package": "github.com/SoundMatt/FuSaOps",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestFindingAndLocation",
+      "package": "github.com/SoundMatt/FuSaOps",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestSentinelErrors",
+      "package": "github.com/SoundMatt/FuSaOps",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestParseToolReport",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestParseToolReportInvalid",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestNormaliseSeverity",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestDetect",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestDetectSkipsBuildDirs",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestCheckWithFakeRunner",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRegistryRegisterDuplicate",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRegistryApplicable",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestDefaultRegistryHasThreeAdapters",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestAdapterGetters",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestAvailableUnknownTool",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestDefaultRunnerExitCodes",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0.01
+    },
+    {
+      "name": "TestDefaultRunnerMissingBinary",
+      "package": "github.com/SoundMatt/FuSaOps/adapter",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestDefaultIsValid",
+      "package": "github.com/SoundMatt/FuSaOps/config",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestSaveLoadRoundTrip",
+      "package": "github.com/SoundMatt/FuSaOps/config",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestLoadMissingReturnsErrNoConfig",
+      "package": "github.com/SoundMatt/FuSaOps/config",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestValidateRejectsBadFormat",
+      "package": "github.com/SoundMatt/FuSaOps/config",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestValidateRejectsMissingName",
+      "package": "github.com/SoundMatt/FuSaOps/config",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestReportWritesFile",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0.01
+    },
+    {
+      "name": "TestCheckReturnsReport",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0.01
+    },
+    {
+      "name": "TestCheckHonoursConfig",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0.01
+    },
+    {
+      "name": "TestServeBadFlag",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestLoadOptionsOnlyOverride",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestNoArgsShowsUsage",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestUnknownCommand",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestVersion",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestHelp",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestInitCreatesConfig",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestScanDetectsLanguages",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestScanEmptyDir",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestAdaptersLists",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestCheckNoLanguages",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestSplitCSV",
+      "package": "github.com/SoundMatt/FuSaOps/cmd/fusaops",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRenderToFileWritesFile",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRenderToFileStdout",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRenderToFileBadPath",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestNewComputesSummaries",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestStatus",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRenderJSONRoundTrip",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRenderText",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRenderHTML",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRenderSARIF",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRenderUnsupported",
+      "package": "github.com/SoundMatt/FuSaOps/report",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestScanCountsAndSorts",
+      "package": "github.com/SoundMatt/FuSaOps/scan",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestScanSkipsVendorAndExclude",
+      "package": "github.com/SoundMatt/FuSaOps/scan",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestScanEmpty",
+      "package": "github.com/SoundMatt/FuSaOps/scan",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRunAggregatesInstalledAdapters",
+      "package": "github.com/SoundMatt/FuSaOps/orchestrator",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRunRecordsSkippedWhenNotInstalled",
+      "package": "github.com/SoundMatt/FuSaOps/orchestrator",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRunCheckErrorRecordedAsSkipped",
+      "package": "github.com/SoundMatt/FuSaOps/orchestrator",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRunNoApplicableReturnsErr",
+      "package": "github.com/SoundMatt/FuSaOps/orchestrator",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRunOnlyFilter",
+      "package": "github.com/SoundMatt/FuSaOps/orchestrator",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRunRequireAvailable",
+      "package": "github.com/SoundMatt/FuSaOps/orchestrator",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestNewNilRegistryUsesDefault",
+      "package": "github.com/SoundMatt/FuSaOps/orchestrator",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestIndexServesDashboard",
+      "package": "github.com/SoundMatt/FuSaOps/server",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestAPIReportServesJSON",
+      "package": "github.com/SoundMatt/FuSaOps/server",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestHealth",
+      "package": "github.com/SoundMatt/FuSaOps/server",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestRefreshRedirects",
+      "package": "github.com/SoundMatt/FuSaOps/server",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestUnknownPath404",
+      "package": "github.com/SoundMatt/FuSaOps/server",
+      "status": "pass",
+      "elapsedSeconds": 0
+    },
+    {
+      "name": "TestServe",
+      "package": "github.com/SoundMatt/FuSaOps/server",
+      "status": "pass",
+      "elapsedSeconds": 0
+    }
+  ],
+  "summary": {
+    "total": 64,
+    "passed": 64,
+    "failed": 0,
+    "skipped": 0
+  }
+}

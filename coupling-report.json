@@ -1,0 +1,57 @@
+{
+  "generatedAt": "2026-06-09T22:48:33.992838Z",
+  "projectRoot": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps",
+  "dataCoupling": [
+    {
+      "ruleId": "COUP001",
+      "severity": "INFO",
+      "message": "exported var \"Default\" creates data coupling — callers can read/write shared state directly",
+      "location": {
+        "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+        "line": 277
+      },
+      "remediation": "replace exported vars with accessor functions or encapsulate in a struct to control coupling"
+    },
+    {
+      "ruleId": "COUP001",
+      "severity": "INFO",
+      "message": "exported var \"ErrNoConfig\" creates data coupling — callers can read/write shared state directly",
+      "location": {
+        "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
+        "line": 24
+      },
+      "remediation": "replace exported vars with accessor functions or encapsulate in a struct to control coupling"
+    },
+    {
+      "ruleId": "COUP001",
+      "severity": "INFO",
+      "message": "exported var \"ErrInvalidConfig\" creates data coupling — callers can read/write shared state directly",
+      "location": {
+        "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
+        "line": 28
+      },
+      "remediation": "replace exported vars with accessor functions or encapsulate in a struct to control coupling"
+    },
+    {
+      "ruleId": "COUP001",
+      "severity": "INFO",
+      "message": "exported var \"ErrNoAdapters\" creates data coupling — callers can read/write shared state directly",
+      "location": {
+        "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
+        "line": 33
+      },
+      "remediation": "replace exported vars with accessor functions or encapsulate in a struct to control coupling"
+    },
+    {
+      "ruleId": "COUP001",
+      "severity": "INFO",
+      "message": "exported var \"ErrCheckFailed\" creates data coupling — callers can read/write shared state directly",
+      "location": {
+        "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
+        "line": 38
+      },
+      "remediation": "replace exported vars with accessor functions or encapsulate in a struct to control coupling"
+    }
+  ],
+  "controlCoupling": null
+}

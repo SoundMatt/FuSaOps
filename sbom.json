@@ -1,0 +1,26 @@
+{
+  "@context": "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
+  "@graph": [
+    {
+      "type": "CreationInfo",
+      "spdxId": "_:creationInfo0",
+      "specVersion": "SPDX-3.0.1",
+      "created": "2026-06-09T22:51:58Z",
+      "createdBy": [
+        "_:tool0"
+      ]
+    },
+    {
+      "type": "Tool",
+      "spdxId": "_:tool0",
+      "name": "go-FuSa/0.23.0",
+      "creationInfo": "_:creationInfo0"
+    },
+    {
+      "type": "SpdxDocument",
+      "spdxId": "https://spdx.org/spdxdocs/github.com-SoundMatt-FuSaOps",
+      "name": "github.com/SoundMatt/FuSaOps",
+      "creationInfo": "_:creationInfo0"
+    }
+  ]
+}

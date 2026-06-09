@@ -1,0 +1,103 @@
+{
+  "project": "FuSaOps",
+  "standard": "ISO 26262",
+  "createdAt": "2026-06-09T00:00:00Z",
+  "operationalSituations": [
+    {
+      "id": "OS-001",
+      "description": "Developer runs fusaops check during active development of a mixed-language repository — aggregated findings inform safety-critical code changes across languages"
+    },
+    {
+      "id": "OS-002",
+      "description": "CI/CD pipeline runs fusaops check as a gating check before release — the aggregate exit code determines whether a polyglot build proceeds"
+    },
+    {
+      "id": "OS-003",
+      "description": "Auditor reviews the FuSaOps aggregated multi-language report or dashboard to make certification decisions spanning every language in the system"
+    }
+  ],
+  "hazards": [
+    {
+      "id": "H-001",
+      "description": "Dropped finding — FuSaOps loses or hides a finding produced by a bundled x-FuSa tool during normalisation",
+      "source": "Parser error swallowing findings, or an unknown severity being discarded instead of normalised",
+      "situations": ["OS-001", "OS-002", "OS-003"],
+      "risk": { "severity": "S2", "exposure": "E4", "controllability": "C2", "asil": "ASIL-C" },
+      "safetyGoals": ["SG-001"]
+    },
+    {
+      "id": "H-002",
+      "description": "Masked coverage gap — an applicable language tool does not run and FuSaOps reports PASS without surfacing that the language was unchecked",
+      "source": "Adapter silently skipped, tool not installed, or detection miss treated as success",
+      "situations": ["OS-002", "OS-003"],
+      "risk": { "severity": "S2", "exposure": "E4", "controllability": "C2", "asil": "ASIL-C" },
+      "safetyGoals": ["SG-002"]
+    },
+    {
+      "id": "H-003",
+      "description": "Silent failure — fusaops check exits 0 when the aggregate contains ERROR-severity findings",
+      "source": "Summary mis-count or exit-code logic returning success despite errors",
+      "situations": ["OS-002"],
+      "risk": { "severity": "S2", "exposure": "E3", "controllability": "C1", "asil": "ASIL-A" },
+      "safetyGoals": ["SG-003"]
+    },
+    {
+      "id": "H-004",
+      "description": "Misattribution — a finding is attributed to the wrong language or tool, misdirecting triage",
+      "source": "Incorrect language/tool tagging during report assembly",
+      "situations": ["OS-001", "OS-003"],
+      "risk": { "severity": "S1", "exposure": "E3", "controllability": "C2", "asil": "QM" },
+      "safetyGoals": ["SG-004"]
+    },
+    {
+      "id": "H-005",
+      "description": "Stale evidence — the served dashboard or cached aggregate report no longer reflects the current source under review",
+      "source": "Cache not refreshed before an audit or gating decision",
+      "situations": ["OS-002", "OS-003"],
+      "risk": { "severity": "S2", "exposure": "E3", "controllability": "C2", "asil": "ASIL-B" },
+      "safetyGoals": ["SG-005"]
+    }
+  ],
+  "safetyGoals": [
+    {
+      "id": "SG-001",
+      "description": "FuSaOps shall preserve every finding emitted by a bundled tool, normalising unknown severities to INFO rather than dropping them",
+      "hazards": ["H-001"],
+      "asil": "ASIL-C",
+      "safeState": "Surface a decode error as a failed/skipped component rather than an empty pass",
+      "fssrRef": "REQ-FO-ADP006 REQ-FO-ADP005"
+    },
+    {
+      "id": "SG-002",
+      "description": "FuSaOps shall record every applicable-but-uninstalled or failed tool as an explicit skipped component so coverage gaps are visible",
+      "hazards": ["H-002"],
+      "asil": "ASIL-C",
+      "safeState": "Emit a skipped component with reason; never omit an applicable language silently",
+      "fssrRef": "REQ-FO-ORC003 REQ-FO-RPT003"
+    },
+    {
+      "id": "SG-003",
+      "description": "FuSaOps shall exit non-zero whenever any component produces an ERROR-severity finding, or a WARNING under --strict",
+      "hazards": ["H-003"],
+      "asil": "ASIL-A",
+      "safeState": "Exit code 1",
+      "fssrRef": "REQ-FO-CLI008 REQ-FO-RPT006 REQ-FO-ERR005"
+    },
+    {
+      "id": "SG-004",
+      "description": "FuSaOps shall tag every finding with the originating language and tool so attribution survives aggregation",
+      "hazards": ["H-004"],
+      "asil": "QM",
+      "safeState": "Findings carry language+tool from the producing adapter",
+      "fssrRef": "REQ-FO-CORE004 REQ-FO-ADP006"
+    },
+    {
+      "id": "SG-005",
+      "description": "FuSaOps shall recompute the aggregate report on demand so a gating or audit decision can be made against current source",
+      "hazards": ["H-005"],
+      "asil": "ASIL-B",
+      "safeState": "Provide an explicit refresh that recomputes before serving",
+      "fssrRef": "REQ-FO-SRV003 REQ-FO-SRV004"
+    }
+  ]
+}

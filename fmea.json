@@ -1,0 +1,490 @@
+{
+  "format": "go-FuSa dFMEA v1",
+  "generated_at": "2026-06-09T22:51:58.583655Z",
+  "module": "github.com/SoundMatt/FuSaOps",
+  "entries": [
+    {
+      "component": "FuSaOps (fusaops)",
+      "function": "Rank",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-CORE002"
+      ]
+    },
+    {
+      "component": "FuSaOps (fusaops)",
+      "function": "String",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "FuSaOps (fusaops)",
+      "function": "String",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "adapter",
+      "function": "All",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "adapter",
+      "function": "Applicable",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-ADP008"
+      ]
+    },
+    {
+      "component": "adapter",
+      "function": "Available",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-ADP003"
+      ]
+    },
+    {
+      "component": "adapter",
+      "function": "Check",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-ADP005"
+      ]
+    },
+    {
+      "component": "adapter",
+      "function": "Detect",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-ADP004"
+      ]
+    },
+    {
+      "component": "adapter",
+      "function": "Language",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "adapter",
+      "function": "MustRegister",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "adapter",
+      "function": "Name",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "adapter",
+      "function": "NewRegistry",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "adapter",
+      "function": "Register",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "medium",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "adapter",
+      "function": "Tool",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "config",
+      "function": "Default",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/config/config.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-CFG003"
+      ]
+    },
+    {
+      "component": "config",
+      "function": "Load",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/config/config.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-CFG004"
+      ]
+    },
+    {
+      "component": "config",
+      "function": "Save",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/config/config.go",
+      "failure_modes": [
+        "Returns unexpected error",
+        "Partial write / data corruption"
+      ],
+      "effects": [
+        "Silent failure propagated to caller",
+        "Incorrect system state"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-CFG005"
+      ]
+    },
+    {
+      "component": "config",
+      "function": "Validate",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/config/config.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-CFG006"
+      ]
+    },
+    {
+      "component": "orchestrator",
+      "function": "New",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/orchestrator/orchestrator.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "orchestrator",
+      "function": "Run",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/orchestrator/orchestrator.go",
+      "failure_modes": [
+        "Returns unexpected error",
+        "Uncontrolled execution"
+      ],
+      "effects": [
+        "Silent failure propagated to caller",
+        "Resource exhaustion"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-ORC003"
+      ]
+    },
+    {
+      "component": "report",
+      "function": "HasErrors",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-RPT006"
+      ]
+    },
+    {
+      "component": "report",
+      "function": "New",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-RPT005"
+      ]
+    },
+    {
+      "component": "report",
+      "function": "Render",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-RPT007"
+      ]
+    },
+    {
+      "component": "report",
+      "function": "RenderToFile",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-RPT008"
+      ]
+    },
+    {
+      "component": "report",
+      "function": "Status",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-RPT002"
+      ]
+    },
+    {
+      "component": "report",
+      "function": "Version",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/html.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "low",
+      "detection_control": "unit tests"
+    },
+    {
+      "component": "scan",
+      "function": "Languages",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/scan/scan.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-SCAN002"
+      ]
+    },
+    {
+      "component": "scan",
+      "function": "Scan",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/scan/scan.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-SCAN003"
+      ]
+    },
+    {
+      "component": "server",
+      "function": "Handler",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/server/server.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-SRV004"
+      ]
+    },
+    {
+      "component": "server",
+      "function": "ListenAndServe",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/server/server.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-SRV005"
+      ]
+    },
+    {
+      "component": "server",
+      "function": "New",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/server/server.go",
+      "failure_modes": [
+        "Incorrect output"
+      ],
+      "effects": [
+        "Incorrect system behavior"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-SRV002"
+      ]
+    },
+    {
+      "component": "server",
+      "function": "Serve",
+      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/server/server.go",
+      "failure_modes": [
+        "Returns unexpected error"
+      ],
+      "effects": [
+        "Silent failure propagated to caller"
+      ],
+      "severity": "high",
+      "detection_control": "requirement testing + unit tests",
+      "requirement_ids": [
+        "REQ-FO-SRV005"
+      ]
+    }
+  ]
+}

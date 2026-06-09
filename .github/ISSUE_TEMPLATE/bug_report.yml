@@ -1,0 +1,86 @@
+name: Bug report
+description: Report incorrect, missing, or spurious aggregated findings or orchestration behaviour
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+        Please fill in as much detail as possible.
+
+  - type: input
+    id: version
+    attributes:
+      label: FuSaOps version
+      description: Output of `fusaops version`
+      placeholder: "fusaops 0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: How you run FuSaOps (host binary or Docker image) and OS
+      placeholder: "ghcr.io/soundmatt/fusaops:latest on Ubuntu 24.04"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component / adapter (if known)
+      options:
+        - FuSaOps core (scan / orchestrator / report)
+        - go-FuSa adapter (gofusa)
+        - c-FuSa adapter (cfusa)
+        - cpp-FuSa adapter (cpfusa)
+        - Web dashboard (serve)
+        - Docker image / tools-monitor
+        - Other / unknown
+    validations:
+      required: false
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Bug kind
+      options:
+        - Dropped finding (a tool finding missing from the aggregate)
+        - Masked coverage gap (applicable tool not surfaced as skipped)
+        - Wrong language/tool attribution
+        - Wrong exit code
+        - Crash or panic
+        - Dashboard / report rendering issue
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: |
+        Smallest repo layout / command that reproduces the issue. Include the
+        languages present and which adapter tools were installed. Wrap output in
+        triple backticks.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: |
+        `.fusaops.json` contents, the `fusaops` command used, and the full
+        aggregate report (`fusaops report --format json`) if available.
+    validations:
+      required: false

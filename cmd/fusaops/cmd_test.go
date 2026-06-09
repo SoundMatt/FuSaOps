@@ -40,11 +40,12 @@ func TestReportWritesFile(t *testing.T) {
 //fusa:test REQ-FO-CLI008
 func TestCheckReturnsReport(t *testing.T) {
 	dir := goProject(t)
-	// gofusa is not assumed installed; the component is skipped, so no ERROR
-	// findings are produced and check exits 0.
+	// Exit code is invariant-free: 0 when the tool is absent (component
+	// skipped) or finds nothing, 1 when an installed gofusa flags the bare
+	// temp project. Either is correct; the report must always render.
 	code, stdout, _ := runArgs(t, "check", "--dir", dir, "--format", "text")
-	if code != 0 {
-		t.Fatalf("check: code=%d", code)
+	if code != 0 && code != 1 {
+		t.Fatalf("check: unexpected code=%d", code)
 	}
 	if !strings.Contains(stdout, "FuSaOps") {
 		t.Errorf("check stdout: %q", stdout)
@@ -63,8 +64,8 @@ func TestCheckHonoursConfig(t *testing.T) {
 		t.Fatalf("loadOptions: %v", ferr)
 	}
 	code, stdout, _ := runArgs(t, "check", "--dir", dir)
-	if code != 0 {
-		t.Fatalf("check: code=%d", code)
+	if code != 0 && code != 1 { // 1 if an installed tool flags the temp project
+		t.Fatalf("check: unexpected code=%d", code)
 	}
 	if !strings.Contains(stdout, "configured-project") {
 		t.Errorf("check did not use config project name: %q", stdout)

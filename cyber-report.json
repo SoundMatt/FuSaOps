@@ -1,0 +1,17 @@
+{
+  "format": "go-FuSa Cyber Report v1",
+  "module": "github.com/SoundMatt/FuSaOps",
+  "findings": [
+    {
+      "ruleId": "CYBER005",
+      "severity": "WARNING",
+      "message": "exec.CommandContext called with a non-literal command name — verify the value cannot be influenced by untrusted input",
+      "location": {
+        "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+        "line": 138,
+        "column": 9
+      },
+      "remediation": "use a fixed command name string literal; pass variable data only as arguments, never as the command name"
+    }
+  ]
+}

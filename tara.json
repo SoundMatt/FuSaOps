@@ -1,0 +1,26 @@
+{
+  "format": "go-FuSa TARA v1",
+  "generated_at": "2026-06-09T22:51:58.621694Z",
+  "module": "github.com/SoundMatt/FuSaOps",
+  "entries": [
+    {
+      "id": "TARA-001",
+      "asset": "adapter.go",
+      "threat": "Command injection from variable input enables arbitrary command execution",
+      "stride": [
+        "E",
+        "R"
+      ],
+      "cwe": "CWE-78",
+      "attack_vector": "Network",
+      "likelihood": "Medium",
+      "impact": "High",
+      "security_level": 3,
+      "current_control": "Use exec.Command with fixed command and sanitised args",
+      "residual_risk": "Low after remediation",
+      "cyber_rule_id": "CYBER005",
+      "source_file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
+      "source_line": 138
+    }
+  ]
+}

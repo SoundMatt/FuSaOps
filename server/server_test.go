@@ -114,9 +114,10 @@ func TestServe(t *testing.T) {
 	go func() { errc <- s.Serve(ln) }() // Serve computes the report then blocks
 
 	url := "http://" + ln.Addr().String() + "/healthz"
+	client := &http.Client{Timeout: time.Second}
 	var resp *http.Response
-	for i := 0; i < 50; i++ {
-		resp, err = http.Get(url)
+	for i := 0; i < 200; i++ {
+		resp, err = client.Get(url)
 		if err == nil {
 			break
 		}

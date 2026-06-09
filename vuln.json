@@ -1,0 +1,7 @@
+{
+  "format": "go-FuSa Vulnerability Report v1",
+  "generated_at": "2026-06-09T22:51:58.586744Z",
+  "module": "github.com/SoundMatt/FuSaOps",
+  "scanned": 0,
+  "findings": null
+}

@@ -1,0 +1,30 @@
+%{init: {"theme": "default"}}%
+flowchart LR
+    % Module: github.com/SoundMatt/FuSaOps
+    % Generated: 2026-06-09T22:51:58Z
+
+    github_com_SoundMatt_FuSaOps["fusaops"]
+    github_com_SoundMatt_FuSaOps_adapter["adapter"]
+    github_com_SoundMatt_FuSaOps_cmd_fusaops["github.com/SoundMatt/FuSaOps/cmd/fusaops"]
+    github_com_SoundMatt_FuSaOps_config["config"]
+    github_com_SoundMatt_FuSaOps_orchestrator["orchestrator"]
+    github_com_SoundMatt_FuSaOps_report["report"]
+    github_com_SoundMatt_FuSaOps_scan["scan"]
+    github_com_SoundMatt_FuSaOps_server["server"]
+
+    github_com_SoundMatt_FuSaOps_adapter --> github_com_SoundMatt_FuSaOps
+    github_com_SoundMatt_FuSaOps_cmd_fusaops --> github_com_SoundMatt_FuSaOps
+    github_com_SoundMatt_FuSaOps_cmd_fusaops --> github_com_SoundMatt_FuSaOps_adapter
+    github_com_SoundMatt_FuSaOps_cmd_fusaops --> github_com_SoundMatt_FuSaOps_config
+    github_com_SoundMatt_FuSaOps_cmd_fusaops --> github_com_SoundMatt_FuSaOps_orchestrator
+    github_com_SoundMatt_FuSaOps_cmd_fusaops --> github_com_SoundMatt_FuSaOps_report
+    github_com_SoundMatt_FuSaOps_cmd_fusaops --> github_com_SoundMatt_FuSaOps_scan
+    github_com_SoundMatt_FuSaOps_cmd_fusaops --> github_com_SoundMatt_FuSaOps_server
+    github_com_SoundMatt_FuSaOps_config --> github_com_SoundMatt_FuSaOps
+    github_com_SoundMatt_FuSaOps_orchestrator --> github_com_SoundMatt_FuSaOps
+    github_com_SoundMatt_FuSaOps_orchestrator --> github_com_SoundMatt_FuSaOps_adapter
+    github_com_SoundMatt_FuSaOps_orchestrator --> github_com_SoundMatt_FuSaOps_report
+    github_com_SoundMatt_FuSaOps_report --> github_com_SoundMatt_FuSaOps
+    github_com_SoundMatt_FuSaOps_scan --> github_com_SoundMatt_FuSaOps
+    github_com_SoundMatt_FuSaOps_server --> github_com_SoundMatt_FuSaOps_orchestrator
+    github_com_SoundMatt_FuSaOps_server --> github_com_SoundMatt_FuSaOps_report

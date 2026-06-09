@@ -1,0 +1,39 @@
+# Example: run FuSaOps multi-language safety checks in your own GitHub Actions
+# workflow. Copy this job into your .github/workflows/ci.yml.
+#
+# No local installation needed — the all-in-one image bundles the x-FuSa tools,
+# so a single job checks every supported language in the repo.
+
+name: Safety Checks (example)
+
+on: [push, pull_request]
+
+jobs:
+  safety:
+    name: FuSaOps safety checks
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/soundmatt/fusaops:latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Detect languages and which adapters apply.
+      - name: fusaops scan
+        run: fusaops scan --dir .
+
+      # Run every applicable tool — exits non-zero on any ERROR finding,
+      # in any language.
+      - name: fusaops check
+        run: fusaops check --dir .
+
+      # Generate the aggregated evidence report.
+      - name: fusaops report
+        run: fusaops report --format html --output fusaops-report.html --dir .
+
+      - name: Upload aggregated evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fusaops-report
+          path: fusaops-report.html

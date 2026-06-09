@@ -138,20 +138,43 @@ Go module's `.fusa.json`); FuSaOps does not manage it.
 
 ## Self-hosting
 
-FuSaOps is written in Go, so it eats its own dog food: go-FuSa runs `gofusa check`
-against the FuSaOps source on every CI run (see `.github/workflows/ci.yml`). The
-toolchain that FuSaOps orchestrates also gates FuSaOps itself.
+FuSaOps is written in Go, so it eats its own dog food: the **`go-FuSa self-check`**
+CI job installs `gofusa` and runs `gofusa check` against the FuSaOps source on
+every run, gating on ERROR findings (see `.github/workflows/ci.yml`). CodeQL and
+a SARIF upload of those findings run alongside it. The toolchain FuSaOps
+orchestrates also gates FuSaOps itself.
 
 ## Supported languages
 
-| Language | Adapter  | Tool     |
-|----------|----------|----------|
-| Go       | go-FuSa  | `gofusa` |
-| C        | c-FuSa   | `cfusa`  |
-| C++      | cpp-FuSa | `cpfusa` |
+| Language | Adapter  | Tool     | Bundled in image |
+|----------|----------|----------|------------------|
+| Go       | go-FuSa  | `gofusa` | ✅ |
+| C        | c-FuSa   | `cfusa`  | ⏸ pending tool image |
+| C++      | cpp-FuSa | `cpfusa` | ⏸ pending tool image |
 
-New languages are added by implementing the `adapter.Adapter` interface and
-registering it — see [ROADMAP.md](ROADMAP.md).
+All three adapters exist; an un-bundled tool reports as *not installed* until its
+image publishes. New languages are added by implementing the `adapter.Adapter`
+interface — see [docs/extending.md](docs/extending.md).
+
+## Safety & standards
+
+FuSaOps is itself developed as an ISO 26262 **ASIL-C** tool and carries the
+go-FuSa-grade evidence set. It aggregates evidence relevant to
+**ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
+orchestrates.
+
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (61 requirements);
+  `gofusa trace` reports them all traced **and** tested.
+- **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
+- **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)
+  (intended use, assumptions, hazards, mitigations).
+- **Qualification** — [docs/qualification.md](docs/qualification.md) (TCL2).
+- **Standards** — [docs/standards/](docs/standards/) ·
+  **Commands** — [docs/commands/](docs/commands/) ·
+  **Release** — [docs/release-process.md](docs/release-process.md) ·
+  **Incident response** — [INCIDENT-RESPONSE.md](INCIDENT-RESPONSE.md).
+- **Generated evidence** (committed) — safety case, TARA, dFMEA, SBOM,
+  provenance, coupling, cyber, vuln, qualification report, test-evidence bundle.
 
 ## License
 

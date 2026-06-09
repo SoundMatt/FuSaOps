@@ -48,6 +48,23 @@ Bundled today: `gofusa`. `cpfusa`/`cfusa` activate as their images publish.
 
 ---
 
+## v0.1.2 — Safety Evidence & Standards Docs ✅
+
+**Goal:** Bring FuSaOps to go-FuSa-grade safety-artifact parity.
+
+- Requirements registry (`.fusa-reqs.json`, 61 reqs) with full `gofusa trace`
+  traceability — every requirement traced **and** tested
+- Tool-failure HARA (`.fusa-hara.json`) with safety goals; FuSaOps developed as
+  an ISO 26262 ASIL-C tool
+- Generated, committed evidence: safety case, TARA, dFMEA, SBOM, provenance,
+  coupling, cyber, vuln, qualification report, test-evidence bundle
+- Docs: Tool Safety Manual, Qualification (TCL2), Release Process, per-command
+  and per-standard references, Incident Response, CLAUDE.md
+- CI parity: CodeQL, SARIF upload, DCO; README badges (CI, CodeQL, Go Reference,
+  Go Report Card, MPL, standards, image)
+
+---
+
 ## v0.2 — Evidence Aggregation
 
 **Goal:** Aggregate more than findings.

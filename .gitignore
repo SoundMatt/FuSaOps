@@ -8,6 +8,12 @@
 /fusaops-report.sarif
 /fusaops-evidence/
 
+# Transient / binary evidence (the structured JSON/MD evidence IS committed)
+/audit-pack.zip
+/evidence.html
+/check-report.json
+*.sarif
+
 # Go coverage
 coverage.out
 cover.out

@@ -4,7 +4,7 @@
     "name": "FuSaOps",
     "module": "github.com/SoundMatt/FuSaOps",
     "standard": "ISO26262",
-    "asil": "ASIL-B"
+    "asil": "ASIL-C"
   },
   "rules": {},
   "report": {
