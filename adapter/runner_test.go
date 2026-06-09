@@ -2,10 +2,29 @@ package adapter
 
 import (
 	"context"
+	"runtime"
 	"testing"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 )
+
+// exitCmd returns a platform-appropriate command that exits with the given code.
+func exitCmd(code int) (string, []string) {
+	if runtime.GOOS == "windows" {
+		return "cmd", []string{"/c", "exit", itoa(code)}
+	}
+	if code == 0 {
+		return "true", nil
+	}
+	return "false", nil
+}
+
+func itoa(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	return "1"
+}
 
 func TestAdapterGetters(t *testing.T) {
 	a := newGoFuSa()
@@ -22,13 +41,15 @@ func TestAvailableUnknownTool(t *testing.T) {
 }
 
 func TestDefaultRunnerExitCodes(t *testing.T) {
-	// "true" exits 0, "false" exits 1; both must return without a runner error
-	// (a non-zero exit means "findings exist", not "failed to run").
-	if _, err := defaultRunner(context.Background(), t.TempDir(), "true"); err != nil {
-		t.Errorf("true: unexpected err %v", err)
+	// Exit 0 and exit 1 must both return without a runner error: a non-zero
+	// exit means "findings exist", not "failed to run".
+	name0, args0 := exitCmd(0)
+	if _, err := defaultRunner(context.Background(), t.TempDir(), name0, args0...); err != nil {
+		t.Errorf("exit 0: unexpected err %v", err)
 	}
-	if _, err := defaultRunner(context.Background(), t.TempDir(), "false"); err != nil {
-		t.Errorf("false (exit 1): should be swallowed, got %v", err)
+	name1, args1 := exitCmd(1)
+	if _, err := defaultRunner(context.Background(), t.TempDir(), name1, args1...); err != nil {
+		t.Errorf("exit 1: should be swallowed, got %v", err)
 	}
 }
 
