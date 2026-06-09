@@ -1,0 +1,18 @@
+# Binaries
+/fusaops
+/dist/
+
+# Aggregated evidence output
+/fusaops-report.json
+/fusaops-report.html
+/fusaops-report.sarif
+/fusaops-evidence/
+
+# Go coverage
+coverage.out
+cover.out
+
+# OS / editor
+.DS_Store
+*.swp
+/.claude/

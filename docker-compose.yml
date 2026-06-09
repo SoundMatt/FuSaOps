@@ -1,0 +1,13 @@
+# FuSaOps docker-compose — zero-install dashboard for the mounted project.
+#
+#   docker compose up --build
+#   open http://localhost:8080
+services:
+  fusaops:
+    build: .
+    image: fusaops:latest
+    command: ["serve", "--addr", ":8080", "--dir", "/project"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ".:/project:ro"

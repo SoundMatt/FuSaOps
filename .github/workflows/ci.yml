@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Build and unit tests ──────────────────────────────────────────────────
+  test:
+    name: Test (${{ matrix.os }}, Go ${{ matrix.go }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-2025]
+        go: ["1.22", "1.23"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test (-race)
+        run: go test -race -count=1 -coverprofile=coverage.out ./...
+
+      - name: Coverage gate (>= 80%)
+        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.22'
+        shell: bash
+        run: |
+          pct=$(go tool cover -func=coverage.out | awk '/^total:/{gsub(/%/,"",$3); print $3}')
+          printf "Coverage: %.1f%%\n" "$pct"
+          awk -v p="$pct" 'BEGIN{ if (p+0 < 80) { print "FAIL: coverage " p "% below 80% threshold"; exit 1 } print "PASS" }'
+
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.22'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+
+  # ── Lint ──────────────────────────────────────────────────────────────────
+  lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.22"
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64.8
+          args: --timeout=5m
+
+  # ── go-FuSa self-check (dogfooding) ───────────────────────────────────────
+  # FuSaOps orchestrates the x-FuSa toolchain, so its own Go source is gated by
+  # go-FuSa exactly as a downstream Go project would be.
+  gofusa:
+    name: go-FuSa self-check
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.22"
+
+      - name: Install gofusa
+        run: go install github.com/SoundMatt/go-FuSa/cmd/gofusa@latest
+
+      - name: gofusa check (gate on ERROR findings)
+        run: gofusa check --format json --output gofusa-check-report.json
+
+      - name: gofusa report (evidence)
+        run: gofusa report --format html --output gofusa-report.html || true
+
+      - name: Upload go-FuSa evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gofusa-evidence
+          path: |
+            gofusa-check-report.json
+            gofusa-report.html
+
+  # ── Docker build verification ─────────────────────────────────────────────
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build Docker image
+        run: docker build --tag fusaops:ci .
+      - name: Smoke-test binary in image
+        run: docker run --rm fusaops:ci version
