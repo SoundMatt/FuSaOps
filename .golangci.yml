@@ -32,6 +32,10 @@ linters:
       - path: _test\.go
         text: "Close.*is not checked"
         linters: [errcheck]
+      # Test code legitimately uses net.Listen / httptest.NewRequest / Client.Get
+      # without a caller-supplied context; noctx targets production code.
+      - path: _test\.go
+        linters: [noctx]
 
 formatters:
   enable:

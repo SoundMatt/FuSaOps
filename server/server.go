@@ -120,7 +120,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 //
 //fusa:req REQ-FO-SRV005
 func (s *Server) ListenAndServe(addr string) error {
-	ln, err := net.Listen("tcp", addr)
+	ln, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", addr)
 	if err != nil {
 		return err
 	}

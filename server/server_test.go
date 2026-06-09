@@ -117,7 +117,8 @@ func TestServe(t *testing.T) {
 	client := &http.Client{Timeout: time.Second}
 	var resp *http.Response
 	for i := 0; i < 200; i++ {
-		resp, err = client.Get(url)
+		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+		resp, err = client.Do(req)
 		if err == nil {
 			break
 		}
