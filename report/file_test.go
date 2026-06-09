@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+//fusa:test REQ-FO-RPT008
 func TestRenderToFileWritesFile(t *testing.T) {
 	r := New("/root", "demo", sampleComponents())
 	path := filepath.Join(t.TempDir(), "out.json")

@@ -1,0 +1,73 @@
+{
+  "requirements": [
+    { "id": "REQ-FO-CORE001", "title": "Severity classification", "text": "FuSaOps shall define a Severity type with INFO, WARNING, and ERROR levels that serialises as a string and is value-compatible with every x-FuSa tool's severity scheme.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CORE002", "title": "Severity ranking", "text": "Severity.Rank shall return a strictly increasing ordinal for INFO < WARNING < ERROR and zero for any unknown value, to support comparison and sorting.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CORE003", "title": "Language identification", "text": "FuSaOps shall define a Language type identifying each supported language (go, c, cpp).", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CORE004", "title": "Attributable finding", "text": "FuSaOps shall represent each normalised finding with the originating Language and Tool so findings remain attributable after being merged across languages.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CORE005", "title": "Finding location", "text": "FuSaOps shall record the file, and optional line and column, identifying the origin of each finding.", "standard": "ISO 26262", "level": "ASIL-B" },
+
+    { "id": "REQ-FO-ERR001", "title": "Comparable sentinel errors", "text": "FuSaOps shall expose its failure conditions as sentinel errors suitable for comparison with errors.Is.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ERR002", "title": "Missing configuration error", "text": "FuSaOps shall return ErrNoConfig when no .fusaops.json configuration file is present.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ERR003", "title": "Invalid configuration error", "text": "FuSaOps shall return ErrInvalidConfig when the configuration is malformed.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ERR004", "title": "No applicable adapters error", "text": "FuSaOps shall return ErrNoAdapters when no detected language can be handled by any registered adapter.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ERR005", "title": "Check failure error", "text": "FuSaOps shall expose ErrCheckFailed to signal that one or more ERROR-severity findings exist in the aggregated report.", "standard": "ISO 26262", "level": "ASIL-B" },
+
+    { "id": "REQ-FO-CFG001", "title": "Project configuration model", "text": "FuSaOps shall define a configuration model capturing project identity, adapter selection, and report preferences.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CFG002", "title": "Adapter restriction", "text": "The configuration shall allow restricting which adapters run via an explicit adapter list, where an empty list means all applicable adapters.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CFG003", "title": "Default configuration", "text": "FuSaOps shall provide a valid starter configuration for a named project.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CFG004", "title": "Configuration load", "text": "FuSaOps shall load and validate configuration from a JSON file, returning ErrNoConfig when the file is absent.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CFG005", "title": "Configuration save", "text": "FuSaOps shall serialise configuration to indented JSON on disk.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CFG006", "title": "Configuration validation", "text": "FuSaOps shall reject configuration missing a version or project name, or specifying an unsupported report format.", "standard": "ISO 26262", "level": "ASIL-B" },
+
+    { "id": "REQ-FO-ADP001", "title": "Adapter interface", "text": "FuSaOps shall define an Adapter interface abstracting a single language-specific x-FuSa tool by name, language, tool, detection, availability, and check.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP002", "title": "Generic command adapter", "text": "FuSaOps shall provide a generic adapter implementation shared by every x-FuSa tool that differs only in configured metadata.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP003", "title": "Tool availability", "text": "An adapter shall report whether its tool binary resolves on PATH.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP004", "title": "Language detection", "text": "An adapter shall detect whether its language is present under a root by source extension, skipping VCS, build, and vendor directories.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP005", "title": "Tool execution", "text": "An adapter shall run its tool's machine-readable check and return normalised findings, treating a non-zero tool exit that signals findings as success.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP006", "title": "Report normalisation", "text": "FuSaOps shall decode a tool's JSON report into findings tagged with the originating language and tool, normalising unknown severities to INFO rather than dropping them.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP007", "title": "Adapter registry", "text": "FuSaOps shall maintain a registry of adapters keyed by tool name, rejecting nil or duplicate registrations.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP008", "title": "Applicable adapters", "text": "The registry shall return the adapters whose language is detected under a given root.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP009", "title": "Default registry", "text": "FuSaOps shall expose a package-level default registry populated by the built-in adapters.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP010", "title": "go-FuSa adapter", "text": "FuSaOps shall register an adapter for go-FuSa handling Go (.go) projects via the gofusa tool.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP011", "title": "c-FuSa adapter", "text": "FuSaOps shall register an adapter for c-FuSa handling C (.c) projects via the cfusa tool, excluding ambiguous headers from detection.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ADP012", "title": "cpp-FuSa adapter", "text": "FuSaOps shall register an adapter for cpp-FuSa handling C++ projects via the cpfusa tool.", "standard": "ISO 26262", "level": "ASIL-B" },
+
+    { "id": "REQ-FO-SCAN001", "title": "Language extension map", "text": "FuSaOps shall map each supported language to its source file extensions.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-SCAN002", "title": "Detected languages", "text": "A scan result shall report the detected languages in deterministic order.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-SCAN003", "title": "Repository scan", "text": "FuSaOps shall count source files per language under a root, skipping VCS, build, vendor, and excluded directories, and omitting languages with no files.", "standard": "ISO 26262", "level": "ASIL-B" },
+
+    { "id": "REQ-FO-ORC001", "title": "Orchestration options", "text": "FuSaOps shall accept orchestration options for project name, adapter restriction, and whether at least one installed tool is required.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ORC002", "title": "Orchestration runner", "text": "FuSaOps shall provide an orchestration runner backed by an adapter registry, defaulting to the package-level registry.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-ORC003", "title": "Multi-language run", "text": "The orchestrator shall run every applicable installed adapter, record applicable-but-uninstalled tools as skipped components, aggregate the results, and return ErrNoAdapters when none apply.", "standard": "ISO 26262", "level": "ASIL-B" },
+
+    { "id": "REQ-FO-RPT001", "title": "Finding summary", "text": "FuSaOps shall summarise findings as total, error, warning, and info counts.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT002", "title": "Aggregate status", "text": "FuSaOps shall derive a PASS/WARN/FAIL verdict from a summary: FAIL on any error, WARN on any warning, otherwise PASS.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT003", "title": "Report component", "text": "FuSaOps shall represent each language's contribution as a component recording its tool, availability, skip reason, findings, and summary.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT004", "title": "Aggregate report", "text": "FuSaOps shall define a top-level multi-language report containing all components and an overall summary.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT005", "title": "Report assembly", "text": "FuSaOps shall assemble an aggregate report from components, computing per-component and overall summaries, with components ordered deterministically.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT006", "title": "Error detection", "text": "The aggregate report shall report whether any component produced an ERROR-severity finding.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT007", "title": "Format dispatch", "text": "FuSaOps shall render the aggregate report in text, JSON, HTML, or SARIF format, rejecting unsupported formats.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT008", "title": "Report to file", "text": "FuSaOps shall write the aggregate report to a file, or to standard output when no path is given.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT009", "title": "JSON rendering", "text": "FuSaOps shall render the aggregate report as indented JSON.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT010", "title": "Text rendering", "text": "FuSaOps shall render a human-readable plain-text aggregate report.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT011", "title": "SARIF rendering", "text": "FuSaOps shall render the aggregate report as SARIF 2.1.0 with one run per component for GitHub Code Scanning.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-RPT012", "title": "HTML dashboard rendering", "text": "FuSaOps shall render a self-contained HTML dashboard with no external dependencies.", "standard": "ISO 26262", "level": "ASIL-B" },
+
+    { "id": "REQ-FO-SRV001", "title": "Dashboard server", "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-SRV002", "title": "Server construction", "text": "FuSaOps shall construct a server bound to a root, orchestration runner, and options.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-SRV003", "title": "Report computation", "text": "The server shall compute and cache the aggregate report for fast serving and on-demand refresh.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-SRV004", "title": "HTTP routes", "text": "The server shall expose dashboard (/), JSON API (/api/report), refresh (/refresh), and health (/healthz) routes.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-SRV005", "title": "Serve", "text": "FuSaOps shall compute the initial report then serve the dashboard on a configured listener or address.", "standard": "ISO 26262", "level": "ASIL-B" },
+
+    { "id": "REQ-FO-CLI001", "title": "Command dispatch", "text": "The fusaops CLI shall dispatch a single invocation to the requested subcommand and return a process exit code.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI002", "title": "Usage help", "text": "The fusaops CLI shall print top-level usage on request and on invalid invocation.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI003", "title": "Version command", "text": "fusaops version shall print the FuSaOps version.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI004", "title": "Init command", "text": "fusaops init shall write a starter .fusaops.json, refusing to overwrite an existing file without --force.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI005", "title": "Scan command", "text": "fusaops scan shall report detected languages and applicable adapters with installation status.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI006", "title": "Adapters command", "text": "fusaops adapters shall list every registered adapter and whether its tool is installed.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI007", "title": "Option resolution", "text": "The CLI shall resolve the absolute root and merge any .fusaops.json, treating a missing configuration as non-fatal.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI008", "title": "Check command", "text": "fusaops check shall run every applicable tool, render the aggregate report, and exit non-zero on ERROR findings, or on WARNING findings under --strict.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI009", "title": "Report command", "text": "fusaops report shall generate an aggregate report to a file or standard output without failing on findings.", "standard": "ISO 26262", "level": "ASIL-B" },
+    { "id": "REQ-FO-CLI010", "title": "Serve command", "text": "fusaops serve shall launch the web dashboard on a configured address.", "standard": "ISO 26262", "level": "ASIL-B" }
+  ]
+}

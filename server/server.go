@@ -9,6 +9,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -119,13 +120,25 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 //
 //fusa:req REQ-FO-SRV005
 func (s *Server) ListenAndServe(addr string) error {
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	return s.Serve(ln)
+}
+
+// Serve computes the initial report then serves the dashboard on ln. Closing ln
+// stops the server. Split from ListenAndServe so the serve path is testable on
+// an ephemeral listener.
+//
+//fusa:req REQ-FO-SRV005
+func (s *Server) Serve(ln net.Listener) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	s.compute(ctx)
 	cancel()
 	srv := &http.Server{
-		Addr:              addr,
 		Handler:           s.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
-	return srv.ListenAndServe()
+	return srv.Serve(ln)
 }

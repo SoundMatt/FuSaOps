@@ -36,6 +36,7 @@ func regWith(as ...adapter.Adapter) *adapter.Registry {
 	return r
 }
 
+//fusa:test REQ-FO-ORC003
 func TestRunAggregatesInstalledAdapters(t *testing.T) {
 	reg := regWith(
 		&fakeAdapter{name: "go-FuSa", tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true,
@@ -85,6 +86,7 @@ func TestRunNoApplicableReturnsErr(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-ORC001
 func TestRunOnlyFilter(t *testing.T) {
 	reg := regWith(
 		&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true},
@@ -107,6 +109,7 @@ func TestRunRequireAvailable(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-ORC002
 func TestNewNilRegistryUsesDefault(t *testing.T) {
 	if New(nil).Registry != adapter.Default {
 		t.Error("nil registry should default to adapter.Default")

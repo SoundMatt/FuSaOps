@@ -21,6 +21,7 @@ func goProject(t *testing.T) string {
 	return dir
 }
 
+//fusa:test REQ-FO-CLI009
 func TestReportWritesFile(t *testing.T) {
 	dir := goProject(t)
 	out := filepath.Join(dir, "agg.json")
@@ -36,6 +37,7 @@ func TestReportWritesFile(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI008
 func TestCheckReturnsReport(t *testing.T) {
 	dir := goProject(t)
 	// gofusa is not assumed installed; the component is skipped, so no ERROR
@@ -49,6 +51,7 @@ func TestCheckReturnsReport(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI007
 func TestCheckHonoursConfig(t *testing.T) {
 	dir := goProject(t)
 	cfg := config.Default("configured-project")
@@ -68,6 +71,16 @@ func TestCheckHonoursConfig(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI010
+func TestServeBadFlag(t *testing.T) {
+	// Exercises runServe's flag parsing without binding a port.
+	code, _, _ := runArgs(t, "serve", "--bogus")
+	if code != 2 {
+		t.Errorf("serve --bogus: got %d, want 2", code)
+	}
+}
+
+//fusa:test REQ-FO-CLI007
 func TestLoadOptionsOnlyOverride(t *testing.T) {
 	dir := goProject(t)
 	_, opts, _, err := loadOptions(dir, "gofusa,cfusa", os.Stderr)

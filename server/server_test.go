@@ -3,10 +3,12 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
@@ -39,6 +41,8 @@ func newTestServer(t *testing.T) *Server {
 	return s
 }
 
+//fusa:test REQ-FO-SRV001
+//fusa:test REQ-FO-SRV002
 func TestIndexServesDashboard(t *testing.T) {
 	s := newTestServer(t)
 	rec := httptest.NewRecorder()
@@ -51,6 +55,7 @@ func TestIndexServesDashboard(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-SRV004
 func TestAPIReportServesJSON(t *testing.T) {
 	s := newTestServer(t)
 	rec := httptest.NewRecorder()
@@ -76,6 +81,7 @@ func TestHealth(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-SRV003
 func TestRefreshRedirects(t *testing.T) {
 	s := newTestServer(t)
 	rec := httptest.NewRecorder()
@@ -91,5 +97,41 @@ func TestUnknownPath404(t *testing.T) {
 	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/nope", nil))
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("got %d, want 404", rec.Code)
+	}
+}
+
+//fusa:test REQ-FO-SRV005
+func TestServe(t *testing.T) {
+	reg := adapter.NewRegistry()
+	reg.MustRegister(&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo})
+	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{Project: "demo"})
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	errc := make(chan error, 1)
+	go func() { errc <- s.Serve(ln) }() // Serve computes the report then blocks
+
+	url := "http://" + ln.Addr().String() + "/healthz"
+	var resp *http.Response
+	for i := 0; i < 50; i++ {
+		resp, err = http.Get(url)
+		if err == nil {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if err != nil {
+		t.Fatalf("server never came up: %v", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("healthz status %d", resp.StatusCode)
+	}
+
+	_ = ln.Close() // closing the listener unblocks Serve
+	if err := <-errc; err != nil && !strings.Contains(err.Error(), "closed") {
+		t.Errorf("Serve returned unexpected error: %v", err)
 	}
 }

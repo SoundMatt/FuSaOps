@@ -8,6 +8,7 @@ import (
 	fusaops "github.com/SoundMatt/FuSaOps"
 )
 
+//fusa:test REQ-FO-CFG003
 func TestDefaultIsValid(t *testing.T) {
 	cfg := Default("demo")
 	if err := Validate(cfg); err != nil {
@@ -18,6 +19,10 @@ func TestDefaultIsValid(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CFG001
+//fusa:test REQ-FO-CFG002
+//fusa:test REQ-FO-CFG004
+//fusa:test REQ-FO-CFG005
 func TestSaveLoadRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ConfigFile)
@@ -42,6 +47,7 @@ func TestLoadMissingReturnsErrNoConfig(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CFG006
 func TestValidateRejectsBadFormat(t *testing.T) {
 	cfg := Default("x")
 	cfg.Report.Format = "xml"

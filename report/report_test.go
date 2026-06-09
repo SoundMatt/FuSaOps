@@ -19,6 +19,11 @@ func sampleComponents() []Component {
 	}
 }
 
+//fusa:test REQ-FO-RPT001
+//fusa:test REQ-FO-RPT003
+//fusa:test REQ-FO-RPT004
+//fusa:test REQ-FO-RPT005
+//fusa:test REQ-FO-RPT006
 func TestNewComputesSummaries(t *testing.T) {
 	r := New("/root", "demo", sampleComponents())
 	if r.Summary.Total != 2 || r.Summary.Errors != 1 || r.Summary.Warnings != 1 {
@@ -33,6 +38,7 @@ func TestNewComputesSummaries(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-RPT002
 func TestStatus(t *testing.T) {
 	cases := []struct {
 		s    Summary
@@ -50,6 +56,8 @@ func TestStatus(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-RPT007
+//fusa:test REQ-FO-RPT009
 func TestRenderJSONRoundTrip(t *testing.T) {
 	r := New("/root", "demo", sampleComponents())
 	var buf bytes.Buffer
@@ -65,6 +73,7 @@ func TestRenderJSONRoundTrip(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-RPT010
 func TestRenderText(t *testing.T) {
 	r := New("/root", "demo", sampleComponents())
 	var buf bytes.Buffer
@@ -79,6 +88,7 @@ func TestRenderText(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-RPT012
 func TestRenderHTML(t *testing.T) {
 	r := New("/root", "demo", sampleComponents())
 	var buf bytes.Buffer
@@ -93,6 +103,7 @@ func TestRenderHTML(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-RPT011
 func TestRenderSARIF(t *testing.T) {
 	r := New("/root", "demo", sampleComponents())
 	var buf bytes.Buffer

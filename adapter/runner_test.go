@@ -26,6 +26,8 @@ func itoa(n int) string {
 	return "1"
 }
 
+//fusa:test REQ-FO-ADP001
+//fusa:test REQ-FO-ADP010
 func TestAdapterGetters(t *testing.T) {
 	a := newGoFuSa()
 	if a.Name() != "go-FuSa" || a.Tool() != "gofusa" || a.Language() != fusaops.LangGo {
@@ -33,6 +35,7 @@ func TestAdapterGetters(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-ADP003
 func TestAvailableUnknownTool(t *testing.T) {
 	a := &cmdAdapter{tool: "definitely-not-a-real-binary-xyz", run: defaultRunner}
 	if a.Available() {
@@ -40,6 +43,7 @@ func TestAvailableUnknownTool(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-ADP005
 func TestDefaultRunnerExitCodes(t *testing.T) {
 	// Exit 0 and exit 1 must both return without a runner error: a non-zero
 	// exit means "findings exist", not "failed to run".

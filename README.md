@@ -2,6 +2,15 @@
 
 **Multi-language functional safety orchestration.**
 
+[![CI](https://github.com/SoundMatt/FuSaOps/actions/workflows/ci.yml/badge.svg)](https://github.com/SoundMatt/FuSaOps/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/SoundMatt/FuSaOps/actions/workflows/codeql.yml/badge.svg)](https://github.com/SoundMatt/FuSaOps/actions/workflows/codeql.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/SoundMatt/FuSaOps.svg)](https://pkg.go.dev/github.com/SoundMatt/FuSaOps)
+[![Go Report Card](https://goreportcard.com/badge/github.com/SoundMatt/FuSaOps)](https://goreportcard.com/report/github.com/SoundMatt/FuSaOps)
+[![Go 1.22](https://img.shields.io/badge/Go-1.22-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://www.mozilla.org/en-US/MPL/2.0/)
+[![Standards](https://img.shields.io/badge/ISO_26262_·_IEC_61508_·_ISO_21434_·_DO--178C-informational)](docs/standards/)
+[![image](https://img.shields.io/badge/ghcr.io-soundmatt%2Ffusaops-blue?logo=docker&logoColor=white)](https://github.com/SoundMatt/FuSaOps/pkgs/container/fusaops)
+
 FuSaOps sits on top of the x-FuSa toolchain — [go-FuSa](https://github.com/SoundMatt/go-FuSa),
 [c-FuSa](https://github.com/SoundMatt/c-FuSa), [cpp-FuSa](https://github.com/SoundMatt/cpp-FuSa)
 and future language tools — and gives mixed-language repositories a single,

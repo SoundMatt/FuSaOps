@@ -15,6 +15,7 @@ func runArgs(t *testing.T, args ...string) (int, string, string) {
 	return code, out.String(), errb.String()
 }
 
+//fusa:test REQ-FO-CLI002
 func TestNoArgsShowsUsage(t *testing.T) {
 	code, out, _ := runArgs(t)
 	if code != 1 || !strings.Contains(out, "Usage:") {
@@ -22,6 +23,7 @@ func TestNoArgsShowsUsage(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI001
 func TestUnknownCommand(t *testing.T) {
 	code, _, errb := runArgs(t, "frobnicate")
 	if code != 1 || !strings.Contains(errb, "unknown command") {
@@ -29,6 +31,7 @@ func TestUnknownCommand(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI003
 func TestVersion(t *testing.T) {
 	code, out, _ := runArgs(t, "version")
 	if code != 0 || !strings.Contains(out, "fusaops") {
@@ -43,6 +46,7 @@ func TestHelp(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI004
 func TestInitCreatesConfig(t *testing.T) {
 	dir := t.TempDir()
 	code, out, errb := runArgs(t, "init", "--dir", dir, "--name", "demo")
@@ -62,6 +66,7 @@ func TestInitCreatesConfig(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI005
 func TestScanDetectsLanguages(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main"), 0o600); err != nil {
@@ -80,6 +85,7 @@ func TestScanEmptyDir(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI006
 func TestAdaptersLists(t *testing.T) {
 	code, out, _ := runArgs(t, "adapters")
 	if code != 0 {
@@ -92,6 +98,7 @@ func TestAdaptersLists(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI008
 func TestCheckNoLanguages(t *testing.T) {
 	// Empty dir → no adapters → exit 1 with message.
 	code, _, errb := runArgs(t, "check", "--dir", t.TempDir())

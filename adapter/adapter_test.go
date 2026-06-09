@@ -20,6 +20,7 @@ const sampleReport = `{
   "summary": {"total":3,"errors":1,"warnings":1,"infos":1}
 }`
 
+//fusa:test REQ-FO-ADP006
 func TestParseToolReport(t *testing.T) {
 	findings, err := parseToolReport([]byte(sampleReport), fusaops.LangGo, "go-FuSa")
 	if err != nil {
@@ -59,6 +60,7 @@ func TestNormaliseSeverity(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-ADP004
 func TestDetect(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main"), 0o600); err != nil {
@@ -79,7 +81,7 @@ func TestDetect(t *testing.T) {
 func TestDetectSkipsBuildDirs(t *testing.T) {
 	dir := t.TempDir()
 	buildDir := filepath.Join(dir, "build")
-	if err := os.MkdirAll(buildDir, 0o755); err != nil {
+	if err := os.MkdirAll(buildDir, 0o750); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(buildDir, "gen.go"), []byte("package x"), 0o600); err != nil {
@@ -102,6 +104,8 @@ func fakeRunner(payload string) runnerFunc {
 	}
 }
 
+//fusa:test REQ-FO-ADP002
+//fusa:test REQ-FO-ADP005
 func TestCheckWithFakeRunner(t *testing.T) {
 	a := &cmdAdapter{
 		name: "go-FuSa", language: fusaops.LangGo, tool: "gofusa",
@@ -116,6 +120,7 @@ func TestCheckWithFakeRunner(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-ADP007
 func TestRegistryRegisterDuplicate(t *testing.T) {
 	r := NewRegistry()
 	if err := r.Register(newGoFuSa()); err != nil {
@@ -129,6 +134,7 @@ func TestRegistryRegisterDuplicate(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-ADP008
 func TestRegistryApplicable(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "a.c"), []byte("int main(){}"), 0o600); err != nil {
@@ -146,6 +152,10 @@ func TestRegistryApplicable(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-ADP009
+//fusa:test REQ-FO-ADP010
+//fusa:test REQ-FO-ADP011
+//fusa:test REQ-FO-ADP012
 func TestDefaultRegistryHasThreeAdapters(t *testing.T) {
 	if len(Default.All()) != 3 {
 		t.Errorf("default registry: got %d adapters, want 3", len(Default.All()))

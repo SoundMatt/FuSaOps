@@ -12,7 +12,7 @@ func writeFiles(t *testing.T, dir string, names ...string) {
 	t.Helper()
 	for _, n := range names {
 		p := filepath.Join(dir, n)
-		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(p), 0o750); err != nil {
 			t.Fatal(err)
 		}
 		if err := os.WriteFile(p, []byte("x"), 0o600); err != nil {
@@ -21,6 +21,9 @@ func writeFiles(t *testing.T, dir string, names ...string) {
 	}
 }
 
+//fusa:test REQ-FO-SCAN001
+//fusa:test REQ-FO-SCAN002
+//fusa:test REQ-FO-SCAN003
 func TestScanCountsAndSorts(t *testing.T) {
 	dir := t.TempDir()
 	writeFiles(t, dir, "a.go", "b.go", "c.go", "x.cpp", "y.c")
