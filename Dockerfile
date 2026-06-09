@@ -1,44 +1,51 @@
 # syntax=docker/dockerfile:1
 #
-# Multi-stage build for FuSaOps.
-# Stage 1 compiles the fusaops binary and installs the go-FuSa adapter tool;
-# Stage 2 produces a minimal runtime image.
+# FuSaOps — all-in-one multi-language functional safety image.
 #
-# Build:
-#   docker build -t fusaops .
+# Tools are NOT built here. Each x-FuSa tool's published image is the single
+# source of truth; this image copies the tool binary straight out of it. A tool
+# release is therefore picked up by *rebuilding* this image (automatically — see
+# .github/workflows/tools-monitor.yml), never by editing anything here.
+#
+# Adding a future x-FuSa is a one-liner: add a `FROM ... AS <tool>` stage and a
+# matching COPY line, register the adapter in Go, and add the tool to the
+# tools-monitor matrix. See docs/extending.md.
+#
+# NOTE: the tool images are linux/amd64; build this image for amd64 too:
+#   docker build --platform linux/amd64 -t fusaops .
 #
 # Run (mount your repo at /project):
-#   docker run --rm -v "$(pwd)":/project fusaops scan
-#   docker run --rm -v "$(pwd)":/project fusaops check
-#   docker run --rm -p 8080:8080 -v "$(pwd)":/project fusaops serve --addr :8080
-#
-# The image bundles gofusa so Go projects work out of the box. To scan C/C++
-# mount cfusa / cpfusa binaries onto PATH, or use the language-specific images.
+#   docker run --rm -v "$(pwd)":/project ghcr.io/soundmatt/fusaops scan
+#   docker run --rm -v "$(pwd)":/project ghcr.io/soundmatt/fusaops check
+#   docker run --rm -p 8080:8080 -v "$(pwd)":/project ghcr.io/soundmatt/fusaops serve --addr :8080
 
-# ── Stage 1: build ────────────────────────────────────────────────────────────
-FROM golang:1.22-alpine AS builder
+# ── Tool stages (source = each x-FuSa's published image) ──────────────────────
+FROM ghcr.io/soundmatt/go-fusa:latest AS gofusa
+# FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa   # enable when published
+# FROM ghcr.io/soundmatt/c-fusa:latest   AS cfusa    # enable when published
 
+# ── Build fusaops ─────────────────────────────────────────────────────────────
+FROM golang:1.22-alpine AS build
 WORKDIR /build
 COPY go.mod ./
 COPY . .
-
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-s -w -extldflags=-static" \
     -o /bin/fusaops ./cmd/fusaops
 
-# Bundle the go-FuSa adapter tool.
-RUN CGO_ENABLED=0 GOBIN=/bin go install github.com/SoundMatt/go-FuSa/cmd/gofusa@latest
-
-# ── Stage 2: runtime ─────────────────────────────────────────────────────────
+# ── Runtime ───────────────────────────────────────────────────────────────────
 FROM alpine:3.20
 
-RUN apk add --no-cache git ca-certificates
+# git + ca-certificates back the tools' provenance / vulnerability features.
+# libstdc++ is pre-staged so cpp-FuSa drops in without a base change.
+RUN apk add --no-cache git ca-certificates libstdc++
 
-COPY --from=builder /bin/fusaops /usr/local/bin/fusaops
-COPY --from=builder /bin/gofusa /usr/local/bin/gofusa
+COPY --from=build  /bin/fusaops          /usr/local/bin/fusaops
+COPY --from=gofusa /usr/local/bin/gofusa /usr/local/bin/gofusa
+# COPY --from=cpfusa /usr/local/bin/cpfusa /usr/local/bin/cpfusa
+# COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa
 
 WORKDIR /project
 EXPOSE 8080
-
 ENTRYPOINT ["fusaops"]
 CMD ["help"]

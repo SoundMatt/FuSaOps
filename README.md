@@ -71,12 +71,36 @@ The dashboard shows an overall status badge, per-language summary cards, and a
 filterable findings table. JSON is available at `/api/report`; `/refresh`
 re-runs the scan. The page is fully self-contained (no external assets).
 
-### Docker
+## Docker quickstart
+
+The published image is **all-in-one**: it bundles the x-FuSa tools, so there is
+nothing else to install. Mount your repo at `/project`.
 
 ```bash
+# Scan / check a repo (no local Go, no tool installs)
+docker run --rm -v "$(pwd)":/project ghcr.io/soundmatt/fusaops scan
 docker run --rm -v "$(pwd)":/project ghcr.io/soundmatt/fusaops check
-docker run --rm -p 8080:8080 -v "$(pwd)":/project ghcr.io/soundmatt/fusaops serve --addr :8080
+
+# Web dashboard
+docker run --rm -p 8080:8080 -v "$(pwd)":/project \
+  ghcr.io/soundmatt/fusaops serve --addr :8080
+# or: docker compose up   →  http://localhost:8080
 ```
+
+**How the image stays current.** Each tool binary is copied from that tool's own
+published image (`ghcr.io/soundmatt/<x>-fusa`). When an x-FuSa releases, a
+`repository_dispatch` rebuilds `ghcr.io/soundmatt/fusaops:latest` with the fresh
+tool — **no manual rebuild, and FuSaOps itself does not need a new release**. A
+weekly scheduled rebuild is the safety net. See
+[`docs/extending.md`](docs/extending.md).
+
+**Bundled tools.** `gofusa` (Go) ships today. `cpfusa` (C++) and `cfusa` (C) are
+wired in the Dockerfile as one-line additions and activate as soon as each
+tool's image is published — adapters for all three already exist, so an
+un-bundled tool simply reports as *not installed* until then.
+
+> The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
+> runs under emulation; add `--platform linux/amd64` if your client needs it.
 
 ## Configuration
 

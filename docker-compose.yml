@@ -1,11 +1,15 @@
 # FuSaOps docker-compose — zero-install dashboard for the mounted project.
 #
-#   docker compose up --build
+#   docker compose up
 #   open http://localhost:8080
+#
+# Pulls the published all-in-one image (bundles the x-FuSa tools). To build
+# locally instead, comment out `image:` and uncomment `build:`.
 services:
   fusaops:
-    build: .
-    image: fusaops:latest
+    image: ghcr.io/soundmatt/fusaops:latest
+    platform: linux/amd64
+    # build: .
     command: ["serve", "--addr", ":8080", "--dir", "/project"]
     ports:
       - "8080:8080"

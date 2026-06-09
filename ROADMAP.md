@@ -30,6 +30,24 @@ Deliverables: `fusaops init|scan|adapters|check|report|serve|version`
 
 ---
 
+## v0.1.1 — Docker Quickstart ✅
+
+**Goal:** Zero-install, all-in-one image that stays current with the tools.
+
+- All-in-one image (`ghcr.io/soundmatt/fusaops`) bundling the x-FuSa tools by
+  copying each binary from its own published image (`COPY --from`) — no
+  build-from-source, no Docker socket at runtime
+- `tools-monitor.yml`: `repository_dispatch` (instant) + weekly schedule rebuild
+  so a tool release refreshes the image **without a FuSaOps release or manual
+  rebuild**
+- `docker compose up` dashboard; CI builds + smoke-tests the image and the
+  bundled tools
+- One-line extension path for future tools, documented in `docs/extending.md`
+
+Bundled today: `gofusa`. `cpfusa`/`cfusa` activate as their images publish.
+
+---
+
 ## v0.2 — Evidence Aggregation
 
 **Goal:** Aggregate more than findings.

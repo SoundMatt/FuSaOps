@@ -7,6 +7,25 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Docker quickstart: all-in-one image (`ghcr.io/soundmatt/fusaops`) that bundles
+  the x-FuSa tools by copying each binary from its published image
+  (`COPY --from=ghcr.io/soundmatt/go-fusa:latest`), so `docker run fusaops check`
+  scans without any local installs and without a Docker socket
+- `tools-monitor.yml` workflow: `repository_dispatch` (`xfusa-released`) +
+  weekly schedule rebuild `fusaops:latest` with `pull: true`, refreshing bundled
+  tools with no manual rebuild or FuSaOps release
+- `docs/extending.md`: one-line process for bundling a future x-FuSa, including
+  the release-notification snippet for tool repos
+- CI Docker job logs in to GHCR and smoke-tests both `fusaops` and bundled
+  `gofusa`; docker-publish/build use `pull: true` to bundle the newest tools
+
+### Changed
+- Dockerfile no longer `go install`s gofusa; it copies the binary from the
+  go-FuSa image (alpine base, `linux/amd64`). cpp/c tool stages are present as
+  commented one-liners pending their published images
+- `docker-compose.yml` defaults to the published image
+
 ## [0.1.0] — 2026-06-09
 
 ### Added

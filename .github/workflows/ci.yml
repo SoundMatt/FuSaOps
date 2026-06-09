@@ -95,13 +95,26 @@ jobs:
             gofusa-report.html
 
   # ── Docker build verification ─────────────────────────────────────────────
+  # The image copies gofusa out of ghcr.io/soundmatt/go-fusa, so the build needs
+  # GHCR read access. Tool images are linux/amd64.
   docker:
     name: Docker build
     runs-on: ubuntu-latest
     needs: test
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v5
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Docker image
-        run: docker build --tag fusaops:ci .
-      - name: Smoke-test binary in image
-        run: docker run --rm fusaops:ci version
+        run: docker build --platform linux/amd64 --pull --tag fusaops:ci .
+      - name: Smoke-test fusaops in image
+        run: docker run --rm --platform linux/amd64 fusaops:ci version
+      - name: Smoke-test bundled gofusa
+        run: docker run --rm --platform linux/amd64 --entrypoint gofusa fusaops:ci version

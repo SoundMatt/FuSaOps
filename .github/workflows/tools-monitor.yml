@@ -1,0 +1,55 @@
+name: Tools Monitor
+
+# Keeps ghcr.io/soundmatt/fusaops:latest in step with the x-FuSa tool images it
+# bundles, WITHOUT a manual rebuild. The image copies each tool binary from the
+# tool's published image, so rebuilding with `pull: true` picks up the newest
+# tool release.
+#
+# Triggers:
+#   - repository_dispatch (xfusa-released): an x-FuSa repo fires this on release
+#     for an instant refresh. See docs/extending.md for the sender snippet.
+#   - schedule: weekly safety net in case a dispatch is missed.
+#   - workflow_dispatch: manual refresh.
+
+on:
+  repository_dispatch:
+    types: [xfusa-released]
+  schedule:
+    - cron: "0 6 * * 1" # Monday 06:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: tools-monitor
+  cancel-in-progress: true
+
+jobs:
+  rebuild:
+    name: Rebuild and publish fusaops:latest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Report trigger
+        run: |
+          echo "event:   ${{ github.event_name }}"
+          echo "tool:    ${{ github.event.client_payload.tool }}"
+          echo "version: ${{ github.event.client_payload.version }}"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rebuild with fresh tool images
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          pull: true # always re-pull the x-FuSa :latest base images
+          tags: ghcr.io/soundmatt/fusaops:latest
