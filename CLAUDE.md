@@ -14,6 +14,16 @@ When extending FuSaOps, keep that boundary: language analysis belongs in the
 per-language tools; FuSaOps does discovery, orchestration, aggregation, and
 presentation.
 
+## The x-FuSa contract
+
+[`docs/x-fusa-spec.md`](docs/x-fusa-spec.md) is the **master specification** every
+x-FuSa tool builds on — CLI surface, JSON output schemas, file/naming
+conventions, exit codes. It is a superset of the three tools, with go-FuSa as the
+canonical reference. **FuSaOps' decoders in `report/`, `trace/`, `sbom/`,
+`auditpack/` are the authoritative implementation of that spec — keep the spec
+and those structs in lock-step.** When a tool's output disagrees with the spec,
+the tool is wrong, not FuSaOps.
+
 ## Architecture
 
 | Package | Responsibility |
