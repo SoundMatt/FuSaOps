@@ -82,6 +82,15 @@ Deliverables: `fusaops trace`, `fusaops audit-pack`, `fusaops sbom`
 
 ---
 
+## The x-FuSa contract
+
+[`docs/x-fusa-spec.md`](docs/x-fusa-spec.md) — the master specification all
+x-FuSa tools conform to (CLI, JSON schemas, naming, exit codes). Superset of
+go/c/cpp-FuSa; go-FuSa is the canonical reference. The standards roll-up below
+relies on every tool emitting the spec's `<standard>-gap-report.json`.
+
+---
+
 ## v0.3 — Standards Roll-up
 
 **Goal:** One compliance view across languages.
