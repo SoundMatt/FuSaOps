@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.2.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.3.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -61,14 +61,14 @@ provide `init --migrate` to rewrite a legacy prefixed config (and flat
 
 ```jsonc
 {
-  "configVersion": "1.2",                 // MUST. config-format version (distinct from report schemaVersion)
-  "project": { "name": "FuSaOps", "version": "0.2.0" },  // MUST: project.name
+  "configVersion": "1.0",                 // MUST. config-format version — own series (see below)
+  "project": { "name": "FuSaOps", "version": "0.1.0" },  // MUST: project.name; version SHOULD default "0.1.0"
   "standard": "iso26262",                 // MUST. canonical standard id — see §2.4.1
   "asil": "ASIL-C",                       // SHOULD: include exactly ONE integrity field —
                                           //   asil (iso26262) | sil (iec61508) | dal (do178c).
                                           //   OMIT the other two entirely (do not emit explicit nulls).
-  "sourceDirs": ["."],                    // MAY
-  "excludePatterns": ["vendor/**", "build/**"], // MAY
+  "sourceDirs": ["."],                    // MAY. see scope note
+  "excludePatterns": ["vendor/**", "build/**"], // MAY. see scope note
   "strict": false                         // MAY. default gate strictness
 }
 ```
@@ -78,11 +78,20 @@ keys MUST be ignored (forward compatibility). The integrity field is the **only
 one of `asil`/`sil`/`dal` present** — the irrelevant keys are omitted, not set to
 `null` (this keeps `omitempty`-style unmarshalling unambiguous). A tool MUST also
 accept a legacy flat `"project": "name"` string and normalise it to the nested
-form, but MUST emit the nested `{ "name", "version" }` from `init`.
+form, but MUST emit the nested `{ "name", "version" }` from `init` (with
+`version` defaulting to `"0.1.0"` absent `--project-version`).
 
-`configVersion` is the **config-file** format version; it is intentionally a
-*different key* from the report `schemaVersion` (§3) and the tool `specVersion`
-(§9.1), because the three version independently.
+**`configVersion` is its own series**, starting at `"1.0"`. It tracks the
+**config-file** format only and advances **only when §1.2.1 changes** — it does
+**not** follow the spec version. A tool implementing spec v1.3 still writes
+`configVersion: "1.0"` from `init` because the config schema has not changed
+since v1.0. (Distinct key from report `schemaVersion` §3 and tool `specVersion`
+§9.1; the three series evolve independently.)
+
+**`sourceDirs` / `excludePatterns` scope (MUST).** Every command that walks
+source — `check`, `trace`, `fmea`, `coupling`, `coverage`, `boundary`, `cyber`,
+`vuln` — MUST honour both. Metadata commands (`version`, `init`) ignore them.
+Patterns are gitignore-style globs relative to `--dir`.
 
 #### 1.2.2 `.fusa-reqs.json` schema (MUST)
 
@@ -150,11 +159,14 @@ SBOM — an SPDX document MAY be emitted additionally.)
 ```
 
 The comment leader follows the host language (`//`, `/* … */`, `#`). A tool MUST
-scan single-line comments and MUST also scan inside multi-line block comments
-(`/* … */`) for annotations. A tool MUST accept exactly one ID per line. A tool
-MAY additionally accept space-separated IDs on one line, but MUST NOT *require*
-it. A malformed annotation (e.g. missing ID) MUST be surfaced by `check` as a
-`WARNING` finding (category `requirement`), never silently dropped.
+scan single-line comments and, **in languages that support them**, MUST also scan
+inside multi-line block comments (`/* … */`); languages without block comments
+(Python, shell, Ruby) are exempt from that part. A tool MUST accept exactly one
+ID per line. A single-ID tool MUST treat any token after the first as
+**malformed** and surface a `WARNING` finding (category `requirement`); a tool
+that opts into multi-ID lines treats every whitespace-separated token as an ID. A
+malformed annotation (e.g. missing ID) MUST likewise be a `WARNING`, never
+silently dropped.
 
 **Tool-defined annotations** such as `//fusa:unsafe`, `//fusa:nolint`, and
 `//fusa:file-suppress <RULE>` are *not* part of this contract; they remain
@@ -217,7 +229,10 @@ The `standard` value is a **canonical lowercase id**, used identically in
 it is an **enum value, never a display string**. Defined ids:
 
 `iso26262` · `iec61508` · `do178c` · `iso21434` · `misra-c` · `misra-cpp` ·
-`autosar-cpp14` · `cert-c` · `cert-cpp`.
+`autosar-cpp14` · `cert-c` · `cert-cpp` · `unece-r155` · `unece-r156`.
+
+(The `unece` command, §9.3, targets `unece-r155` (cybersecurity) and/or
+`unece-r156` (software updates) — the command name is not itself a standard id.)
 
 There is no `"ISO 26262"` form anywhere in the JSON. A clause reference is the
 separate `clause` field (e.g. `"6.4.4"`). Consumers MUST treat an unrecognised id
@@ -252,33 +267,48 @@ This is the single rule; the two shapes are not an inconsistency.
 
 | Key | Where | Means |
 |---|---|---|
-| `configVersion` | `.fusa.json` (§1.2.1) | config-file format version |
-| `schemaVersion` | every report document (§3) | the spec version the document conforms to |
+| `configVersion` | `.fusa.json` (§1.2.1) | config-file format version — own series, starts `1.0` |
+| `schemaVersion` | report documents (§3) | the spec version the document conforms to |
 | `specVersion` | `version --format json` (§9.1) | the spec version the tool implements |
 
-They version independently and MUST NOT be conflated under one key name.
+The three series evolve independently and MUST NOT be conflated under one key
+name. `schemaVersion` and `specVersion` track the spec version; `configVersion`
+moves only when the config schema (§1.2.1) itself changes.
 
 ---
 
 ## 3. Common envelope
 
-Every `--format json` report document MUST carry these self-describing header
-fields so an aggregated artefact stays attributable:
+**Scope.** "Report documents" — the `--format json` outputs of `check` (§4),
+`trace` (§5), `qualify` (§6), `report` (§9.1), and the standards gap-reports
+(§9.3) — MUST carry the envelope below. **File-format artefacts** — `sbom.json`
+(§7), `provenance.json` / `artifact-manifest.json` (§7), and audit-pack
+`manifest.json` (§8) — are *not* report documents; they carry only
+`schemaVersion` plus their own documented fields and are **exempt** from the rest
+of the envelope. This resolves the apparent "every document MUST" contradiction.
+
+A report document MUST carry these self-describing header fields so an aggregated
+artefact stays attributable:
 
 ```jsonc
 {
-  "schemaVersion": "1.2",        // MUST. the spec version this document conforms to (MAJOR.MINOR)
+  "schemaVersion": "1.3",        // MUST. the spec version this document conforms to (MAJOR.MINOR)
   "tool":        "go-FuSa",      // MUST. human-readable tool name
   "toolVersion": "0.23.0",       // MUST. tool semver
   "language":    "go",           // MUST. go | c | cpp | …
   "generatedAt": "2026-06-10T13:54:40Z",  // MUST. RFC 3339
   "projectRoot": "/abs/path",    // MUST. the --dir value verbatim (see note)
   "project":     "my-project",   // SHOULD
-  "standard":    "iso26262",     // SHOULD — canonical id (§2.4.1); FuSaOps routes/groups on this
-  "asil":        "ASIL-C",       // MAY
-  "error":       null            // MAY. non-null string ⇒ a runtime error occurred (paired with exit 3)
+  "standard":    "iso26262"      // SHOULD — canonical id (§2.4.1); FuSaOps routes/groups on this
+  // "asil": "ASIL-C"            // MAY
+  // "error": "…"                // present ONLY on a runtime error (with exit 3); omit otherwise
 }
 ```
+
+**`error` (MUST when runtime error, else absent).** It MUST be present (a
+non-empty string) when a runtime error occurred while a partial document was
+still emitted (paired with exit `3`); otherwise it MUST be **omitted** (do not
+emit `"error": null` in normal documents).
 
 **`projectRoot` across boundaries.** It is informational. The same source tree
 has different absolute paths on host vs. in a container (`/Users/x/p` vs.
@@ -344,6 +374,13 @@ The everyday gate. Exit `1` on any **open** ERROR finding (and on WARNING under
 end position is **inclusive**, matching SARIF. A point location omits the `end*`
 fields.
 
+**`--format sarif`.** When a tool emits SARIF it MUST emit **SARIF 2.1.0** with a
+`physicalLocation` on every result (this is what GitHub Code Scanning requires).
+
+**`fingerprint` adoption.** It is `SHOULD` today. It is **expected to become
+`MUST`** when FuSaOps begins consuming `diff` (a future MINOR bump, §13) — until
+every tool emits it, cross-tool `diff` is unusable.
+
 `summaryTable` (go-FuSa) MAY be present and is ignored by FuSaOps.
 
 ### 4.1 Dispositions & the exit code
@@ -352,20 +389,39 @@ Disposition support is **SHOULD** for a tool. When a tool does **not** implement
 it, every finding is treated as open and FuSaOps reads the exit code at face
 value. When a tool **does** implement it, the rules below are MUST.
 
-**Open vs. dispositioned.** An open finding omits the `disposition` field (the
-explicit string `"open"` is also accepted, and is equivalent to absent). A
-`"rejected"` disposition is also open (the rejection was overruled).
+A disposition entry records a **waiver decision** on a finding. `accepted` and
+`deferred` are waivers that suppress the gate; `rejected` is **not** a waiver.
+
+**Value semantics (MUST).**
+
+| `disposition` | Meaning | Gates? |
+|---|---|---|
+| absent / `"open"` | no waiver decision | **yes** |
+| `"accepted"` | waiver granted (e.g. false positive, risk accepted) | no |
+| `"deferred"` | waiver granted for now (tracked to fix later) | no |
+| `"rejected"` | a proposed waiver was **denied** — the finding remains actionable | **yes** |
+
+> `rejected` does **not** mean "the finding was rejected as invalid." It means
+> the *waiver request* was rejected, so the finding is still open and MUST still
+> gate. (Recording it keeps the denied-waiver decision auditable.)
 
 **Matching (MUST).** To decide a finding's disposition, a tool MUST match by
 `fingerprint` (§4.2) when both the finding and a disposition entry carry one; it
 MAY fall back to `ruleId` + `location.file` + `location.line`; and it MAY support
 a rule-level accept (`ruleId` only) when an entry omits file/line.
 
-**Exit code (MUST).** `check` gates only on **open** findings. A finding with
-`disposition:"accepted"` or `"deferred"` MUST remain in the JSON (marked via the
-`disposition` field, not removed) but MUST NOT by itself cause exit `1`. FuSaOps
-therefore trusts the exit code, and MAY additionally read
-`.fusa-dispositions.json` (§1.2.3) using the same matching rule.
+**Orphaned dispositions (SHOULD).** When a disposition entry matches **no**
+finding in the current run (e.g. a fallback `ruleId+file+line` entry stranded
+after a refactor moved the code), `check` SHOULD emit a `WARNING` finding
+(category `config`) naming the unmatched entry, so a team does not silently lose
+an accepted waiver after an ordinary refactor.
+
+**Exit code (MUST).** `check` gates only on **open** findings (absent/`open`/
+`rejected`). A finding with `disposition:"accepted"` or `"deferred"` MUST remain
+in the JSON (marked via the `disposition` field, not removed) but MUST NOT by
+itself cause exit `1`. FuSaOps therefore trusts the exit code, and MAY
+additionally read `.fusa-dispositions.json` (§1.2.3) using the same matching
+rule.
 
 ### 4.2 `fingerprint` (canonical algorithm, MUST when emitted)
 
@@ -399,10 +455,15 @@ always passes). On `trace`, `--strict` with no explicit threshold is equivalent
 to `--req-coverage 100 --sec-tested 100` (any gap → exit `1`); an explicit
 `--req-coverage N` / `--sec-tested N` overrides the implied 100.
 
-`--gaps` selects only requirements with no `test` tag. In `--format json` it
-filters the `requirements[]` and `tags[]` arrays to those untested requirements,
-but `coverage` MUST still report the **full** totals (so the gap set is visible
-without distorting the percentage).
+`--gaps` selects only requirements with **no tag of kind `test` OR `sec-test`**.
+In `--format json` it filters the `requirements[]` and `tags[]` arrays to those
+untested requirements, but `coverage` MUST still report the **full** totals (so
+the gap set is visible without distorting the percentage).
+
+**Counting (MUST).** A requirement is counted in `testedRequirements` if it has a
+tag of kind `test` **or** `sec-test` (a security test is a test). It is counted
+in `secTestedRequirements` only if it has a `sec-test` tag. So a requirement with
+only a `sec-test` tag counts toward **both** — it is not a coverage gap.
 
 JSON document = §3 envelope plus the matrix. **This is the canonical shape —
 flat `{total,traced,tested,matrix[]}` is NOT conformant.**
@@ -415,6 +476,7 @@ flat `{total,traced,tested,matrix[]}` is NOT conformant.**
       "standard": "iso26262", "level": "HLR", "asil": "ASIL-C" }
   ],
   "tags": [
+    // requirementId/file/kind MUST; line SHOULD (1-indexed), as in §4 location
     { "requirementId": "REQ-FO-CORE001", "file": "x.go", "line": 12, "kind": "impl" }
   ],
   "coverage": {
@@ -458,11 +520,22 @@ MUST support `--output <file>`. Writes `qualify-report.json` by default. JSON =
 `results[].result` MUST be one of `PASS` · `FAIL` · `SKIP` · `ERROR`. `total`
 counts every case including skipped/errored.
 
-**`hash` (reproducible, MUST when emitted).** It MUST be independent of run time.
-Compute it over the document with `hash` set to `null` **and** `generatedAt` set
-to `""`, serialised as 2-space-indented UTF-8 JSON in the field order shown
-above; then `hash = "sha256:" + lowercase_hex( SHA-256( that_bytes ) )`. Two runs
-of identical code on identical inputs MUST therefore yield the same `hash`.
+**`hash` (reproducible, MUST when emitted).** It MUST be independent of run time
+**and of JSON key ordering**, so it is computed over a *canonical* serialisation,
+not the pretty-printed output:
+
+1. Take the document, **remove** the `hash` member and **set** `generatedAt` to
+   `""` (both vary or are self-referential).
+2. Serialise per **RFC 8785 (JSON Canonicalization Scheme)** — UTF-8, keys sorted
+   lexicographically at every level, no insignificant whitespace, numbers in
+   shortest round-trip form. (For these flat documents JCS reduces to exactly
+   that.)
+3. `hash = "sha256:" + lowercase_hex( SHA-256( canonical_bytes ) )`.
+
+"Field order shown above" is **not** a valid substitute — Go, Python, and
+`nlohmann::json` order keys differently. RFC 8785's lexicographic ordering is the
+single rule that makes two tools agree. The same procedure applies to any other
+self-integrity `hash` field in this spec.
 
 ---
 
@@ -471,11 +544,12 @@ of identical code on identical inputs MUST therefore yield the same `hash`.
 `<lang>fusa release [--dir <path>] [--output-dir <dir>] [--spdx-version 2.2|2.3|3.0.1] [--full]`
 
 MUST write **`sbom.json`** (this exact name) into the output dir. MAY *also* write
-an SPDX document. `sbom.json` =
+an SPDX document; `--spdx-version` **defaults to `2.3`**. `sbom.json` is a
+file-format artefact (envelope-exempt per §3) and =
 
 ```jsonc
 {
-  "schemaVersion": "1.2",
+  "schemaVersion": "1.3",
   "format":      "x-FuSa SBOM v1",
   "generatedAt": "…",
   "module":      "github.com/SoundMatt/go-FuSa",   // MUST. identity — see below
@@ -504,7 +578,23 @@ NOT emit an empty/stub file and MUST NOT exit `3` for a *deliberately*
 unimplemented component): `fmea.json`, `fmea.csv`, `boundary.dot`,
 `boundary.mermaid`, `vuln.json`, and finally `audit-pack.zip`. Because
 `audit-pack` bundles the other artefacts, it MUST run **last**.
-`provenance.json` and `artifact-manifest.json` carry the §3 envelope.
+
+**`provenance.json` / `artifact-manifest.json`.** File-format artefacts
+(envelope-exempt, §3); **not consumed by FuSaOps in v1** (they ride along inside
+the audit-pack as opaque evidence). Minimal bodies:
+
+```jsonc
+// provenance.json
+{ "schemaVersion": "1.3", "format": "x-FuSa provenance v1", "generatedAt": "…",
+  "module": "…", "builder": "github-actions", "vcsRevision": "f8127ea",
+  "vcsModified": false, "os": "linux", "arch": "amd64" }
+
+// artifact-manifest.json
+{ "schemaVersion": "1.3", "format": "x-FuSa manifest v1", "generatedAt": "…",
+  "artifacts": [ { "path": "sbom.json", "sha256": "<bare-hex>" } ] }
+```
+
+Fields beyond these are tool-defined.
 
 ---
 
@@ -522,8 +612,8 @@ its SHA-256:
 
 ```jsonc
 {
-  "schemaVersion": "1.2",
-  "tool": "go-FuSa", "version": "0.23.0",
+  "schemaVersion": "1.3",
+  "tool": "go-FuSa", "toolVersion": "0.23.0",   // toolVersion key, aligned with §3 (artefact is still envelope-exempt)
   "module": "…",                         // project/module identity
   "files": [ { "path": "sbom.json", "size": 1234, "sha256": "<bare-hex>" } ]  // paths relative to ZIP root
 }
@@ -553,16 +643,18 @@ unified pack, so the per-tool pack MUST be a self-contained, openable ZIP.
 `^(\S+) (\d+\.\d+\.\d+[0-9A-Za-z.+-]*)$` — tool token, one space, semver
 (e.g. `go-FuSa 0.23.0`). FuSaOps extracts the version as the second capture
 group of the first stdout line. A tool SHOULD also support `version --format
-json` → `{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.2" }`. This
+json` → `{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.3" }`. This
 JSON form does **not** carry the §3 envelope, and uses `specVersion` (the spec
 the tool implements) — distinct from a document's `schemaVersion` (§2.8).
 
 **`init` (MUST).** Creates `.fusa.json` (§1.2.1, with `project.name`, `standard`,
 and the integrity field populated) and `.fusa-reqs.json` containing
-`{ "requirements": [] }`. It MUST refuse to overwrite an existing file without
-`--force`; `--force` **overwrites the file completely** (it does not merge). It
-MAY scaffold additional structure (`.github/`, hooks) and MAY offer `--migrate`
-(§1.2).
+`{ "requirements": [] }`. It operates **per file**: it creates each target that
+is missing and leaves an existing one untouched (a one-line stderr note), rather
+than aborting the whole command — so a repo with `.fusa.json` but no
+`.fusa-reqs.json` gets the missing file created. `--force` **overwrites
+completely** (it does not merge) any target. It MAY scaffold additional structure
+(`.github/`, hooks) and MAY offer `--migrate` (§1.2).
 
 **`report` (MUST).** `report [--format text|json|html|sarif|md] [--output <file>]`
 **re-runs analysis** on the project root — it does not read a cached
@@ -608,6 +700,9 @@ the canonical **gap-report** schema:
 - **`objectives[].findings`** are **rule id strings** (e.g. `"LINT001"`), not
   §4.2 fingerprints — a gap-report is not bound to one `check` run, so it uses the
   run-stable rule id.
+- **`--strict`** (MAY) on a standards command exits `1` when any objective is
+  `gap`; `partial` does **not** trip `--strict` (it is a known-incomplete, not a
+  failure).
 
 This is written to `<standard>-gap-report.json` (§1.3) and is the shape FuSaOps
 v0.3 rolls up.
@@ -657,7 +752,7 @@ Snapshot 2026-06-10. ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (S
 | `schemaVersion` MUST on every doc (new) | ▫️ add | ▫️ add | ▫️ add |
 | finding `category` (new for go) | ▫️ add | ✅ has it | ✅ has it |
 | finding `standard`+`clause` (new for go) | ▫️ add | ▫️ | ✅ has it |
-| finding `fingerprint` algo (new) | ▫️ add | ▫️ | ▫️ |
+| finding `fingerprint` algo (SHOULD; →MUST when `diff` lands) | ▫️ add | ▫️ add | ▫️ add |
 | location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ |
 | standards `<std>-gap-report.json` canonical | ⚠️ per-cmd shapes | ⚠️ | ⚠️ `objectives` vs other |
 
@@ -726,6 +821,36 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.3.0 — 2026-06-10 (third review round: go-FuSa / c-FuSa / cpp-FuSa)
+
+- **qualify `hash` determinism (§6):** computed over an **RFC 8785 (JCS)**
+  canonical serialisation (lexicographic keys), with `hash` removed and
+  `generatedAt:""` — "field order shown above" is explicitly rejected.
+- **Envelope scope (§3):** report documents carry the envelope; **file-format
+  artefacts** (`sbom.json`, `provenance.json`, `artifact-manifest.json`,
+  audit-pack `manifest.json`) are envelope-exempt — resolves the
+  "every document MUST" contradiction. `error` is omitted unless a runtime error
+  occurred (no `"error": null` default).
+- **`rejected` disposition (§4.1):** clarified — it means a *waiver was denied*;
+  the finding stays **open and gates**. Added a value-semantics table and an
+  **orphaned-disposition WARNING** rule (stale waiver after a refactor).
+- **sec-test counting (§5):** a `sec-test` tag counts toward **both**
+  `testedRequirements` and `secTestedRequirements`; `--gaps` excludes
+  requirements with a `test` **or** `sec-test` tag.
+- **provenance/manifest bodies (§7):** minimal schemas added; marked not consumed
+  by FuSaOps v1. `--spdx-version` default = `2.3`.
+- **SARIF pinned (§4):** SARIF **2.1.0** with a location on every result.
+- **`configVersion` own series (§1.2.1/§2.8):** starts `1.0`, advances only on
+  config-schema change — decoupled from the spec version.
+- **init (§9.1):** per-file create (missing only), `--force` overwrites;
+  `project.version` defaults `0.1.0`.
+- **Scope/edge fixes:** `sourceDirs`/`excludePatterns` apply to source-walking
+  commands (§1.2.1); UNECE ids `unece-r155`/`unece-r156` (§2.4.1); block-comment
+  scanning only in languages that have them, extra-token-after-ID is malformed
+  (§1.4); `tags[].line` SHOULD (§5); standards `--strict` gates on `gap` not
+  `partial` (§9.3); manifest uses `toolVersion` (§8); fingerprint shown as a real
+  SHOULD gap in §11; `§2.8` typo fixed.
 
 ### 1.2.0 — 2026-06-10 (second review round: go-FuSa / c-FuSa / cpp-FuSa)
 
