@@ -109,15 +109,17 @@ Deliverables: `fusaops iso26262`, `fusaops iec61508`, `fusaops do178`,
 
 ---
 
-## v0.4 — Monorepo & Component Model
+## v0.4 — Monorepo & Component Model ✅
 
 **Goal:** First-class support for large mixed-language monorepos.
 
-- Per-directory component pinning in `.fusaops.json`
-- Parallel adapter execution with per-component timeouts
-- Baseline + diff gating across the whole repo (regression CI gate)
+- ✅ Per-directory component pinning in `.fusaops.json` (`scan.components[].adapter`, `scan.components[].timeout`)
+- ✅ Parallel adapter execution with per-component timeouts (`run.workers`, `run.timeout`, `Options.Timeout/Workers`)
+- ✅ Baseline + diff gating (`fusaops diff --baseline --strict`) — fingerprint-matched across all tools
+- ✅ `Finding.Category` and `Finding.Fingerprint` fields; `ComputeFingerprint` per spec §4.2
+- ✅ x-FuSa spec promoted to v1.9: `category`, `fingerprint`, `remediation`, `capabilities` → MUST
 
-Deliverables: `fusaops diff`, component-scoped scans
+Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 requirements
 
 ---
 

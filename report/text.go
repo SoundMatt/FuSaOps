@@ -26,7 +26,11 @@ func renderText(w io.Writer, r *AggregateReport) error {
 		fmt.Fprintf(w, "  %s  %d findings (%d errors, %d warnings, %d infos)\n\n",
 			c.Summary.Status(), c.Summary.Total, c.Summary.Errors, c.Summary.Warnings, c.Summary.Infos)
 		for _, f := range c.Findings {
-			fmt.Fprintf(w, "  [%s] %-10s %s", f.Severity, f.RuleID, f.Message)
+			fmt.Fprintf(w, "  [%s] %-10s", f.Severity, f.RuleID)
+			if f.Category != "" {
+				fmt.Fprintf(w, " [%s]", f.Category)
+			}
+			fmt.Fprintf(w, " %s", f.Message)
 			if f.Location.File != "" {
 				fmt.Fprintf(w, " (%s", f.Location.File)
 				if f.Location.Line > 0 {

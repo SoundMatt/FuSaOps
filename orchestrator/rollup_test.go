@@ -293,3 +293,29 @@ func zipNames(t *testing.T, path string) map[string]bool {
 	}
 	return out
 }
+
+//fusa:test REQ-FO-ORC008
+func TestRunTraceWithWorkers(t *testing.T) {
+	a := tracer("gofusa")
+	b := tracer("cfusa")
+	agg, err := New(regWith(a, b)).RunTrace(context.Background(), t.TempDir(), Options{Workers: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(agg.Components) != 2 {
+		t.Errorf("expected 2 trace components with workers=2, got %d", len(agg.Components))
+	}
+}
+
+//fusa:test REQ-FO-ORC008
+func TestRunSBOMWithWorkers(t *testing.T) {
+	a := tracer("gofusa")
+	b := tracer("cfusa")
+	agg, err := New(regWith(a, b)).RunSBOM(context.Background(), t.TempDir(), Options{Workers: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(agg.Components) != 2 {
+		t.Errorf("expected 2 sbom components with workers=2, got %d", len(agg.Components))
+	}
+}

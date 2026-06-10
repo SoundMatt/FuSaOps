@@ -65,6 +65,8 @@ fusaops adapters             # list adapters and whether each tool is installed
 fusaops check                # run every applicable tool; exit 1 on ERROR findings
 fusaops check --strict       # also exit 1 on WARNING findings
 fusaops report --format html --output fusaops-report.html
+fusaops diff --baseline check-report.json   # compare baseline; exit 1 on new errors
+fusaops diff --strict        # exit 1 on any new finding (not just errors)
 fusaops trace                # cross-language requirement traceability + qualification
 fusaops trace --strict       # CI gate: fail on any untraced/untested requirement
 fusaops sbom --format spdx   # merged cross-language SBOM (SPDX 2.3)
@@ -97,10 +99,35 @@ produces into one cross-language view:
 - **`fusaops iec61508`** — same for IEC 61508.
 - **`fusaops do178`** — same for DO-178C (maps to the `do178c` canonical id).
 
-### Spec conformance (v0.3)
+### Diff gating (v0.4)
+
+- **`fusaops diff --baseline <file>`** — compares a stored baseline
+  `check-report.json` with the findings from a fresh scan, matching by
+  fingerprint (§4.2).  Exit 0 when no new errors; exit 1 when new errors appear.
+  `--strict` widens the gate to any new finding.  Ideal CI step after storing a
+  clean-baseline artifact.
+
+### Monorepo & component pinning (v0.4)
+
+In `.fusaops.json`, pin specific sub-directories to specific adapters and run
+everything in parallel:
+
+```json
+{
+  "run": { "timeout": "60s", "workers": 4 },
+  "scan": {
+    "components": [
+      { "path": "services/auth", "adapter": "gofusa", "timeout": "30s" },
+      { "path": "drivers/safety", "adapter": "cfusa" }
+    ]
+  }
+}
+```
+
+### Spec conformance (v0.3 / updated v0.4)
 
 - **`fusaops conform <binary>`** — validates any x-FuSa tool binary against the
-  spec v1.8 schema and behavioural invariants.  Per spec §16 step 7, this is a
+  spec v1.9 schema and behavioural invariants.  Per spec §16 step 7, this is a
   **MUST** gate for onboarding a new language tool.  See
   [`docs/conformance.md`](docs/conformance.md).
 
@@ -200,7 +227,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (134 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (146 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

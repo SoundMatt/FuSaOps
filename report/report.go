@@ -59,6 +59,7 @@ func (s Summary) Status() string {
 type Component struct {
 	Language  fusaops.Language  `json:"language"`
 	Tool      string            `json:"tool"`
+	Dir       string            `json:"dir,omitempty"` // relative path when component-pinned
 	Available bool              `json:"available"`
 	Skipped   string            `json:"skipped,omitempty"` // reason, if not run
 	Findings  []fusaops.Finding `json:"findings"`

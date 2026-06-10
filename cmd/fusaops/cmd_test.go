@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/SoundMatt/FuSaOps/config"
 )
@@ -90,5 +91,63 @@ func TestLoadOptionsOnlyOverride(t *testing.T) {
 	}
 	if len(opts.Only) != 2 || opts.Only[0] != "gofusa" {
 		t.Errorf("only override: %v", opts.Only)
+	}
+}
+
+//fusa:test REQ-FO-CFG007
+//fusa:test REQ-FO-CFG008
+//fusa:test REQ-FO-CFG009
+func TestLoadOptionsRunConfig(t *testing.T) {
+	dir := goProject(t)
+	cfg := config.Default("run-cfg-project")
+	cfg.Run = config.RunConfig{Timeout: "45s", Workers: 3}
+	cfg.Scan.Components = []config.ComponentConfig{
+		{Path: ".", Adapter: "gofusa"},
+	}
+	if err := config.Save(filepath.Join(dir, config.ConfigFile), cfg); err != nil {
+		t.Fatal(err)
+	}
+	_, opts, _, err := loadOptions(dir, "", os.Stderr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if opts.Timeout != 45*time.Second {
+		t.Errorf("timeout: got %v, want 45s", opts.Timeout)
+	}
+	if opts.Workers != 3 {
+		t.Errorf("workers: got %d, want 3", opts.Workers)
+	}
+	if len(opts.Components) != 1 || opts.Components[0].Adapter != "gofusa" {
+		t.Errorf("component pin: %+v", opts.Components)
+	}
+}
+
+func TestLoadOptionsInvalidTimeout(t *testing.T) {
+	dir := goProject(t)
+	cfg := config.Default("bad-timeout")
+	cfg.Run = config.RunConfig{Timeout: "not-a-duration"}
+	if err := config.Save(filepath.Join(dir, config.ConfigFile), cfg); err != nil {
+		t.Fatal(err)
+	}
+	// Invalid timeout is warned but does not fail loadOptions.
+	var warnBuf strings.Builder
+	_, opts, _, err := loadOptions(dir, "", &warnBuf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if opts.Timeout != 0 {
+		t.Errorf("invalid timeout should result in zero duration, got %v", opts.Timeout)
+	}
+	if !strings.Contains(warnBuf.String(), "not-a-duration") {
+		t.Errorf("expected warning about invalid timeout: %q", warnBuf.String())
+	}
+}
+
+//fusa:test REQ-FO-CLI018
+func TestDiffMissingBaseline(t *testing.T) {
+	dir := goProject(t)
+	code, _, errOut := runArgs(t, "diff", "--dir", dir, "--baseline", "nonexistent.json")
+	if code != 1 {
+		t.Errorf("diff with missing baseline: got code=%d, want 1; err=%q", code, errOut)
 	}
 }

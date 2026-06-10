@@ -15,6 +15,7 @@
 //	trace       Roll up cross-language requirement traceability and qualification
 //	sbom        Merge every language's SBOM into one (json/text/spdx)
 //	audit-pack  Bundle every component's evidence into one ZIP
+//	diff        Compare a baseline check-report with the current scan
 //	conform     Run x-FuSa spec conformance checks against a tool binary
 //	iso26262    Roll up ISO 26262 gap reports across all languages
 //	iec61508    Roll up IEC 61508 gap reports across all languages
@@ -63,6 +64,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runSBOM(args[1:], stdout, stderr)
 	case "audit-pack":
 		return runAuditPack(args[1:], stdout, stderr)
+	case "diff":
+		return runDiff(args[1:], stdout, stderr)
 	case "conform":
 		return runConform(args[1:], stdout, stderr)
 	case "iso26262", "iec61508", "do178":
@@ -99,6 +102,7 @@ Commands:
   trace      Roll up cross-language requirement traceability and qualification
   sbom       Merge every language's SBOM into one (json/text/spdx)
   audit-pack Bundle every component's evidence into one ZIP
+  diff       Compare a baseline check-report with the current scan
   conform    Run x-FuSa spec conformance checks against a tool binary
   iso26262   Roll up ISO 26262 gap reports across all languages
   iec61508   Roll up IEC 61508 gap reports across all languages

@@ -115,3 +115,42 @@ func TestNewNilRegistryUsesDefault(t *testing.T) {
 		t.Error("nil registry should default to adapter.Default")
 	}
 }
+
+//fusa:test REQ-FO-ORC010
+func TestRunComponentPins(t *testing.T) {
+	root := t.TempDir()
+	reg := regWith(
+		&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true,
+			findings: []fusaops.Finding{{RuleID: "G1", Severity: fusaops.SeverityWarning}}},
+		&fakeAdapter{tool: "cfusa", lang: fusaops.LangC, detect: true, avail: true},
+	)
+	opts := Options{
+		Components: []ComponentPin{
+			{Path: ".", Adapter: "gofusa"},
+		},
+	}
+	rep, err := New(reg).Run(context.Background(), root, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rep.Components) != 1 || rep.Components[0].Tool != "gofusa" {
+		t.Errorf("component pin should restrict to gofusa: %+v", rep.Components)
+	}
+}
+
+//fusa:test REQ-FO-ORC008
+func TestRunWithWorkers(t *testing.T) {
+	reg := regWith(
+		&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true,
+			findings: []fusaops.Finding{{RuleID: "G1", Severity: fusaops.SeverityInfo}}},
+		&fakeAdapter{tool: "cfusa", lang: fusaops.LangC, detect: true, avail: true},
+	)
+	rep, err := New(reg).Run(context.Background(), t.TempDir(), Options{Workers: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Both adapters detected — both should appear regardless of concurrency.
+	if len(rep.Components) != 2 {
+		t.Errorf("expected 2 components with workers=2, got %d", len(rep.Components))
+	}
+}

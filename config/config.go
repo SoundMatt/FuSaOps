@@ -28,6 +28,7 @@ type Config struct {
 	Project ProjectConfig `json:"project"`
 	Scan    ScanConfig    `json:"scan"`
 	Report  ReportConfig  `json:"report"`
+	Run     RunConfig     `json:"run,omitempty"`
 }
 
 // ProjectConfig holds project identity and safety context.
@@ -51,10 +52,25 @@ type ScanConfig struct {
 	Components []ComponentConfig `json:"components,omitempty"`
 }
 
-// ComponentConfig pins one sub-directory to a specific language/adapter.
+// ComponentConfig pins one sub-directory to a specific adapter.
+//
+//fusa:req REQ-FO-CFG009
 type ComponentConfig struct {
-	Path     string `json:"path"`
-	Language string `json:"language,omitempty"`
+	Path    string `json:"path"`
+	Adapter string `json:"adapter,omitempty"` // tool name, e.g. "gofusa"; empty = auto-detect
+	Timeout string `json:"timeout,omitempty"` // e.g. "30s"; overrides run.timeout
+}
+
+// RunConfig controls adapter execution concurrency and per-adapter timeouts.
+type RunConfig struct {
+	// Timeout is the per-adapter execution timeout (e.g. "60s"). Empty means no limit.
+	//
+	//fusa:req REQ-FO-CFG007
+	Timeout string `json:"timeout,omitempty"`
+	// Workers caps the number of adapters running concurrently. Zero means unlimited.
+	//
+	//fusa:req REQ-FO-CFG008
+	Workers int `json:"workers,omitempty"`
 }
 
 // ReportConfig controls aggregate report output.

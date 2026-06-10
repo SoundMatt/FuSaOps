@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
@@ -38,10 +39,20 @@ func (rn *Runner) selectAdapters(root string, opts Options) ([]adapter.Adapter, 
 	return out, nil
 }
 
+// semaphore returns a buffered channel for limiting concurrency, or nil when
+// workers is zero (unlimited).
+func newSem(workers int) chan struct{} {
+	if workers > 0 {
+		return make(chan struct{}, workers)
+	}
+	return nil
+}
+
 // RunTrace rolls every applicable tool's requirement traceability matrix and
 // qualification summary up into one cross-language Aggregate. A component whose
 // binary is missing, whose tool cannot trace, or whose trace fails is recorded
 // as skipped so coverage gaps stay visible rather than inflating the totals.
+// Adapters run in parallel, governed by Options.Workers and Options.Timeout.
 //
 //fusa:req REQ-FO-ORC004
 func (rn *Runner) RunTrace(ctx context.Context, root string, opts Options) (*trace.Aggregate, error) {
@@ -52,39 +63,63 @@ func (rn *Runner) RunTrace(ctx context.Context, root string, opts Options) (*tra
 	if len(adapters) == 0 {
 		return nil, fusaops.ErrNoAdapters
 	}
-	var components []trace.ComponentTrace
-	for _, a := range adapters {
-		ct := trace.ComponentTrace{Language: a.Language().String(), Tool: a.Tool(), Available: a.Available()}
-		switch {
-		case !ct.Available:
-			ct.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
-		default:
-			tr, ok := a.(adapter.Tracer)
-			if !ok {
-				ct.Skipped = fmt.Sprintf("%s does not support trace", a.Tool())
-				break
+
+	results := make([]trace.ComponentTrace, len(adapters))
+	var wg sync.WaitGroup
+	sem := newSem(opts.Workers)
+
+	for i, a := range adapters {
+		wg.Add(1)
+		go func(i int, a adapter.Adapter) {
+			defer wg.Done()
+			if sem != nil {
+				sem <- struct{}{}
+				defer func() { <-sem }()
 			}
-			m, err := tr.Trace(ctx, root)
-			if err != nil {
-				ct.Skipped = fmt.Sprintf("trace failed: %v", err)
-				break
+
+			ct := trace.ComponentTrace{Language: a.Language().String(), Tool: a.Tool(), Available: a.Available()}
+
+			tctx := ctx
+			var cancel context.CancelFunc
+			if opts.Timeout > 0 {
+				tctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+				defer cancel()
 			}
-			ct.Coverage = m.Coverage
-			ct.Requirements = m.Requirements
-			// Qualification is best-effort: its absence must not drop the row.
-			if q, ok := a.(adapter.Qualifier); ok {
-				if qr, qerr := q.Qualify(ctx, root); qerr == nil {
-					ct.Qualification = qr
+
+			switch {
+			case !ct.Available:
+				ct.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
+			default:
+				tr, ok := a.(adapter.Tracer)
+				if !ok {
+					ct.Skipped = fmt.Sprintf("%s does not support trace", a.Tool())
+					break
+				}
+				m, err := tr.Trace(tctx, root)
+				if err != nil {
+					ct.Skipped = fmt.Sprintf("trace failed: %v", err)
+					break
+				}
+				ct.Coverage = m.Coverage
+				ct.Requirements = m.Requirements
+				// Qualification is best-effort: its absence must not drop the row.
+				if q, ok := a.(adapter.Qualifier); ok {
+					if qr, qerr := q.Qualify(tctx, root); qerr == nil {
+						ct.Qualification = qr
+					}
 				}
 			}
-		}
-		components = append(components, ct)
+			results[i] = ct
+		}(i, a)
 	}
-	return trace.New(root, opts.Project, components), nil
+	wg.Wait()
+
+	return trace.New(root, opts.Project, results), nil
 }
 
 // RunSBOM rolls every applicable tool's SBOM up into one merged, de-duplicated
 // cross-language Aggregate, recording skipped components as for RunTrace.
+// Adapters run in parallel, governed by Options.Workers and Options.Timeout.
 //
 //fusa:req REQ-FO-ORC005
 func (rn *Runner) RunSBOM(ctx context.Context, root string, opts Options) (*sbom.Aggregate, error) {
@@ -95,35 +130,59 @@ func (rn *Runner) RunSBOM(ctx context.Context, root string, opts Options) (*sbom
 	if len(adapters) == 0 {
 		return nil, fusaops.ErrNoAdapters
 	}
-	var components []sbom.ComponentSBOM
-	for _, a := range adapters {
-		cs := sbom.ComponentSBOM{Language: a.Language().String(), Tool: a.Tool(), Available: a.Available()}
-		switch {
-		case !cs.Available:
-			cs.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
-		default:
-			s, ok := a.(adapter.SBOMer)
-			if !ok {
-				cs.Skipped = fmt.Sprintf("%s does not support SBOM", a.Tool())
-				break
+
+	results := make([]sbom.ComponentSBOM, len(adapters))
+	var wg sync.WaitGroup
+	sem := newSem(opts.Workers)
+
+	for i, a := range adapters {
+		wg.Add(1)
+		go func(i int, a adapter.Adapter) {
+			defer wg.Done()
+			if sem != nil {
+				sem <- struct{}{}
+				defer func() { <-sem }()
 			}
-			doc, err := s.SBOM(ctx, root)
-			if err != nil {
-				cs.Skipped = fmt.Sprintf("sbom failed: %v", err)
-				break
+
+			cs := sbom.ComponentSBOM{Language: a.Language().String(), Tool: a.Tool(), Available: a.Available()}
+
+			tctx := ctx
+			var cancel context.CancelFunc
+			if opts.Timeout > 0 {
+				tctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+				defer cancel()
 			}
-			cs.Module = doc.Module
-			cs.Packages = doc.Components
-		}
-		components = append(components, cs)
+
+			switch {
+			case !cs.Available:
+				cs.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
+			default:
+				s, ok := a.(adapter.SBOMer)
+				if !ok {
+					cs.Skipped = fmt.Sprintf("%s does not support SBOM", a.Tool())
+					break
+				}
+				doc, err := s.SBOM(tctx, root)
+				if err != nil {
+					cs.Skipped = fmt.Sprintf("sbom failed: %v", err)
+					break
+				}
+				cs.Module = doc.Module
+				cs.Packages = doc.Components
+			}
+			results[i] = cs
+		}(i, a)
 	}
-	return sbom.New(root, opts.Project, components), nil
+	wg.Wait()
+
+	return sbom.New(root, opts.Project, results), nil
 }
 
 // RunStandards rolls every applicable tool's §9.3 gap report for standard up
-// into one cross-language Aggregate.  A component whose binary is missing,
+// into one cross-language Aggregate. A component whose binary is missing,
 // whose tool cannot produce a gap report, or whose command fails is recorded as
 // skipped so coverage gaps remain visible.
+// Adapters run in parallel, governed by Options.Workers and Options.Timeout.
 //
 //fusa:req REQ-FO-ORC007
 func (rn *Runner) RunStandards(ctx context.Context, root, standard string, opts Options) (*standards.Aggregate, error) {
@@ -134,28 +193,51 @@ func (rn *Runner) RunStandards(ctx context.Context, root, standard string, opts 
 	if len(adapters) == 0 {
 		return nil, fusaops.ErrNoAdapters
 	}
-	var components []standards.ComponentGap
-	for _, a := range adapters {
-		cg := standards.ComponentGap{Language: a.Language().String(), Tool: a.Tool()}
-		switch {
-		case !a.Available():
-			cg.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
-		default:
-			sp, ok := a.(adapter.StandardsProvider)
-			if !ok {
-				cg.Skipped = fmt.Sprintf("%s does not support standards", a.Tool())
-				break
+
+	results := make([]standards.ComponentGap, len(adapters))
+	var wg sync.WaitGroup
+	sem := newSem(opts.Workers)
+
+	for i, a := range adapters {
+		wg.Add(1)
+		go func(i int, a adapter.Adapter) {
+			defer wg.Done()
+			if sem != nil {
+				sem <- struct{}{}
+				defer func() { <-sem }()
 			}
-			r, serr := sp.Standards(ctx, root, standard)
-			if serr != nil {
-				cg.Skipped = fmt.Sprintf("standards failed: %v", serr)
-				break
+
+			cg := standards.ComponentGap{Language: a.Language().String(), Tool: a.Tool()}
+
+			tctx := ctx
+			var cancel context.CancelFunc
+			if opts.Timeout > 0 {
+				tctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+				defer cancel()
 			}
-			cg.Report = r
-		}
-		components = append(components, cg)
+
+			switch {
+			case !a.Available():
+				cg.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
+			default:
+				sp, ok := a.(adapter.StandardsProvider)
+				if !ok {
+					cg.Skipped = fmt.Sprintf("%s does not support standards", a.Tool())
+					break
+				}
+				r, serr := sp.Standards(tctx, root, standard)
+				if serr != nil {
+					cg.Skipped = fmt.Sprintf("standards failed: %v", serr)
+					break
+				}
+				cg.Report = r
+			}
+			results[i] = cg
+		}(i, a)
 	}
-	return standards.New(opts.Project, standard, components), nil
+	wg.Wait()
+
+	return standards.New(opts.Project, standard, results), nil
 }
 
 // AuditPackResult reports what a unified audit-pack run produced.
@@ -172,6 +254,7 @@ type AuditPackResult struct {
 // single audit-pack.zip at dest. Per-tool packs land under components/<tool>/.
 // A tool that cannot produce a pack is recorded in Skipped; the FuSaOps-level
 // evidence is always included so the bundle is never empty.
+// Per-tool packing runs in parallel, governed by Options.Workers and Options.Timeout.
 //
 //fusa:req REQ-FO-ORC006
 func (rn *Runner) RunAuditPack(ctx context.Context, root, dest string, opts Options) (*AuditPackResult, error) {
@@ -189,29 +272,70 @@ func (rn *Runner) RunAuditPack(ctx context.Context, root, dest string, opts Opti
 	}
 	defer func() { _ = os.RemoveAll(tmp) }()
 
+	type packResult struct {
+		tool    string
+		zipPath string
+		skipped string
+	}
+
+	packResults := make([]packResult, len(adapters))
+	var wg sync.WaitGroup
+	sem := newSem(opts.Workers)
+
+	for i, a := range adapters {
+		wg.Add(1)
+		go func(i int, a adapter.Adapter) {
+			defer wg.Done()
+			if sem != nil {
+				sem <- struct{}{}
+				defer func() { <-sem }()
+			}
+
+			pr := packResult{tool: a.Tool()}
+
+			if !a.Available() {
+				pr.skipped = fmt.Sprintf("%s: binary not found on PATH", a.Tool())
+				packResults[i] = pr
+				return
+			}
+			p, ok := a.(adapter.Packer)
+			if !ok {
+				pr.skipped = fmt.Sprintf("%s: does not support audit-pack", a.Tool())
+				packResults[i] = pr
+				return
+			}
+
+			tctx := ctx
+			var cancel context.CancelFunc
+			if opts.Timeout > 0 {
+				tctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+				defer cancel()
+			}
+
+			zipPath := filepath.Join(tmp, a.Tool()+"-audit-pack.zip")
+			if perr := p.AuditPack(tctx, root, zipPath); perr != nil {
+				pr.skipped = fmt.Sprintf("%s: %v", a.Tool(), perr)
+				packResults[i] = pr
+				return
+			}
+			pr.zipPath = zipPath
+			packResults[i] = pr
+		}(i, a)
+	}
+	wg.Wait()
+
 	res := &AuditPackResult{}
 	var sources []auditpack.Source
-
-	for _, a := range adapters {
-		if !a.Available() {
-			res.Skipped = append(res.Skipped, fmt.Sprintf("%s: binary not found on PATH", a.Tool()))
-			continue
-		}
-		p, ok := a.(adapter.Packer)
-		if !ok {
-			res.Skipped = append(res.Skipped, fmt.Sprintf("%s: does not support audit-pack", a.Tool()))
-			continue
-		}
-		zipPath := filepath.Join(tmp, a.Tool()+"-audit-pack.zip")
-		if perr := p.AuditPack(ctx, root, zipPath); perr != nil {
-			res.Skipped = append(res.Skipped, fmt.Sprintf("%s: %v", a.Tool(), perr))
+	for _, pr := range packResults {
+		if pr.skipped != "" {
+			res.Skipped = append(res.Skipped, pr.skipped)
 			continue
 		}
 		sources = append(sources, auditpack.Source{
-			ArchivePath: "components/" + a.Tool() + "/audit-pack.zip",
-			FilePath:    zipPath,
+			ArchivePath: "components/" + pr.tool + "/audit-pack.zip",
+			FilePath:    pr.zipPath,
 		})
-		res.Packed = append(res.Packed, a.Tool())
+		res.Packed = append(res.Packed, pr.tool)
 	}
 
 	// Always include the FuSaOps cross-language evidence.

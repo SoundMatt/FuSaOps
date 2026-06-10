@@ -162,7 +162,9 @@ type toolFinding struct {
 		Line   int    `json:"line"`
 		Column int    `json:"column"`
 	} `json:"location"`
+	Category    string `json:"category"`
 	Remediation string `json:"remediation"`
+	Fingerprint string `json:"fingerprint"`
 }
 
 // parseToolReport decodes a tool's JSON report into FuSaOps findings, tagging
@@ -183,7 +185,9 @@ func parseToolReport(data []byte, lang fusaops.Language, tool string) ([]fusaops
 			Severity:    normaliseSeverity(f.Severity),
 			Message:     f.Message,
 			Location:    fusaops.Location{File: f.Location.File, Line: f.Location.Line, Column: f.Location.Column},
+			Category:    f.Category,
 			Remediation: f.Remediation,
+			Fingerprint: f.Fingerprint,
 		})
 	}
 	return findings, nil

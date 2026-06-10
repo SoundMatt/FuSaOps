@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"path/filepath"
+	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/config"
@@ -31,6 +33,27 @@ func loadOptions(dir, only string, stderr io.Writer) (string, orchestrator.Optio
 			opts.Project = cfg.Project.Name
 		}
 		opts.Only = cfg.Scan.Adapters
+		if cfg.Run.Timeout != "" {
+			d, perr := time.ParseDuration(cfg.Run.Timeout)
+			if perr != nil {
+				fmt.Fprintf(stderr, "fusaops: invalid run.timeout %q: %v (ignored)\n", cfg.Run.Timeout, perr)
+			} else {
+				opts.Timeout = d
+			}
+		}
+		opts.Workers = cfg.Run.Workers
+		for _, c := range cfg.Scan.Components {
+			pin := orchestrator.ComponentPin{Path: c.Path, Adapter: c.Adapter}
+			if c.Timeout != "" {
+				d, perr := time.ParseDuration(c.Timeout)
+				if perr != nil {
+					fmt.Fprintf(stderr, "fusaops: invalid component timeout %q for %s: %v (ignored)\n", c.Timeout, c.Path, perr)
+				} else {
+					pin.Timeout = d
+				}
+			}
+			opts.Components = append(opts.Components, pin)
+		}
 	}
 	if only != "" {
 		opts.Only = splitCSV(only)

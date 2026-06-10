@@ -1,158 +1,1026 @@
 {
   "requirements": [
-    { "id": "REQ-FO-CORE001", "title": "Severity classification", "text": "FuSaOps shall define a Severity type with INFO, WARNING, and ERROR levels that serialises as a string and is value-compatible with every x-FuSa tool's severity scheme.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CORE002", "title": "Severity ranking", "text": "Severity.Rank shall return a strictly increasing ordinal for INFO < WARNING < ERROR and zero for any unknown value, to support comparison and sorting.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CORE003", "title": "Language identification", "text": "FuSaOps shall define a Language type identifying each supported language (go, c, cpp).", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CORE004", "title": "Attributable finding", "text": "FuSaOps shall represent each normalised finding with the originating Language and Tool so findings remain attributable after being merged across languages.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CORE005", "title": "Finding location", "text": "FuSaOps shall record the file, and optional line and column, identifying the origin of each finding.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-ERR001", "title": "Comparable sentinel errors", "text": "FuSaOps shall expose its failure conditions as sentinel errors suitable for comparison with errors.Is.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ERR002", "title": "Missing configuration error", "text": "FuSaOps shall return ErrNoConfig when no .fusaops.json configuration file is present.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ERR003", "title": "Invalid configuration error", "text": "FuSaOps shall return ErrInvalidConfig when the configuration is malformed.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ERR004", "title": "No applicable adapters error", "text": "FuSaOps shall return ErrNoAdapters when no detected language can be handled by any registered adapter.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ERR005", "title": "Check failure error", "text": "FuSaOps shall expose ErrCheckFailed to signal that one or more ERROR-severity findings exist in the aggregated report.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-CFG001", "title": "Project configuration model", "text": "FuSaOps shall define a configuration model capturing project identity, adapter selection, and report preferences.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CFG002", "title": "Adapter restriction", "text": "The configuration shall allow restricting which adapters run via an explicit adapter list, where an empty list means all applicable adapters.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CFG003", "title": "Default configuration", "text": "FuSaOps shall provide a valid starter configuration for a named project.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CFG004", "title": "Configuration load", "text": "FuSaOps shall load and validate configuration from a JSON file, returning ErrNoConfig when the file is absent.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CFG005", "title": "Configuration save", "text": "FuSaOps shall serialise configuration to indented JSON on disk.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CFG006", "title": "Configuration validation", "text": "FuSaOps shall reject configuration missing a version or project name, or specifying an unsupported report format.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-ADP001", "title": "Adapter interface", "text": "FuSaOps shall define an Adapter interface abstracting a single language-specific x-FuSa tool by name, language, tool, detection, availability, and check.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP002", "title": "Generic command adapter", "text": "FuSaOps shall provide a generic adapter implementation shared by every x-FuSa tool that differs only in configured metadata.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP003", "title": "Tool availability", "text": "An adapter shall report whether its tool binary resolves on PATH.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP004", "title": "Language detection", "text": "An adapter shall detect whether its language is present under a root by source extension, skipping VCS, build, and vendor directories.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP005", "title": "Tool execution", "text": "An adapter shall run its tool's machine-readable check and return normalised findings, treating a non-zero tool exit that signals findings as success.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP006", "title": "Report normalisation", "text": "FuSaOps shall decode a tool's JSON report into findings tagged with the originating language and tool, normalising unknown severities to INFO rather than dropping them.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP007", "title": "Adapter registry", "text": "FuSaOps shall maintain a registry of adapters keyed by tool name, rejecting nil or duplicate registrations.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP008", "title": "Applicable adapters", "text": "The registry shall return the adapters whose language is detected under a given root.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP009", "title": "Default registry", "text": "FuSaOps shall expose a package-level default registry populated by the built-in adapters.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP010", "title": "go-FuSa adapter", "text": "FuSaOps shall register an adapter for go-FuSa handling Go (.go) projects via the gofusa tool.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP011", "title": "c-FuSa adapter", "text": "FuSaOps shall register an adapter for c-FuSa handling C (.c) projects via the cfusa tool, excluding ambiguous headers from detection.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP012", "title": "cpp-FuSa adapter", "text": "FuSaOps shall register an adapter for cpp-FuSa handling C++ projects via the cpfusa tool.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-SCAN001", "title": "Language extension map", "text": "FuSaOps shall map each supported language to its source file extensions.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SCAN002", "title": "Detected languages", "text": "A scan result shall report the detected languages in deterministic order.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SCAN003", "title": "Repository scan", "text": "FuSaOps shall count source files per language under a root, skipping VCS, build, vendor, and excluded directories, and omitting languages with no files.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-ORC001", "title": "Orchestration options", "text": "FuSaOps shall accept orchestration options for project name, adapter restriction, and whether at least one installed tool is required.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ORC002", "title": "Orchestration runner", "text": "FuSaOps shall provide an orchestration runner backed by an adapter registry, defaulting to the package-level registry.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ORC003", "title": "Multi-language run", "text": "The orchestrator shall run every applicable installed adapter, record applicable-but-uninstalled tools as skipped components, aggregate the results, and return ErrNoAdapters when none apply.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-RPT001", "title": "Finding summary", "text": "FuSaOps shall summarise findings as total, error, warning, and info counts.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT002", "title": "Aggregate status", "text": "FuSaOps shall derive a PASS/WARN/FAIL verdict from a summary: FAIL on any error, WARN on any warning, otherwise PASS.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT003", "title": "Report component", "text": "FuSaOps shall represent each language's contribution as a component recording its tool, availability, skip reason, findings, and summary.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT004", "title": "Aggregate report", "text": "FuSaOps shall define a top-level multi-language report containing all components and an overall summary.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT005", "title": "Report assembly", "text": "FuSaOps shall assemble an aggregate report from components, computing per-component and overall summaries, with components ordered deterministically.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT006", "title": "Error detection", "text": "The aggregate report shall report whether any component produced an ERROR-severity finding.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT007", "title": "Format dispatch", "text": "FuSaOps shall render the aggregate report in text, JSON, HTML, or SARIF format, rejecting unsupported formats.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT008", "title": "Report to file", "text": "FuSaOps shall write the aggregate report to a file, or to standard output when no path is given.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT009", "title": "JSON rendering", "text": "FuSaOps shall render the aggregate report as indented JSON.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT010", "title": "Text rendering", "text": "FuSaOps shall render a human-readable plain-text aggregate report.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT011", "title": "SARIF rendering", "text": "FuSaOps shall render the aggregate report as SARIF 2.1.0 with one run per component for GitHub Code Scanning.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-RPT012", "title": "HTML dashboard rendering", "text": "FuSaOps shall render a self-contained HTML dashboard with no external dependencies.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-SRV001", "title": "Dashboard server", "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SRV002", "title": "Server construction", "text": "FuSaOps shall construct a server bound to a root, orchestration runner, and options.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SRV003", "title": "Report computation", "text": "The server shall compute and cache the aggregate report for fast serving and on-demand refresh.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SRV004", "title": "HTTP routes", "text": "The server shall expose dashboard (/), JSON API (/api/report), refresh (/refresh), and health (/healthz) routes.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SRV005", "title": "Serve", "text": "FuSaOps shall compute the initial report then serve the dashboard on a configured listener or address.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-CLI001", "title": "Command dispatch", "text": "The fusaops CLI shall dispatch a single invocation to the requested subcommand and return a process exit code.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI002", "title": "Usage help", "text": "The fusaops CLI shall print top-level usage on request and on invalid invocation.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI003", "title": "Version command", "text": "fusaops version shall print the FuSaOps version.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI004", "title": "Init command", "text": "fusaops init shall write a starter .fusaops.json, refusing to overwrite an existing file without --force.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI005", "title": "Scan command", "text": "fusaops scan shall report detected languages and applicable adapters with installation status.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI006", "title": "Adapters command", "text": "fusaops adapters shall list every registered adapter and whether its tool is installed.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI007", "title": "Option resolution", "text": "The CLI shall resolve the absolute root and merge any .fusaops.json, treating a missing configuration as non-fatal.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI008", "title": "Check command", "text": "fusaops check shall run every applicable tool, render the aggregate report, and exit non-zero on ERROR findings, or on WARNING findings under --strict.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI009", "title": "Report command", "text": "fusaops report shall generate an aggregate report to a file or standard output without failing on findings.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI010", "title": "Serve command", "text": "fusaops serve shall launch the web dashboard on a configured address.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI011", "title": "Trace command", "text": "fusaops trace shall roll up cross-language requirement traceability and qualification, render it (text/json/html), and exit non-zero under --strict when any requirement is untraced or untested.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI012", "title": "SBOM command", "text": "fusaops sbom shall merge every applicable tool's SBOM into one cross-language bill of materials rendered as json, text, or SPDX 2.3.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI013", "title": "Audit-pack command", "text": "fusaops audit-pack shall bundle every applicable tool's audit-pack together with the FuSaOps cross-language evidence into a single ZIP.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-TRC001", "title": "Requirement decode", "text": "The trace package shall decode a requirement entry (id, title, standard, level, ASIL) from a tool's traceability matrix.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC002", "title": "Annotation tag decode", "text": "The trace package shall decode requirement and test annotation tags, distinguishing their kind.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC003", "title": "Coverage figures", "text": "The trace package shall decode the total, traced, and tested requirement counts from a tool's matrix.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC004", "title": "Matrix model", "text": "The trace package shall model a tool's traceability matrix as requirements, tags, and coverage.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC005", "title": "Qualification summary", "text": "The trace package shall model a tool's qualification summary with total, passed, and failed case counts.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC006", "title": "Component trace", "text": "The trace package shall represent each language's contribution with its tool, availability, skip reason, coverage, requirements, and qualification.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC007", "title": "Coverage percentages", "text": "The trace package shall compute traced and tested percentages per component, treating zero requirements as fully covered.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC008", "title": "Aggregate coverage", "text": "The trace package shall sum coverage across components into aggregate totals and percentages.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC009", "title": "Aggregate matrix model", "text": "The trace package shall model the cross-language roll-up with generation time, root, project, components, and aggregate coverage.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC010", "title": "Aggregate construction", "text": "The trace package shall build the aggregate deterministically (components sorted by tool), excluding skipped components from coverage totals so gaps stay visible.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC011", "title": "Gap status", "text": "The trace package shall report a PASS/GAP status that fails when any requirement across all languages is untraced or untested.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC012", "title": "Matrix rendering", "text": "The trace package shall render the aggregate to a writer or file in text, json, or html, rejecting unknown formats.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC013", "title": "Matrix JSON", "text": "The trace package shall render the aggregate as indented JSON.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC014", "title": "Matrix text", "text": "The trace package shall render a human-readable text view with per-component and total coverage and status.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-TRC015", "title": "Matrix HTML", "text": "The trace package shall render a self-contained, dependency-free HTML traceability dashboard.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-SBM001", "title": "Normalised package", "text": "The sbom package shall represent a dependency as name, version, optional hash, and originating language.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SBM002", "title": "Tool SBOM decode", "text": "The sbom package shall decode a tool's SBOM document (module, go version, component packages).", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SBM003", "title": "Component SBOM", "text": "The sbom package shall represent each language's SBOM contribution with tool, availability, skip reason, module, and packages.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SBM004", "title": "Aggregate SBOM model", "text": "The sbom package shall model the merged cross-language SBOM with generation time, root, project, components, packages, and total count.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SBM005", "title": "SBOM merge", "text": "The sbom package shall merge component packages, de-duplicating on name and version, deterministically sorted, preserving the first contributing language.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SBM006", "title": "SBOM rendering", "text": "The sbom package shall render the aggregate to a writer or file in json, text, or spdx, rejecting unknown formats.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SBM007", "title": "SBOM JSON", "text": "The sbom package shall render the aggregate as indented native JSON.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SBM008", "title": "SBOM text", "text": "The sbom package shall render a human-readable text view of components and merged packages.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-SBM009", "title": "SPDX rendering", "text": "The sbom package shall render a valid SPDX 2.3 JSON document with a DESCRIBES relationship per package and syntactically valid SPDX identifiers.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-PCK001", "title": "Pack source", "text": "The auditpack package shall accept bundle sources supplied either by file path or in-memory data, keyed by archive path.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-PCK002", "title": "Pack entry integrity", "text": "The auditpack package shall record each packed file's path, size, and SHA-256 hash.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-PCK003", "title": "Pack manifest", "text": "The auditpack package shall write a manifest.json index naming the tool, version, project, and packed files.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-PCK004", "title": "Deterministic packing", "text": "The auditpack package shall write a deterministic ZIP with sources sorted by archive path, failing hard if any source content cannot be read so no evidence is silently omitted.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-PCK005", "title": "JSON source helper", "text": "The auditpack package shall provide a helper that marshals a value into an in-memory JSON bundle source.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-ADP013", "title": "Adapter capabilities", "text": "FuSaOps shall define optional capability interfaces (Tracer, Qualifier, SBOMer, Packer) so an adapter can contribute trace, qualification, SBOM, and audit-pack evidence when its tool supports them.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP014", "title": "Adapter trace", "text": "A command adapter shall produce a traceability matrix by running its tool's trace command and decoding the JSON output.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP015", "title": "Adapter qualify", "text": "A command adapter shall produce a qualification summary by running its tool's qualify command and decoding the report file.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP016", "title": "Adapter SBOM", "text": "A command adapter shall produce an SBOM by running its tool's release command and decoding the generated sbom.json.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP017", "title": "Adapter audit-pack", "text": "A command adapter shall produce a per-tool audit-pack ZIP by running its tool's audit-pack command and confirming the file was written.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-ORC004", "title": "Trace roll-up", "text": "The orchestrator shall roll every applicable tool's trace and qualification into one cross-language aggregate, recording skipped components.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ORC005", "title": "SBOM roll-up", "text": "The orchestrator shall merge every applicable tool's SBOM into one cross-language aggregate, recording skipped components.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ORC006", "title": "Audit-pack roll-up", "text": "The orchestrator shall bundle every applicable tool's audit-pack with the FuSaOps cross-language evidence into one ZIP, always including the FuSaOps-level artefacts.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-CNF001", "title": "Conformance level types", "text": "The conform package shall define Level (MUST/SHOULD/MAY) and Status (PASS/FAIL/SKIP) types matching RFC 2119.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF002", "title": "Conformance result", "text": "The conform package shall represent each check outcome with id, spec section, level, name, status, and optional detail.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF003", "title": "Conformance report", "text": "The conform package shall aggregate results into a report with binary, tool, version, language, spec version, and summary counts; HasFailures returns true only when a MUST check failed.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF004", "title": "Conformance options", "text": "The conform package shall accept an injectable RunFunc to allow deterministic testing without a real binary on PATH.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF005", "title": "Conformance runner", "text": "conform.Run shall locate the binary, scaffold a temp project, execute all conformance checks, and return a report.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF006", "title": "Conformance rendering", "text": "The conform package shall render a report in text or json format, reporting RESULT:PASS or RESULT:FAIL.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF007", "title": "Language detection", "text": "The conform package shall map binary names to language ids per §1.1 (gofusa→go, cfusa→c, cpfusa→cpp).", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF008", "title": "Common header validation", "text": "The conform package shall validate the §3.1 common header (schemaVersion, kind, tool, toolVersion, language, generatedAt) on every document.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF009", "title": "Version check", "text": "The conform package shall check §9.1 version output matches the <tool> <semver> regex and optionally validates version --format json specVersion.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF010", "title": "Init check", "text": "The conform package shall check §9.1 init creates .fusa.json and .fusa-reqs.json with valid JSON.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF011", "title": "Check command validation", "text": "The conform package shall validate §4 check --format json: common header, nested location object, project-relative file paths, severity enum, ruleId regex, summary fields.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF012", "title": "Trace command validation", "text": "The conform package shall validate §5 trace --format json: common header, requirements/tags/coverage keys, and all four coverage counters including secTestedRequirements.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF013", "title": "Qualify command validation", "text": "The conform package shall validate §6 qualify --output: common header, total/passed/failed keys (not tests_passed/tests_failed), results[].result enum.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF014", "title": "Release command validation", "text": "The conform package shall validate §7 release --output-dir writes sbom.json with common header, module, and components.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF015", "title": "Audit-pack validation", "text": "The conform package shall validate §8 audit-pack produces a valid ZIP containing manifest.json with bare-hex sha256 fields.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF016", "title": "Capabilities validation", "text": "The conform package shall validate §9.1 SHOULD capabilities --format json: common header, specVersion, commands.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CNF017", "title": "Fingerprint algorithm", "text": "The conform package shall implement the §4.2 fingerprint algorithm: sha256(ruleId + U+001F + location.file + U+001F + normalizedMessage), with digit-run normalisation and whitespace collapsing.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-CLI014", "title": "Conform command", "text": "fusaops conform shall run x-FuSa spec conformance checks against a named binary, render the report in text or json, and exit non-zero when any MUST check fails.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-STD001", "title": "GapReport type", "text": "The standards package shall define a GapReport type mirroring the §9.3 gap-report document with standard, objectives, and summary fields.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD002", "title": "Objective status enum", "text": "The standards package shall define Objective with status values satisfied, partial, and gap; a consumer must map any unrecognised status to gap (fail-safe).", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD003", "title": "ComponentGap skipped recording", "text": "The standards package shall record a skipped reason for any component whose tool is unavailable or whose standards command fails, so coverage gaps remain visible.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD004", "title": "Aggregate construction", "text": "The standards package shall aggregate ComponentGap entries into an Aggregate with standard id, project, generated timestamp, and all component results.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD005", "title": "HasGaps predicate", "text": "Aggregate.HasGaps shall return true if and only if at least one reporting component has a non-zero gaps count in its Summary; nil or skipped components shall not count.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD006", "title": "Text renderer", "text": "The standards package shall render an Aggregate as human-readable text showing per-component satisfied/partial/gaps counts and a RESULT: PASS|GAP|SKIP line.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD007", "title": "JSON renderer", "text": "The standards package shall render an Aggregate as indented JSON, and RenderToFile shall write to a file or stdout.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD008", "title": "CommandStandard alias", "text": "The standards package shall map CLI command names to canonical §2.4.1 standard ids; do178 maps to do178c.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD009", "title": "DisplayName", "text": "The standards package shall expose a DisplayName function returning a human-readable label for each canonical standard id.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-STD010", "title": "Summary recomputation", "text": "GapReport.RecomputeSummary shall derive Summary counts from Objectives when the existing Summary invariant does not hold, mapping any unrecognised status to gap (fail-safe per §9.3).", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-ADP018", "title": "StandardsProvider capability", "text": "The adapter package shall define a StandardsProvider capability interface whose Standards method runs the tool's gap-report command for a given standard id and returns a decoded GapReport.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-ADP019", "title": "cmdAdapter Standards implementation", "text": "cmdAdapter shall implement StandardsProvider by shelling out to <tool> <standard> --format json and decoding the GapReport.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-ORC007", "title": "Standards roll-up", "text": "The orchestrator shall roll every applicable tool's §9.3 gap report for a given standard into one cross-language Aggregate, recording skipped components for unavailable or non-supporting tools.", "standard": "ISO 26262", "level": "ASIL-C" },
-
-    { "id": "REQ-FO-CLI015", "title": "ISO 26262 command", "text": "fusaops iso26262 shall roll up ISO 26262 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI016", "title": "IEC 61508 command", "text": "fusaops iec61508 shall roll up IEC 61508 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.", "standard": "ISO 26262", "level": "ASIL-C" },
-    { "id": "REQ-FO-CLI017", "title": "DO-178C command", "text": "fusaops do178 shall roll up DO-178C gap reports across all applicable installed tools, mapping the do178 command name to the do178c canonical id, render in text or json, and exit 1 under --strict when any objective has gap status.", "standard": "ISO 26262", "level": "ASIL-C" }
+    {
+      "id": "REQ-FO-CORE001",
+      "title": "Severity classification",
+      "text": "FuSaOps shall define a Severity type with INFO, WARNING, and ERROR levels that serialises as a string and is value-compatible with every x-FuSa tool's severity scheme.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CORE002",
+      "title": "Severity ranking",
+      "text": "Severity.Rank shall return a strictly increasing ordinal for INFO < WARNING < ERROR and zero for any unknown value, to support comparison and sorting.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CORE003",
+      "title": "Language identification",
+      "text": "FuSaOps shall define a Language type identifying each supported language (go, c, cpp).",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CORE004",
+      "title": "Attributable finding",
+      "text": "FuSaOps shall represent each normalised finding with the originating Language and Tool so findings remain attributable after being merged across languages.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CORE005",
+      "title": "Finding location",
+      "text": "FuSaOps shall record the file, and optional line and column, identifying the origin of each finding.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ERR001",
+      "title": "Comparable sentinel errors",
+      "text": "FuSaOps shall expose its failure conditions as sentinel errors suitable for comparison with errors.Is.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ERR002",
+      "title": "Missing configuration error",
+      "text": "FuSaOps shall return ErrNoConfig when no .fusaops.json configuration file is present.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ERR003",
+      "title": "Invalid configuration error",
+      "text": "FuSaOps shall return ErrInvalidConfig when the configuration is malformed.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ERR004",
+      "title": "No applicable adapters error",
+      "text": "FuSaOps shall return ErrNoAdapters when no detected language can be handled by any registered adapter.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ERR005",
+      "title": "Check failure error",
+      "text": "FuSaOps shall expose ErrCheckFailed to signal that one or more ERROR-severity findings exist in the aggregated report.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CFG001",
+      "title": "Project configuration model",
+      "text": "FuSaOps shall define a configuration model capturing project identity, adapter selection, and report preferences.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CFG002",
+      "title": "Adapter restriction",
+      "text": "The configuration shall allow restricting which adapters run via an explicit adapter list, where an empty list means all applicable adapters.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CFG003",
+      "title": "Default configuration",
+      "text": "FuSaOps shall provide a valid starter configuration for a named project.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CFG004",
+      "title": "Configuration load",
+      "text": "FuSaOps shall load and validate configuration from a JSON file, returning ErrNoConfig when the file is absent.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CFG005",
+      "title": "Configuration save",
+      "text": "FuSaOps shall serialise configuration to indented JSON on disk.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CFG006",
+      "title": "Configuration validation",
+      "text": "FuSaOps shall reject configuration missing a version or project name, or specifying an unsupported report format.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP001",
+      "title": "Adapter interface",
+      "text": "FuSaOps shall define an Adapter interface abstracting a single language-specific x-FuSa tool by name, language, tool, detection, availability, and check.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP002",
+      "title": "Generic command adapter",
+      "text": "FuSaOps shall provide a generic adapter implementation shared by every x-FuSa tool that differs only in configured metadata.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP003",
+      "title": "Tool availability",
+      "text": "An adapter shall report whether its tool binary resolves on PATH.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP004",
+      "title": "Language detection",
+      "text": "An adapter shall detect whether its language is present under a root by source extension, skipping VCS, build, and vendor directories.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP005",
+      "title": "Tool execution",
+      "text": "An adapter shall run its tool's machine-readable check and return normalised findings, treating a non-zero tool exit that signals findings as success.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP006",
+      "title": "Report normalisation",
+      "text": "FuSaOps shall decode a tool's JSON report into findings tagged with the originating language and tool, normalising unknown severities to INFO rather than dropping them.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP007",
+      "title": "Adapter registry",
+      "text": "FuSaOps shall maintain a registry of adapters keyed by tool name, rejecting nil or duplicate registrations.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP008",
+      "title": "Applicable adapters",
+      "text": "The registry shall return the adapters whose language is detected under a given root.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP009",
+      "title": "Default registry",
+      "text": "FuSaOps shall expose a package-level default registry populated by the built-in adapters.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP010",
+      "title": "go-FuSa adapter",
+      "text": "FuSaOps shall register an adapter for go-FuSa handling Go (.go) projects via the gofusa tool.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP011",
+      "title": "c-FuSa adapter",
+      "text": "FuSaOps shall register an adapter for c-FuSa handling C (.c) projects via the cfusa tool, excluding ambiguous headers from detection.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP012",
+      "title": "cpp-FuSa adapter",
+      "text": "FuSaOps shall register an adapter for cpp-FuSa handling C++ projects via the cpfusa tool.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SCAN001",
+      "title": "Language extension map",
+      "text": "FuSaOps shall map each supported language to its source file extensions.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SCAN002",
+      "title": "Detected languages",
+      "text": "A scan result shall report the detected languages in deterministic order.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SCAN003",
+      "title": "Repository scan",
+      "text": "FuSaOps shall count source files per language under a root, skipping VCS, build, vendor, and excluded directories, and omitting languages with no files.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ORC001",
+      "title": "Orchestration options",
+      "text": "FuSaOps shall accept orchestration options for project name, adapter restriction, and whether at least one installed tool is required.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ORC002",
+      "title": "Orchestration runner",
+      "text": "FuSaOps shall provide an orchestration runner backed by an adapter registry, defaulting to the package-level registry.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ORC003",
+      "title": "Multi-language run",
+      "text": "The orchestrator shall run every applicable installed adapter, record applicable-but-uninstalled tools as skipped components, aggregate the results, and return ErrNoAdapters when none apply.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT001",
+      "title": "Finding summary",
+      "text": "FuSaOps shall summarise findings as total, error, warning, and info counts.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT002",
+      "title": "Aggregate status",
+      "text": "FuSaOps shall derive a PASS/WARN/FAIL verdict from a summary: FAIL on any error, WARN on any warning, otherwise PASS.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT003",
+      "title": "Report component",
+      "text": "FuSaOps shall represent each language's contribution as a component recording its tool, availability, skip reason, findings, and summary.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT004",
+      "title": "Aggregate report",
+      "text": "FuSaOps shall define a top-level multi-language report containing all components and an overall summary.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT005",
+      "title": "Report assembly",
+      "text": "FuSaOps shall assemble an aggregate report from components, computing per-component and overall summaries, with components ordered deterministically.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT006",
+      "title": "Error detection",
+      "text": "The aggregate report shall report whether any component produced an ERROR-severity finding.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT007",
+      "title": "Format dispatch",
+      "text": "FuSaOps shall render the aggregate report in text, JSON, HTML, or SARIF format, rejecting unsupported formats.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT008",
+      "title": "Report to file",
+      "text": "FuSaOps shall write the aggregate report to a file, or to standard output when no path is given.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT009",
+      "title": "JSON rendering",
+      "text": "FuSaOps shall render the aggregate report as indented JSON.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT010",
+      "title": "Text rendering",
+      "text": "FuSaOps shall render a human-readable plain-text aggregate report.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT011",
+      "title": "SARIF rendering",
+      "text": "FuSaOps shall render the aggregate report as SARIF 2.1.0 with one run per component for GitHub Code Scanning.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-RPT012",
+      "title": "HTML dashboard rendering",
+      "text": "FuSaOps shall render a self-contained HTML dashboard with no external dependencies.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SRV001",
+      "title": "Dashboard server",
+      "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SRV002",
+      "title": "Server construction",
+      "text": "FuSaOps shall construct a server bound to a root, orchestration runner, and options.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SRV003",
+      "title": "Report computation",
+      "text": "The server shall compute and cache the aggregate report for fast serving and on-demand refresh.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SRV004",
+      "title": "HTTP routes",
+      "text": "The server shall expose dashboard (/), JSON API (/api/report), refresh (/refresh), and health (/healthz) routes.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SRV005",
+      "title": "Serve",
+      "text": "FuSaOps shall compute the initial report then serve the dashboard on a configured listener or address.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI001",
+      "title": "Command dispatch",
+      "text": "The fusaops CLI shall dispatch a single invocation to the requested subcommand and return a process exit code.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI002",
+      "title": "Usage help",
+      "text": "The fusaops CLI shall print top-level usage on request and on invalid invocation.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI003",
+      "title": "Version command",
+      "text": "fusaops version shall print the FuSaOps version.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI004",
+      "title": "Init command",
+      "text": "fusaops init shall write a starter .fusaops.json, refusing to overwrite an existing file without --force.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI005",
+      "title": "Scan command",
+      "text": "fusaops scan shall report detected languages and applicable adapters with installation status.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI006",
+      "title": "Adapters command",
+      "text": "fusaops adapters shall list every registered adapter and whether its tool is installed.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI007",
+      "title": "Option resolution",
+      "text": "The CLI shall resolve the absolute root and merge any .fusaops.json, treating a missing configuration as non-fatal.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI008",
+      "title": "Check command",
+      "text": "fusaops check shall run every applicable tool, render the aggregate report, and exit non-zero on ERROR findings, or on WARNING findings under --strict.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI009",
+      "title": "Report command",
+      "text": "fusaops report shall generate an aggregate report to a file or standard output without failing on findings.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI010",
+      "title": "Serve command",
+      "text": "fusaops serve shall launch the web dashboard on a configured address.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI011",
+      "title": "Trace command",
+      "text": "fusaops trace shall roll up cross-language requirement traceability and qualification, render it (text/json/html), and exit non-zero under --strict when any requirement is untraced or untested.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI012",
+      "title": "SBOM command",
+      "text": "fusaops sbom shall merge every applicable tool's SBOM into one cross-language bill of materials rendered as json, text, or SPDX 2.3.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI013",
+      "title": "Audit-pack command",
+      "text": "fusaops audit-pack shall bundle every applicable tool's audit-pack together with the FuSaOps cross-language evidence into a single ZIP.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC001",
+      "title": "Requirement decode",
+      "text": "The trace package shall decode a requirement entry (id, title, standard, level, ASIL) from a tool's traceability matrix.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC002",
+      "title": "Annotation tag decode",
+      "text": "The trace package shall decode requirement and test annotation tags, distinguishing their kind.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC003",
+      "title": "Coverage figures",
+      "text": "The trace package shall decode the total, traced, and tested requirement counts from a tool's matrix.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC004",
+      "title": "Matrix model",
+      "text": "The trace package shall model a tool's traceability matrix as requirements, tags, and coverage.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC005",
+      "title": "Qualification summary",
+      "text": "The trace package shall model a tool's qualification summary with total, passed, and failed case counts.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC006",
+      "title": "Component trace",
+      "text": "The trace package shall represent each language's contribution with its tool, availability, skip reason, coverage, requirements, and qualification.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC007",
+      "title": "Coverage percentages",
+      "text": "The trace package shall compute traced and tested percentages per component, treating zero requirements as fully covered.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC008",
+      "title": "Aggregate coverage",
+      "text": "The trace package shall sum coverage across components into aggregate totals and percentages.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC009",
+      "title": "Aggregate matrix model",
+      "text": "The trace package shall model the cross-language roll-up with generation time, root, project, components, and aggregate coverage.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC010",
+      "title": "Aggregate construction",
+      "text": "The trace package shall build the aggregate deterministically (components sorted by tool), excluding skipped components from coverage totals so gaps stay visible.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC011",
+      "title": "Gap status",
+      "text": "The trace package shall report a PASS/GAP status that fails when any requirement across all languages is untraced or untested.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC012",
+      "title": "Matrix rendering",
+      "text": "The trace package shall render the aggregate to a writer or file in text, json, or html, rejecting unknown formats.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC013",
+      "title": "Matrix JSON",
+      "text": "The trace package shall render the aggregate as indented JSON.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC014",
+      "title": "Matrix text",
+      "text": "The trace package shall render a human-readable text view with per-component and total coverage and status.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-TRC015",
+      "title": "Matrix HTML",
+      "text": "The trace package shall render a self-contained, dependency-free HTML traceability dashboard.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM001",
+      "title": "Normalised package",
+      "text": "The sbom package shall represent a dependency as name, version, optional hash, and originating language.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM002",
+      "title": "Tool SBOM decode",
+      "text": "The sbom package shall decode a tool's SBOM document (module, go version, component packages).",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM003",
+      "title": "Component SBOM",
+      "text": "The sbom package shall represent each language's SBOM contribution with tool, availability, skip reason, module, and packages.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM004",
+      "title": "Aggregate SBOM model",
+      "text": "The sbom package shall model the merged cross-language SBOM with generation time, root, project, components, packages, and total count.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM005",
+      "title": "SBOM merge",
+      "text": "The sbom package shall merge component packages, de-duplicating on name and version, deterministically sorted, preserving the first contributing language.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM006",
+      "title": "SBOM rendering",
+      "text": "The sbom package shall render the aggregate to a writer or file in json, text, or spdx, rejecting unknown formats.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM007",
+      "title": "SBOM JSON",
+      "text": "The sbom package shall render the aggregate as indented native JSON.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM008",
+      "title": "SBOM text",
+      "text": "The sbom package shall render a human-readable text view of components and merged packages.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SBM009",
+      "title": "SPDX rendering",
+      "text": "The sbom package shall render a valid SPDX 2.3 JSON document with a DESCRIBES relationship per package and syntactically valid SPDX identifiers.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-PCK001",
+      "title": "Pack source",
+      "text": "The auditpack package shall accept bundle sources supplied either by file path or in-memory data, keyed by archive path.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-PCK002",
+      "title": "Pack entry integrity",
+      "text": "The auditpack package shall record each packed file's path, size, and SHA-256 hash.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-PCK003",
+      "title": "Pack manifest",
+      "text": "The auditpack package shall write a manifest.json index naming the tool, version, project, and packed files.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-PCK004",
+      "title": "Deterministic packing",
+      "text": "The auditpack package shall write a deterministic ZIP with sources sorted by archive path, failing hard if any source content cannot be read so no evidence is silently omitted.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-PCK005",
+      "title": "JSON source helper",
+      "text": "The auditpack package shall provide a helper that marshals a value into an in-memory JSON bundle source.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP013",
+      "title": "Adapter capabilities",
+      "text": "FuSaOps shall define optional capability interfaces (Tracer, Qualifier, SBOMer, Packer) so an adapter can contribute trace, qualification, SBOM, and audit-pack evidence when its tool supports them.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP014",
+      "title": "Adapter trace",
+      "text": "A command adapter shall produce a traceability matrix by running its tool's trace command and decoding the JSON output.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP015",
+      "title": "Adapter qualify",
+      "text": "A command adapter shall produce a qualification summary by running its tool's qualify command and decoding the report file.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP016",
+      "title": "Adapter SBOM",
+      "text": "A command adapter shall produce an SBOM by running its tool's release command and decoding the generated sbom.json.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP017",
+      "title": "Adapter audit-pack",
+      "text": "A command adapter shall produce a per-tool audit-pack ZIP by running its tool's audit-pack command and confirming the file was written.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ORC004",
+      "title": "Trace roll-up",
+      "text": "The orchestrator shall roll every applicable tool's trace and qualification into one cross-language aggregate, recording skipped components.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ORC005",
+      "title": "SBOM roll-up",
+      "text": "The orchestrator shall merge every applicable tool's SBOM into one cross-language aggregate, recording skipped components.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ORC006",
+      "title": "Audit-pack roll-up",
+      "text": "The orchestrator shall bundle every applicable tool's audit-pack with the FuSaOps cross-language evidence into one ZIP, always including the FuSaOps-level artefacts.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF001",
+      "title": "Conformance level types",
+      "text": "The conform package shall define Level (MUST/SHOULD/MAY) and Status (PASS/FAIL/SKIP) types matching RFC 2119.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF002",
+      "title": "Conformance result",
+      "text": "The conform package shall represent each check outcome with id, spec section, level, name, status, and optional detail.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF003",
+      "title": "Conformance report",
+      "text": "The conform package shall aggregate results into a report with binary, tool, version, language, spec version, and summary counts; HasFailures returns true only when a MUST check failed.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF004",
+      "title": "Conformance options",
+      "text": "The conform package shall accept an injectable RunFunc to allow deterministic testing without a real binary on PATH.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF005",
+      "title": "Conformance runner",
+      "text": "conform.Run shall locate the binary, scaffold a temp project, execute all conformance checks, and return a report.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF006",
+      "title": "Conformance rendering",
+      "text": "The conform package shall render a report in text or json format, reporting RESULT:PASS or RESULT:FAIL.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF007",
+      "title": "Language detection",
+      "text": "The conform package shall map binary names to language ids per \u00a71.1 (gofusa\u2192go, cfusa\u2192c, cpfusa\u2192cpp).",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF008",
+      "title": "Common header validation",
+      "text": "The conform package shall validate the \u00a73.1 common header (schemaVersion, kind, tool, toolVersion, language, generatedAt) on every document.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF009",
+      "title": "Version check",
+      "text": "The conform package shall check \u00a79.1 version output matches the <tool> <semver> regex and optionally validates version --format json specVersion.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF010",
+      "title": "Init check",
+      "text": "The conform package shall check \u00a79.1 init creates .fusa.json and .fusa-reqs.json with valid JSON.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF011",
+      "title": "Check command validation",
+      "text": "The conform package shall validate \u00a74 check --format json: common header, nested location object, project-relative file paths, severity enum, ruleId regex, summary fields.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF012",
+      "title": "Trace command validation",
+      "text": "The conform package shall validate \u00a75 trace --format json: common header, requirements/tags/coverage keys, and all four coverage counters including secTestedRequirements.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF013",
+      "title": "Qualify command validation",
+      "text": "The conform package shall validate \u00a76 qualify --output: common header, total/passed/failed keys (not tests_passed/tests_failed), results[].result enum.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF014",
+      "title": "Release command validation",
+      "text": "The conform package shall validate \u00a77 release --output-dir writes sbom.json with common header, module, and components.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF015",
+      "title": "Audit-pack validation",
+      "text": "The conform package shall validate \u00a78 audit-pack produces a valid ZIP containing manifest.json with bare-hex sha256 fields.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF016",
+      "title": "Capabilities validation",
+      "text": "The conform package shall validate \u00a79.1 SHOULD capabilities --format json: common header, specVersion, commands.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CNF017",
+      "title": "Fingerprint algorithm",
+      "text": "The conform package shall implement the \u00a74.2 fingerprint algorithm: sha256(ruleId + U+001F + location.file + U+001F + normalizedMessage), with digit-run normalisation and whitespace collapsing.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI014",
+      "title": "Conform command",
+      "text": "fusaops conform shall run x-FuSa spec conformance checks against a named binary, render the report in text or json, and exit non-zero when any MUST check fails.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD001",
+      "title": "GapReport type",
+      "text": "The standards package shall define a GapReport type mirroring the \u00a79.3 gap-report document with standard, objectives, and summary fields.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD002",
+      "title": "Objective status enum",
+      "text": "The standards package shall define Objective with status values satisfied, partial, and gap; a consumer must map any unrecognised status to gap (fail-safe).",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD003",
+      "title": "ComponentGap skipped recording",
+      "text": "The standards package shall record a skipped reason for any component whose tool is unavailable or whose standards command fails, so coverage gaps remain visible.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD004",
+      "title": "Aggregate construction",
+      "text": "The standards package shall aggregate ComponentGap entries into an Aggregate with standard id, project, generated timestamp, and all component results.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD005",
+      "title": "HasGaps predicate",
+      "text": "Aggregate.HasGaps shall return true if and only if at least one reporting component has a non-zero gaps count in its Summary; nil or skipped components shall not count.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD006",
+      "title": "Text renderer",
+      "text": "The standards package shall render an Aggregate as human-readable text showing per-component satisfied/partial/gaps counts and a RESULT: PASS|GAP|SKIP line.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD007",
+      "title": "JSON renderer",
+      "text": "The standards package shall render an Aggregate as indented JSON, and RenderToFile shall write to a file or stdout.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD008",
+      "title": "CommandStandard alias",
+      "text": "The standards package shall map CLI command names to canonical \u00a72.4.1 standard ids; do178 maps to do178c.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD009",
+      "title": "DisplayName",
+      "text": "The standards package shall expose a DisplayName function returning a human-readable label for each canonical standard id.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-STD010",
+      "title": "Summary recomputation",
+      "text": "GapReport.RecomputeSummary shall derive Summary counts from Objectives when the existing Summary invariant does not hold, mapping any unrecognised status to gap (fail-safe per \u00a79.3).",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP018",
+      "title": "StandardsProvider capability",
+      "text": "The adapter package shall define a StandardsProvider capability interface whose Standards method runs the tool's gap-report command for a given standard id and returns a decoded GapReport.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ADP019",
+      "title": "cmdAdapter Standards implementation",
+      "text": "cmdAdapter shall implement StandardsProvider by shelling out to <tool> <standard> --format json and decoding the GapReport.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-ORC007",
+      "title": "Standards roll-up",
+      "text": "The orchestrator shall roll every applicable tool's \u00a79.3 gap report for a given standard into one cross-language Aggregate, recording skipped components for unavailable or non-supporting tools.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI015",
+      "title": "ISO 26262 command",
+      "text": "fusaops iso26262 shall roll up ISO 26262 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI016",
+      "title": "IEC 61508 command",
+      "text": "fusaops iec61508 shall roll up IEC 61508 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CLI017",
+      "title": "DO-178C command",
+      "text": "fusaops do178 shall roll up DO-178C gap reports across all applicable installed tools, mapping the do178 command name to the do178c canonical id, render in text or json, and exit 1 under --strict when any objective has gap status.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-CORE006",
+      "title": "ComputeFingerprint canonical hash",
+      "description": "The root package must export ComputeFingerprint(Finding) string that returns sha256:<64 hex> per x-FuSa spec \u00a74.2, normalising digit runs in Message to # and collapsing whitespace.",
+      "priority": "MUST",
+      "rationale": "Enables reproducible cross-run matching without requiring tools to emit fingerprints."
+    },
+    {
+      "id": "REQ-FO-CFG007",
+      "title": "run.timeout configuration",
+      "description": "Config.Run.Timeout must hold a duration string (e.g. 60s) applied as a per-adapter execution deadline.",
+      "priority": "MUST",
+      "rationale": "Prevents hung tool invocations from blocking CI indefinitely."
+    },
+    {
+      "id": "REQ-FO-CFG008",
+      "title": "run.workers configuration",
+      "description": "Config.Run.Workers must hold a non-negative integer capping the number of adapters that run concurrently; zero means unlimited.",
+      "priority": "MUST",
+      "rationale": "Allows resource-constrained environments to limit parallelism."
+    },
+    {
+      "id": "REQ-FO-CFG009",
+      "title": "component pin configuration",
+      "description": "Each ComponentConfig in scan.components must support an adapter field (tool name, overrides detection) and a timeout field (per-component duration override).",
+      "priority": "MUST",
+      "rationale": "Enables monorepo sub-directory pinning to specific adapters with independent timeouts."
+    },
+    {
+      "id": "REQ-FO-ORC008",
+      "title": "Parallel adapter execution",
+      "description": "Run, RunTrace, RunSBOM, RunStandards, and RunAuditPack must execute per-adapter work in parallel goroutines, bounded by Options.Workers when > 0, each with Options.Timeout deadline when > 0.",
+      "priority": "MUST",
+      "rationale": "Reduces total scan latency from sum-of-tools to max-of-tools."
+    },
+    {
+      "id": "REQ-FO-ORC009",
+      "title": "Per-adapter context timeout",
+      "description": "Each adapter goroutine must derive a child context with the applicable timeout (component-level overrides global) and cancel it on completion.",
+      "priority": "MUST",
+      "rationale": "Isolates a hung adapter so others continue and the overall run still produces a report."
+    },
+    {
+      "id": "REQ-FO-ORC010",
+      "title": "Component pinning orchestration",
+      "description": "When Options.Components is non-empty, Run must scan each ComponentPin.Path independently and restrict to ComponentPin.Adapter when set, allowing the same tool to scan multiple sub-directories.",
+      "priority": "MUST",
+      "rationale": "Supports monorepo layouts where multiple Go or C modules coexist under one root."
+    },
+    {
+      "id": "REQ-FO-DIF001",
+      "title": "Baseline loading",
+      "description": "LoadBaseline must parse both the FuSaOps aggregate report format (components[].findings) and the flat single-tool format (findings[]) and return a Baseline value.",
+      "priority": "MUST",
+      "rationale": "Lets users store baselines from either a full fusaops check run or a per-tool check run."
+    },
+    {
+      "id": "REQ-FO-DIF002",
+      "title": "Diff comparison",
+      "description": "Compare must match findings by fingerprint (computing one via ComputeFingerprint when absent) and return Result{Added, Removed, Unchanged} deterministically sorted.",
+      "priority": "MUST",
+      "rationale": "Enables reproducible CI gating independent of iteration order."
+    },
+    {
+      "id": "REQ-FO-DIF003",
+      "title": "Diff rendering",
+      "description": "Render must support text and json formats, emit a Gate: PASS/FAIL line, and reflect --strict mode (any new finding \u2192 FAIL, not just errors).",
+      "priority": "MUST",
+      "rationale": "Provides human and machine-readable CI output with clear gate verdict."
+    },
+    {
+      "id": "REQ-FO-CLI018",
+      "title": "fusaops diff command",
+      "description": "fusaops diff --dir --baseline --format --output --strict must load a baseline, run the orchestrator, compare findings, render the result, and exit 1 on gate failure.",
+      "priority": "MUST",
+      "rationale": "Exposes diff gating as a first-class CLI command suitable for CI steps."
+    }
   ]
 }

@@ -128,13 +128,14 @@ const dashboardTemplate = `<!DOCTYPE html>
   </div>
 
   <table id="findings">
-    <thead><tr><th>Severity</th><th>Lang</th><th>Rule</th><th>Message</th><th>Location</th></tr></thead>
+    <thead><tr><th>Severity</th><th>Lang</th><th>Rule</th><th>Category</th><th>Message</th><th>Location</th></tr></thead>
     <tbody>
     {{range .Components}}{{$lang := .Language}}{{range .Findings}}
       <tr data-sev="{{.Severity}}">
         <td><span class="pill {{sevClass .Severity}}">{{.Severity}}</span></td>
         <td>{{$lang}}</td>
         <td>{{.RuleID}}</td>
+        <td>{{.Category}}</td>
         <td>{{.Message}}{{if .Remediation}}<br><span class="loc">→ {{.Remediation}}</span>{{end}}</td>
         <td class="loc">{{.Location.File}}{{if .Location.Line}}:{{.Location.Line}}{{end}}</td>
       </tr>

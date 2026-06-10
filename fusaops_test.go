@@ -2,6 +2,7 @@ package fusaops
 
 import (
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -68,5 +69,45 @@ func TestSentinelErrors(t *testing.T) {
 	}
 	if errors.Is(ErrNoConfig, ErrInvalidConfig) {
 		t.Error("distinct sentinels must not be equal")
+	}
+}
+
+// TestComputeFingerprint verifies the §4.2 fingerprint algorithm.
+//
+//fusa:test REQ-FO-CORE006
+func TestComputeFingerprint(t *testing.T) {
+	f := Finding{
+		RuleID:  "LINT001",
+		Message: "function has 42 lines",
+		Location: Location{File: "main.go"},
+	}
+	fp := ComputeFingerprint(f)
+	if !strings.HasPrefix(fp, "sha256:") {
+		t.Errorf("fingerprint must start with sha256:, got %q", fp)
+	}
+	if len(fp) != len("sha256:")+64 {
+		t.Errorf("fingerprint length wrong: %d", len(fp))
+	}
+	// Deterministic: same input → same output.
+	if ComputeFingerprint(f) != fp {
+		t.Error("ComputeFingerprint must be deterministic")
+	}
+	// Digit normalisation: "42 lines" and "7 lines" should produce the same fingerprint.
+	f2 := f
+	f2.Message = "function has 7 lines"
+	if ComputeFingerprint(f2) != fp {
+		t.Errorf("digit normalisation failed: %q vs %q", fp, ComputeFingerprint(f2))
+	}
+	// Different rule → different fingerprint.
+	f3 := f
+	f3.RuleID = "LINT002"
+	if ComputeFingerprint(f3) == fp {
+		t.Error("different ruleId must produce different fingerprint")
+	}
+	// Different file → different fingerprint.
+	f4 := f
+	f4.Location.File = "other.go"
+	if ComputeFingerprint(f4) == fp {
+		t.Error("different file must produce different fingerprint")
 	}
 }

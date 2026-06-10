@@ -10,10 +10,16 @@
 // all sub-packages (config, adapter, scan, orchestrator, report, server).
 package fusaops
 
-import "errors"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"regexp"
+	"strings"
+)
 
 // Version is the current release of FuSaOps.
-const Version = "0.3.0"
+const Version = "0.4.0"
 
 // Sentinel errors. Callers should use errors.Is for comparison.
 //
@@ -96,7 +102,24 @@ type Finding struct {
 	Severity    Severity `json:"severity"`
 	Message     string   `json:"message"`
 	Location    Location `json:"location"`
+	Category    string   `json:"category,omitempty"`
 	Remediation string   `json:"remediation,omitempty"`
+	Fingerprint string   `json:"fingerprint,omitempty"`
+}
+
+var digitRunRE = regexp.MustCompile(`[0-9]+`)
+
+// ComputeFingerprint returns the canonical sha256:<64 hex> fingerprint for f
+// per §4.2 of the x-FuSa spec. Digit runs in Message are normalised to "#"
+// and whitespace is collapsed so cosmetic differences do not produce distinct
+// fingerprints.
+//
+//fusa:req REQ-FO-CORE006
+func ComputeFingerprint(f Finding) string {
+	normalized := strings.Join(strings.Fields(digitRunRE.ReplaceAllString(f.Message, "#")), " ")
+	canonical := f.RuleID + "\x1f" + f.Location.File + "\x1f" + normalized
+	h := sha256.Sum256([]byte(canonical))
+	return "sha256:" + hex.EncodeToString(h[:])
 }
 
 // Location identifies the origin of a Finding.
