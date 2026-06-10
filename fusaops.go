@@ -13,7 +13,7 @@ package fusaops
 import "errors"
 
 // Version is the current release of FuSaOps.
-const Version = "0.2.0"
+const Version = "0.3.0"
 
 // Sentinel errors. Callers should use errors.Is for comparison.
 //

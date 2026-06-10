@@ -1,0 +1,33 @@
+[
+  {
+    "_comment": "§4.2: fingerprint = sha256(ruleId + \\x1f + location.file + \\x1f + normalizedMessage)",
+    "_normRule": "replace runs of ASCII digits with '#'; collapse whitespace runs to one space; trim",
+    "ruleId": "LINT001",
+    "file": "src/foo.go",
+    "message": "function foo has 65 lines",
+    "normalizedMessage": "function foo has # lines",
+    "fingerprint": "sha256:a1b252d0e9771755eb62612606b6291d4e725a8a6d0aa9ee830209e481f50f1e"
+  },
+  {
+    "ruleId": "FUSA004",
+    "file": "src/bar.go",
+    "message": "unreachable code after return statement",
+    "normalizedMessage": "unreachable code after return statement",
+    "fingerprint": "sha256:5194d908a5c8e4a479735b81fb52956e3116aa48adba51fb6e21cfdf0b2f8260"
+  },
+  {
+    "ruleId": "SEC001",
+    "file": "cmd/main.go",
+    "message": "use of unsafe.Pointer without documentation",
+    "normalizedMessage": "use of unsafe.Pointer without documentation",
+    "fingerprint": "sha256:586acffd2484322e01678f5c3b5d5839fd3af0323fcbf7a47102ae552a2799a4"
+  },
+  {
+    "_comment": "Digit-run normalisation: multiple digit groups each become '#'",
+    "ruleId": "LINT001",
+    "file": "src/foo.go",
+    "message": "function bar has 120 lines (limit 60)",
+    "normalizedMessage": "function bar has # lines (limit #)",
+    "fingerprint": "sha256:65f1feb1219e4fcdea4d142fbb7c9e735dfd705f2579aad9d3a4d373fd1bb3d4"
+  }
+]

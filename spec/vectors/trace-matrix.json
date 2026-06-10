@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.8",
+  "kind": "trace-matrix",
+  "tool": "go-FuSa",
+  "toolVersion": "0.23.0",
+  "language": "go",
+  "generatedAt": "2026-06-10T12:00:00Z",
+  "projectRoot": "/project",
+  "project": "my-project",
+  "standard": "iso26262",
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "title": "Severity classification",
+      "text": "The tool shall classify findings as ERROR, WARNING, or INFO.",
+      "standard": "iso26262",
+      "level": "HLR",
+      "asil": "ASIL-C"
+    },
+    {
+      "id": "REQ-002",
+      "title": "Project-relative paths",
+      "text": "Finding locations shall be relative to the project root.",
+      "standard": "iso26262",
+      "level": "LLR",
+      "asil": "ASIL-C"
+    }
+  ],
+  "tags": [
+    { "requirementId": "REQ-001", "file": "src/severity.go", "line": 10, "kind": "impl" },
+    { "requirementId": "REQ-001", "file": "src/severity_test.go", "line": 5, "kind": "test" },
+    { "requirementId": "REQ-002", "file": "src/report.go", "line": 22, "kind": "impl" },
+    { "requirementId": "REQ-002", "file": "src/report_test.go", "line": 8, "kind": "test" }
+  ],
+  "coverage": {
+    "totalRequirements": 2,
+    "tracedRequirements": 2,
+    "testedRequirements": 2,
+    "secTestedRequirements": 0
+  }
+}

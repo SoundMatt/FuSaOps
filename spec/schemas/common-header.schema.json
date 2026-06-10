@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-common-header-v1.8",
+  "title": "x-FuSa Common Header",
+  "description": "§3.1: every JSON document emitted by an x-FuSa tool carries this header. The version --format json response is the only exception (it carries specVersion instead).",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "tool", "toolVersion", "language", "generatedAt"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$",
+      "description": "Spec MAJOR.MINOR the document conforms to (§2.8)."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "check-report", "report",
+        "trace-matrix",
+        "qualification",
+        "sbom",
+        "provenance",
+        "artifact-manifest",
+        "audit-manifest",
+        "gap-report",
+        "capabilities"
+      ],
+      "description": "Document-type discriminator (§3.1). A consumer MUST treat unknown values as opaque."
+    },
+    "tool": {
+      "type": "string",
+      "description": "Human-readable tool name, e.g. 'go-FuSa' (§1.1)."
+    },
+    "toolVersion": {
+      "type": "string",
+      "description": "Tool semver, e.g. '0.23.0'."
+    },
+    "language": {
+      "type": "string",
+      "enum": ["go", "c", "cpp", "rust", "python", "ada"],
+      "description": "Language id from §1.1 registry. A consumer MUST treat unknown values as opaque."
+    },
+    "generatedAt": {
+      "type": "string",
+      "description": "RFC 3339 timestamp of generation."
+    }
+  }
+}

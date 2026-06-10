@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-version-v1.8",
+  "title": "x-FuSa Version JSON",
+  "description": "§9.1 SHOULD: output of '<lang>fusa version --format json'. Envelope-exempt — carries specVersion instead of schemaVersion (§2.5/§2.8). Exactly three fields.",
+  "type": "object",
+  "required": ["tool", "version", "specVersion"],
+  "properties": {
+    "tool":        { "type": "string", "description": "Human-readable tool name (§1.1)." },
+    "version":     { "type": "string", "description": "Tool semver." },
+    "specVersion": { "type": "string", "description": "Spec version the tool implements (§2.8)." }
+  },
+  "additionalProperties": false
+}

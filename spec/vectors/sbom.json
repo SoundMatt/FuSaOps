@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.8",
+  "kind": "sbom",
+  "tool": "go-FuSa",
+  "toolVersion": "0.23.0",
+  "language": "go",
+  "generatedAt": "2026-06-10T12:00:00Z",
+  "format": "x-FuSa SBOM v1",
+  "module": "github.com/SoundMatt/go-FuSa",
+  "components": [
+    { "name": "golang.org/x/sys",  "version": "v0.21.0", "hash": "sha256:7da8a57d68df5d3dff3a9b5d2a0c4e92f3a8f0a2b1c4d5e6f7a8b9c0d1e2f3a4" },
+    { "name": "golang.org/x/text", "version": "v0.14.0", "hash": "h1:GQjVFCRk+gEh1GCMqYiuYJj7u1D9M3G2W5BkHdImxqg=" }
+  ]
+}

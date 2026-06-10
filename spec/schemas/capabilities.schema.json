@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-capabilities-v1.8",
+  "title": "x-FuSa Capabilities",
+  "description": "§9.1 SHOULD: output of '<lang>fusa capabilities --format json'. Enables generic orchestration without per-tool branching.",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "tool", "toolVersion", "language", "generatedAt", "specVersion", "commands"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+    "kind":          { "type": "string", "const": "capabilities" },
+    "tool":          { "type": "string" },
+    "toolVersion":   { "type": "string" },
+    "language":      { "type": "string" },
+    "generatedAt":   { "type": "string" },
+    "specVersion": {
+      "type": "string",
+      "description": "The spec version this tool implements (§2.8/§9.1)."
+    },
+    "commands": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of implemented command names."
+    },
+    "formats": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "description": "Per-command list of supported --format values."
+    },
+    "standards": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Canonical standard ids (§2.4.1) the tool can gap-report."
+    }
+  }
+}

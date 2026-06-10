@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-check-report-v1.8",
+  "title": "x-FuSa Check Report",
+  "description": "§4: output of '<lang>fusa check --format json' and '<lang>fusa report --format json'.",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "tool", "toolVersion", "language", "generatedAt", "projectRoot", "findings", "summary"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+    "kind": { "type": "string", "enum": ["check-report", "report"] },
+    "tool":        { "type": "string" },
+    "toolVersion": { "type": "string" },
+    "language":    { "type": "string" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string", "description": "The --dir value, resolved to absolute (§3.2)." },
+    "project":     { "type": "string" },
+    "standard":    { "type": "string", "description": "Canonical standard id (§2.4.1)." },
+    "asil":        { "type": "string" },
+    "sil":         { "type": "string" },
+    "dal":         { "type": "string" },
+    "error": {
+      "type": "object",
+      "description": "Present ONLY on runtime error (exit 3); omit otherwise (§3.2).",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": ["no-config", "invalid-config", "unsupported", "internal"]
+        },
+        "message": { "type": "string" }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Finding" }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "errors", "warnings", "infos"],
+      "description": "Counts across all findings regardless of disposition (§4).",
+      "properties": {
+        "total":    { "type": "integer", "minimum": 0 },
+        "errors":   { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "infos":    { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "Finding": {
+      "type": "object",
+      "required": ["ruleId", "severity", "message", "location"],
+      "properties": {
+        "ruleId": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9.]+)*$",
+          "description": "Stable rule id matching ^[A-Z][A-Z0-9]*(-[A-Z0-9.]+)*$ (§1.5.1)."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["ERROR", "WARNING", "INFO"],
+          "description": "Uppercase severity enum (§2.4)."
+        },
+        "message": { "type": "string" },
+        "location": {
+          "type": "object",
+          "description": "MUST be an object, never flat fields (§4).",
+          "required": ["file"],
+          "properties": {
+            "file":      { "type": "string", "description": "Project-relative path using / separators (§4)." },
+            "line":      { "type": "integer", "minimum": 0, "description": "1-indexed; 0 or omit = not line-scoped." },
+            "column":    { "type": "integer", "minimum": 0 },
+            "endLine":   { "type": "integer", "minimum": 0 },
+            "endColumn": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "category": {
+          "type": "string",
+          "enum": ["lint", "style", "safety", "security", "coverage", "requirement", "concurrency", "supply-chain", "config", "other"],
+          "description": "Closed enum; consumers map unknown to 'other' (§4)."
+        },
+        "standard":    { "type": "string", "description": "Canonical standard id (§2.4.1)." },
+        "clause":      { "type": "string" },
+        "remediation": { "type": "string", "description": "One actionable sentence (§4). NOT 'fix'." },
+        "disposition": {
+          "type": "string",
+          "enum": ["open", "accepted", "deferred", "rejected"],
+          "description": "Omit when open; present when a waiver decision exists (§4.1)."
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "§4.2 canonical hash: sha256:<64 lowercase hex>."
+        }
+      }
+    }
+  }
+}

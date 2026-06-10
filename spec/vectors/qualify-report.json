@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.8",
+  "kind": "qualification",
+  "tool": "go-FuSa",
+  "toolVersion": "0.23.0",
+  "language": "go",
+  "generatedAt": "2026-06-10T12:00:00Z",
+  "projectRoot": "/project",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "results": [
+    { "name": "rule-LINT001-known-answer", "result": "PASS" },
+    { "name": "rule-FUSA004-unreachable",  "result": "PASS" },
+    { "name": "rule-FUSA007-panic-unsafe", "result": "PASS" }
+  ],
+  "hash": "sha256:8bde0ef8de6174eaa8ace3b02dda7804fe208663510c55634fdfef58c163d0b8"
+}

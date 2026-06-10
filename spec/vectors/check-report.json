@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.8",
+  "kind": "check-report",
+  "tool": "go-FuSa",
+  "toolVersion": "0.23.0",
+  "language": "go",
+  "generatedAt": "2026-06-10T12:00:00Z",
+  "projectRoot": "/project",
+  "project": "my-project",
+  "standard": "iso26262",
+  "asil": "ASIL-C",
+  "findings": [
+    {
+      "ruleId": "LINT001",
+      "severity": "WARNING",
+      "message": "function foo has 65 lines",
+      "location": { "file": "src/foo.go", "line": 10 },
+      "category": "lint",
+      "remediation": "split into smaller functions",
+      "fingerprint": "sha256:a1b252d0e9771755eb62612606b6291d4e725a8a6d0aa9ee830209e481f50f1e"
+    },
+    {
+      "ruleId": "FUSA004",
+      "severity": "ERROR",
+      "message": "unreachable code after return statement",
+      "location": { "file": "src/bar.go", "line": 42, "column": 5 },
+      "category": "safety",
+      "standard": "iso26262",
+      "clause": "6.4.4",
+      "remediation": "remove unreachable code block",
+      "fingerprint": "sha256:5194d908a5c8e4a479735b81fb52956e3116aa48adba51fb6e21cfdf0b2f8260"
+    }
+  ],
+  "summary": { "total": 2, "errors": 1, "warnings": 1, "infos": 0 }
+}

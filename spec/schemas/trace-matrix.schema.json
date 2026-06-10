@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-trace-matrix-v1.8",
+  "title": "x-FuSa Trace Matrix",
+  "description": "§5: output of '<lang>fusa trace --format json'. The flat {total,traced,tested,matrix[]} shape is NOT conformant.",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "tool", "toolVersion", "language", "generatedAt", "projectRoot", "requirements", "tags", "coverage"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+    "kind":          { "type": "string", "const": "trace-matrix" },
+    "tool":          { "type": "string" },
+    "toolVersion":   { "type": "string" },
+    "language":      { "type": "string" },
+    "generatedAt":   { "type": "string" },
+    "projectRoot":   { "type": "string" },
+    "project":       { "type": "string" },
+    "standard":      { "type": "string" },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id":       { "type": "string" },
+          "title":    { "type": "string" },
+          "text":     { "type": "string" },
+          "standard": { "type": "string" },
+          "level":    { "type": "string" },
+          "asil":     { "type": "string" }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["requirementId", "file", "kind"],
+        "properties": {
+          "requirementId": { "type": "string" },
+          "file":          { "type": "string", "description": "Project-relative path (§5)." },
+          "line":          { "type": "integer", "minimum": 0 },
+          "kind": {
+            "type": "string",
+            "enum": ["impl", "test", "sec-test"],
+            "description": "Annotation kind (§1.4/§5)."
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["totalRequirements", "tracedRequirements", "testedRequirements", "secTestedRequirements"],
+      "description": "Coverage counters per §5. --gaps filters requirements/tags but MUST keep full totals here.",
+      "properties": {
+        "totalRequirements":     { "type": "integer", "minimum": 0 },
+        "tracedRequirements":    { "type": "integer", "minimum": 0 },
+        "testedRequirements":    { "type": "integer", "minimum": 0 },
+        "secTestedRequirements": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

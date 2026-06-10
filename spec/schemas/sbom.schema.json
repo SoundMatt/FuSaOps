@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-sbom-v1.8",
+  "title": "x-FuSa SBOM",
+  "description": "§7: sbom.json written by '<lang>fusa release --output-dir <dir>'. Does NOT carry the §3.2 report extension fields.",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "tool", "toolVersion", "language", "generatedAt", "format", "module", "components"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+    "kind":          { "type": "string", "const": "sbom" },
+    "tool":          { "type": "string" },
+    "toolVersion":   { "type": "string" },
+    "language":      { "type": "string" },
+    "generatedAt":   { "type": "string" },
+    "format": {
+      "type": "string",
+      "const": "x-FuSa SBOM v1"
+    },
+    "module": {
+      "type": "string",
+      "description": "Module/package identity. For ecosystems without a module path, MUST be the canonical repo URL or '<project>@<version>'."
+    },
+    "components": {
+      "type": "array",
+      "description": "External dependencies; MAY be empty.",
+      "items": {
+        "type": "object",
+        "required": ["name", "version"],
+        "properties": {
+          "name":    { "type": "string" },
+          "version": { "type": "string" },
+          "hash": {
+            "type": "string",
+            "pattern": "^(sha256|h1):[0-9A-Za-z+/=]+$",
+            "description": "'<algo>:<value>' format per §2.7. algo ∈ {sha256, h1}. A bare hash without algo: is non-conformant."
+          }
+        }
+      }
+    }
+  }
+}

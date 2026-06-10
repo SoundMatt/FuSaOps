@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "1.8",
+  "kind": "capabilities",
+  "tool": "go-FuSa",
+  "toolVersion": "0.23.0",
+  "language": "go",
+  "generatedAt": "2026-06-10T12:00:00Z",
+  "specVersion": "1.8",
+  "commands": ["check", "trace", "qualify", "release", "audit-pack", "report", "init", "version", "capabilities", "fmea"],
+  "formats": {
+    "check":    ["text", "json", "sarif"],
+    "trace":    ["text", "json", "html"],
+    "qualify":  ["text", "json"],
+    "report":   ["text", "json", "html", "sarif"],
+    "fmea":     ["text", "json", "csv"]
+  },
+  "standards": ["iso26262"]
+}

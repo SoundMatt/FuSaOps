@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-audit-manifest-v1.8",
+  "title": "x-FuSa Audit Manifest",
+  "description": "§8: manifest.json inside audit-pack.zip. Entries are flat at the ZIP root. sha256 is BARE lowercase hex (NOT 'sha256:' prefixed — the key names the algorithm, §2.7).",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "tool", "toolVersion", "language", "generatedAt", "module", "files"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+    "kind":          { "type": "string", "const": "audit-manifest" },
+    "tool":          { "type": "string" },
+    "toolVersion":   { "type": "string" },
+    "language":      { "type": "string" },
+    "generatedAt":   { "type": "string" },
+    "module":        { "type": "string", "description": "Project/module identity." },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "size", "sha256"],
+        "properties": {
+          "path":   { "type": "string", "description": "Entry name at ZIP root." },
+          "size":   { "type": "integer", "minimum": 0 },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "BARE lowercase hex — NOT 'sha256:…' prefixed (§2.7)."
+          }
+        }
+      }
+    }
+  }
+}

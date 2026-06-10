@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-gap-report-v1.8",
+  "title": "x-FuSa Gap Report",
+  "description": "§9.3: output of standards commands (iso26262, iec61508, do178, …). Written to <standard>-gap-report.json. objectives[] key MUST be used (NOT 'requirements').",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "tool", "toolVersion", "language", "generatedAt", "standard", "objectives", "summary"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+    "kind":          { "type": "string", "const": "gap-report" },
+    "tool":          { "type": "string" },
+    "toolVersion":   { "type": "string" },
+    "language":      { "type": "string" },
+    "generatedAt":   { "type": "string" },
+    "projectRoot":   { "type": "string" },
+    "standard": {
+      "type": "string",
+      "description": "Canonical standard id (§2.4.1), e.g. 'iso26262'."
+    },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "clause", "status"],
+        "properties": {
+          "id":     { "type": "string" },
+          "title":  { "type": "string" },
+          "clause": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["satisfied", "partial", "gap"],
+            "description": "Consumers MUST map unknown values to 'gap' (§9.3)."
+          },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Artefact filenames supporting this objective."
+          },
+          "findings": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Rule id strings (NOT fingerprints) — run-stable identifiers (§9.3)."
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "satisfied", "partial", "gaps"],
+      "description": "Invariant: satisfied + partial + gaps = total.",
+      "properties": {
+        "total":     { "type": "integer", "minimum": 0 },
+        "satisfied": { "type": "integer", "minimum": 0 },
+        "partial":   { "type": "integer", "minimum": 0 },
+        "gaps":      { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

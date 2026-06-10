@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "x-fusa-qualify-report-v1.8",
+  "title": "x-FuSa Qualify Report",
+  "description": "§6: output of '<lang>fusa qualify --output <file>'. Keys MUST be total/passed/failed (NOT tests_passed/tests_failed).",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "tool", "toolVersion", "language", "generatedAt", "total", "passed", "failed"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+    "kind":          { "type": "string", "const": "qualification" },
+    "tool":          { "type": "string" },
+    "toolVersion":   { "type": "string" },
+    "language":      { "type": "string" },
+    "generatedAt":   { "type": "string" },
+    "projectRoot":   { "type": "string" },
+    "total":  { "type": "integer", "minimum": 0, "description": "Total test cases." },
+    "passed": { "type": "integer", "minimum": 0, "description": "Count of PASS results." },
+    "failed": { "type": "integer", "minimum": 0, "description": "Count of FAIL only — not SKIP/ERROR (§6)." },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "result"],
+        "properties": {
+          "name":   { "type": "string", "description": "MUST be unique within the document (§6)." },
+          "result": {
+            "type": "string",
+            "enum": ["PASS", "FAIL", "SKIP", "ERROR"],
+            "description": "MUST be one of these four values."
+          }
+        }
+      }
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "RFC 8785 reproducible integrity hash (§6). Computed after sorting results[] by name, removing hash, setting generatedAt to ''."
+    }
+  }
+}

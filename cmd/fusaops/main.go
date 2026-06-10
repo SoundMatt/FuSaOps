@@ -15,6 +15,7 @@
 //	trace      Roll up cross-language requirement traceability and qualification
 //	sbom       Merge every language's SBOM into one (json/text/spdx)
 //	audit-pack Bundle every component's evidence into one ZIP
+//	conform    Run x-FuSa spec conformance checks against a tool binary
 //	serve      Launch the web reporting dashboard
 //	version    Print the FuSaOps version
 //
@@ -59,6 +60,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runSBOM(args[1:], stdout, stderr)
 	case "audit-pack":
 		return runAuditPack(args[1:], stdout, stderr)
+	case "conform":
+		return runConform(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "version":
@@ -91,6 +94,7 @@ Commands:
   trace      Roll up cross-language requirement traceability and qualification
   sbom       Merge every language's SBOM into one (json/text/spdx)
   audit-pack Bundle every component's evidence into one ZIP
+  conform    Run x-FuSa spec conformance checks against a tool binary
   serve      Launch the web reporting dashboard
   version    Print the FuSaOps version
 
