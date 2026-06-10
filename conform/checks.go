@@ -201,6 +201,7 @@ func (r *runner) checkCheck() {
 				// flat fields would be separate top-level keys, not nested
 			} `json:"location"`
 			Category    string `json:"category"`
+			Remediation string `json:"remediation"`
 			Fingerprint string `json:"fingerprint"`
 		} `json:"findings"`
 		Summary *struct {
@@ -303,40 +304,68 @@ func (r *runner) checkCheck() {
 		r.pass("check/finding-location-file", "§4", LevelMUST, "finding.location.file present")
 		r.pass("check/finding-location-relative", "§4", LevelMUST, "finding.location.file is project-relative")
 
-		// SHOULD: fingerprint
-		hasFP := false
+		// MUST (spec v1.9): fingerprint on every finding
 		for _, f := range doc.Findings {
-			if f.Fingerprint != "" {
-				hasFP = true
-				if !fingerprintRE.MatchString(f.Fingerprint) {
-					r.fail("check/fingerprint-format", "§4.2", LevelSHOULD,
-						"fingerprint format sha256:<64 hex>",
-						fmt.Sprintf("fingerprint %q invalid", f.Fingerprint))
-					return
-				}
+			if f.Fingerprint == "" {
+				r.fail("check/fingerprint-format", "§4.2", LevelMUST,
+					"finding fingerprint sha256:<64 hex>",
+					fmt.Sprintf("finding %q missing fingerprint (MUST)", f.RuleID))
+				return
+			}
+			if !fingerprintRE.MatchString(f.Fingerprint) {
+				r.fail("check/fingerprint-format", "§4.2", LevelMUST,
+					"finding fingerprint sha256:<64 hex>",
+					fmt.Sprintf("fingerprint %q invalid", f.Fingerprint))
+				return
 			}
 		}
-		if hasFP {
-			r.pass("check/fingerprint-format", "§4.2", LevelSHOULD,
-				"fingerprint format sha256:<64 hex>")
-		} else {
-			r.skip("check/fingerprint-format", "§4.2", LevelSHOULD,
-				"fingerprint format sha256:<64 hex>",
-				"no fingerprints in output (SHOULD but not MUST yet)")
+		r.pass("check/fingerprint-format", "§4.2", LevelMUST, "finding fingerprint sha256:<64 hex>")
+
+		// MUST (spec v1.9): category enum on every finding
+		catOK := true
+		for _, f := range doc.Findings {
+			if f.Category == "" {
+				r.fail("check/category-enum", "§4", LevelMUST, "finding.category closed enum",
+					fmt.Sprintf("finding %q missing category (MUST)", f.RuleID))
+				catOK = false
+				break
+			}
+			if !validCategories[f.Category] {
+				r.fail("check/category-enum", "§4", LevelMUST, "finding.category closed enum",
+					fmt.Sprintf("category %q not in enum", f.Category))
+				catOK = false
+				break
+			}
+		}
+		if catOK {
+			r.pass("check/category-enum", "§4", LevelMUST, "finding.category closed enum")
 		}
 
-		// SHOULD: category enum
-		checkCategory(r, doc.Findings[0].Category)
+		// MUST (spec v1.9): remediation on every finding
+		remOK := true
+		for _, f := range doc.Findings {
+			if f.Remediation == "" {
+				r.fail("check/remediation", "§4", LevelMUST, "finding.remediation present",
+					fmt.Sprintf("finding %q missing remediation (MUST)", f.RuleID))
+				remOK = false
+				break
+			}
+		}
+		if remOK {
+			r.pass("check/remediation", "§4", LevelMUST, "finding.remediation present")
+		}
 	} else {
-		// No findings — these checks are vacuously satisfied.
+		// No findings — per-finding MUST checks are vacuously satisfied.
 		r.pass("check/finding-ruleId", "§4/§1.5.1", LevelMUST, "finding has ruleId")
 		r.pass("check/finding-severity", "§2.4/§4", LevelMUST, "finding severity ∈ {ERROR,WARNING,INFO}")
 		r.pass("check/finding-location-nested", "§4", LevelMUST, "finding.location is a nested object")
 		r.pass("check/finding-location-file", "§4", LevelMUST, "finding.location.file present")
 		r.pass("check/finding-location-relative", "§4", LevelMUST, "finding.location.file is project-relative")
-		r.skip("check/fingerprint-format", "§4.2", LevelSHOULD,
-			"fingerprint format sha256:<64 hex>", "no findings produced")
-		r.skip("check/category-enum", "§4", LevelSHOULD, "finding.category closed enum",
+		r.skip("check/fingerprint-format", "§4.2", LevelMUST,
+			"finding fingerprint sha256:<64 hex>", "no findings produced")
+		r.skip("check/category-enum", "§4", LevelMUST, "finding.category closed enum",
+			"no findings produced")
+		r.skip("check/remediation", "§4", LevelMUST, "finding.remediation present",
 			"no findings produced")
 	}
 }
@@ -345,20 +374,6 @@ var validCategories = map[string]bool{
 	"lint": true, "style": true, "safety": true, "security": true,
 	"coverage": true, "requirement": true, "concurrency": true,
 	"supply-chain": true, "config": true, "other": true,
-}
-
-func checkCategory(r *runner, cat string) {
-	if cat == "" {
-		r.skip("check/category-enum", "§4", LevelSHOULD, "finding.category closed enum",
-			"category field absent")
-		return
-	}
-	if !validCategories[cat] {
-		r.fail("check/category-enum", "§4", LevelSHOULD, "finding.category closed enum",
-			fmt.Sprintf("category %q not in enum", cat))
-		return
-	}
-	r.pass("check/category-enum", "§4", LevelSHOULD, "finding.category closed enum")
 }
 
 // checkTrace validates §5 trace --format json.
@@ -686,15 +701,15 @@ func (r *runner) checkAuditPack() {
 		"manifest.json files[].sha256 is bare hex (no 'sha256:' prefix)")
 }
 
-// checkCapabilities validates §9.1 SHOULD capabilities --format json.
+// checkCapabilities validates §9.1 MUST capabilities --format json (spec v1.9).
 //
 //fusa:req REQ-FO-CNF016
 func (r *runner) checkCapabilities() {
 	stdout, _, code := r.run(r.dir, r.binary, "capabilities", "--format", "json")
 	if code != 0 {
-		r.skip("capabilities/schema", "§9.1", LevelSHOULD,
+		r.fail("capabilities/schema", "§9.1", LevelMUST,
 			"capabilities --format json",
-			"command not supported")
+			"command not supported (MUST from spec v1.9)")
 		return
 	}
 
@@ -704,7 +719,7 @@ func (r *runner) checkCapabilities() {
 		Commands    []interface{} `json:"commands"`
 	}
 	if err := decodeJSON(stdout, &doc); err != nil {
-		r.fail("capabilities/schema", "§9.1", LevelSHOULD,
+		r.fail("capabilities/schema", "§9.1", LevelMUST,
 			"capabilities --format json produces valid JSON",
 			fmt.Sprintf("%v", err))
 		return
@@ -721,11 +736,11 @@ func (r *runner) checkCapabilities() {
 		errs = append(errs, "missing commands array")
 	}
 	if len(errs) > 0 {
-		r.fail("capabilities/schema", "§9.1", LevelSHOULD,
+		r.fail("capabilities/schema", "§9.1", LevelMUST,
 			"capabilities carries kind/specVersion/commands",
 			strings.Join(errs, "; "))
 		return
 	}
-	r.pass("capabilities/schema", "§9.1", LevelSHOULD,
+	r.pass("capabilities/schema", "§9.1", LevelMUST,
 		"capabilities carries kind/specVersion/commands")
 }

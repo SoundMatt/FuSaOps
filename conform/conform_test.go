@@ -93,7 +93,8 @@ func newConformingRunFunc() RunFunc {
 					{"ruleId": "LINT001", "severity": "WARNING",
 						"message":  "function has 65 lines",
 						"location": map[string]interface{}{"file": "main.go", "line": 1},
-						"category": "lint", "remediation": "split function"},
+						"category": "lint", "remediation": "split function",
+						"fingerprint": "sha256:b2beafa767506a074d84e95dd9955427dc9806c197272b84e1dd7360e50cb602"},
 				},
 				"summary": map[string]int{"total": 1, "errors": 0, "warnings": 1, "infos": 0},
 			}
@@ -633,9 +634,11 @@ func TestCheckCategoryFail(t *testing.T) {
 				"projectRoot": dir,
 				"findings": []map[string]interface{}{
 					{"ruleId": "LINT001", "severity": "INFO",
-						"message":  "note",
-						"location": map[string]interface{}{"file": "main.go"},
-						"category": "notacategory"},
+						"message":     "note",
+						"location":    map[string]interface{}{"file": "main.go"},
+						"category":    "notacategory",
+						"remediation": "fix it",
+						"fingerprint": "sha256:5529f6e552b61370fcd04fdcf22d73c495c5c9d2746b9293233f0dbb08fe6b27"},
 				},
 				"summary": map[string]int{"total": 1, "errors": 0, "warnings": 0, "infos": 1},
 			}

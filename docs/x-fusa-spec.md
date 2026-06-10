@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.8.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.9.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -213,7 +213,7 @@ unambiguous and a new tool inherits a ready-made scheme.
   a single tool's own document, the bare `ruleId` is sufficient (its
   `language` header supplies the namespace).
 - **Prefix → category registry (SHOULD).** A rule id's leading token SHOULD come
-  from this shared set, and a tool MUST set `category` (§4) consistently with it,
+  from this shared set, and MUST set `category` (§4) consistently with it,
   so the same prefix means the same thing everywhere:
 
   | Prefix | `category` | Meaning |
@@ -386,10 +386,10 @@ header, so FuSaOps (or anything) can read attribution and route decoding off
 
 ```jsonc
 {
-  "schemaVersion": "1.8",        // MUST. spec version the document conforms to (MAJOR.MINOR)
+  "schemaVersion": "1.9",        // MUST. spec version the document conforms to (MAJOR.MINOR)
   "kind":          "check-report", // MUST. document-type discriminator — see below
   "tool":          "go-FuSa",    // MUST. human-readable tool name
-  "toolVersion":   "0.23.0",     // MUST. tool semver
+  "toolVersion":   "0.24.0",     // MUST. tool semver
   "language":      "go",         // MUST. go | c | cpp | …
   "generatedAt":   "2026-06-10T13:54:40Z"  // MUST. RFC 3339
 }
@@ -486,12 +486,12 @@ finding's severity or its presence in the counts.
     "endLine":   48,                     // MAY (new). 1-indexed, inclusive (SARIF region semantics)
     "endColumn": 1                       // MAY (new). 1-indexed, inclusive
   },
-  "category":    "lint",                 // SHOULD (new for go-FuSa). closed enum — see below
-  "standard":    "iso26262",             // MAY (new for go-FuSa). canonical standard id (§2.4.1), NOT a display string
-  "clause":      "6.4.4",                // MAY (new for go-FuSa). clause within that standard
-  "remediation": "split into smaller functions",  // SHOULD. free text, one actionable sentence. (NOT "fix")
+  "category":    "lint",                 // MUST. closed enum — see below
+  "standard":    "iso26262",             // SHOULD. canonical standard id (§2.4.1), NOT a display string
+  "clause":      "6.4.4",                // SHOULD. clause within that standard
+  "remediation": "split into smaller functions",  // MUST. free text, one actionable sentence. (NOT "fix")
   "disposition": "accepted",             // omit when open; accepted|deferred|rejected|open — see §4.1
-  "fingerprint": "sha256:a1b2…"          // SHOULD (new). canonical hash — see §4.2
+  "fingerprint": "sha256:a1b2…"          // MUST. canonical hash — see §4.2
 }
 ```
 
@@ -511,9 +511,9 @@ fields.
 **`--format sarif`.** When a tool emits SARIF it MUST emit **SARIF 2.1.0** with a
 `physicalLocation` on every result (this is what GitHub Code Scanning requires).
 
-**`fingerprint` adoption.** It is `SHOULD` today. It is **expected to become
-`MUST`** when FuSaOps begins consuming `diff` (a future MINOR bump, §13) — until
-every tool emits it, cross-tool `diff` is unusable.
+**`fingerprint` is `MUST` from spec v1.9.** Every conformant tool MUST emit it.
+This unblocks cross-tool `diff` (§13) and enables stable finding suppression via
+dispositions (§4.1) without relying on mutable line-number matching.
 
 **`Finding` is the canonical finding atom.** Any command that emits a list of
 findings (`vuln`, `cyber`, and `diff`'s `added`/`removed`, §13) SHOULD reuse this
@@ -808,7 +808,7 @@ unified pack, so the per-tool pack MUST be a self-contained, openable ZIP.
 ### 9.1 Required (FuSaOps-consumed — MUST)
 
 `version` · `init` · `check` · `trace` · `qualify` · `release` · `audit-pack` ·
-`report`. Plus `capabilities` (SHOULD — the generic discovery handshake).
+`report` · `capabilities` (all MUST).
 
 **`version` (MUST).** Prints to stdout a single line matching the regex
 `^(\S+) (\d+\.\d+\.\d+[0-9A-Za-z.+-]*)$` — tool token, one space, semver
@@ -817,31 +817,32 @@ group of the first stdout line. A tool SHOULD also support `version --format
 json` (exactly three fields, no envelope):
 
 ```json
-{ "tool": "go-FuSa", "version": "0.24.0", "specVersion": "1.8" }
+{ "tool": "go-FuSa", "version": "0.24.0", "specVersion": "1.9" }
 ```
 
 `specVersion` is the spec the tool implements — distinct from a document's
 `schemaVersion` (§2.8). `version --format text` is the same as the default line.
 
-**`capabilities` (SHOULD — generic discovery).** `capabilities --format json`
+**`capabilities` (MUST — generic discovery).** `capabilities --format json`
 emits a §3.1-header document (`kind: "capabilities"`) declaring what the tool
 supports, so FuSaOps can orchestrate it **without trial-and-error or per-tool
 branching**:
 
 ```jsonc
 {
-  "schemaVersion": "1.8", "kind": "capabilities", "tool": "go-FuSa",
-  "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
-  "specVersion": "1.8",                          // spec implemented
+  "schemaVersion": "1.9", "kind": "capabilities", "tool": "go-FuSa",
+  "toolVersion": "0.24.0", "language": "go", "generatedAt": "…",
+  "specVersion": "1.9",                          // spec implemented
   "commands":  ["check","trace","qualify","release","audit-pack","report","fmea"],
   "formats":   { "check": ["text","json","sarif"], "trace": ["text","json","html"] },
   "standards": ["iso26262"]                       // canonical ids (§2.4.1) it can gap-report
 }
 ```
 
-When `capabilities` is present FuSaOps SHOULD prefer it over probing; when absent
-it falls back to running a command and handling the result. This is the keystone
-that keeps the FuSaOps↔tool exchange generic as commands and tools grow.
+FuSaOps calls `capabilities` first; when a non-conformant tool does not support
+it, FuSaOps falls back to probing by running commands and handling results. This
+is the keystone that keeps the FuSaOps↔tool exchange generic as commands and
+tools grow.
 
 **`init` (MUST).** Creates `.fusa.json` (§1.2.1, with `project.name`, `standard`,
 and the integrity field populated) and `.fusa-reqs.json` containing
@@ -959,7 +960,7 @@ Snapshot 2026-06-10 (go-FuSa v0.24 · cpp-FuSa v0.6.0). ✅ conforms · ⚠️ g
 | `.fusa.json` schema (§1.2.1) | ▫️ subset | ⚠️ drifted keys | ✅ |
 | check finding `ruleId` (camel) | ✅ | ✅ | ✅ |
 | check finding **nested `location`** | ✅ | ⚠️ flat `file`/`line` | ✅ |
-| check `remediation` (not `fix`) | ✅ | ▫️ none | ✅ |
+| check finding `remediation` (not `fix`) | ✅ | ⚠️ | ✅ |
 | trace **`requirements/tags/coverage`** schema | ✅ | ⚠️ `total/traced/tested/matrix` | ✅ |
 | trace `--format json` | ✅ | ⚠️ | ⚠️ text-only |
 | qualify `--output` + `total/passed/failed` | ✅ | ⚠️ stdout, `tests_passed/_failed` | ✅ |
@@ -968,20 +969,20 @@ Snapshot 2026-06-10 (go-FuSa v0.24 · cpp-FuSa v0.6.0). ✅ conforms · ⚠️ g
 | audit-pack = single **ZIP** + `manifest.json` | ✅ | ⚠️ directory + `MANIFEST.json` | ✅ |
 | evidence filenames lowercase-kebab | ✅ | ⚠️ `SAFETY_CASE.md`,`TARA.md` | ✅ |
 | exit `2` for usage errors | ✅ | ⚠️ verify | ✅ |
-| exit `3` for runtime errors (new) | ✅ | ▫️ add | ✅ |
-| `--no-color`/`NO_COLOR` (new) | ✅ | ▫️ add | ✅ |
-| `--output` ⇒ no stdout copy (new) | ▫️ verify | ▫️ verify | ▫️ verify |
-| `location.file`/`tags[].file` project-relative (new) | ▫️ verify | ⚠️ check | ✅ |
-| envelope `tool/toolVersion/language` on check + gap (new) | ✅ | ▫️ add | ✅ |
-| `kind` + common header on check + gap docs (§3.1) | ✅ | ▫️ add | ✅ |
+| exit `3` for runtime errors | ✅ | ⚠️ | ✅ |
+| `--no-color`/`NO_COLOR` | ✅ | ⚠️ | ✅ |
+| `--output` ⇒ no stdout copy (§2.2) | ▫️ verify | ▫️ verify | ▫️ verify |
+| `location.file`/`tags[].file` project-relative | ▫️ verify | ⚠️ | ✅ |
+| envelope `tool/toolVersion/language` on check + gap | ✅ | ⚠️ | ✅ |
+| `kind` + common header on check + gap docs (§3.1) | ✅ | ⚠️ | ✅ |
 | `kind` + common header on trace/qualify/sbom/pack (§3.1) | ▫️ add | ▫️ add | ▫️ add |
-| structured `error {code,message}` on check (new, §3.2) | ✅ | ▫️ add | ✅ |
-| `capabilities` command (SHOULD, new, §9.1) | ✅ | ▫️ add | ✅ |
-| `schemaVersion` on check + gap docs (new) | ✅ | ▫️ add | ✅ |
-| `schemaVersion` on trace/qualify/sbom/pack (new) | ▫️ add | ▫️ add | ▫️ add |
-| finding `category` | ✅ | ✅ has it | ✅ |
+| structured `error {code,message}` on check (§3.2) | ✅ | ⚠️ | ✅ |
+| `capabilities` command (MUST, §9.1) | ✅ | ⚠️ | ✅ |
+| `schemaVersion` on check + gap docs | ✅ | ⚠️ | ✅ |
+| `schemaVersion` on trace/qualify/sbom/pack | ▫️ add | ▫️ add | ▫️ add |
+| finding `category` | ✅ | ✅ | ✅ |
 | finding `standard`+`clause` | ✅ | ▫️ | ✅ |
-| finding `fingerprint` algo (SHOULD; →MUST when `diff` lands) | ✅ | ▫️ add | ✅ |
+| finding `fingerprint` (MUST, §4.2) | ✅ | ⚠️ | ✅ |
 | location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ |
 | `ruleId` regex + qualified `lang/ruleId` (new, §1.5) | ▫️ verify | ▫️ verify | ▫️ verify |
 | ids format-invariant across formats (new, §2.9) | ▫️ verify | ▫️ verify | ▫️ verify |
@@ -998,16 +999,18 @@ audited rows above.
 
 **Net change-set to reach full conformance:**
 
-- **c-FuSa:** nest `location` + add `remediation` (check); add `trace --format json`
-  with `requirements/tags/coverage` schema **incl. `secTestedRequirements`** (§5);
-  `qualify --output` with `total/passed/failed`; emit `sbom.json` with `algo:value`
-  hashes; single-ZIP `audit-pack` + `manifest.json`; `.fusa-reqs.json` (delete stray
-  no-dot file) **+ duplicate-id ERROR check** (§1.2.2); lowercase evidence filenames;
-  **flip `--spdx-version` default to `2.3`**; **change `release --output-dir` default
-  to project root**; **declare multi-ID-annotation tool** (§1.4); emit project-relative
-  paths (§4/§5); **move image base ubuntu→alpine** + static binary at
-  `/usr/local/bin/cfusa` (§15); exit `2`/`3`; `--no-color`/`NO_COLOR`; `capabilities`;
-  `fingerprint`; `standard`+`clause` on findings; canonical §9.3 gap-report.
+- **c-FuSa:** nest `location`; add `remediation` (MUST §4), `fingerprint` (MUST §4.2),
+  `capabilities` (MUST §9.1); emit `kind`/`schemaVersion`/common header on check + gap
+  docs; exit `2`/`3`; `--no-color`/`NO_COLOR`; structured `error {code,message}` on
+  check; add `trace --format json` with `requirements/tags/coverage` schema **incl.
+  `secTestedRequirements`** (§5); `qualify --output` with `total/passed/failed`; emit
+  `sbom.json` with `algo:value` hashes; single-ZIP `audit-pack` + `manifest.json`;
+  `.fusa-reqs.json` (delete stray no-dot file) **+ duplicate-id ERROR check** (§1.2.2);
+  lowercase evidence filenames; **flip `--spdx-version` default to `2.3`**; **change
+  `release --output-dir` default to project root**; **declare multi-ID-annotation tool**
+  (§1.4); emit project-relative paths (§4/§5); **move image base ubuntu→alpine** +
+  static binary at `/usr/local/bin/cfusa` (§15); `standard`+`clause` on findings;
+  canonical §9.3 gap-report.
   `qualify.hash` is MAY — fine to omit rather than add a JCS serialiser in C.
 - **cpp-FuSa:** add `trace --format json` with `requirements/tags/coverage` schema (§5);
   fix `summary` keys in gap reports: `satisfied`/`gaps` instead of `addressed`/`gap`
@@ -1049,7 +1052,7 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 | `cyber` → `cyber-report.json` | tool-defined | finding-list reusing §4 `Finding` shape |
 | `coupling` → `coupling-report.json` | tool-defined; **c-FuSa ships a finding-list today** | graph `{ modules:[…], edges:[{from,to,weight}], metrics:{…} }` — ⚠️ a change from the finding-list; do not deepen investment in the list shape |
 | `coverage` | tool-defined | `{ lines:{covered,total,pct}, mutation:{score}, dal? }` — `pct`/`score` are **percentages 0–100** (e.g. `75.3` = 75.3%, **not** 0–1.0); `dal` is the string form (e.g. `"DAL-A"`) |
-| `diff` | tool-defined; **blocked on fingerprint adoption** (§4.2 is SHOULD) — unusable cross-tool until all tools emit fingerprints | `{ added:[fingerprint], removed:[fingerprint], unchanged:N }`; baseline is a prior `check --format json`, given via `--baseline <file>`. **Exit `1`** when `added[]` contains any open ERROR (or any severity under `--strict`), else `0` |
+| `diff` | tool-defined; fingerprint is **MUST** from v1.9 — cross-tool diff is now enabled for conformant tools | `{ added:[fingerprint], removed:[fingerprint], unchanged:N }`; baseline is a prior `check --format json`, given via `--baseline <file>`. **Exit `1`** when `added[]` contains any open ERROR (or any severity under `--strict`), else `0` |
 | `hara` → `.fusa-hara.json` | **input** file; the `hara` command validates/normalises it (and scaffolds a template if absent), output tool-defined | `{ hazards:[{id, hazard, severity, exposure, controllability, asil, safetyGoal}] }` |
 | `sas` → `sas.json`/`sas.md` | tool-defined; **conflict**: go md-only vs cpp `sas.json`+`md` | `sas.json` (envelope + tool-defined body) plus `sas.md` |
 | `sci` → `sci.json` | tool-defined; **conflict**: go stdout-only vs cpp `sci.json` | `sci.json` (envelope + tool-defined body) |
@@ -1059,6 +1062,38 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.9.0 — 2026-06-10 (MUST promotion: category, remediation, fingerprint, capabilities)
+
+Promotes four SHOULD/MAY fields to MUST, targeting items go-FuSa and cpp-FuSa
+already implement so no current conformant tool is blocked. c-FuSa gains new ⚠️
+items. Also corrects §11 table accuracy for c-FuSa: prior ▫️ entries on items
+already MUST in the spec body are now correctly shown as ⚠️.
+
+- **`category` (§4, MUST):** promoted from SHOULD. Every finding MUST carry a
+  category from the closed enum (`lint`/`style`/`safety`/…). Enables
+  FuSaOps to filter/group by category without tool-specific branching.
+- **`remediation` (§4, MUST):** promoted from SHOULD. One actionable free-text
+  sentence. Safety tooling that reports a finding without telling the engineer
+  how to address it is insufficient evidence.
+- **`fingerprint` (§4.2, MUST):** promoted from SHOULD; removes the deferred
+  "→MUST when diff lands" qualifier. Every conformant tool MUST emit it now.
+  This unblocks cross-tool `diff` (§13) and makes disposition matching via
+  `fingerprint` stable and machine-readable rather than fragile line-number-based.
+- **`capabilities` (§9.1, MUST):** promoted from SHOULD. FuSaOps calls it first
+  and falls back to probing for non-conformant tools. The fallback exists but
+  conformance requires the command.
+- **`standard`+`clause` (§4, SHOULD):** promoted from MAY. Not MUST because not
+  every rule maps to a specific standards clause; SHOULD gives a strong signal
+  without over-constraining generic tools.
+- **§11 accuracy:** c-FuSa ▫️ → ⚠️ for exit `3`, `--no-color`, envelope/kind/
+  schemaVersion on check+gap, structured error — these were already MUST in the
+  spec body; the table was incorrectly lenient.
+- **§13 `diff`:** updated status note; fingerprint is now MUST so diff is
+  enabled for conformant tools.
+- **`(new)` annotations cleared** from fields now well-established (go-FuSa v0.24
+  implements them all): exit `3`, `--no-color`, envelope, kind, schemaVersion,
+  structured error, capabilities, fingerprint.
 
 ### 1.8.0 — 2026-06-10 (naming commonisation + container standard + onboarding)
 
@@ -1097,7 +1132,7 @@ same way and routes generically:
 - **Structured `error` (§3.2):** `{code, message}` with a code enum
   (`no-config`/`invalid-config`/`unsupported`/`internal`) so FuSaOps reacts to
   error categories generically instead of parsing free text.
-- **`capabilities` command (§9.1, SHOULD):** `capabilities --format json` →
+- **`capabilities` command (§9.1, was SHOULD → MUST in v1.9):** `capabilities --format json` →
   `{commands, formats, standards, specVersion}` — the discovery handshake that
   lets FuSaOps orchestrate without per-tool trial-and-error.
 - **One finding decoder (§4/§13):** `vuln`/`cyber`/`diff` SHOULD reuse the §4
