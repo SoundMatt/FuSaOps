@@ -77,8 +77,8 @@ func TestSentinelErrors(t *testing.T) {
 //fusa:test REQ-FO-CORE006
 func TestComputeFingerprint(t *testing.T) {
 	f := Finding{
-		RuleID:  "LINT001",
-		Message: "function has 42 lines",
+		RuleID:   "LINT001",
+		Message:  "function has 42 lines",
 		Location: Location{File: "main.go"},
 	}
 	fp := ComputeFingerprint(f)

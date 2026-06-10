@@ -290,7 +290,9 @@ func (r *runner) checkCheck() {
 				fmt.Sprintf("%s: location.file absent", prefix))
 			return
 		}
-		if filepath.IsAbs(f.Location.File) {
+		// Spec §4 mandates forward-slash separators; check for leading '/'
+		// rather than filepath.IsAbs which is OS-dependent (false on Windows for /foo).
+		if strings.HasPrefix(f.Location.File, "/") {
 			r.fail("check/finding-location-relative", "§4", LevelMUST,
 				"finding.location.file is project-relative",
 				fmt.Sprintf("%s: location.file %q is absolute", prefix, f.Location.File))
