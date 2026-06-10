@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.6.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.7.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -258,8 +258,9 @@ verbatim (pass-through), never reject it.
 
 UTF-8, 2-space indented, RFC 3339 timestamps (`generatedAt`). Field names are
 `lowerCamelCase` (`ruleId`, not `rule_id`). Every top-level JSON document **MUST**
-carry `"schemaVersion"` — **except** the `version --format json` response, which
-carries `specVersion` instead (see the §3 scope paragraph).
+carry the §3.1 common header (`schemaVersion` + `kind` + attribution) — **except**
+the `version --format json` response, which is a command-status reply carrying
+`specVersion` (§9.1).
 
 ### 2.6 Colour (MUST)
 
@@ -294,41 +295,60 @@ moves only when the config schema (§1.2.1) itself changes.
 
 ---
 
-## 3. Common envelope
+## 3. Common header & envelope
 
-**Scope.** "Report documents" — the `--format json` outputs of `check` (§4),
-`trace` (§5), `qualify` (§6), `report` (§9.1), and the standards gap-reports
-(§9.3) — MUST carry the envelope below. The following are **not** report
-documents and carry only their own documented fields (exempt from the envelope,
-and from the §2.5 "every document MUST carry `schemaVersion`" rule where noted):
-**file-format artefacts** `sbom.json` / `provenance.json` /
-`artifact-manifest.json` (§7) and audit-pack `manifest.json` (§8) — these still
-carry `schemaVersion`; and the **`version --format json`** response (§9.1) — a
-command-status response that carries `specVersion` instead. This resolves the
-apparent "every document MUST" contradiction.
+Every JSON document a tool emits is **self-identifying** and carries a uniform
+header, so FuSaOps (or anything) can read attribution and route decoding off
+*any* artefact without knowing which command produced it.
 
-A report document MUST carry these self-describing header fields so an aggregated
-artefact stays attributable:
+### 3.1 Common header (every document MUST carry)
 
 ```jsonc
 {
-  "schemaVersion": "1.6",        // MUST. the spec version this document conforms to (MAJOR.MINOR)
-  "tool":        "go-FuSa",      // MUST. human-readable tool name
-  "toolVersion": "0.23.0",       // MUST. tool semver
-  "language":    "go",           // MUST. go | c | cpp | …
-  "generatedAt": "2026-06-10T13:54:40Z",  // MUST. RFC 3339
-  "projectRoot": "/abs/path",    // MUST. the --dir value verbatim (see note)
-  "project":     "my-project",   // SHOULD
-  "standard":    "iso26262"      // SHOULD — canonical id (§2.4.1); FuSaOps routes/groups on this
-  // "asil": "ASIL-C"            // MAY — exactly one of asil|sil|dal, same rule as §1.2.1 (omit the others)
-  // "error": "…"                // present ONLY on a runtime error (with exit 3); omit otherwise
+  "schemaVersion": "1.7",        // MUST. spec version the document conforms to (MAJOR.MINOR)
+  "kind":          "check-report", // MUST. document-type discriminator — see below
+  "tool":          "go-FuSa",    // MUST. human-readable tool name
+  "toolVersion":   "0.23.0",     // MUST. tool semver
+  "language":      "go",         // MUST. go | c | cpp | …
+  "generatedAt":   "2026-06-10T13:54:40Z"  // MUST. RFC 3339
 }
 ```
 
-**`error` (MUST when runtime error, else absent).** It MUST be present (a
-non-empty string) when a runtime error occurred while a partial document was
-still emitted (paired with exit `3`); otherwise it MUST be **omitted** (do not
-emit `"error": null` in normal documents).
+**`kind` (MUST — closed, extensible enum).** Identifies the document type so a
+consumer routes generically: `check-report` (also `report`) · `trace-matrix` ·
+`qualification` · `sbom` · `provenance` · `artifact-manifest` · `audit-manifest`
+· `gap-report` · `capabilities`. A consumer MUST treat an unknown `kind` as
+opaque (read the common header, skip the payload) — never reject it.
+
+The common header applies to **every** document, including the file-format
+artefacts (`sbom.json`, `provenance.json`, `artifact-manifest.json`, audit-pack
+`manifest.json`). (The `version --format json` response (§9.1) is the one
+exception — a command-status reply, not a document; it carries `specVersion`
+instead and is described there.)
+
+### 3.2 Report extension (report documents add these)
+
+The `--format json` outputs of `check` (§4), `trace` (§5), `qualify` (§6),
+`report` (§9.1), and gap-reports (§9.3) are **report documents**: they carry the
+§3.1 header **plus**:
+
+```jsonc
+{
+  "projectRoot": "/abs/path",    // MUST. the --dir value verbatim (see note)
+  "project":     "my-project",   // SHOULD
+  "standard":    "iso26262",     // SHOULD — canonical id (§2.4.1); FuSaOps routes/groups on this
+  "asil":        "ASIL-C",       // MAY — exactly one of asil|sil|dal, same rule as §1.2.1 (omit the others)
+  "error":       { "code": "internal", "message": "…" }  // present ONLY on a runtime error (exit 3); omit otherwise
+}
+```
+
+**`error` (structured; MUST when runtime error, else absent).** When a runtime
+error occurred but a partial document was still emitted (paired with exit `3`),
+`error` MUST be an object `{ "code", "message" }` where `code` is one of
+`no-config` · `invalid-config` · `unsupported` · `internal` (consumers map an
+unknown code to `internal`). Otherwise `error` MUST be **omitted** (do not emit
+`"error": null`). The structured form lets FuSaOps react to error *categories*
+generically instead of parsing free text.
 
 **`projectRoot` across boundaries.** It is informational. The same source tree
 has different absolute paths on host vs. in a container (`/Users/x/p` vs.
@@ -336,8 +356,12 @@ has different absolute paths on host vs. in a container (`/Users/x/p` vs.
 components — cross-component identity is the `fingerprint` (§4.2). A tool SHOULD
 emit the `--dir` value verbatim (resolved to absolute).
 
-`tool`, `toolVersion`, `language` are **(new)** — they let FuSaOps attribute a
-raw artefact without inferring it from the adapter.
+**`schemaVersion` semantics (MUST).** It is the **spec** version the document
+conforms to, `MAJOR.MINOR`. A consumer MUST accept any document whose MAJOR
+equals a MAJOR it supports; a MINOR bump is additive and **never** invalidates an
+older document (a `1.0` document stays conformant under a `1.1` reader). A tool
+emits the highest spec MINOR it fully implements. FuSaOps uses `schemaVersion` as
+its parser discriminator.
 
 **`schemaVersion` semantics (MUST).** It is the **spec** version the document
 conforms to, `MAJOR.MINOR`. A consumer MUST accept any document whose MAJOR
@@ -409,6 +433,11 @@ fields.
 **`fingerprint` adoption.** It is `SHOULD` today. It is **expected to become
 `MUST`** when FuSaOps begins consuming `diff` (a future MINOR bump, §13) — until
 every tool emits it, cross-tool `diff` is unusable.
+
+**`Finding` is the canonical finding atom.** Any command that emits a list of
+findings (`vuln`, `cyber`, and `diff`'s `added`/`removed`, §13) SHOULD reuse this
+exact shape, so FuSaOps has **one** finding decoder for every finding-bearing
+document rather than one per command.
 
 `summaryTable` (go-FuSa) MAY be present and is ignored by FuSaOps.
 
@@ -590,16 +619,16 @@ self-integrity `hash` field in this spec.
 MUST write **`sbom.json`** (this exact name) into the output dir. `--output-dir`
 **defaults to the project root** (the `--dir` value) when omitted, and a tool
 MUST **create it** if it does not exist (do not fail). MAY *also* write an SPDX
-document; `--spdx-version` **defaults to `2.3`**. `sbom.json` is a file-format
-artefact (envelope-exempt per §3) and =
+document; `--spdx-version` **defaults to `2.3`**. `sbom.json` carries the §3.1
+common header (`kind: "sbom"`) plus its payload — it does not add the §3.2 report
+fields:
 
 ```jsonc
 {
-  "schemaVersion": "1.6",
+  "schemaVersion": "1.7", "kind": "sbom",           // §3.1 common header (+ tool/toolVersion/language/generatedAt)
+  "tool": "go-FuSa", "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
   "format":      "x-FuSa SBOM v1",
-  "generatedAt": "…",
   "module":      "github.com/SoundMatt/go-FuSa",   // MUST. identity — see below
-  "language":    "go",                              // SHOULD
   "components": [                                    // MUST (deps; may be empty)
     { "name": "golang.org/x/sys", "version": "v0.1.0", "hash": "sha256:…" }
   ]
@@ -628,18 +657,22 @@ unimplemented component): `fmea.json`, `fmea.csv`, `boundary.dot`,
 `provenance.intoto.jsonl` already exists from a prior `slsa` run, `audit-pack`
 includes it as a §1.3 file.
 
-**`provenance.json` / `artifact-manifest.json`.** File-format artefacts
-(envelope-exempt, §3); **not consumed by FuSaOps in v1** (they ride along inside
-the audit-pack as opaque evidence). Minimal bodies:
+**`provenance.json` / `artifact-manifest.json`.** Carry the §3.1 common header
+(`kind: "provenance"` / `"artifact-manifest"`); **not consumed by FuSaOps in v1**
+(they ride along inside the audit-pack as opaque evidence). Minimal bodies (common
+header abbreviated):
 
 ```jsonc
 // provenance.json
-{ "schemaVersion": "1.6", "format": "x-FuSa provenance v1", "generatedAt": "…",
-  "module": "…", "builder": "github-actions", "vcsRevision": "f8127ea",
-  "vcsModified": false, "os": "linux", "arch": "amd64" }
+{ "schemaVersion": "1.7", "kind": "provenance", "tool": "go-FuSa",
+  "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
+  "format": "x-FuSa provenance v1", "module": "…", "builder": "github-actions",
+  "vcsRevision": "f8127ea", "vcsModified": false, "os": "linux", "arch": "amd64" }
 
 // artifact-manifest.json
-{ "schemaVersion": "1.6", "format": "x-FuSa manifest v1", "generatedAt": "…",
+{ "schemaVersion": "1.7", "kind": "artifact-manifest", "tool": "go-FuSa",
+  "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
+  "format": "x-FuSa manifest v1",
   "artifacts": [ { "path": "sbom.json", "sha256": "<bare-hex>" } ] }
 ```
 
@@ -661,8 +694,8 @@ its SHA-256:
 
 ```jsonc
 {
-  "schemaVersion": "1.6",
-  "tool": "go-FuSa", "toolVersion": "0.23.0",   // toolVersion key, aligned with §3 (artefact is still envelope-exempt)
+  "schemaVersion": "1.7", "kind": "audit-manifest",   // §3.1 common header
+  "tool": "go-FuSa", "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
   "module": "…",                         // project/module identity
   "files": [ { "path": "sbom.json", "size": 1234, "sha256": "<bare-hex>" } ]  // paths relative to ZIP root
 }
@@ -694,7 +727,7 @@ unified pack, so the per-tool pack MUST be a self-contained, openable ZIP.
 ### 9.1 Required (FuSaOps-consumed — MUST)
 
 `version` · `init` · `check` · `trace` · `qualify` · `release` · `audit-pack` ·
-`report`.
+`report`. Plus `capabilities` (SHOULD — the generic discovery handshake).
 
 **`version` (MUST).** Prints to stdout a single line matching the regex
 `^(\S+) (\d+\.\d+\.\d+[0-9A-Za-z.+-]*)$` — tool token, one space, semver
@@ -703,11 +736,31 @@ group of the first stdout line. A tool SHOULD also support `version --format
 json` (exactly three fields, no envelope):
 
 ```json
-{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.6" }
+{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.7" }
 ```
 
 `specVersion` is the spec the tool implements — distinct from a document's
 `schemaVersion` (§2.8). `version --format text` is the same as the default line.
+
+**`capabilities` (SHOULD — generic discovery).** `capabilities --format json`
+emits a §3.1-header document (`kind: "capabilities"`) declaring what the tool
+supports, so FuSaOps can orchestrate it **without trial-and-error or per-tool
+branching**:
+
+```jsonc
+{
+  "schemaVersion": "1.7", "kind": "capabilities", "tool": "go-FuSa",
+  "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
+  "specVersion": "1.7",                          // spec implemented
+  "commands":  ["check","trace","qualify","release","audit-pack","report","fmea"],
+  "formats":   { "check": ["text","json","sarif"], "trace": ["text","json","html"] },
+  "standards": ["iso26262"]                       // canonical ids (§2.4.1) it can gap-report
+}
+```
+
+When `capabilities` is present FuSaOps SHOULD prefer it over probing; when absent
+it falls back to running a command and handling the result. This is the keystone
+that keeps the FuSaOps↔tool exchange generic as commands and tools grow.
 
 **`init` (MUST).** Creates `.fusa.json` (§1.2.1, with `project.name`, `standard`,
 and the integrity field populated) and `.fusa-reqs.json` containing
@@ -802,10 +855,14 @@ v0.3 rolls up.
 | `fusaops sbom` | `release --output-dir <d>` → `sbom.json` | §7 `{module,components}` |
 | `fusaops audit-pack` | `audit-pack --output <f>` | §8 ZIP, nested verbatim |
 | version probe | `version` | §9.1 regex |
+| capability discovery | `capabilities --format json` | §9.1 (when present) |
 | project metadata | `.fusa.json` | §1.2.1 |
 
-FuSaOps' Go types in `report/`, `trace/`, `sbom/`, `auditpack/` are the
-authoritative decoders; keep this spec and those structs in lock-step.
+**Generic routing.** Every document carries the §3.1 header, so FuSaOps reads the
+same attribution off any artefact and dispatches on `kind` — one header decoder
+plus a `kind`→payload-decoder map, rather than command-specific parsing. FuSaOps'
+Go types in `report/`, `trace/`, `sbom/`, `auditpack/` are the authoritative
+payload decoders; keep this spec and those structs in lock-step.
 
 ---
 
@@ -834,6 +891,10 @@ Snapshot 2026-06-10. ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (S
 | `--output` ⇒ no stdout copy (new) | ▫️ verify | ▫️ verify | ▫️ verify |
 | `location.file`/`tags[].file` project-relative (new) | ▫️ verify | ⚠️ check | ⚠️ check |
 | envelope `tool/toolVersion/language` (new) | ▫️ add | ▫️ add | ▫️ add |
+| `kind` discriminator on every doc (new, §3.1) | ▫️ add | ▫️ add | ▫️ add |
+| common header on artefacts too (new, §3.1) | ▫️ add | ▫️ add | ▫️ add |
+| structured `error {code,message}` (new, §3.2) | ▫️ add | ▫️ add | ▫️ add |
+| `capabilities` command (SHOULD, new, §9.1) | ▫️ add | ▫️ add | ▫️ add |
 | `schemaVersion` MUST on every doc (new) | ▫️ add | ▫️ add | ▫️ add |
 | finding `category` (new for go) | ▫️ add | ✅ has it | ✅ has it |
 | finding `standard`+`clause` (new for go) | ▫️ add | ▫️ | ✅ has it |
@@ -914,6 +975,29 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.7.0 — 2026-06-10 (generic data-exchange uplift)
+
+Makes the FuSaOps↔tool exchange uniform so a consumer reads any artefact the
+same way and routes generically:
+
+- **Self-identifying documents (§3.1):** new **`kind`** discriminator
+  (`check-report`/`trace-matrix`/`sbom`/`gap-report`/…) on **every** document.
+- **Universal common header (§3.1):** `{schemaVersion, kind, tool, toolVersion,
+  language, generatedAt}` now MUST appear on **every** document, including the
+  file-format artefacts (`sbom.json`/`provenance.json`/`manifest.json`) — tightens
+  the v1.5 artefact exemption so FuSaOps reads one header off anything. Report
+  documents add the §3.2 fields (`projectRoot`/`project`/`standard`/`asil`/`error`).
+- **Structured `error` (§3.2):** `{code, message}` with a code enum
+  (`no-config`/`invalid-config`/`unsupported`/`internal`) so FuSaOps reacts to
+  error categories generically instead of parsing free text.
+- **`capabilities` command (§9.1, SHOULD):** `capabilities --format json` →
+  `{commands, formats, standards, specVersion}` — the discovery handshake that
+  lets FuSaOps orchestrate without per-tool trial-and-error.
+- **One finding decoder (§4/§13):** `vuln`/`cyber`/`diff` SHOULD reuse the §4
+  `Finding` atom verbatim.
+- **§10/§11:** documented generic `kind`-based routing; added conformance rows
+  for `kind`, the universal header, structured `error`, and `capabilities`.
 
 ### 1.6.0 — 2026-06-10 (sixth review round: go-FuSa / c-FuSa / cpp-FuSa)
 
