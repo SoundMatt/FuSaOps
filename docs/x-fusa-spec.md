@@ -950,7 +950,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-10 (go-FuSa v0.24 · cpp-FuSa v0.6.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-10 (go-FuSa v0.25 · cpp-FuSa v0.8.0 · c-FuSa v0.4.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa |
 |---|---|---|---|
@@ -959,8 +959,8 @@ Snapshot 2026-06-10 (go-FuSa v0.24 · cpp-FuSa v0.6.0). ✅ conforms · ⚠️ g
 | `.fusa-reqs.json` (un-prefixed) | ✅ | ⚠️ `.cfusa-reqs.json` (+ stray `cfusa-reqs.json`) | ✅ |
 | `.fusa.json` schema (§1.2.1) | ▫️ subset | ⚠️ drifted keys | ✅ |
 | check finding `ruleId` (camel) | ✅ | ✅ | ✅ |
-| check finding **nested `location`** | ✅ | ⚠️ flat `file`/`line` | ✅ |
-| check finding `remediation` (not `fix`) | ✅ | ⚠️ | ✅ |
+| check finding **nested `location`** | ✅ | ✅ | ✅ |
+| check finding `remediation` (not `fix`) | ✅ | ✅ | ✅ |
 | trace **`requirements/tags/coverage`** schema | ✅ | ⚠️ `total/traced/tested/matrix` | ✅ |
 | trace `--format json` | ✅ | ⚠️ | ⚠️ text-only |
 | qualify `--output` + `total/passed/failed` | ✅ | ⚠️ stdout, `tests_passed/_failed` | ✅ |
@@ -970,19 +970,19 @@ Snapshot 2026-06-10 (go-FuSa v0.24 · cpp-FuSa v0.6.0). ✅ conforms · ⚠️ g
 | evidence filenames lowercase-kebab | ✅ | ⚠️ `SAFETY_CASE.md`,`TARA.md` | ✅ |
 | exit `2` for usage errors | ✅ | ⚠️ verify | ✅ |
 | exit `3` for runtime errors | ✅ | ⚠️ | ✅ |
-| `--no-color`/`NO_COLOR` | ✅ | ⚠️ | ✅ |
+| `--no-color`/`NO_COLOR` | ✅ | ✅ | ✅ |
 | `--output` ⇒ no stdout copy (§2.2) | ▫️ verify | ▫️ verify | ▫️ verify |
-| `location.file`/`tags[].file` project-relative | ▫️ verify | ⚠️ | ✅ |
-| envelope `tool/toolVersion/language` on check + gap | ✅ | ⚠️ | ✅ |
-| `kind` + common header on check + gap docs (§3.1) | ✅ | ⚠️ | ✅ |
+| `location.file`/`tags[].file` project-relative | ▫️ verify | ✅ | ✅ |
+| envelope `tool/toolVersion/language` on check + gap | ✅ | ✅ | ✅ |
+| `kind` + common header on check + gap docs (§3.1) | ✅ | ✅ | ✅ |
 | `kind` + common header on trace/qualify/sbom/pack (§3.1) | ▫️ add | ▫️ add | ▫️ add |
 | structured `error {code,message}` on check (§3.2) | ✅ | ⚠️ | ✅ |
-| `capabilities` command (MUST, §9.1) | ✅ | ⚠️ | ✅ |
-| `schemaVersion` on check + gap docs | ✅ | ⚠️ | ✅ |
+| `capabilities` command (MUST, §9.1) | ✅ | ✅ | ✅ |
+| `schemaVersion` on check + gap docs | ✅ | ✅ | ✅ |
 | `schemaVersion` on trace/qualify/sbom/pack | ▫️ add | ▫️ add | ▫️ add |
 | finding `category` | ✅ | ✅ | ✅ |
-| finding `standard`+`clause` | ✅ | ▫️ | ✅ |
-| finding `fingerprint` (MUST, §4.2) | ✅ | ⚠️ | ✅ |
+| finding `standard`+`clause` | ✅ | ✅ | ✅ |
+| finding `fingerprint` (MUST, §4.2) | ✅ | ✅ | ✅ |
 | location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ |
 | `ruleId` regex + qualified `lang/ruleId` (new, §1.5) | ▫️ verify | ▫️ verify | ▫️ verify |
 | ids format-invariant across formats (new, §2.9) | ▫️ verify | ▫️ verify | ▫️ verify |

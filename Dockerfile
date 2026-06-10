@@ -21,9 +21,9 @@
 
 # ── Tool stages (source = each x-FuSa's published image) ──────────────────────
 FROM ghcr.io/soundmatt/go-fusa:latest AS gofusa
-# cpp-FuSa v0.6.0 is spec v1.8 aligned; enable once ghcr.io/soundmatt/cpp-fusa is published
+# cpp-FuSa v0.8.0 is spec v1.9 aligned; enable once ghcr.io/soundmatt/cpp-fusa is published
 # FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa
-# c-FuSa: enable once spec-aligned and image is published
+# c-FuSa v0.4.0 is spec v1.9 aligned; enable once ghcr.io/soundmatt/c-fusa is published
 # FROM ghcr.io/soundmatt/c-fusa:latest   AS cfusa
 
 # ── Build fusaops ─────────────────────────────────────────────────────────────

@@ -167,10 +167,11 @@ tool — **no manual rebuild, and FuSaOps itself does not need a new release**. 
 weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
-**Bundled tools.** `gofusa` (Go) ships today. `cpfusa` (C++) and `cfusa` (C) are
-wired in the Dockerfile as one-line additions and activate as soon as each
-tool's image is published — adapters for all three already exist, so an
-un-bundled tool simply reports as *not installed* until then.
+**Bundled tools.** `gofusa` (Go) ships today. `cpfusa` (C++, v0.8.0) and
+`cfusa` (C, v0.4.0) are wired in the Dockerfile as one-line additions and
+activate as soon as each tool's image is published — adapters for all three
+already exist, so an un-bundled tool simply reports as *not installed* until
+then. Both `cpfusa` and `cfusa` are now spec v1.9 aligned.
 
 > The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
 > runs under emulation; add `--platform linux/amd64` if your client needs it.
@@ -212,9 +213,9 @@ orchestrates also gates FuSaOps itself.
 
 | Language | Adapter  | Tool     | Bundled in image |
 |----------|----------|----------|------------------|
-| Go       | go-FuSa  | `gofusa` | ✅ |
-| C++      | cpp-FuSa | `cpfusa` | ⏳ spec-aligned (v0.6.0); pending image publish |
-| C        | c-FuSa   | `cfusa`  | ⏸ pending spec alignment + image |
+| Go       | go-FuSa  | `gofusa` | ✅ (v0.25, spec v1.9) |
+| C++      | cpp-FuSa | `cpfusa` | ⏳ spec v1.9 aligned (v0.8.0); pending image publish |
+| C        | c-FuSa   | `cfusa`  | ⏳ spec v1.9 aligned (v0.4.0); pending image publish |
 
 All three adapters exist; an un-bundled tool reports as *not installed* until its
 image publishes. New languages are added by implementing the `adapter.Adapter`
