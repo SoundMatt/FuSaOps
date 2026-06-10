@@ -1,6 +1,6 @@
 {
   "format": "go-FuSa Safety Case v1",
-  "generatedAt": "2026-06-09T22:48:34.002527Z",
+  "generatedAt": "2026-06-10T14:31:49.528893Z",
   "module": "github.com/SoundMatt/FuSaOps",
   "standard": "generic",
   "evidence": [
@@ -16,35 +16,33 @@
       "description": "Requirements traceability matrix",
       "file": ".fusa-reqs.json",
       "status": "present",
-      "detail": "61 requirements"
+      "detail": "101 requirements"
     },
     {
       "id": "verify",
       "description": "Test evidence bundle",
       "file": ".fusa-evidence.json",
-      "status": "absent",
-      "detail": "run 'gofusa verify' to generate"
+      "status": "present",
+      "detail": "105/105 tests passed"
     },
     {
       "id": "qualify",
       "description": "Tool qualification report",
       "file": "qualify-report.json",
-      "status": "absent",
-      "detail": "run 'gofusa qualify' to generate"
+      "status": "present",
+      "detail": "44/44 cases passed"
     },
     {
       "id": "sbom",
       "description": "SBOM (SPDX 3.0.1)",
       "file": "sbom.json",
-      "status": "absent",
-      "detail": "run 'gofusa release' to generate sbom.json"
+      "status": "present"
     },
     {
       "id": "provenance",
       "description": "Build provenance",
       "file": "provenance.json",
-      "status": "absent",
-      "detail": "run 'gofusa release' to generate provenance.json"
+      "status": "present"
     }
   ],
   "clauses": [
@@ -91,10 +89,6 @@
     }
   ],
   "gaps": [
-    "check",
-    "verify",
-    "qualify",
-    "sbom",
-    "provenance"
+    "check"
   ]
 }

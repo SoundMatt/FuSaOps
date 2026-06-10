@@ -65,14 +65,18 @@ Bundled today: `gofusa`. `cpfusa`/`cfusa` activate as their images publish.
 
 ---
 
-## v0.2 — Evidence Aggregation
+## v0.2 — Evidence Aggregation ✅
 
 **Goal:** Aggregate more than findings.
 
-- Merge per-language traceability (`trace`) into a cross-language matrix
-- Aggregate coverage and qualification status per component
-- Unified audit-pack: bundle every component's evidence into one ZIP
-- Aggregate SBOM across languages (SPDX)
+- Merge per-language traceability (`trace`) into a cross-language matrix, with
+  per-component coverage and qualification status; skipped tools stay visible as
+  gaps rather than inflating coverage
+- Unified audit-pack: bundle every component's own audit-pack plus the FuSaOps
+  aggregate report, trace matrix, and SBOM into one ZIP with a hashed manifest
+- Aggregate SBOM across languages — merged, de-duplicated, with SPDX 2.3 output
+- Optional adapter capability interfaces (`Tracer`, `Qualifier`, `SBOMer`,
+  `Packer`) so a tool contributes evidence only where it supports it
 
 Deliverables: `fusaops trace`, `fusaops audit-pack`, `fusaops sbom`
 
