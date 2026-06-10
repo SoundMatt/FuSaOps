@@ -949,44 +949,45 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-10 (go-FuSa v0.24). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-10 (go-FuSa v0.24 · cpp-FuSa v0.6.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa |
 |---|---|---|---|
 | severity enum `ERROR/WARNING/INFO` | ✅ | ✅ | ✅ |
 | tag kinds `impl/test/sec-test` | ✅ | ✅ | ✅ |
 | `.fusa-reqs.json` (un-prefixed) | ✅ | ⚠️ `.cfusa-reqs.json` (+ stray `cfusa-reqs.json`) | ✅ |
-| `.fusa.json` schema (§1.2.1) | ▫️ subset | ⚠️ drifted keys | ⚠️ drifted keys |
-| check finding `ruleId` (camel) | ✅ | ✅ | ⚠️ `rule_id` in primary JSON |
-| check finding **nested `location`** | ✅ | ⚠️ flat `file`/`line` | ⚠️ flat in primary JSON |
-| check `remediation` (not `fix`) | ✅ | ▫️ none | ⚠️ `fix` |
+| `.fusa.json` schema (§1.2.1) | ▫️ subset | ⚠️ drifted keys | ✅ |
+| check finding `ruleId` (camel) | ✅ | ✅ | ✅ |
+| check finding **nested `location`** | ✅ | ⚠️ flat `file`/`line` | ✅ |
+| check `remediation` (not `fix`) | ✅ | ▫️ none | ✅ |
 | trace **`requirements/tags/coverage`** schema | ✅ | ⚠️ `total/traced/tested/matrix` | ✅ |
+| trace `--format json` | ✅ | ⚠️ | ⚠️ text-only |
 | qualify `--output` + `total/passed/failed` | ✅ | ⚠️ stdout, `tests_passed/_failed` | ✅ |
 | `sbom.json` name + `{module,components}` | ✅ | ⚠️ `<proj>.spdx.json` only | ✅ |
-| `components[].hash` = `algo:value` | ▫️ `h1:` ok | ⚠️ | ▫️ |
+| `components[].hash` = `algo:value` | ▫️ `h1:` ok | ⚠️ | ✅ |
 | audit-pack = single **ZIP** + `manifest.json` | ✅ | ⚠️ directory + `MANIFEST.json` | ✅ |
 | evidence filenames lowercase-kebab | ✅ | ⚠️ `SAFETY_CASE.md`,`TARA.md` | ✅ |
-| exit `2` for usage errors | ✅ | ⚠️ verify | ⚠️ verify |
-| exit `3` for runtime errors (new) | ✅ | ▫️ add | ▫️ add |
-| `--no-color`/`NO_COLOR` (new) | ✅ | ▫️ add | ▫️ add |
+| exit `2` for usage errors | ✅ | ⚠️ verify | ✅ |
+| exit `3` for runtime errors (new) | ✅ | ▫️ add | ✅ |
+| `--no-color`/`NO_COLOR` (new) | ✅ | ▫️ add | ✅ |
 | `--output` ⇒ no stdout copy (new) | ▫️ verify | ▫️ verify | ▫️ verify |
-| `location.file`/`tags[].file` project-relative (new) | ▫️ verify | ⚠️ check | ⚠️ check |
-| envelope `tool/toolVersion/language` on check + gap (new) | ✅ | ▫️ add | ▫️ add |
-| `kind` + common header on check + gap docs (§3.1) | ✅ | ▫️ add | ▫️ add |
+| `location.file`/`tags[].file` project-relative (new) | ▫️ verify | ⚠️ check | ✅ |
+| envelope `tool/toolVersion/language` on check + gap (new) | ✅ | ▫️ add | ✅ |
+| `kind` + common header on check + gap docs (§3.1) | ✅ | ▫️ add | ✅ |
 | `kind` + common header on trace/qualify/sbom/pack (§3.1) | ▫️ add | ▫️ add | ▫️ add |
-| structured `error {code,message}` on check (new, §3.2) | ✅ | ▫️ add | ▫️ add |
-| `capabilities` command (SHOULD, new, §9.1) | ✅ | ▫️ add | ▫️ add |
-| `schemaVersion` on check + gap docs (new) | ✅ | ▫️ add | ▫️ add |
+| structured `error {code,message}` on check (new, §3.2) | ✅ | ▫️ add | ✅ |
+| `capabilities` command (SHOULD, new, §9.1) | ✅ | ▫️ add | ✅ |
+| `schemaVersion` on check + gap docs (new) | ✅ | ▫️ add | ✅ |
 | `schemaVersion` on trace/qualify/sbom/pack (new) | ▫️ add | ▫️ add | ▫️ add |
-| finding `category` | ✅ | ✅ has it | ✅ has it |
-| finding `standard`+`clause` | ✅ | ▫️ | ✅ has it |
-| finding `fingerprint` algo (SHOULD; →MUST when `diff` lands) | ✅ | ▫️ add | ▫️ add |
+| finding `category` | ✅ | ✅ has it | ✅ |
+| finding `standard`+`clause` | ✅ | ▫️ | ✅ |
+| finding `fingerprint` algo (SHOULD; →MUST when `diff` lands) | ✅ | ▫️ add | ✅ |
 | location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ |
 | `ruleId` regex + qualified `lang/ruleId` (new, §1.5) | ▫️ verify | ▫️ verify | ▫️ verify |
 | ids format-invariant across formats (new, §2.9) | ▫️ verify | ▫️ verify | ▫️ verify |
 | image: **alpine/musl base** + `/usr/local/bin/<bin>` (§15) | ✅ alpine | ⚠️ ubuntu→alpine | ✅ alpine |
 | image: OCI + `io.x-fusa.*` labels (new, §15) | ▫️ add | ▫️ add | ▫️ add |
-| standards `<std>-gap-report.json` canonical | ✅ | ⚠️ | ⚠️ `objectives` vs other |
+| standards `<std>-gap-report.json` canonical §9.3 shape | ✅ | ⚠️ | ⚠️ `summary.addressed`/`gap` vs `satisfied`/`gaps` |
 
 The `req`/`impact`/`metrics`/`lint`/`fix`/`iec62443`/`slsa` commands are §9.3
 optional and **not consumed by FuSaOps v1** — intentionally absent from the
@@ -997,29 +998,26 @@ audited rows above.
 
 **Net change-set to reach full conformance:**
 
-- **c-FuSa:** nest `location` + add `remediation` (check); adopt
-  `requirements/tags/coverage` `trace` schema **incl. the new
-  `secTestedRequirements` counter** (§5); `qualify --output` with
-  `total/passed/failed`; emit `sbom.json` with `algo:value` hashes; single-ZIP
-  `audit-pack` + `manifest.json`; `.fusa-reqs.json` (delete the stray no-dot
-  file) **+ duplicate-id ERROR check** on load (§1.2.2); lowercase evidence
-  filenames; **flip `--spdx-version` default to `2.3`** (currently `3.0.1`, §7);
-  **change `release --output-dir` default to the project root** (currently
-  `.cfusa_release/`, §7); **declare itself a multi-ID-annotation tool** so
-  existing `req REQ-A REQ-B` lines don't become WARNINGs (§1.4); emit
-  project-relative `location.file`/`tags[].file` (§4/§5); **move the image base
-  ubuntu→alpine** with a musl/static binary at `/usr/local/bin/cfusa` (§15);
-  exit `2`/`3`; `--no-color`/`NO_COLOR`; `capabilities`; `fingerprint`;
-  `standard`+`clause` on findings; canonical gap-report.
+- **c-FuSa:** nest `location` + add `remediation` (check); add `trace --format json`
+  with `requirements/tags/coverage` schema **incl. `secTestedRequirements`** (§5);
+  `qualify --output` with `total/passed/failed`; emit `sbom.json` with `algo:value`
+  hashes; single-ZIP `audit-pack` + `manifest.json`; `.fusa-reqs.json` (delete stray
+  no-dot file) **+ duplicate-id ERROR check** (§1.2.2); lowercase evidence filenames;
+  **flip `--spdx-version` default to `2.3`**; **change `release --output-dir` default
+  to project root**; **declare multi-ID-annotation tool** (§1.4); emit project-relative
+  paths (§4/§5); **move image base ubuntu→alpine** + static binary at
+  `/usr/local/bin/cfusa` (§15); exit `2`/`3`; `--no-color`/`NO_COLOR`; `capabilities`;
+  `fingerprint`; `standard`+`clause` on findings; canonical §9.3 gap-report.
   `qualify.hash` is MAY — fine to omit rather than add a JCS serialiser in C.
-- **cpp-FuSa:** primary `check --format json` → `ruleId`, nested `location`,
-  `remediation` (rename `fix`); exit `2`/`3`; `--no-color`/`NO_COLOR`;
-  `capabilities`; `fingerprint`; canonical gap-report.
+- **cpp-FuSa:** add `trace --format json` with `requirements/tags/coverage` schema (§5);
+  fix `summary` keys in gap reports: `satisfied`/`gaps` instead of `addressed`/`gap`
+  (§9.3); `kind` + common header on remaining artefact types.
+  FuSaOps works around the summary key mismatch via `RecomputeSummary()` — fix
+  preferred so the conformance check passes.
 - **go-FuSa:** extend `schemaVersion` + `kind` + common header to **all** docs
-  (trace/qualify/sbom/audit-pack); `.fusa.json` full §1.2.1 schema; project-relative
-  path verification; image OCI labels.
-- **all three:** `kind` + common header on remaining artefact types (§3.1);
-  `.fusa.json` per §1.2.1; image OCI + `io.x-fusa.*` labels (§15).
+  (trace/qualify/sbom/audit-pack); `.fusa.json` full §1.2.1 schema; image OCI labels.
+- **all three:** `kind` + common header on trace/qualify/sbom/pack (§3.1);
+  image OCI + `io.x-fusa.*` labels (§15).
 
 ---
 

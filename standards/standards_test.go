@@ -316,3 +316,82 @@ func TestRenderToFile(t *testing.T) {
 		t.Errorf("output missing standard: %s", data)
 	}
 }
+
+// TestRecomputeSummaryFromObjectives verifies RecomputeSummary derives correct
+// counts from objectives when the Summary is missing or inconsistent — e.g.
+// cpp-FuSa v0.6.0 uses "addressed"/"gap" instead of spec "satisfied"/"gaps".
+//
+//fusa:test REQ-FO-STD010
+func TestRecomputeSummaryFromObjectives(t *testing.T) {
+	r := &GapReport{
+		Objectives: []Objective{
+			{ID: "1", Status: "satisfied"},
+			{ID: "2", Status: "satisfied"},
+			{ID: "3", Status: "partial"},
+			{ID: "4", Status: "gap"},
+			{ID: "5", Status: "gap"},
+		},
+		// Summary has wrong keys decoded (zeros for satisfied/gaps — as if
+		// the tool emitted "addressed" and "gap" instead of spec key names).
+		Summary: Summary{Total: 5, Satisfied: 0, Partial: 1, Gaps: 0},
+	}
+	r.RecomputeSummary()
+	if r.Summary.Satisfied != 2 {
+		t.Errorf("want Satisfied=2, got %d", r.Summary.Satisfied)
+	}
+	if r.Summary.Partial != 1 {
+		t.Errorf("want Partial=1, got %d", r.Summary.Partial)
+	}
+	if r.Summary.Gaps != 2 {
+		t.Errorf("want Gaps=2, got %d", r.Summary.Gaps)
+	}
+	if r.Summary.Total != 5 {
+		t.Errorf("want Total=5, got %d", r.Summary.Total)
+	}
+}
+
+// TestRecomputeSummaryNoOp verifies RecomputeSummary is a no-op when the
+// invariant already holds.
+//
+//fusa:test REQ-FO-STD010
+func TestRecomputeSummaryNoOp(t *testing.T) {
+	r := &GapReport{
+		Objectives: []Objective{
+			{ID: "1", Status: "satisfied"},
+			{ID: "2", Status: "gap"},
+		},
+		Summary: Summary{Total: 2, Satisfied: 1, Partial: 0, Gaps: 1},
+	}
+	r.RecomputeSummary()
+	if r.Summary.Satisfied != 1 || r.Summary.Gaps != 1 {
+		t.Errorf("no-op violated: %+v", r.Summary)
+	}
+}
+
+// TestRecomputeSummaryUnknownStatus verifies unknown status maps to gap.
+//
+//fusa:test REQ-FO-STD010
+func TestRecomputeSummaryUnknownStatus(t *testing.T) {
+	r := &GapReport{
+		Objectives: []Objective{
+			{ID: "1", Status: "addressed"}, // non-conformant synonym
+			{ID: "2", Status: "unknown-x"},
+		},
+		Summary: Summary{Total: 0}, // will be recomputed
+	}
+	r.RecomputeSummary()
+	if r.Summary.Gaps != 2 {
+		t.Errorf("unknown status should map to gap, got Gaps=%d", r.Summary.Gaps)
+	}
+}
+
+// TestRecomputeSummaryEmpty verifies RecomputeSummary is a no-op on empty objectives.
+//
+//fusa:test REQ-FO-STD010
+func TestRecomputeSummaryEmpty(t *testing.T) {
+	r := &GapReport{Summary: Summary{Total: 5, Satisfied: 3, Partial: 1, Gaps: 1}}
+	r.RecomputeSummary() // no objectives — should not change summary
+	if r.Summary.Total != 5 {
+		t.Errorf("empty objectives: summary should not change")
+	}
+}

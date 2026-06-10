@@ -144,6 +144,7 @@
     { "id": "REQ-FO-STD007", "title": "JSON renderer", "text": "The standards package shall render an Aggregate as indented JSON, and RenderToFile shall write to a file or stdout.", "standard": "ISO 26262", "level": "ASIL-C" },
     { "id": "REQ-FO-STD008", "title": "CommandStandard alias", "text": "The standards package shall map CLI command names to canonical §2.4.1 standard ids; do178 maps to do178c.", "standard": "ISO 26262", "level": "ASIL-C" },
     { "id": "REQ-FO-STD009", "title": "DisplayName", "text": "The standards package shall expose a DisplayName function returning a human-readable label for each canonical standard id.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD010", "title": "Summary recomputation", "text": "GapReport.RecomputeSummary shall derive Summary counts from Objectives when the existing Summary invariant does not hold, mapping any unrecognised status to gap (fail-safe per §9.3).", "standard": "ISO 26262", "level": "ASIL-C" },
 
     { "id": "REQ-FO-ADP018", "title": "StandardsProvider capability", "text": "The adapter package shall define a StandardsProvider capability interface whose Standards method runs the tool's gap-report command for a given standard id and returns a decoded GapReport.", "standard": "ISO 26262", "level": "ASIL-C" },
     { "id": "REQ-FO-ADP019", "title": "cmdAdapter Standards implementation", "text": "cmdAdapter shall implement StandardsProvider by shelling out to <tool> <standard> --format json and decoding the GapReport.", "standard": "ISO 26262", "level": "ASIL-C" },

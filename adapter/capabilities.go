@@ -138,6 +138,8 @@ func (a *cmdAdapter) AuditPack(ctx context.Context, root, dest string) error {
 }
 
 // Standards runs "<tool> <standard> --format json" and decodes the gap report.
+// RecomputeSummary is called after decode so that tools using non-canonical
+// summary key names (e.g. "addressed"/"gap") still produce correct aggregates.
 //
 //fusa:req REQ-FO-ADP019
 func (a *cmdAdapter) Standards(ctx context.Context, root, standard string) (*standards.GapReport, error) {
@@ -149,6 +151,7 @@ func (a *cmdAdapter) Standards(ctx context.Context, root, standard string) (*sta
 	if err := json.Unmarshal(extractJSON(out), &r); err != nil {
 		return nil, fmt.Errorf("adapter %s: decode gap report: %w", a.name, err)
 	}
+	r.RecomputeSummary()
 	return &r, nil
 }
 

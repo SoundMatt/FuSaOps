@@ -69,6 +69,37 @@ type Aggregate struct {
 	Components []ComponentGap `json:"components"`
 }
 
+// RecomputeSummary derives Summary counts from Objectives.  Call this after
+// decoding a GapReport from a tool that uses non-canonical summary key names
+// (e.g. "addressed"/"gap" instead of spec §9.3 "satisfied"/"gaps").  It is a
+// no-op when the Summary invariant (satisfied + partial + gaps == total) already
+// holds.
+//
+//fusa:req REQ-FO-STD010
+func (r *GapReport) RecomputeSummary() {
+	if len(r.Objectives) == 0 {
+		return
+	}
+	var sat, par, gap int
+	for _, o := range r.Objectives {
+		switch o.Status {
+		case "satisfied":
+			sat++
+		case "partial":
+			par++
+		default:
+			gap++ // unknown status maps to gap (fail-safe, per §9.3)
+		}
+	}
+	if sat+par+gap == r.Summary.Total && r.Summary.Satisfied+r.Summary.Partial+r.Summary.Gaps == r.Summary.Total {
+		return // already consistent
+	}
+	r.Summary.Total = sat + par + gap
+	r.Summary.Satisfied = sat
+	r.Summary.Partial = par
+	r.Summary.Gaps = gap
+}
+
 // New builds an Aggregate from a slice of ComponentGap entries.
 //
 //fusa:req REQ-FO-STD004

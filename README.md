@@ -186,8 +186,8 @@ orchestrates also gates FuSaOps itself.
 | Language | Adapter  | Tool     | Bundled in image |
 |----------|----------|----------|------------------|
 | Go       | go-FuSa  | `gofusa` | ✅ |
-| C        | c-FuSa   | `cfusa`  | ⏸ pending tool image |
-| C++      | cpp-FuSa | `cpfusa` | ⏸ pending tool image |
+| C++      | cpp-FuSa | `cpfusa` | ⏳ spec-aligned (v0.6.0); pending image publish |
+| C        | c-FuSa   | `cfusa`  | ⏸ pending spec alignment + image |
 
 All three adapters exist; an un-bundled tool reports as *not installed* until its
 image publishes. New languages are added by implementing the `adapter.Adapter`
@@ -200,7 +200,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (61 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (134 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

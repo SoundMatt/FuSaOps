@@ -21,8 +21,10 @@
 
 # ── Tool stages (source = each x-FuSa's published image) ──────────────────────
 FROM ghcr.io/soundmatt/go-fusa:latest AS gofusa
-# FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa   # enable when published
-# FROM ghcr.io/soundmatt/c-fusa:latest   AS cfusa    # enable when published
+# cpp-FuSa v0.6.0 is spec v1.8 aligned; enable once ghcr.io/soundmatt/cpp-fusa is published
+# FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa
+# c-FuSa: enable once spec-aligned and image is published
+# FROM ghcr.io/soundmatt/c-fusa:latest   AS cfusa
 
 # ── Build fusaops ─────────────────────────────────────────────────────────────
 FROM golang:1.22-alpine AS build
@@ -42,8 +44,8 @@ RUN apk add --no-cache git ca-certificates libstdc++
 
 COPY --from=build  /bin/fusaops          /usr/local/bin/fusaops
 COPY --from=gofusa /usr/local/bin/gofusa /usr/local/bin/gofusa
-# COPY --from=cpfusa /usr/local/bin/cpfusa /usr/local/bin/cpfusa
-# COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa
+# COPY --from=cpfusa /usr/local/bin/cpfusa /usr/local/bin/cpfusa  # uncomment with FROM stage above
+# COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa   # uncomment with FROM stage above
 
 WORKDIR /project
 EXPOSE 8080
