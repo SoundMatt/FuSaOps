@@ -7,6 +7,31 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-06-10
+
+### Evidence aggregation
+- `trace` package: rolls every tool's requirement traceability matrix and
+  qualification summary into one cross-language `Aggregate`; skipped components
+  stay visible and are excluded from coverage totals; text / JSON / HTML
+  renderers and a PASS/GAP status
+- `sbom` package: merges and de-duplicates every tool's SBOM on `(name,
+  version)`; native JSON, plain-text, and **SPDX 2.3** renderers
+- `auditpack` package: bundles each tool's own audit-pack plus the FuSaOps
+  aggregate report, trace matrix, and SBOM into one deterministic ZIP with a
+  `manifest.json` recording each file's size and SHA-256
+- `adapter` capability interfaces (`Tracer`, `Qualifier`, `SBOMer`, `Packer`):
+  optional, type-asserted by the orchestrator so a tool contributes evidence
+  only where it supports it; `cmdAdapter` implements all four via the tool's
+  `trace` / `qualify` / `release` / `audit-pack` subcommands
+- `orchestrator`: `RunTrace`, `RunSBOM`, `RunAuditPack` roll-ups
+- CLI: `fusaops trace` (with `--strict` polyglot coverage gate), `fusaops sbom`,
+  `fusaops audit-pack`
+
+### Safety
+- Requirements registry grown to 101 (added TRC, SBM, PCK and new ADP/ORC/CLI
+  requirements); 100% traced and tested; `gofusa check` passes with 0 errors
+- Docs: per-command references for `trace`, `sbom`, `audit-pack`
+
 ## [0.1.0] — 2026-06-09
 
 ### Multi-language orchestration core
@@ -52,5 +77,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/SoundMatt/FuSaOps/releases/tag/v0.1.0

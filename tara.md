@@ -1,7 +1,7 @@
 # Threat Analysis and Risk Assessment (TARA)
 
 **Module:** github.com/SoundMatt/FuSaOps  
-**Generated:** 2026-06-09T22:51:58Z  
+**Generated:** 2026-06-10T14:32:27Z  
 **Standard:** ISO 21434 Chapter 9  
 
 | ID | Asset | Threat | STRIDE | CWE | Vector | Likelihood | Impact | SL | Control | Residual Risk |

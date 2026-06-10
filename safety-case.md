@@ -1,6 +1,6 @@
 # Safety Case: github.com/SoundMatt/FuSaOps
 
-Generated: 2026-06-09T22:48:34Z  
+Generated: 2026-06-10T14:31:49Z  
 Standard: generic
 
 ## Top Claim
@@ -13,11 +13,11 @@ argued by demonstrating compliance with the safety development lifecycle.
 | ID | Description | Status | Detail |
 |---|---|---|---|
 | Sn1 | Coding standard and static analysis checks | ⚠ absent | run 'gofusa check --output check-report.json' to generate |
-| Sn2 | Requirements traceability matrix | ✅ present | 61 requirements |
-| Sn3 | Test evidence bundle | ⚠ absent | run 'gofusa verify' to generate |
-| Sn4 | Tool qualification report | ⚠ absent | run 'gofusa qualify' to generate |
-| Sn5 | SBOM (SPDX 3.0.1) | ⚠ absent | run 'gofusa release' to generate sbom.json |
-| Sn6 | Build provenance | ⚠ absent | run 'gofusa release' to generate provenance.json |
+| Sn2 | Requirements traceability matrix | ✅ present | 101 requirements |
+| Sn3 | Test evidence bundle | ✅ present | 105/105 tests passed |
+| Sn4 | Tool qualification report | ✅ present | 44/44 cases passed |
+| Sn5 | SBOM (SPDX 3.0.1) | ✅ present |  |
+| Sn6 | Build provenance | ✅ present |  |
 
 ## Compliance Mapping
 
@@ -34,7 +34,3 @@ argued by demonstrating compliance with the safety development lifecycle.
 The following evidence items are absent:
 
 - `check`
-- `verify`
-- `qualify`
-- `sbom`
-- `provenance`

@@ -65,9 +65,28 @@ fusaops adapters             # list adapters and whether each tool is installed
 fusaops check                # run every applicable tool; exit 1 on ERROR findings
 fusaops check --strict       # also exit 1 on WARNING findings
 fusaops report --format html --output fusaops-report.html
+fusaops trace                # cross-language requirement traceability + qualification
+fusaops trace --strict       # CI gate: fail on any untraced/untested requirement
+fusaops sbom --format spdx   # merged cross-language SBOM (SPDX 2.3)
+fusaops audit-pack           # bundle every language's evidence into audit-pack.zip
 fusaops serve --addr :8080   # launch the web dashboard
 fusaops init                 # write a starter .fusaops.json
 ```
+
+### Evidence aggregation (v0.2)
+
+Beyond aggregating *findings*, FuSaOps rolls up the evidence each tool already
+produces into one cross-language view:
+
+- **`fusaops trace`** — merges every tool's requirement traceability matrix and
+  qualification status; `--strict` is a polyglot coverage gate.
+- **`fusaops sbom`** — merges and de-duplicates every tool's SBOM, with an
+  SPDX 2.3 output.
+- **`fusaops audit-pack`** — bundles each tool's own audit-pack plus the
+  FuSaOps aggregate report, trace matrix, and SBOM into one ZIP with a hashed
+  manifest.
+
+See [`docs/commands/`](docs/commands/) for each command.
 
 ### Web dashboard
 

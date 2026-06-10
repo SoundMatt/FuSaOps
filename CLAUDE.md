@@ -22,10 +22,19 @@ presentation.
 | `config/` | `.fusaops.json` (optional; zero-config by default) |
 | `adapter/` | `Adapter` interface, registry, generic `cmdAdapter`, go/c/cpp adapters |
 | `scan/` | Language detection with file counts |
-| `orchestrator/` | Runs applicable+installed adapters, records skipped components, aggregates |
+| `orchestrator/` | Runs applicable+installed adapters, records skipped components, aggregates; `RunTrace`/`RunSBOM`/`RunAuditPack` roll-ups |
 | `report/` | `AggregateReport` + text/json/html/sarif renderers |
+| `trace/` | Cross-language requirement traceability + qualification roll-up (text/json/html) |
+| `sbom/` | Cross-language SBOM merge + native JSON / SPDX 2.3 renderers |
+| `auditpack/` | Unified evidence ZIP bundler with hashed manifest |
 | `server/` | Web dashboard + JSON API (`fusaops serve`) |
 | `cmd/fusaops/` | CLI dispatch + subcommands |
+
+Adapter **capability interfaces** (`adapter/capabilities.go`): `Tracer`,
+`Qualifier`, `SBOMer`, `Packer` are optional — the orchestrator type-asserts for
+them, so a tool that cannot produce an artefact is recorded as skipped, never
+fatal. Every `cmdAdapter` implements all four by shelling out to its tool's
+matching subcommand (`trace`, `qualify`, `release`, `audit-pack`).
 
 ## Conventions (mirrors go-FuSa)
 
