@@ -812,12 +812,12 @@ unified pack, so the per-tool pack MUST be a self-contained, openable ZIP.
 
 **`version` (MUST).** Prints to stdout a single line matching the regex
 `^(\S+) (\d+\.\d+\.\d+[0-9A-Za-z.+-]*)$` — tool token, one space, semver
-(e.g. `go-FuSa 0.23.0`). FuSaOps extracts the version as the second capture
+(e.g. `go-FuSa 0.24.0`). FuSaOps extracts the version as the second capture
 group of the first stdout line. A tool SHOULD also support `version --format
 json` (exactly three fields, no envelope):
 
 ```json
-{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.8" }
+{ "tool": "go-FuSa", "version": "0.24.0", "specVersion": "1.8" }
 ```
 
 `specVersion` is the spec the tool implements — distinct from a document's
@@ -949,7 +949,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-10. ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-10 (go-FuSa v0.24). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa |
 |---|---|---|---|
@@ -966,38 +966,36 @@ Snapshot 2026-06-10. ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (S
 | `components[].hash` = `algo:value` | ▫️ `h1:` ok | ⚠️ | ▫️ |
 | audit-pack = single **ZIP** + `manifest.json` | ✅ | ⚠️ directory + `MANIFEST.json` | ✅ |
 | evidence filenames lowercase-kebab | ✅ | ⚠️ `SAFETY_CASE.md`,`TARA.md` | ✅ |
-| exit `2` for usage errors | ⚠️ returns `1` | ⚠️ verify | ⚠️ verify |
-| exit `3` for runtime errors (new) | ▫️ add | ▫️ add | ▫️ add |
-| `--no-color`/`NO_COLOR` (new) | ▫️ add | ▫️ add | ▫️ add |
+| exit `2` for usage errors | ✅ | ⚠️ verify | ⚠️ verify |
+| exit `3` for runtime errors (new) | ✅ | ▫️ add | ▫️ add |
+| `--no-color`/`NO_COLOR` (new) | ✅ | ▫️ add | ▫️ add |
 | `--output` ⇒ no stdout copy (new) | ▫️ verify | ▫️ verify | ▫️ verify |
 | `location.file`/`tags[].file` project-relative (new) | ▫️ verify | ⚠️ check | ⚠️ check |
-| envelope `tool/toolVersion/language` (new) | ▫️ add | ▫️ add | ▫️ add |
-| `kind` discriminator on every doc (new, §3.1) | ▫️ add | ▫️ add | ▫️ add |
-| common header on artefacts too (new, §3.1) | ▫️ add | ▫️ add | ▫️ add |
-| structured `error {code,message}` (new, §3.2) | ▫️ add | ▫️ add | ▫️ add |
-| `capabilities` command (SHOULD, new, §9.1) | ▫️ add | ▫️ add | ▫️ add |
-| `schemaVersion` MUST on every doc (new) | ▫️ add | ▫️ add | ▫️ add |
-| finding `category` (new for go) | ▫️ add | ✅ has it | ✅ has it |
-| finding `standard`+`clause` (new for go) | ▫️ add | ▫️ | ✅ has it |
-| finding `fingerprint` algo (SHOULD; →MUST when `diff` lands) | ▫️ add | ▫️ add | ▫️ add |
+| envelope `tool/toolVersion/language` on check + gap (new) | ✅ | ▫️ add | ▫️ add |
+| `kind` + common header on check + gap docs (§3.1) | ✅ | ▫️ add | ▫️ add |
+| `kind` + common header on trace/qualify/sbom/pack (§3.1) | ▫️ add | ▫️ add | ▫️ add |
+| structured `error {code,message}` on check (new, §3.2) | ✅ | ▫️ add | ▫️ add |
+| `capabilities` command (SHOULD, new, §9.1) | ✅ | ▫️ add | ▫️ add |
+| `schemaVersion` on check + gap docs (new) | ✅ | ▫️ add | ▫️ add |
+| `schemaVersion` on trace/qualify/sbom/pack (new) | ▫️ add | ▫️ add | ▫️ add |
+| finding `category` | ✅ | ✅ has it | ✅ has it |
+| finding `standard`+`clause` | ✅ | ▫️ | ✅ has it |
+| finding `fingerprint` algo (SHOULD; →MUST when `diff` lands) | ✅ | ▫️ add | ▫️ add |
 | location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ |
 | `ruleId` regex + qualified `lang/ruleId` (new, §1.5) | ▫️ verify | ▫️ verify | ▫️ verify |
 | ids format-invariant across formats (new, §2.9) | ▫️ verify | ▫️ verify | ▫️ verify |
 | image: **alpine/musl base** + `/usr/local/bin/<bin>` (§15) | ✅ alpine | ⚠️ ubuntu→alpine | ✅ alpine |
 | image: OCI + `io.x-fusa.*` labels (new, §15) | ▫️ add | ▫️ add | ▫️ add |
-| standards `<std>-gap-report.json` canonical | ⚠️ per-cmd shapes | ⚠️ | ⚠️ `objectives` vs other |
+| standards `<std>-gap-report.json` canonical | ✅ | ⚠️ | ⚠️ `objectives` vs other |
 
 The `req`/`impact`/`metrics`/`lint`/`fix`/`iec62443`/`slsa` commands are §9.3
 optional and **not consumed by FuSaOps v1** — intentionally absent from the
 audited rows above.
 
-> **Reference split.** go-FuSa is the **schema** reference; until it adopts exit
-> codes `2`/`3`, **c-FuSa is the exit-code-semantics reference**. A conformant
-> tool needs both — neither tool is fully conformant at this snapshot.
+> **Reference split.** go-FuSa is the **schema** reference and — from v0.24 —
+> also the **exit-code** reference. A conformant tool MUST match both.
 
-**Net change-set to reach conformance** (unchanged MUST count from 1.0, plus the
-new shared MUSTs `schemaVersion`/envelope/exit-3/no-color which apply to all
-three):
+**Net change-set to reach full conformance:**
 
 - **c-FuSa:** nest `location` + add `remediation` (check); adopt
   `requirements/tags/coverage` `trace` schema **incl. the new
@@ -1010,17 +1008,18 @@ three):
   `.cfusa_release/`, §7); **declare itself a multi-ID-annotation tool** so
   existing `req REQ-A REQ-B` lines don't become WARNINGs (§1.4); emit
   project-relative `location.file`/`tags[].file` (§4/§5); **move the image base
-  ubuntu→alpine** with a musl/static binary at `/usr/local/bin/cfusa` (§15).
+  ubuntu→alpine** with a musl/static binary at `/usr/local/bin/cfusa` (§15);
+  exit `2`/`3`; `--no-color`/`NO_COLOR`; `capabilities`; `fingerprint`;
+  `standard`+`clause` on findings; canonical gap-report.
   `qualify.hash` is MAY — fine to omit rather than add a JCS serialiser in C.
 - **cpp-FuSa:** primary `check --format json` → `ruleId`, nested `location`,
-  `remediation` (rename `fix`).
-- **go-FuSa:** exit `2` for usage errors; the additive resolution fields
-  (`category`, `standard`+`clause`, `fingerprint`, `location` regions); and the
-  canonical standards gap-report key (`objectives`).
-- **all three:** `schemaVersion` + `kind` + common header on **every** document
-  (§3.1); exit `3` for runtime errors; `--no-color`/`NO_COLOR`; `capabilities`
-  command (§9.1); `.fusa.json` per §1.2.1; project-relative paths (§4); image
-  OCI + `io.x-fusa.*` labels (§15).
+  `remediation` (rename `fix`); exit `2`/`3`; `--no-color`/`NO_COLOR`;
+  `capabilities`; `fingerprint`; canonical gap-report.
+- **go-FuSa:** extend `schemaVersion` + `kind` + common header to **all** docs
+  (trace/qualify/sbom/audit-pack); `.fusa.json` full §1.2.1 schema; project-relative
+  path verification; image OCI labels.
+- **all three:** `kind` + common header on remaining artefact types (§3.1);
+  `.fusa.json` per §1.2.1; image OCI + `io.x-fusa.*` labels (§15).
 
 ---
 

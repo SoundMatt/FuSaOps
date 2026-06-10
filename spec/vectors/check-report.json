@@ -2,7 +2,7 @@
   "schemaVersion": "1.8",
   "kind": "check-report",
   "tool": "go-FuSa",
-  "toolVersion": "0.23.0",
+  "toolVersion": "0.24.0",
   "language": "go",
   "generatedAt": "2026-06-10T12:00:00Z",
   "projectRoot": "/project",
