@@ -459,7 +459,7 @@ func TestNonConformingAbsolutePath(t *testing.T) {
 		case "check":
 			doc := fmt.Sprintf(
 				`{"schemaVersion":"1.8","kind":"check-report","tool":"abs-FuSa","toolVersion":"0.1.0","language":"go","generatedAt":"2026-06-10T00:00:00Z","projectRoot":"%s","findings":[{"ruleId":"LINT001","severity":"WARNING","message":"msg","location":{"file":"/absolute/path.go","line":1}}],"summary":{"total":1,"errors":0,"warnings":1,"infos":0}}`,
-				dir)
+				filepath.ToSlash(dir)) // ToSlash: backslashes in Windows tempdir are invalid JSON escapes
 			return []byte(doc), nil, 0
 		default:
 			return nil, nil, 0
