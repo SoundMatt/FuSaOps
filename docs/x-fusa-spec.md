@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.7.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.8.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -31,10 +31,27 @@ field go-FuSa does not yet emit, that field is marked **(new)** and listed in
 
 ## 1. Files & naming
 
-### 1.1 Binary
+### 1.1 Tool, language & binary registry
 
-`<lang>fusa` — `gofusa`, `cfusa`, `cpfusa`. A future tool for language `L` is
-`Lfusa` (or the closest readable contraction).
+Three identifiers travel together and MUST come from this registry. A new tool
+adds a row (one PR against this spec) before release, so there is exactly one
+canonical spelling of each.
+
+| `language` id | binary | human name (`tool`) | image |
+|---|---|---|---|
+| `go`  | `gofusa` | `go-FuSa`  | `ghcr.io/soundmatt/go-fusa`  |
+| `c`   | `cfusa`  | `c-FuSa`   | `ghcr.io/soundmatt/c-fusa`   |
+| `cpp` | `cpfusa` | `cpp-FuSa` | `ghcr.io/soundmatt/cpp-fusa` |
+| `rust` *(reserved)* | `rsfusa` | `rust-FuSa` | `ghcr.io/soundmatt/rust-fusa` |
+| `python` *(reserved)* | `pyfusa` | `py-FuSa` | `ghcr.io/soundmatt/py-fusa` |
+| `ada` *(reserved)* | `adafusa` | `ada-FuSa` | `ghcr.io/soundmatt/ada-fusa` |
+
+- **`language`** is the lowercase id emitted in every document header (§3.1) and
+  used as the rule-id namespace (§1.5). It MUST be unique and stable.
+- **binary** = `<contraction>fusa`, lowercase, on `PATH`.
+- **human name** (`tool`) = `<Language>-FuSa`.
+- **image** = `ghcr.io/soundmatt/<language>-fusa` (note: full language id, not the
+  binary contraction — §15).
 
 ### 1.2 Input / config files (dot-prefixed, un-tool-prefixed, with schema)
 
@@ -175,6 +192,54 @@ silently dropped.
 `//fusa:file-suppress <RULE>` are *not* part of this contract; they remain
 tool-specific. FuSaOps does not consume rule suppressions in spec v1.
 
+### 1.5 Identifier naming (rules & requirements)
+
+The taxonomies (severity, category, tag kind, standard id, document kind) are
+already common enums. This section makes the **leaf identifiers** — rule/lint
+codes and requirement ids — common too, so a cross-language aggregate is
+unambiguous and a new tool inherits a ready-made scheme.
+
+#### 1.5.1 Rule ids (`ruleId`)
+
+- **Local form (MUST).** A `ruleId` MUST match
+  `^[A-Z][A-Z0-9]*(-[A-Z0-9.]+)*$` — uppercase, no spaces, stable across runs.
+  This covers `LINT001`, `FUSA004`, `MISRA-15.5`, `AUTOSAR-A7-1-1`,
+  `CERT-INT30-C`, `CWE-787`. A `ruleId` MUST be unique **within a tool**.
+- **Qualified form (MUST cross-tool).** `ruleId` is only tool-local, so the
+  canonical **cross-language** identity is `"<language>/<ruleId>"`
+  (`go/LINT001`, `cpp/MISRA-15.5`). Any reference that can span languages — the
+  FuSaOps aggregate, dispositions applied across components, gap-report
+  `findings[]` in a multi-language project — MUST use the qualified form. Within
+  a single tool's own document, the bare `ruleId` is sufficient (its
+  `language` header supplies the namespace).
+- **Prefix → category registry (SHOULD).** A rule id's leading token SHOULD come
+  from this shared set, and a tool MUST set `category` (§4) consistently with it,
+  so the same prefix means the same thing everywhere:
+
+  | Prefix | `category` | Meaning |
+  |---|---|---|
+  | `LINT` | `lint` | general correctness / lint |
+  | `STYLE` | `style` | formatting / style |
+  | `FUSA` | `safety` | the tool's own functional-safety rules |
+  | `SEC`, `CWE-<n>` | `security` | security weakness |
+  | `COV` | `coverage` | coverage / test gap |
+  | `REQ` | `requirement` | requirement-traceability defect |
+  | `CONC`, `RACE` | `concurrency` | concurrency / data race |
+  | `SBOM`, `SLSA`, `VULN` | `supply-chain` | dependency / supply-chain |
+  | `CFG` | `config` | configuration |
+  | `MISRA-*`, `AUTOSAR-*`, `CERT-*` | per the rule's nature (usually `safety`) | standard-defined rule (keep the standard's own numbering verbatim) |
+
+  Standard-defined rules keep their official id (`MISRA-15.5`, not a re-coding)
+  and still set `category` + the relevant `standard`/`clause` fields (§4).
+
+#### 1.5.2 Requirement ids (`id`)
+
+A requirement `id` SHOULD match `^REQ-[A-Z0-9]+(-[A-Z0-9]+)*$`
+(`REQ-FO-CORE001`, `REQ-LINT001`). It is unique within the project's
+`.fusa-reqs.json` (§1.2.2). References to it in `trace` tags, gap-reports, and
+markdown MUST use the id **verbatim** (no re-casing). Requirement ids are
+project-scoped, so they are **not** language-qualified.
+
 ---
 
 ## 2. Common CLI conventions
@@ -293,6 +358,22 @@ The three series evolve independently and MUST NOT be conflated under one key
 name. `schemaVersion` and `specVersion` track the spec version; `configVersion`
 moves only when the config schema (§1.2.1) itself changes.
 
+### 2.9 Identifiers are format-invariant (MUST)
+
+The **same identifier** appears byte-identical in every output format a command
+supports — `json`, `sarif`, `text`, `html`, `md`. A `ruleId` is the same string
+in the text line, the JSON `ruleId`, and the SARIF `result.ruleId`; a requirement
+`id` is the same in the trace table, JSON, and markdown. Formats differ only in
+*presentation*, never in the value of an id, `severity`, `category`, `standard`,
+or `kind`.
+
+**SARIF mapping (MUST, when `--format sarif`).** `tool.driver.name` = the `tool`
+name (§1.1); each `result.ruleId` = the finding's `ruleId`; `tool.driver.rules[]`
+declares each rule once with `id` = `ruleId`; `result.level` maps `ERROR`→`error`,
+`WARNING`→`warning`, `INFO`→`note`; `physicalLocation.artifactLocation.uri` = the
+project-relative `location.file` (§4). A rule's `category`/`standard`/`clause`
+SHOULD ride in `result.properties`.
+
 ---
 
 ## 3. Common header & envelope
@@ -305,7 +386,7 @@ header, so FuSaOps (or anything) can read attribution and route decoding off
 
 ```jsonc
 {
-  "schemaVersion": "1.7",        // MUST. spec version the document conforms to (MAJOR.MINOR)
+  "schemaVersion": "1.8",        // MUST. spec version the document conforms to (MAJOR.MINOR)
   "kind":          "check-report", // MUST. document-type discriminator — see below
   "tool":          "go-FuSa",    // MUST. human-readable tool name
   "toolVersion":   "0.23.0",     // MUST. tool semver
@@ -625,7 +706,7 @@ fields:
 
 ```jsonc
 {
-  "schemaVersion": "1.7", "kind": "sbom",           // §3.1 common header (+ tool/toolVersion/language/generatedAt)
+  "schemaVersion": "1.8", "kind": "sbom",           // §3.1 common header (+ tool/toolVersion/language/generatedAt)
   "tool": "go-FuSa", "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
   "format":      "x-FuSa SBOM v1",
   "module":      "github.com/SoundMatt/go-FuSa",   // MUST. identity — see below
@@ -664,13 +745,13 @@ header abbreviated):
 
 ```jsonc
 // provenance.json
-{ "schemaVersion": "1.7", "kind": "provenance", "tool": "go-FuSa",
+{ "schemaVersion": "1.8", "kind": "provenance", "tool": "go-FuSa",
   "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
   "format": "x-FuSa provenance v1", "module": "…", "builder": "github-actions",
   "vcsRevision": "f8127ea", "vcsModified": false, "os": "linux", "arch": "amd64" }
 
 // artifact-manifest.json
-{ "schemaVersion": "1.7", "kind": "artifact-manifest", "tool": "go-FuSa",
+{ "schemaVersion": "1.8", "kind": "artifact-manifest", "tool": "go-FuSa",
   "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
   "format": "x-FuSa manifest v1",
   "artifacts": [ { "path": "sbom.json", "sha256": "<bare-hex>" } ] }
@@ -694,7 +775,7 @@ its SHA-256:
 
 ```jsonc
 {
-  "schemaVersion": "1.7", "kind": "audit-manifest",   // §3.1 common header
+  "schemaVersion": "1.8", "kind": "audit-manifest",   // §3.1 common header
   "tool": "go-FuSa", "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
   "module": "…",                         // project/module identity
   "files": [ { "path": "sbom.json", "size": 1234, "sha256": "<bare-hex>" } ]  // paths relative to ZIP root
@@ -736,7 +817,7 @@ group of the first stdout line. A tool SHOULD also support `version --format
 json` (exactly three fields, no envelope):
 
 ```json
-{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.7" }
+{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.8" }
 ```
 
 `specVersion` is the spec the tool implements — distinct from a document's
@@ -749,9 +830,9 @@ branching**:
 
 ```jsonc
 {
-  "schemaVersion": "1.7", "kind": "capabilities", "tool": "go-FuSa",
+  "schemaVersion": "1.8", "kind": "capabilities", "tool": "go-FuSa",
   "toolVersion": "0.23.0", "language": "go", "generatedAt": "…",
-  "specVersion": "1.7",                          // spec implemented
+  "specVersion": "1.8",                          // spec implemented
   "commands":  ["check","trace","qualify","release","audit-pack","report","fmea"],
   "formats":   { "check": ["text","json","sarif"], "trace": ["text","json","html"] },
   "standards": ["iso26262"]                       // canonical ids (§2.4.1) it can gap-report
@@ -900,6 +981,10 @@ Snapshot 2026-06-10. ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (S
 | finding `standard`+`clause` (new for go) | ▫️ add | ▫️ | ✅ has it |
 | finding `fingerprint` algo (SHOULD; →MUST when `diff` lands) | ▫️ add | ▫️ add | ▫️ add |
 | location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ |
+| `ruleId` regex + qualified `lang/ruleId` (new, §1.5) | ▫️ verify | ▫️ verify | ▫️ verify |
+| ids format-invariant across formats (new, §2.9) | ▫️ verify | ▫️ verify | ▫️ verify |
+| image: **alpine/musl base** + `/usr/local/bin/<bin>` (§15) | ✅ alpine | ⚠️ ubuntu→alpine | ✅ alpine |
+| image: OCI + `io.x-fusa.*` labels (new, §15) | ▫️ add | ▫️ add | ▫️ add |
 | standards `<std>-gap-report.json` canonical | ⚠️ per-cmd shapes | ⚠️ | ⚠️ `objectives` vs other |
 
 The `req`/`impact`/`metrics`/`lint`/`fix`/`iec62443`/`slsa` commands are §9.3
@@ -924,16 +1009,18 @@ three):
   **change `release --output-dir` default to the project root** (currently
   `.cfusa_release/`, §7); **declare itself a multi-ID-annotation tool** so
   existing `req REQ-A REQ-B` lines don't become WARNINGs (§1.4); emit
-  project-relative `location.file`/`tags[].file` (§4/§5). `qualify.hash` is MAY —
-  fine to omit rather than add a JCS serialiser in C.
+  project-relative `location.file`/`tags[].file` (§4/§5); **move the image base
+  ubuntu→alpine** with a musl/static binary at `/usr/local/bin/cfusa` (§15).
+  `qualify.hash` is MAY — fine to omit rather than add a JCS serialiser in C.
 - **cpp-FuSa:** primary `check --format json` → `ruleId`, nested `location`,
   `remediation` (rename `fix`).
 - **go-FuSa:** exit `2` for usage errors; the additive resolution fields
   (`category`, `standard`+`clause`, `fingerprint`, `location` regions); and the
   canonical standards gap-report key (`objectives`).
-- **all three:** `schemaVersion` on every JSON doc; envelope
-  `tool/toolVersion/language`; exit `3` for runtime errors; `--no-color`/
-  `NO_COLOR`; `.fusa.json` per §1.2.1; `location.file` project-relative (§4).
+- **all three:** `schemaVersion` + `kind` + common header on **every** document
+  (§3.1); exit `3` for runtime errors; `--no-color`/`NO_COLOR`; `capabilities`
+  command (§9.1); `.fusa.json` per §1.2.1; project-relative paths (§4); image
+  OCI + `io.x-fusa.*` labels (§15).
 
 ---
 
@@ -975,6 +1062,28 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.8.0 — 2026-06-10 (naming commonisation + container standard + onboarding)
+
+Commonises **all** naming — values, not just shapes — and standardises the
+container images, so a new x-FuSa starts at a high baseline.
+
+- **Tool/language/binary registry (§1.1):** one canonical row per tool
+  (`language` id · binary · human name · image), with reserved rows for future
+  languages.
+- **Identifier naming (§1.5):** `ruleId` regex + the qualified cross-language
+  form `"<language>/<ruleId>"`; a shared **prefix→category registry** so the same
+  prefix means the same thing across tools; requirement-id convention.
+- **Format-invariant identifiers (§2.9):** the same id/severity/category/standard
+  appears byte-identical in `json`/`sarif`/`text`/`html`/`md`; normative SARIF
+  field mapping.
+- **Container images (§15):** alpine/musl base + static binary at
+  `/usr/local/bin/<binary>`, `ghcr.io/soundmatt/<language>-fusa` naming/tags, OCI
+  + `io.x-fusa.*` labels, the one-line `COPY --from` bundling shape.
+- **Onboarding ramp (§16):** the MUST baseline (1–7) that makes a new tool
+  orchestrable by FuSaOps on day one with zero FuSaOps changes.
+- **§11:** rows for rule-id naming, format-invariance, and the image base/labels;
+  c-FuSa change-set gains the ubuntu→alpine base move.
 
 ### 1.7.0 — 2026-06-10 (generic data-exchange uplift)
 
@@ -1178,3 +1287,75 @@ same way and routes generically:
 ### 1.0.0 — 2026-06-10
 
 Initial master contract.
+
+---
+
+## 15. Container images (MUST for a published tool)
+
+So FuSaOps can bundle every tool uniformly (`COPY --from`) and a new tool drops
+in with one `FROM`+`COPY` pair, published images follow one shape.
+
+- **Base.** The runtime image MUST be **musl/alpine-compatible** and the tool
+  binary MUST be **statically linked or musl-linked**, so binaries from different
+  tools co-reside in one image without a libc clash. Use `alpine:<pinned>` (or a
+  shared `ghcr.io/soundmatt/x-fusa-base:<ver>` once published) as the runtime
+  base. (This is why `c-FuSa` must move its base ubuntu→alpine.)
+- **Binary location (MUST).** `/usr/local/bin/<binary>` (e.g.
+  `/usr/local/bin/gofusa`), on `PATH`, executable.
+- **Image name & tags (MUST).** `ghcr.io/soundmatt/<language>-fusa` with tags
+  `:latest`, `:<major.minor.patch>`, and `:<major.minor>`.
+- **Entrypoint (SHOULD).** `WORKDIR /project`, `ENTRYPOINT ["<binary>"]`,
+  `CMD ["help"]`, `EXPOSE` only if it serves.
+- **Platforms (SHOULD).** `linux/amd64` MUST; `linux/arm64` SHOULD.
+- **Labels (MUST).** OCI labels plus the x-FuSa set, so an image is
+  self-describing and FuSaOps can introspect a tool image without running it:
+
+  ```dockerfile
+  LABEL org.opencontainers.image.title="go-FuSa" \
+        org.opencontainers.image.version="0.23.0" \
+        org.opencontainers.image.source="https://github.com/SoundMatt/go-FuSa" \
+        org.opencontainers.image.licenses="MPL-2.0" \
+        io.x-fusa.tool="go-FuSa" \
+        io.x-fusa.language="go" \
+        io.x-fusa.binary="gofusa" \
+        io.x-fusa.spec-version="1.8"
+  ```
+
+- **Refresh (SHOULD).** A tool release SHOULD fire `repository_dispatch`
+  (`xfusa-released`) so the FuSaOps all-in-one image rebuilds without a FuSaOps
+  release (see `tools-monitor.yml`).
+
+FuSaOps then bundles any tool with exactly:
+
+```dockerfile
+FROM ghcr.io/soundmatt/<language>-fusa:latest AS <language>
+COPY --from=<language> /usr/local/bin/<binary> /usr/local/bin/<binary>
+```
+
+---
+
+## 16. Onboarding a new x-FuSa tool
+
+The high-water mark for a new language `L`. A conforming tool is orchestrable by
+FuSaOps with **zero FuSaOps code changes** once these are done:
+
+1. **Register** the row in §1.1 (`language` id, binary, human name, image) — one
+   PR against this spec.
+2. **Required commands (§9.1)** emitting §3 documents: `version` (+ `--format
+   json`), `capabilities`, `init`, `check`, `trace`, `qualify`, `release`,
+   `audit-pack`, `report`.
+3. **Read** the §1.2 input files (`.fusa.json`, `.fusa-reqs.json`,
+   `.fusa-dispositions.json`).
+4. **Naming:** common header + `kind` on every document (§3.1); rule ids and
+   requirement ids per §1.5; severity/category/standard/tag-kind enums; the same
+   id in every format (§2.9).
+5. **Exit codes** `0/1/2/3` (§2.3); `--no-color` (§2.6); `--output` redirection
+   (§2.2); project-relative paths (§4).
+6. **Image** per §15 (alpine base, `/usr/local/bin/<binary>`, labels, tags).
+7. **Self-check:** validate output against the published JSON Schemas, and (when
+   available) run the conformance kit `fusaops conform <binary>` in CI.
+8. **Evidence (SHOULD):** the §9.2/§9.3 commands, following the §13 canonical
+   directions so the new tool doesn't recreate the existing divergences.
+
+Steps 1–7 are the **MUST** baseline for "on board"; step 8 deepens coverage. A
+tool that does 1–7 interoperates on day one.
