@@ -10,6 +10,7 @@ import (
 	"github.com/SoundMatt/FuSaOps/adapter"
 	"github.com/SoundMatt/FuSaOps/auditpack"
 	"github.com/SoundMatt/FuSaOps/sbom"
+	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
 )
 
@@ -117,6 +118,44 @@ func (rn *Runner) RunSBOM(ctx context.Context, root string, opts Options) (*sbom
 		components = append(components, cs)
 	}
 	return sbom.New(root, opts.Project, components), nil
+}
+
+// RunStandards rolls every applicable tool's §9.3 gap report for standard up
+// into one cross-language Aggregate.  A component whose binary is missing,
+// whose tool cannot produce a gap report, or whose command fails is recorded as
+// skipped so coverage gaps remain visible.
+//
+//fusa:req REQ-FO-ORC007
+func (rn *Runner) RunStandards(ctx context.Context, root, standard string, opts Options) (*standards.Aggregate, error) {
+	adapters, err := rn.selectAdapters(root, opts)
+	if err != nil {
+		return nil, err
+	}
+	if len(adapters) == 0 {
+		return nil, fusaops.ErrNoAdapters
+	}
+	var components []standards.ComponentGap
+	for _, a := range adapters {
+		cg := standards.ComponentGap{Language: a.Language().String(), Tool: a.Tool()}
+		switch {
+		case !a.Available():
+			cg.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
+		default:
+			sp, ok := a.(adapter.StandardsProvider)
+			if !ok {
+				cg.Skipped = fmt.Sprintf("%s does not support standards", a.Tool())
+				break
+			}
+			r, serr := sp.Standards(ctx, root, standard)
+			if serr != nil {
+				cg.Skipped = fmt.Sprintf("standards failed: %v", serr)
+				break
+			}
+			cg.Report = r
+		}
+		components = append(components, cg)
+	}
+	return standards.New(opts.Project, standard, components), nil
 }
 
 // AuditPackResult reports what a unified audit-pack run produced.

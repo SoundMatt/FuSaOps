@@ -7,17 +7,20 @@
 //
 // Commands:
 //
-//	init      Initialise a .fusaops.json project configuration
-//	scan      Detect languages and applicable x-FuSa adapters in a repo
-//	adapters  List registered adapters and their availability on PATH
-//	check      Run every applicable x-FuSa tool and print the aggregate report
-//	report     Generate an aggregate report (text/json/html/sarif) to a file
-//	trace      Roll up cross-language requirement traceability and qualification
-//	sbom       Merge every language's SBOM into one (json/text/spdx)
-//	audit-pack Bundle every component's evidence into one ZIP
-//	conform    Run x-FuSa spec conformance checks against a tool binary
-//	serve      Launch the web reporting dashboard
-//	version    Print the FuSaOps version
+//	init        Initialise a .fusaops.json project configuration
+//	scan        Detect languages and applicable x-FuSa adapters in a repo
+//	adapters    List registered adapters and their availability on PATH
+//	check       Run every applicable x-FuSa tool and print the aggregate report
+//	report      Generate an aggregate report (text/json/html/sarif) to a file
+//	trace       Roll up cross-language requirement traceability and qualification
+//	sbom        Merge every language's SBOM into one (json/text/spdx)
+//	audit-pack  Bundle every component's evidence into one ZIP
+//	conform     Run x-FuSa spec conformance checks against a tool binary
+//	iso26262    Roll up ISO 26262 gap reports across all languages
+//	iec61508    Roll up IEC 61508 gap reports across all languages
+//	do178       Roll up DO-178C gap reports across all languages
+//	serve       Launch the web reporting dashboard
+//	version     Print the FuSaOps version
 //
 // Run 'fusaops <command> --help' for per-command flags.
 package main
@@ -62,6 +65,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runAuditPack(args[1:], stdout, stderr)
 	case "conform":
 		return runConform(args[1:], stdout, stderr)
+	case "iso26262", "iec61508", "do178":
+		return runStandards(args[0], args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "version":
@@ -95,6 +100,9 @@ Commands:
   sbom       Merge every language's SBOM into one (json/text/spdx)
   audit-pack Bundle every component's evidence into one ZIP
   conform    Run x-FuSa spec conformance checks against a tool binary
+  iso26262   Roll up ISO 26262 gap reports across all languages
+  iec61508   Roll up IEC 61508 gap reports across all languages
+  do178      Roll up DO-178C gap reports across all languages
   serve      Launch the web reporting dashboard
   version    Print the FuSaOps version
 

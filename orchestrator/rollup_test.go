@@ -10,22 +10,25 @@ import (
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/sbom"
+	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
 )
 
 // capFake is a fully capable fake adapter: it implements Adapter plus every
 // capability interface, with injectable per-capability errors.
 type capFake struct {
-	tool     string
-	lang     fusaops.Language
-	detect   bool
-	avail    bool
-	matrix   *trace.Matrix
-	qual     *trace.Qualification
-	doc      *sbom.Document
-	traceErr error
-	sbomErr  error
-	packErr  error
+	tool         string
+	lang         fusaops.Language
+	detect       bool
+	avail        bool
+	matrix       *trace.Matrix
+	qual         *trace.Qualification
+	doc          *sbom.Document
+	gapReport    *standards.GapReport
+	traceErr     error
+	sbomErr      error
+	packErr      error
+	standardsErr error
 }
 
 func (f *capFake) Name() string                                             { return f.tool }
@@ -51,12 +54,20 @@ func (f *capFake) AuditPack(_ context.Context, _, dest string) error {
 	return os.WriteFile(dest, []byte("PK\x03\x04 fake pack"), 0o600)
 }
 
+func (f *capFake) Standards(_ context.Context, _, _ string) (*standards.GapReport, error) {
+	return f.gapReport, f.standardsErr
+}
+
 func tracer(tool string) *capFake {
 	return &capFake{
 		tool: tool, lang: fusaops.LangGo, detect: true, avail: true,
 		matrix: &trace.Matrix{Coverage: trace.Coverage{TotalRequirements: 4, TracedRequirements: 4, TestedRequirements: 3}},
 		qual:   &trace.Qualification{Total: 2, Passed: 2},
 		doc:    &sbom.Document{Module: "m-" + tool, Components: []sbom.Package{{Name: "dep", Version: "v1"}}},
+		gapReport: &standards.GapReport{
+			Standard: "iso26262",
+			Summary:  standards.Summary{Total: 10, Satisfied: 9, Partial: 1, Gaps: 0},
+		},
 	}
 }
 
@@ -203,6 +214,68 @@ func TestRunAuditPackErrorsAndEmpty(t *testing.T) {
 	// No applicable adapters → ErrNoAdapters.
 	none := regWith(&capFake{tool: "gofusa", detect: false, avail: true})
 	if _, err := New(none).RunAuditPack(context.Background(), t.TempDir(), dest, Options{}); !errors.Is(err, fusaops.ErrNoAdapters) {
+		t.Errorf("got %v, want ErrNoAdapters", err)
+	}
+}
+
+//fusa:test REQ-FO-ORC007
+func TestRunStandards(t *testing.T) {
+	reg := regWith(
+		tracer("gofusa"),
+		&capFake{tool: "cfusa", lang: fusaops.LangC, detect: true, avail: false},     // skipped: not installed
+		&fakeAdapter{tool: "nope", lang: fusaops.LangCpp, detect: true, avail: true}, // not a StandardsProvider
+	)
+	agg, err := New(reg).RunStandards(context.Background(), t.TempDir(), "iso26262", Options{Project: "p"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(agg.Components) != 3 {
+		t.Fatalf("want 3 components, got %d", len(agg.Components))
+	}
+	if agg.Standard != "iso26262" {
+		t.Errorf("standard wrong: %s", agg.Standard)
+	}
+	var gofusa standards.ComponentGap
+	for _, c := range agg.Components {
+		switch c.Tool {
+		case "gofusa":
+			gofusa = c
+		case "cfusa":
+			if c.Skipped == "" {
+				t.Error("cfusa should be skipped (not installed)")
+			}
+		case "nope":
+			if c.Skipped == "" {
+				t.Error("nope should be skipped (not a StandardsProvider)")
+			}
+		}
+	}
+	if gofusa.Report == nil {
+		t.Fatal("gofusa gap report missing")
+	}
+	if gofusa.Report.Summary.Total != 10 {
+		t.Errorf("gofusa summary wrong: %+v", gofusa.Report.Summary)
+	}
+	if agg.HasGaps() {
+		t.Error("no gaps expected in this aggregate")
+	}
+}
+
+//fusa:test REQ-FO-ORC007
+func TestRunStandardsErrorsAndEmpty(t *testing.T) {
+	// standards failure recorded as skipped, not fatal.
+	bad := tracer("gofusa")
+	bad.standardsErr = errors.New("boom")
+	agg, err := New(regWith(bad)).RunStandards(context.Background(), t.TempDir(), "iso26262", Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if agg.Components[0].Skipped == "" {
+		t.Error("standards error should be recorded as skipped")
+	}
+	// No applicable adapters → ErrNoAdapters.
+	none := regWith(&capFake{tool: "gofusa", detect: false, avail: true})
+	if _, err := New(none).RunStandards(context.Background(), t.TempDir(), "iso26262", Options{}); !errors.Is(err, fusaops.ErrNoAdapters) {
 		t.Errorf("got %v, want ErrNoAdapters", err)
 	}
 }

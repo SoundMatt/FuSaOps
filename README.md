@@ -69,6 +69,10 @@ fusaops trace                # cross-language requirement traceability + qualifi
 fusaops trace --strict       # CI gate: fail on any untraced/untested requirement
 fusaops sbom --format spdx   # merged cross-language SBOM (SPDX 2.3)
 fusaops audit-pack           # bundle every language's evidence into audit-pack.zip
+fusaops iso26262             # roll up ISO 26262 gap reports across all languages
+fusaops iec61508             # roll up IEC 61508 gap reports across all languages
+fusaops do178                # roll up DO-178C gap reports across all languages
+fusaops conform gofusa       # check a binary against the x-FuSa spec
 fusaops serve --addr :8080   # launch the web dashboard
 fusaops init                 # write a starter .fusaops.json
 ```
@@ -85,6 +89,20 @@ produces into one cross-language view:
 - **`fusaops audit-pack`** — bundles each tool's own audit-pack plus the
   FuSaOps aggregate report, trace matrix, and SBOM into one ZIP with a hashed
   manifest.
+
+### Standards roll-up (v0.3)
+
+- **`fusaops iso26262`** — rolls up ISO 26262 gap reports from each language
+  tool into one cross-language PASS/GAP matrix; `--strict` exits 1 on any gap.
+- **`fusaops iec61508`** — same for IEC 61508.
+- **`fusaops do178`** — same for DO-178C (maps to the `do178c` canonical id).
+
+### Spec conformance (v0.3)
+
+- **`fusaops conform <binary>`** — validates any x-FuSa tool binary against the
+  spec v1.8 schema and behavioural invariants.  Per spec §16 step 7, this is a
+  **MUST** gate for onboarding a new language tool.  See
+  [`docs/conformance.md`](docs/conformance.md).
 
 See [`docs/commands/`](docs/commands/) for each command.
 

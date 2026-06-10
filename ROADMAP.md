@@ -91,15 +91,21 @@ relies on every tool emitting the spec's `<standard>-gap-report.json`.
 
 ---
 
-## v0.3 — Standards Roll-up
+## v0.3 — Standards Roll-up & Spec Conformance ✅
 
-**Goal:** One compliance view across languages.
+**Goal:** One compliance view across languages, plus a machine-checkable spec.
 
 - Roll up ISO 26262 / IEC 61508 / DO-178C gap reports from each component
-- Per-standard PASS/GAP matrix spanning all languages
-- Project-level safety case assembling component safety cases (GSN)
+- Per-standard PASS/GAP matrix spanning all languages with skipped-component
+  visibility (gaps are never silently dropped)
+- x-FuSa spec v1.8 → machine-checkable conformance kit:
+  - JSON Schemas for all 9 document kinds (`spec/schemas/`)
+  - Golden reference vectors with pre-computed fingerprints (`spec/vectors/`)
+  - `fusaops conform <binary>` runner — 37 checks, 8 subcommands, stdlib-only
+  - Conformance gate per spec §16 step 7 for onboarding any language tool
 
-Deliverables: `fusaops iso26262`, `fusaops do178`, `fusaops safety-case`
+Deliverables: `fusaops iso26262`, `fusaops iec61508`, `fusaops do178`,
+`fusaops conform`
 
 ---
 

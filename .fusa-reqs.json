@@ -133,6 +133,25 @@
     { "id": "REQ-FO-CNF016", "title": "Capabilities validation", "text": "The conform package shall validate §9.1 SHOULD capabilities --format json: common header, specVersion, commands.", "standard": "ISO 26262", "level": "ASIL-C" },
     { "id": "REQ-FO-CNF017", "title": "Fingerprint algorithm", "text": "The conform package shall implement the §4.2 fingerprint algorithm: sha256(ruleId + U+001F + location.file + U+001F + normalizedMessage), with digit-run normalisation and whitespace collapsing.", "standard": "ISO 26262", "level": "ASIL-C" },
 
-    { "id": "REQ-FO-CLI014", "title": "Conform command", "text": "fusaops conform shall run x-FuSa spec conformance checks against a named binary, render the report in text or json, and exit non-zero when any MUST check fails.", "standard": "ISO 26262", "level": "ASIL-C" }
+    { "id": "REQ-FO-CLI014", "title": "Conform command", "text": "fusaops conform shall run x-FuSa spec conformance checks against a named binary, render the report in text or json, and exit non-zero when any MUST check fails.", "standard": "ISO 26262", "level": "ASIL-C" },
+
+    { "id": "REQ-FO-STD001", "title": "GapReport type", "text": "The standards package shall define a GapReport type mirroring the §9.3 gap-report document with standard, objectives, and summary fields.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD002", "title": "Objective status enum", "text": "The standards package shall define Objective with status values satisfied, partial, and gap; a consumer must map any unrecognised status to gap (fail-safe).", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD003", "title": "ComponentGap skipped recording", "text": "The standards package shall record a skipped reason for any component whose tool is unavailable or whose standards command fails, so coverage gaps remain visible.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD004", "title": "Aggregate construction", "text": "The standards package shall aggregate ComponentGap entries into an Aggregate with standard id, project, generated timestamp, and all component results.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD005", "title": "HasGaps predicate", "text": "Aggregate.HasGaps shall return true if and only if at least one reporting component has a non-zero gaps count in its Summary; nil or skipped components shall not count.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD006", "title": "Text renderer", "text": "The standards package shall render an Aggregate as human-readable text showing per-component satisfied/partial/gaps counts and a RESULT: PASS|GAP|SKIP line.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD007", "title": "JSON renderer", "text": "The standards package shall render an Aggregate as indented JSON, and RenderToFile shall write to a file or stdout.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD008", "title": "CommandStandard alias", "text": "The standards package shall map CLI command names to canonical §2.4.1 standard ids; do178 maps to do178c.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-STD009", "title": "DisplayName", "text": "The standards package shall expose a DisplayName function returning a human-readable label for each canonical standard id.", "standard": "ISO 26262", "level": "ASIL-C" },
+
+    { "id": "REQ-FO-ADP018", "title": "StandardsProvider capability", "text": "The adapter package shall define a StandardsProvider capability interface whose Standards method runs the tool's gap-report command for a given standard id and returns a decoded GapReport.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-ADP019", "title": "cmdAdapter Standards implementation", "text": "cmdAdapter shall implement StandardsProvider by shelling out to <tool> <standard> --format json and decoding the GapReport.", "standard": "ISO 26262", "level": "ASIL-C" },
+
+    { "id": "REQ-FO-ORC007", "title": "Standards roll-up", "text": "The orchestrator shall roll every applicable tool's §9.3 gap report for a given standard into one cross-language Aggregate, recording skipped components for unavailable or non-supporting tools.", "standard": "ISO 26262", "level": "ASIL-C" },
+
+    { "id": "REQ-FO-CLI015", "title": "ISO 26262 command", "text": "fusaops iso26262 shall roll up ISO 26262 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-CLI016", "title": "IEC 61508 command", "text": "fusaops iec61508 shall roll up IEC 61508 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.", "standard": "ISO 26262", "level": "ASIL-C" },
+    { "id": "REQ-FO-CLI017", "title": "DO-178C command", "text": "fusaops do178 shall roll up DO-178C gap reports across all applicable installed tools, mapping the do178 command name to the do178c canonical id, render in text or json, and exit 1 under --strict when any objective has gap status.", "standard": "ISO 26262", "level": "ASIL-C" }
   ]
 }

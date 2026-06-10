@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/SoundMatt/FuSaOps/sbom"
+	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
 )
 
@@ -45,6 +46,13 @@ type SBOMer interface {
 //fusa:req REQ-FO-ADP013
 type Packer interface {
 	AuditPack(ctx context.Context, root, dest string) error
+}
+
+// StandardsProvider can produce a §9.3 gap report for a given standard id.
+//
+//fusa:req REQ-FO-ADP018
+type StandardsProvider interface {
+	Standards(ctx context.Context, root, standard string) (*standards.GapReport, error)
 }
 
 // Trace runs "<tool> trace --format json" and decodes the matrix from stdout.
@@ -127,6 +135,21 @@ func (a *cmdAdapter) AuditPack(ctx context.Context, root, dest string) error {
 		return fmt.Errorf("adapter %s: audit-pack produced no file: %w", a.name, err)
 	}
 	return nil
+}
+
+// Standards runs "<tool> <standard> --format json" and decodes the gap report.
+//
+//fusa:req REQ-FO-ADP019
+func (a *cmdAdapter) Standards(ctx context.Context, root, standard string) (*standards.GapReport, error) {
+	out, err := a.run(ctx, root, a.tool, standard, "--format", "json")
+	if err != nil {
+		return nil, fmt.Errorf("adapter %s: %s: %w", a.name, standard, err)
+	}
+	var r standards.GapReport
+	if err := json.Unmarshal(extractJSON(out), &r); err != nil {
+		return nil, fmt.Errorf("adapter %s: decode gap report: %w", a.name, err)
+	}
+	return &r, nil
 }
 
 // extractJSON returns the JSON object spanning the first '{' to the last '}' in
