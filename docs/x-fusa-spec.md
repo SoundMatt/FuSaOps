@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.5.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.6.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -113,8 +113,10 @@ Patterns are gitignore-style globs relative to `--dir`.
 
 A document MAY wrap additional top-level keys (`project`, `version`,
 `generated`); consumers MUST read only `.requirements` and MUST ignore the rest.
-A duplicate `id` MUST be reported by `check` as an `ERROR` finding (category
-`requirement`); a tool MUST NOT silently merge or drop duplicates.
+A tool MUST validate `.fusa-reqs.json` for duplicate `id`s **whenever it reads
+the file** (e.g. in `check` or `trace`); a duplicate MUST surface as an `ERROR`
+finding (category `requirement`) — a tool MUST NOT silently merge or drop
+duplicates.
 
 #### 1.2.3 `.fusa-dispositions.json` schema (read by FuSaOps when present)
 
@@ -141,9 +143,9 @@ to a disposition and how that affects the exit code.
 
 ### 1.3 Generated evidence (lowercase kebab-case, at project root)
 
-`sbom.json` · `provenance.json` · `artifact-manifest.json` ·
-`safety-case.{json,md,mermaid}` · `tara.{json,md}` · `fmea.{json,csv}` ·
-`coupling-report.json` · `cyber-report.json` · `vuln.json` ·
+`sbom.json` · `provenance.json` · `provenance.intoto.jsonl` (from `slsa`, §9.3) ·
+`artifact-manifest.json` · `safety-case.{json,md,mermaid}` · `tara.{json,md}` ·
+`fmea.{json,csv}` · `coupling-report.json` · `cyber-report.json` · `vuln.json` ·
 `qualify-report.json` · `boundary.{dot,mermaid}` · `audit-pack.zip` ·
 `<standard>-gap-report.json` (e.g. `iso26262-gap-report.json`).
 
@@ -218,7 +220,8 @@ FuSaOps can tell a real failure from a finding. A non-zero exit MUST NOT prevent
 the requested `--format json`/`--output` artefact from being written when the
 cause is a gate failure (`1`); FuSaOps reads the artefact regardless of a `1`.
 When a partial document is emitted under a `3`, the envelope MUST set `error`
-(§3).
+(§3), and the tool SHOULD still honour `--output` (write the partial document
+rather than nothing).
 
 ### 2.4 Severity enum (MUST)
 
@@ -309,7 +312,7 @@ artefact stays attributable:
 
 ```jsonc
 {
-  "schemaVersion": "1.5",        // MUST. the spec version this document conforms to (MAJOR.MINOR)
+  "schemaVersion": "1.6",        // MUST. the spec version this document conforms to (MAJOR.MINOR)
   "tool":        "go-FuSa",      // MUST. human-readable tool name
   "toolVersion": "0.23.0",       // MUST. tool semver
   "language":    "go",           // MUST. go | c | cpp | …
@@ -564,7 +567,8 @@ is skipped/errored, visible in `results[]`.
 *canonical* serialisation, not the pretty-printed output:
 
 1. **Sort `results[]` by `name` ascending** (so parallel/non-deterministic test
-   order does not change the hash).
+   order does not change the hash). A tool MUST ensure `results[].name` is
+   **unique** within the document, so the sort is total and the hash stable.
 2. **Remove** the `hash` member and **set** `generatedAt` to `""` (both vary or
    are self-referential).
 3. Serialise per **RFC 8785 (JSON Canonicalization Scheme)** — UTF-8, keys sorted
@@ -591,7 +595,7 @@ artefact (envelope-exempt per §3) and =
 
 ```jsonc
 {
-  "schemaVersion": "1.5",
+  "schemaVersion": "1.6",
   "format":      "x-FuSa SBOM v1",
   "generatedAt": "…",
   "module":      "github.com/SoundMatt/go-FuSa",   // MUST. identity — see below
@@ -619,7 +623,10 @@ stderr warning for each it skips because the command is not implemented (it MUST
 NOT emit an empty/stub file and MUST NOT exit `3` for a *deliberately*
 unimplemented component): `fmea.json`, `fmea.csv`, `boundary.dot`,
 `boundary.mermaid`, `vuln.json`, and finally `audit-pack.zip`. Because
-`audit-pack` bundles the other artefacts, it MUST run **last**.
+`audit-pack` bundles the other artefacts, it MUST run **last**. `--full` does
+**not** run `slsa` (the SLSA attestation is a separate supply-chain step); but if
+`provenance.intoto.jsonl` already exists from a prior `slsa` run, `audit-pack`
+includes it as a §1.3 file.
 
 **`provenance.json` / `artifact-manifest.json`.** File-format artefacts
 (envelope-exempt, §3); **not consumed by FuSaOps in v1** (they ride along inside
@@ -627,12 +634,12 @@ the audit-pack as opaque evidence). Minimal bodies:
 
 ```jsonc
 // provenance.json
-{ "schemaVersion": "1.5", "format": "x-FuSa provenance v1", "generatedAt": "…",
+{ "schemaVersion": "1.6", "format": "x-FuSa provenance v1", "generatedAt": "…",
   "module": "…", "builder": "github-actions", "vcsRevision": "f8127ea",
   "vcsModified": false, "os": "linux", "arch": "amd64" }
 
 // artifact-manifest.json
-{ "schemaVersion": "1.5", "format": "x-FuSa manifest v1", "generatedAt": "…",
+{ "schemaVersion": "1.6", "format": "x-FuSa manifest v1", "generatedAt": "…",
   "artifacts": [ { "path": "sbom.json", "sha256": "<bare-hex>" } ] }
 ```
 
@@ -654,7 +661,7 @@ its SHA-256:
 
 ```jsonc
 {
-  "schemaVersion": "1.5",
+  "schemaVersion": "1.6",
   "tool": "go-FuSa", "toolVersion": "0.23.0",   // toolVersion key, aligned with §3 (artefact is still envelope-exempt)
   "module": "…",                         // project/module identity
   "files": [ { "path": "sbom.json", "size": 1234, "sha256": "<bare-hex>" } ]  // paths relative to ZIP root
@@ -696,11 +703,11 @@ group of the first stdout line. A tool SHOULD also support `version --format
 json` (exactly three fields, no envelope):
 
 ```json
-{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.5" }
+{ "tool": "go-FuSa", "version": "0.23.0", "specVersion": "1.6" }
 ```
 
 `specVersion` is the spec the tool implements — distinct from a document's
-`schemaVersion` (§2.8).
+`schemaVersion` (§2.8). `version --format text` is the same as the default line.
 
 **`init` (MUST).** Creates `.fusa.json` (§1.2.1, with `project.name`, `standard`,
 and the integrity field populated) and `.fusa-reqs.json` containing
@@ -709,25 +716,29 @@ is missing and leaves an existing one untouched (a one-line stderr note), rather
 than aborting the whole command — so a repo with `.fusa.json` but no
 `.fusa-reqs.json` gets the missing file created. `--force` **overwrites
 completely** (it does not merge) any target. A tool SHOULD source the config
-values from flags (`--name`, `--standard`, and one of `--asil`/`--sil`/`--dal`)
-and/or interactive prompts; if a required value is missing **and stdin is not a
-TTY** (CI), `init` MUST exit `2` rather than prompt or write a placeholder
-config. It MAY scaffold additional structure (`.github/`, hooks) and MAY offer
-`--migrate` (§1.2).
+values from flags (`--name`, `--standard`, one of `--asil`/`--sil`/`--dal`, and
+`--project-version`) and/or interactive prompts. The **required** values are
+`project.name` and `standard` (the integrity field is SHOULD); if a required
+value is missing **and stdin is not a TTY** (CI), `init` MUST exit `2` rather
+than prompt or write a placeholder config. It MAY scaffold additional structure
+(`.github/`, hooks) and MAY offer `--migrate` (§1.2).
 
 **`report` (MUST).** `report [--format text|json|html|sarif|md] [--output <file>]`
 **re-runs analysis** on the project root — it does not read a cached
 `check-report.json` and has no `--input` flag. It is effectively `check` that
 always exits `0` regardless of findings (only `2`/`3` apply); its `--format json`
 shape is identical to `check` (§4). It produces one report for one run and does
-not aggregate across runs.
+not aggregate across runs. Because `report` never gate-fails, a tool SHOULD treat
+`--strict` on `report` as a usage error (exit `2`).
 
 ### 9.2 Recommended (safety evidence — SHOULD; not consumed by FuSaOps v1)
 
 `verify` · `hara` · `tara` · `fmea` · `safety-case` · `coupling` · `cyber` ·
 `vuln` · `boundary` · `coverage` · `diff`. Their JSON is **tool-defined** in spec
-v1 — see §13. A command in this group MAY support `--format json`; if it does and
-FuSaOps later consumes it, the canonical schema is added per §12/§13.
+v1 — see §13. A command in this group MAY support `--format json`; if it does it
+**SHOULD carry the §3 envelope** (even though FuSaOps does not consume it in v1)
+so that future consumption — added per §12/§13 — does not force a breaking change
+to add the envelope later.
 
 ### 9.3 Optional (standards & workflow — MAY)
 
@@ -744,7 +755,8 @@ gap-report shape and are clarified here:
   the SLSA/in-toto attestation for the supply-chain toolchain. It is not a
   gap-report command.
 - **`disposition`** manages `.fusa-dispositions.json` (§1.2.3) — it adds, lists,
-  and shows waiver decisions; it does not itself gate.
+  and shows waiver decisions (and MAY support remove/update for entries that
+  change over time); it does not itself gate.
 
 A standards command (`iso26262`, `iec61508`, `do178`, …) that emits JSON MUST use
 the canonical **gap-report** schema:
@@ -819,6 +831,8 @@ Snapshot 2026-06-10. ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (S
 | exit `2` for usage errors | ⚠️ returns `1` | ⚠️ verify | ⚠️ verify |
 | exit `3` for runtime errors (new) | ▫️ add | ▫️ add | ▫️ add |
 | `--no-color`/`NO_COLOR` (new) | ▫️ add | ▫️ add | ▫️ add |
+| `--output` ⇒ no stdout copy (new) | ▫️ verify | ▫️ verify | ▫️ verify |
+| `location.file`/`tags[].file` project-relative (new) | ▫️ verify | ⚠️ check | ⚠️ check |
 | envelope `tool/toolVersion/language` (new) | ▫️ add | ▫️ add | ▫️ add |
 | `schemaVersion` MUST on every doc (new) | ▫️ add | ▫️ add | ▫️ add |
 | finding `category` (new for go) | ▫️ add | ✅ has it | ✅ has it |
@@ -890,7 +904,7 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 | `cyber` → `cyber-report.json` | tool-defined | finding-list reusing §4 `Finding` shape |
 | `coupling` → `coupling-report.json` | tool-defined; **c-FuSa ships a finding-list today** | graph `{ modules:[…], edges:[{from,to,weight}], metrics:{…} }` — ⚠️ a change from the finding-list; do not deepen investment in the list shape |
 | `coverage` | tool-defined | `{ lines:{covered,total,pct}, mutation:{score}, dal? }` — `pct`/`score` are **percentages 0–100** (e.g. `75.3` = 75.3%, **not** 0–1.0); `dal` is the string form (e.g. `"DAL-A"`) |
-| `diff` | tool-defined; **blocked on fingerprint adoption** (§4.2 is SHOULD) — unusable cross-tool until all tools emit fingerprints | `{ added:[fingerprint], removed:[fingerprint], unchanged:N }`; baseline is a prior `check --format json`, given via `--baseline <file>` |
+| `diff` | tool-defined; **blocked on fingerprint adoption** (§4.2 is SHOULD) — unusable cross-tool until all tools emit fingerprints | `{ added:[fingerprint], removed:[fingerprint], unchanged:N }`; baseline is a prior `check --format json`, given via `--baseline <file>`. **Exit `1`** when `added[]` contains any open ERROR (or any severity under `--strict`), else `0` |
 | `hara` → `.fusa-hara.json` | **input** file; the `hara` command validates/normalises it (and scaffolds a template if absent), output tool-defined | `{ hazards:[{id, hazard, severity, exposure, controllability, asil, safetyGoal}] }` |
 | `sas` → `sas.json`/`sas.md` | tool-defined; **conflict**: go md-only vs cpp `sas.json`+`md` | `sas.json` (envelope + tool-defined body) plus `sas.md` |
 | `sci` → `sci.json` | tool-defined; **conflict**: go stdout-only vs cpp `sci.json` | `sci.json` (envelope + tool-defined body) |
@@ -900,6 +914,28 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.6.0 — 2026-06-10 (sixth review round: go-FuSa / c-FuSa / cpp-FuSa)
+
+- Fixed a duplicated bullet in the v1.4.0 changelog entry.
+- **`provenance.intoto.jsonl`** (from `slsa`) added to the §1.3 evidence list so
+  `audit-pack` packs it; §7 states `--full` does **not** run `slsa` but packs the
+  attestation if present.
+- **qualify hash:** `results[].name` MUST be **unique** (total sort order, stable
+  hash on duplicate names).
+- **`diff` exit codes (§13):** `1` when `added[]` has an open ERROR (or any under
+  `--strict`), else `0`.
+- **exit 3 + `--output` (§2.3):** SHOULD still write the partial document.
+- **duplicate-id rule (§1.2.2):** rebased onto "whenever a tool reads
+  `.fusa-reqs.json`" instead of binding it to `check`.
+- **§9.2 envelope (SHOULD):** a §9.2 `--format json` SHOULD carry the §3 envelope
+  to avoid a breaking change when FuSaOps later consumes it.
+- **init (§9.1):** named the required values (`project.name`, `standard`); added
+  `--project-version`; `report --strict` ⇒ exit `2`; `version --format text` =
+  default line.
+- **`disposition` command:** MAY support remove/update (§9.3).
+- **§11:** added shared-MUST rows for `--output` no-stdout and project-relative
+  paths.
 
 ### 1.5.0 — 2026-06-10 (fifth review round: go-FuSa / c-FuSa / cpp-FuSa)
 
@@ -929,8 +965,6 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 - Stale "spec v1.3" reference in §1.2.1 → "any spec v1.x".
 
 ### 1.4.0 — 2026-06-10 (fourth review round: go-FuSa / c-FuSa / cpp-FuSa)
-
-- **`location.file` MUST be project-relative (§4):** the missing rule that makes
 
 - **`location.file` MUST be project-relative (§4):** the missing rule that makes
   the §4.2 fingerprint actually identical across tools/machines (and the SARIF
