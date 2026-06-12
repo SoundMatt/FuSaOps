@@ -176,9 +176,10 @@ tool — **no manual rebuild, and FuSaOps itself does not need a new release**. 
 weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
-**Bundled tools.** The image bundles `gofusa` (Go, v0.25), `cpfusa` (C++,
-v0.9.2), and `rsfusa` (Rust, v0.2.0). `cfusa` and `pyfusa` are registered
-adapters but not yet bundled — those tools do not yet publish a Docker image.
+**Bundled tools.** The image currently bundles `gofusa` (Go, v0.25). All five
+adapters are registered; the other tools' Docker images will be added to the
+bundle as they publish to GHCR (cpp-FuSa v0.9.2, c-FuSa v0.5.1, rust-FuSa v0.2.0,
+py-FuSa v0.1.1 are each spec v1.9 aligned).
 
 > The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
 > runs under emulation; add `--platform linux/amd64` if your client needs it.
