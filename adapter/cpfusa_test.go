@@ -16,8 +16,8 @@ func cppFuSaTestAdapter(run runnerFunc) *cppFuSaAdapter {
 	return a
 }
 
-// TestCppFuSaTrace verifies cpp-FuSa trace normalization:
-// implementedBy/testedBy location arrays → flat Tag slice; summary → Coverage.
+// TestCppFuSaTrace verifies cpp-FuSa trace normalization for v0.10.0+ format:
+// per-requirement nested tags[] flattened; kind "req" mapped to "impl".
 //
 //fusa:test REQ-FO-ADP024
 func TestCppFuSaTrace(t *testing.T) {
@@ -26,13 +26,17 @@ func TestCppFuSaTrace(t *testing.T) {
 		"requirements": [
 			{
 				"id": "REQ-001", "title": "Req one", "standardRef": "ISO 26262-6",
-				"implementedBy": [{"file": "src/a.cpp", "line": 10}],
-				"testedBy":      [{"file": "test/a_test.cpp", "line": 20}]
+				"tags": [
+					{"requirementId": "REQ-001", "file": "src/a.cpp", "line": 10, "kind": "req"},
+					{"requirementId": "REQ-001", "file": "test/a_test.cpp", "line": 20, "kind": "test"}
+				]
 			},
 			{
 				"id": "REQ-002", "title": "Req two", "standardRef": "",
-				"implementedBy": [{"file": "src/b.cpp", "line": 5}, {"file": "src/c.cpp", "line": 7}],
-				"testedBy":      []
+				"tags": [
+					{"requirementId": "REQ-002", "file": "src/b.cpp", "line": 5, "kind": "req"},
+					{"requirementId": "REQ-002", "file": "src/c.cpp", "line": 7, "kind": "req"}
+				]
 			}
 		],
 		"summary": {"total": 2, "annotated": 2, "tested": 1, "annotationCoverage": 100.0, "testCoverage": 50.0}
@@ -204,14 +208,17 @@ func TestCppFuSaStandardsRunError(t *testing.T) {
 }
 
 // TestParseCppFuSaTrace is a unit test for the parser helper (no runner needed).
+// Uses cpp-FuSa v0.10.0+ per-requirement tags[] format with kind "req" → "impl" mapping.
 //
 //fusa:test REQ-FO-ADP024
 func TestParseCppFuSaTrace(t *testing.T) {
 	const data = `{
 		"requirements":[
 			{"id":"R1","title":"T1","standardRef":"IEC 61508",
-			 "implementedBy":[{"file":"x.cpp","line":1}],
-			 "testedBy":[{"file":"x_test.cpp","line":99}]}
+			 "tags":[
+				{"requirementId":"R1","file":"x.cpp","line":1,"kind":"req"},
+				{"requirementId":"R1","file":"x_test.cpp","line":99,"kind":"test"}
+			 ]}
 		],
 		"summary":{"total":1,"annotated":1,"tested":1}
 	}`

@@ -18,9 +18,10 @@ type cppFuSaAdapter struct {
 }
 
 // Trace runs "cpfusa trace --format json --output <tmp>" and normalizes
-// cpp-FuSa's {implementedBy/testedBy/summary} schema to trace.Matrix.
-// cpp-FuSa writes trace JSON to a file (not stdout) and uses per-requirement
-// impl/test location arrays rather than the spec's flat tags array.
+// cpp-FuSa's non-conformant output to trace.Matrix (cpp-FuSa issue #3).
+// cpp-FuSa writes trace JSON to a file rather than stdout, uses per-requirement
+// nested tags[] rather than the spec's flat top-level tags[], and emits tag
+// kind "req" instead of "impl".
 //
 //fusa:req REQ-FO-ADP024
 func (a *cppFuSaAdapter) Trace(ctx context.Context, root string) (*trace.Matrix, error) {
@@ -42,23 +43,22 @@ func (a *cppFuSaAdapter) Trace(ctx context.Context, root string) (*trace.Matrix,
 	return parseCppFuSaTrace(data, a.name)
 }
 
-// parseCppFuSaTrace decodes cpp-FuSa's trace JSON into trace.Matrix, mapping
-// implementedBy/testedBy location arrays to the spec's flat tags format and
-// summary.total/annotated/tested to coverage.
+// parseCppFuSaTrace decodes cpp-FuSa's trace JSON (v0.10.0+ format) into
+// trace.Matrix. cpp-FuSa nests tags[] inside each requirements entry instead of
+// at the top level, and uses kind "req" where the spec requires "impl". Both are
+// normalised here pending the fix in cpp-FuSa issue #3.
 func parseCppFuSaTrace(data []byte, tool string) (*trace.Matrix, error) {
 	var raw struct {
 		Requirements []struct {
-			ID            string `json:"id"`
-			Title         string `json:"title"`
-			StandardRef   string `json:"standardRef"`
-			ImplementedBy []struct {
-				File string `json:"file"`
-				Line int    `json:"line"`
-			} `json:"implementedBy"`
-			TestedBy []struct {
-				File string `json:"file"`
-				Line int    `json:"line"`
-			} `json:"testedBy"`
+			ID          string `json:"id"`
+			Title       string `json:"title"`
+			StandardRef string `json:"standardRef"`
+			Tags        []struct {
+				RequirementID string `json:"requirementId"`
+				File          string `json:"file"`
+				Line          int    `json:"line"`
+				Kind          string `json:"kind"`
+			} `json:"tags"`
 		} `json:"requirements"`
 		Summary struct {
 			Total     int `json:"total"`
@@ -82,20 +82,16 @@ func parseCppFuSaTrace(data []byte, tool string) (*trace.Matrix, error) {
 			Title:    req.Title,
 			Standard: req.StandardRef,
 		})
-		for _, loc := range req.ImplementedBy {
+		for _, tag := range req.Tags {
+			kind := tag.Kind
+			if kind == "req" {
+				kind = "impl" // cpp-FuSa issue #3: "req" → "impl"
+			}
 			m.Tags = append(m.Tags, trace.Tag{
 				RequirementID: req.ID,
-				File:          loc.File,
-				Line:          loc.Line,
-				Kind:          "impl",
-			})
-		}
-		for _, loc := range req.TestedBy {
-			m.Tags = append(m.Tags, trace.Tag{
-				RequirementID: req.ID,
-				File:          loc.File,
-				Line:          loc.Line,
-				Kind:          "test",
+				File:          tag.File,
+				Line:          tag.Line,
+				Kind:          kind,
 			})
 		}
 	}

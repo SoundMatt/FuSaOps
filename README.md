@@ -177,10 +177,10 @@ tool — **no manual rebuild, and FuSaOps itself does not need a new release**. 
 weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
-**Bundled tools.** The image currently bundles `gofusa` (Go, v0.26). All six
+**Bundled tools.** The image currently bundles `gofusa` (Go, v0.29.0). All six
 adapters are registered; the other tools' Docker images will be added to the
-bundle as they publish to GHCR (cpp-FuSa v0.11.0, c-FuSa v0.5.2, rust-FuSa v0.2.3,
-py-FuSa v0.1.2, java-FuSa v0.1.0 are each spec v1.10 aligned). The java-FuSa
+bundle as they publish to GHCR (cpp-FuSa v0.12.0, c-FuSa v0.5.4, rust-FuSa v0.2.4,
+py-FuSa v0.1.3, java-FuSa v0.1.0 are each spec v1.10 aligned). The java-FuSa
 image requires a JVM in the runtime stage; the Dockerfile will add `openjdk-21-jre`
 when the image is wired in.
 
@@ -224,14 +224,14 @@ orchestrates also gates FuSaOps itself.
 
 | Language | Adapter    | Tool     | Bundled in image |
 |----------|------------|----------|------------------|
-| Go       | go-FuSa    | `gofusa` | ✅ (v0.26, spec v1.10) |
-| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.11.0, spec v1.10) |
-| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.2, spec v1.10) |
-| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.2.3, spec v1.10) |
-| Python   | py-FuSa    | `pyfusa` | ✅ (v0.1.2, spec v1.10, alpha) |
+| Go       | go-FuSa    | `gofusa` | ✅ (v0.29.0, spec v1.10) |
+| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.12.0, spec v1.10) |
+| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.4, spec v1.10) |
+| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.2.4, spec v1.10) |
+| Python   | py-FuSa    | `pyfusa` | ✅ (v0.1.3, spec v1.10, alpha) |
 | Java     | java-FuSa  | `jfusa`  | ✅ (v0.1.0, spec v1.10, alpha) |
 
-All five adapters exist; an un-bundled tool reports as *not installed* until its
+All six adapters exist; an un-bundled tool reports as *not installed* until its
 image publishes. New languages are added by implementing the `adapter.Adapter`
 interface — see [docs/extending.md](docs/extending.md).
 
