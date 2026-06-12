@@ -137,3 +137,15 @@ func TestServe(t *testing.T) {
 		t.Errorf("Serve returned unexpected error: %v", err)
 	}
 }
+
+// TestListenAndServeBindError verifies ListenAndServe propagates bind errors.
+//
+//fusa:test REQ-FO-SRV005
+func TestListenAndServeBindError(t *testing.T) {
+	reg := adapter.NewRegistry()
+	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{})
+	err := s.ListenAndServe("!invalid-addr!")
+	if err == nil {
+		t.Fatal("expected bind error for invalid address")
+	}
+}

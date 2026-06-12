@@ -184,7 +184,9 @@ func newConformingRunFunc() RunFunc {
 
 // TestRunConformingTool verifies all checks pass for a fully conforming fake tool.
 //
+//fusa:test REQ-FO-CNF004
 //fusa:test REQ-FO-CNF005
+//fusa:test REQ-FO-CNF010
 func TestRunConformingTool(t *testing.T) {
 	rep, err := Run("testBinary", Options{
 		TempDir: t.TempDir(),
@@ -207,6 +209,8 @@ func TestRunConformingTool(t *testing.T) {
 
 // TestHasFailures verifies MUST-fail detection.
 //
+//fusa:test REQ-FO-CNF001
+//fusa:test REQ-FO-CNF002
 //fusa:test REQ-FO-CNF003
 func TestHasFailures(t *testing.T) {
 	rep := &Report{}

@@ -171,3 +171,34 @@ func toolNames(as []Adapter) []string {
 	}
 	return out
 }
+
+// TestCmdAdapterStandards verifies the Standards method decodes a gap report and
+// recomputes the summary from raw objective statuses.
+//
+//fusa:test REQ-FO-ADP018
+//fusa:test REQ-FO-ADP019
+func TestCmdAdapterStandards(t *testing.T) {
+	const payload = `{"standard":"iso26262","tool":"gofusa","language":"go",
+		"objectives":[{"id":"S1","status":"satisfied"},{"id":"G1","status":"gap"}],
+		"summary":{"total":2,"satisfied":1,"partial":0,"gaps":1}}`
+	a := &cmdAdapter{
+		name: "go-FuSa", language: fusaops.LangGo, tool: "gofusa",
+		extensions: []string{".go"},
+		run: func(_ context.Context, _, _ string, _ ...string) ([]byte, error) {
+			return []byte(payload), nil
+		},
+	}
+	r, err := a.Standards(context.Background(), t.TempDir(), "iso26262")
+	if err != nil {
+		t.Fatalf("Standards: %v", err)
+	}
+	if r.Standard != "iso26262" {
+		t.Errorf("standard: got %q, want iso26262", r.Standard)
+	}
+	if r.Summary.Gaps != 1 {
+		t.Errorf("gaps: got %d, want 1", r.Summary.Gaps)
+	}
+	if r.Summary.Satisfied != 1 {
+		t.Errorf("satisfied: got %d, want 1", r.Summary.Satisfied)
+	}
+}
