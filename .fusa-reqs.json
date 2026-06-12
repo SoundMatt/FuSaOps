@@ -1105,6 +1105,13 @@
       "description": "FuSaOps shall provide a py-FuSa adapter (pyfusa) that detects .py files and delegates check/trace/qualify/release/audit-pack to pyfusa via the generic cmdAdapter path. The pyfusa binary produces spec v1.9 conformant JSON so no output normalisation is required.",
       "priority": "MUST",
       "rationale": "Extends FuSaOps multi-language orchestration to Python projects using py-FuSa v0.1.0 (alpha)."
+    },
+    {
+      "id": "REQ-FO-ADP028",
+      "title": "java-FuSa adapter",
+      "description": "FuSaOps shall provide a java-FuSa adapter (jfusa) that detects .java files and delegates check/trace/qualify/release/audit-pack to jfusa via the generic cmdAdapter path. The jfusa binary produces spec v1.10 conformant JSON so no output normalisation is required.",
+      "priority": "MUST",
+      "rationale": "Extends FuSaOps multi-language orchestration to Java projects using java-FuSa v0.1.0."
     }
   ]
 }

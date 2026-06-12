@@ -20,6 +20,7 @@ var langExtensions = map[fusaops.Language][]string{
 	fusaops.LangCpp:    {".cpp", ".cc", ".cxx", ".hpp", ".hh"},
 	fusaops.LangRust:   {".rs"},
 	fusaops.LangPython: {".py"},
+	fusaops.LangJava:   {".java"},
 }
 
 // LangStat records how many source files of a language were found.
