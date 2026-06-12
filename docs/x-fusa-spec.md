@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.10.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.10.2 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -969,7 +969,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-12 (go-FuSa v0.26 · cpp-FuSa v0.11.0 · c-FuSa v0.5.2 · rust-FuSa v0.2.3 · py-FuSa v0.1.2 · java-FuSa v0.1.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-12 (go-FuSa v0.29.0 · cpp-FuSa v0.12.0 · c-FuSa v0.5.5 · rust-FuSa v0.2.4 · py-FuSa v0.1.3 · java-FuSa v0.1.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -980,44 +980,47 @@ Snapshot 2026-06-12 (go-FuSa v0.26 · cpp-FuSa v0.11.0 · c-FuSa v0.5.2 · rust-
 | check finding `ruleId` (camel) | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
 | check finding **nested `location`** | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
 | check finding `remediation` (not `fix`) | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
-| trace **`requirements/tags/coverage`** schema | ✅ | ✅ | ✅† flat `tags[]` (v0.10.0) | ✅ | ✅ | ▫️ verify |
+| trace **`requirements/tags/coverage`** schema | ✅ | ✅ | ⚠️†† per-req nested `tags[]`, not top-level | ✅ | ✅ | ▫️ verify |
 | trace `--format json` | ✅ | ✅ | ✅† file via `--output` | ✅ | ✅ | ▫️ verify |
 | qualify `--output` + `total/passed/failed` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `sbom.json` name + `{module,components}` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `components[].hash` = `sha256:hex` (§2.7) | ✅ (v0.26) | ✅ | ✅ | ✅ | ▫️ | ▫️ verify |
+| `components[].hash` = `sha256:hex` (§2.7) | ✅ | ✅ | ✅ | ✅ | ✅ (v0.1.3) | ▫️ verify |
 | audit-pack = single **ZIP** + `manifest.json` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | evidence filenames lowercase-kebab | ✅ | ✅ | ✅ | ✅ | ▫️ | ▫️ verify |
 | exit `2` for usage errors | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
-| exit `3` for runtime errors | ✅ | ✅ | ✅ | ✅ | ▫️ verify | ▫️ verify |
+| exit `3` for runtime errors | ✅ | ✅ | ✅ | ✅ | ✅ (v0.1.3) | ▫️ verify |
 | `--no-color`/`NO_COLOR` | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
-| `--output` ⇒ no stdout copy (§2.2) | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify |
+| `--output` ⇒ no stdout copy (§2.2) | ✅ (v0.29.0) | ▫️ qualify only | ▫️ v0.12.1 WIP | ▫️ qualify+comp only | ▫️ verify | ▫️ verify |
 | `location.file`/`tags[].file` project-relative | ▫️ verify | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
 | envelope `tool/toolVersion/language` on check + gap | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `kind` + common header on check + gap docs (§3.1) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `kind` + common header on trace/qualify/sbom/pack (§3.1) | ✅ (v0.26) | ✅ | ⚠️ trace kind is `"trace-report"` not `"trace-matrix"` | ✅ | ✅ | ✅ |
+| `kind` + common header on trace/qualify/sbom/pack (§3.1) | ✅ | ✅ | ⚠️ trace kind is `"trace-report"` not `"trace-matrix"` | ✅ | ✅ | ✅ |
 | gap-report `kind` = `"gap-report"` (§3.1) | ✅ | ✅ | ✅ | ✅ | ⚠️ emits `"<std>-gap-report"` | ▫️ verify |
-| structured `error {code,message}` on check (§3.2) | ✅ | ✅ | ✅ | ✅ | ▫️ add | ▫️ verify |
+| structured `error {code,message}` on check (§3.2) | ✅ | ✅ | ✅ | ✅ | ✅ (v0.1.3) | ▫️ verify |
 | `capabilities` command (MUST, §9.1) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `schemaVersion` on check + gap docs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `schemaVersion` on trace/qualify/sbom/pack | ✅ (v0.26) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `schemaVersion` on trace/qualify/sbom/pack | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | finding `category` | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
-| finding `standard`+`clause` | ✅ | ✅ | ✅ | ✅ | ▫️ add | ▫️ verify |
+| finding `standard`+`clause` | ✅ | ✅ | ✅ | ✅ | ✅ (v0.1.3) | ▫️ verify |
 | finding `fingerprint` (MUST, §4.2) | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
-| location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ | ▫️ | ▫️ | ▫️ |
+| location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ | ▫️ fields exist, always 0 | ▫️ | ▫️ |
 | `ruleId` regex + qualified `lang/ruleId` (§1.5) | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify |
-| ids format-invariant across formats (§2.9) | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify |
+| ids format-invariant across formats (§2.9) | ✅ (v0.29.0) | ▫️ verify | ▫️ verify | ✅ (v0.2.4) | ▫️ verify | ▫️ verify |
 | image: **alpine/musl base** + `/usr/local/bin/<bin>` (§15) | ✅ | ✅ | ✅ | ✅ | ▫️ verify | ▫️ verify (JVM base) |
 | image: OCI + `io.x-fusa.*` labels (§15) | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
-| standards `iso21434`+`unece`+`iec62443`+`slsa` subcommands (§9.3) | ✅ (v0.26) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| standards `iso21434`+`unece`+`iec62443`+`slsa` subcommands (§9.3) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | standards canonical §9.3 shape (`satisfied`/`gaps`) | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
 | `slsa` standard id = `"slsa"`, kind = `"gap-report"` (§2.4.1) | ✅ | ✅ | ▫️ | ✅ | ✅ | ▫️ verify |
-| `comp` command (§9.2 SHOULD) | ✅ (engine rule) | ✅ | ✅ (v0.10.0) | ✅ (v0.2.3) | ✅ | ✅ |
-| trace `secTestedRequirements` (MUST, §5) | ✅ | ✅ | ✅ (v0.10.0) | ✅ | ✅ | ▫️ verify |
+| `comp` command (§9.2 SHOULD) | ✅ (engine rule) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| trace `secTestedRequirements` (MUST, §5) | ✅ | ✅ | ✅ | ✅ | ✅ | ▫️ verify |
 | `fusaops trace --gaps/--req-coverage/--sec-tested` (§5) | — | — | — | — | — | — |
 
-† cpp-FuSa v0.10.0 adopted the flat `tags[]` schema and `secTestedRequirements`; the
-remaining issues are `kind: "trace-report"` (should be `"trace-matrix"`) and tag
-kind `"req"` (should be `"impl"`) — see cpp-FuSa issue #3.
+† cpp-FuSa trace requires `--output <file>`; stdout-by-default fix is in v0.12.1 WIP (§2.2).
+
+†† cpp-FuSa v0.10.0 moved from `implementedBy[]`/`testedBy[]` to per-requirement nested `tags[]`,
+but the spec §5 requires a **top-level flat `tags[]` array**. Tags are still nested inside each
+`requirements[]` entry, and tag kind `"req"` should be `"impl"`. Both tracked in cpp-FuSa issue #3.
+FuSaOps normalises both during ingestion.
 
 The `req`/`impact`/`metrics`/`lint`/`fix` commands are §9.3 optional and
 **not consumed by FuSaOps v1** — intentionally absent from the audited rows above.
@@ -1027,14 +1030,15 @@ The `req`/`impact`/`metrics`/`lint`/`fix` commands are §9.3 optional and
 
 **Net change-set to reach full conformance:**
 
-- **cpp-FuSa:** trace `kind` from `"trace-report"` → `"trace-matrix"` (§3.1); tag kind
-  `"req"` → `"impl"` (§5). Both tracked in cpp-FuSa issue #3.
+- **cpp-FuSa:** trace top-level flat `tags[]` (currently per-req nested, §5); tag kind
+  `"req"` → `"impl"` (§5); trace `kind` from `"trace-report"` → `"trace-matrix"` (§3.1).
+  All tracked in cpp-FuSa issue #3.
 - **py-FuSa:** gap-report `kind` from `"<std>-gap-report"` → `"gap-report"` (§3.1)
   across all 7 compliance modules. Tracked in py-FuSa issue #1.
 - **java-FuSa v0.1.0:** newly added; ▫️ verify rows to be confirmed in v0.2.0
-  (severity enum, tag kinds, exit codes, hash format, image labels, etc.).
-- **go-FuSa v0.27 (in progress):** gap-report stdout → stderr when `--output` given (§2.2);
-  `slsa` standard id confirmed ✅ in working tree.
+  (severity enum, tag kinds, exit codes, hash format, image labels, etc.). Tracked in java-FuSa issue #1.
+- **All tools:** `--output` no-stdout-copy (§2.2) fully conformant only in go-FuSa v0.29.0; partial fixes
+  in c-FuSa v0.5.4 (qualify) and rust-FuSa v0.2.4 (qualify+comp); cpp-FuSa in v0.12.1 WIP.
 
 ---
 
@@ -1077,6 +1081,20 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.10.2 — 2026-06-12 (version snapshot updated; §11 corrected for cpp-FuSa trace format and py-FuSa v0.1.3 fixes)
+
+- **Version snapshot updated (§11):** go-FuSa v0.29.0 · cpp-FuSa v0.12.0 · c-FuSa v0.5.5 · rust-FuSa v0.2.4 · py-FuSa v0.1.3 · java-FuSa v0.1.0.
+- **§11 conformance corrections:**
+  - `--output` no stdout copy (§2.2): go-FuSa ▫️ → ✅ (v0.29.0 §2.2+§2.9 test suite); c-FuSa and rust-FuSa updated to ▫️ partial (qualify only); cpp-FuSa ▫️ v0.12.1 WIP.
+  - `ids format-invariant (§2.9)`: go-FuSa ▫️ → ✅ (v0.29.0); rust-FuSa ▫️ → ✅ (v0.2.4 §2.9 suite).
+  - `components[].hash sha256:hex`: py-FuSa ▫️ → ✅ (v0.1.3).
+  - `exit 3 for runtime errors`: py-FuSa ▫️ → ✅ (v0.1.3).
+  - `structured error {code,message}`: py-FuSa ▫️ add → ✅ (v0.1.3 §3.2 JSON error envelope).
+  - `finding standard+clause`: py-FuSa ▫️ add → ✅ (v0.1.3 engine injection).
+  - `trace requirements/tags/coverage schema`: cpp-FuSa footnote corrected — v0.10.0 moved from `implementedBy/testedBy` to per-requirement nested `tags[]`, not top-level flat; the original bug in issue #3 (flat top-level tags[]) is still open. FuSaOps normalises during ingestion.
+- **FuSaOps `adapter/cpfusa.go` updated:** `parseCppFuSaTrace` updated to parse cpp-FuSa v0.10.0+ per-requirement nested `tags[]` format; maps tag kind `"req"` → `"impl"` pending cpp-FuSa issue #3 fix.
+- **Issues filed on tool repos:** go-FuSa #25 (endLine/endColumn feat), rust-FuSa #6 (end_line always 0), cpp-FuSa #5 (endLine/endColumn feat), py-FuSa #2 (endLine/endColumn feat), py-FuSa #3 (structured error feat), java-FuSa #1 (§11 conformance tracking). Closed: c-FuSa #9, py-FuSa #4 (incorrectly filed — both tools already support `--no-color`).
 
 ### 1.10.1 — 2026-06-12 (java-FuSa added; §11 table corrected after code review)
 
