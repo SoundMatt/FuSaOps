@@ -20,11 +20,12 @@
 #   docker run --rm -p 8080:8080 -v "$(pwd)":/project ghcr.io/soundmatt/fusaops serve --addr :8080
 
 # ── Tool stages (source = each x-FuSa's published image) ──────────────────────
+# Uncomment a stage when the tool's image is published to ghcr.io.
 FROM ghcr.io/soundmatt/go-fusa:latest   AS gofusa
 FROM ghcr.io/soundmatt/cpp-fusa:latest  AS cpfusa
-FROM ghcr.io/soundmatt/c-fusa:latest    AS cfusa
 FROM ghcr.io/soundmatt/rust-fusa:latest AS rsfusa
-FROM ghcr.io/soundmatt/py-fusa:latest   AS pyfusa
+# FROM ghcr.io/soundmatt/c-fusa:latest    AS cfusa   # no Docker image yet
+# FROM ghcr.io/soundmatt/py-fusa:latest   AS pyfusa  # no Docker image yet
 
 # ── Build fusaops ─────────────────────────────────────────────────────────────
 FROM golang:1.22-alpine AS build
@@ -45,9 +46,9 @@ RUN apk add --no-cache git ca-certificates libstdc++
 COPY --from=build  /bin/fusaops          /usr/local/bin/fusaops
 COPY --from=gofusa /usr/local/bin/gofusa /usr/local/bin/gofusa
 COPY --from=cpfusa /usr/local/bin/cpfusa /usr/local/bin/cpfusa
-COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa
 COPY --from=rsfusa /usr/local/bin/rsfusa /usr/local/bin/rsfusa
-COPY --from=pyfusa /usr/local/bin/pyfusa /usr/local/bin/pyfusa
+# COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa   # no Docker image yet
+# COPY --from=pyfusa /usr/local/bin/pyfusa /usr/local/bin/pyfusa  # no Docker image yet
 
 WORKDIR /project
 EXPOSE 8080

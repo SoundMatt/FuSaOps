@@ -177,8 +177,8 @@ weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
 **Bundled tools.** The image bundles `gofusa` (Go, v0.25), `cpfusa` (C++,
-v0.9.2), `cfusa` (C, v0.5.1), `rsfusa` (Rust, v0.2.0), and `pyfusa` (Python,
-v0.1.1) — all five are spec v1.9 aligned.
+v0.9.2), and `rsfusa` (Rust, v0.2.0). `cfusa` and `pyfusa` are registered
+adapters but not yet bundled — those tools do not yet publish a Docker image.
 
 > The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
 > runs under emulation; add `--platform linux/amd64` if your client needs it.
