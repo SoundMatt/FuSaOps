@@ -86,6 +86,7 @@ const (
 	LangCpp    Language = "cpp"
 	LangRust   Language = "rust"
 	LangPython Language = "python"
+	LangJava   Language = "java"
 )
 
 // String implements fmt.Stringer.

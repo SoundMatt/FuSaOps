@@ -37,6 +37,8 @@ func itoa(n int) string {
 
 // TestHasGaps checks HasGaps and TotalGaps.
 //
+//fusa:test REQ-FO-STD001
+//fusa:test REQ-FO-STD002
 //fusa:test REQ-FO-STD005
 func TestHasGaps(t *testing.T) {
 	agg := &Aggregate{
@@ -282,6 +284,7 @@ func TestCommandStandard(t *testing.T) {
 // TestDisplayName verifies human-readable labels.
 //
 //fusa:test REQ-FO-STD006
+//fusa:test REQ-FO-STD009
 func TestDisplayName(t *testing.T) {
 	cases := []struct{ id, want string }{
 		{"iso26262", "ISO 26262"},

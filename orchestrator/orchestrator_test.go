@@ -139,6 +139,7 @@ func TestRunComponentPins(t *testing.T) {
 }
 
 //fusa:test REQ-FO-ORC008
+//fusa:test REQ-FO-ORC009
 func TestRunWithWorkers(t *testing.T) {
 	reg := regWith(
 		&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true,

@@ -13,7 +13,8 @@
 
 FuSaOps sits on top of the x-FuSa toolchain — [go-FuSa](https://github.com/SoundMatt/go-FuSa),
 [c-FuSa](https://github.com/SoundMatt/c-FuSa), [cpp-FuSa](https://github.com/SoundMatt/cpp-FuSa),
-[rust-FuSa](https://github.com/SoundMatt/rust-FuSa), [py-FuSa](https://github.com/SoundMatt/py-FuSa)
+[rust-FuSa](https://github.com/SoundMatt/rust-FuSa), [py-FuSa](https://github.com/SoundMatt/py-FuSa),
+[java-FuSa](https://github.com/SoundMatt/java-FuSa)
 and future language tools — and gives mixed-language repositories a single,
 intuitive way to **scan**, **aggregate**, and **report** functional safety
 evidence. One command runs the right tool for every language present and merges
@@ -176,10 +177,12 @@ tool — **no manual rebuild, and FuSaOps itself does not need a new release**. 
 weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
-**Bundled tools.** The image currently bundles `gofusa` (Go, v0.25). All five
+**Bundled tools.** The image currently bundles `gofusa` (Go, v0.26). All six
 adapters are registered; the other tools' Docker images will be added to the
-bundle as they publish to GHCR (cpp-FuSa v0.9.2, c-FuSa v0.5.1, rust-FuSa v0.2.0,
-py-FuSa v0.1.1 are each spec v1.9 aligned).
+bundle as they publish to GHCR (cpp-FuSa v0.11.0, c-FuSa v0.5.2, rust-FuSa v0.2.3,
+py-FuSa v0.1.2, java-FuSa v0.1.0 are each spec v1.10 aligned). The java-FuSa
+image requires a JVM in the runtime stage; the Dockerfile will add `openjdk-21-jre`
+when the image is wired in.
 
 > The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
 > runs under emulation; add `--platform linux/amd64` if your client needs it.
@@ -221,11 +224,12 @@ orchestrates also gates FuSaOps itself.
 
 | Language | Adapter    | Tool     | Bundled in image |
 |----------|------------|----------|------------------|
-| Go       | go-FuSa    | `gofusa` | ✅ (v0.25, spec v1.9) |
-| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.9.2, spec v1.9) |
-| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.1, spec v1.9) |
-| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.2.0, spec v1.9) |
-| Python   | py-FuSa    | `pyfusa` | ✅ (v0.1.1, spec v1.9, alpha) |
+| Go       | go-FuSa    | `gofusa` | ✅ (v0.26, spec v1.10) |
+| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.11.0, spec v1.10) |
+| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.2, spec v1.10) |
+| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.2.3, spec v1.10) |
+| Python   | py-FuSa    | `pyfusa` | ✅ (v0.1.2, spec v1.10, alpha) |
+| Java     | java-FuSa  | `jfusa`  | ✅ (v0.1.0, spec v1.10, alpha) |
 
 All five adapters exist; an un-bundled tool reports as *not installed* until its
 image publishes. New languages are added by implementing the `adapter.Adapter`
@@ -238,7 +242,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (146 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (159 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

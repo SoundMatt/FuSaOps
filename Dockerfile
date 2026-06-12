@@ -21,14 +21,17 @@
 
 # ── Tool stages (source = each x-FuSa's published image) ──────────────────────
 FROM ghcr.io/soundmatt/go-fusa:latest AS gofusa
-# cpp-FuSa v0.9.2 is spec v1.9 aligned; enable once ghcr.io/soundmatt/cpp-fusa is published
+# cpp-FuSa v0.11.0 is spec v1.10 aligned; enable once ghcr.io/soundmatt/cpp-fusa is published
 # FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa
-# c-FuSa v0.5.1 is spec v1.9 aligned; enable once ghcr.io/soundmatt/c-fusa is published
+# c-FuSa v0.5.2 is spec v1.10 aligned; enable once ghcr.io/soundmatt/c-fusa is published
 # FROM ghcr.io/soundmatt/c-fusa:latest   AS cfusa
-# rust-FuSa v0.2.0 is spec v1.9 aligned; enable once ghcr.io/soundmatt/rust-fusa is published
+# rust-FuSa v0.2.3 is spec v1.10 aligned; enable once ghcr.io/soundmatt/rust-fusa is published
 # FROM ghcr.io/soundmatt/rust-fusa:latest AS rsfusa
-# py-FuSa v0.1.1 is spec v1.9 aligned; enable once ghcr.io/soundmatt/py-fusa is published
+# py-FuSa v0.1.2 is spec v1.10 aligned; enable once ghcr.io/soundmatt/py-fusa is published
 # FROM ghcr.io/soundmatt/py-fusa:latest   AS pyfusa
+# java-FuSa v0.1.0 is spec v1.10 aligned; enable once ghcr.io/soundmatt/java-fusa is published
+# Note: enabling this stage also requires adding `openjdk21-jre` to the apk install line below.
+# FROM ghcr.io/soundmatt/java-fusa:latest AS jfusa
 
 # ── Build fusaops ─────────────────────────────────────────────────────────────
 FROM golang:1.22-alpine AS build
@@ -52,6 +55,7 @@ COPY --from=gofusa /usr/local/bin/gofusa /usr/local/bin/gofusa
 # COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa   # uncomment with FROM stage above
 # COPY --from=rsfusa /usr/local/bin/rsfusa /usr/local/bin/rsfusa  # uncomment with FROM stage above
 # COPY --from=pyfusa /usr/local/bin/pyfusa /usr/local/bin/pyfusa  # uncomment with FROM stage above
+# COPY --from=jfusa  /usr/local/bin/jfusa  /usr/local/bin/jfusa   # uncomment with FROM stage above
 
 WORKDIR /project
 EXPOSE 8080
