@@ -950,45 +950,52 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-10 (go-FuSa v0.25 · cpp-FuSa v0.8.0 · c-FuSa v0.4.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-11 (go-FuSa v0.25 · cpp-FuSa v0.9.2 · c-FuSa v0.5.1 · rust-FuSa v0.2.0 · py-FuSa v0.1.1). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
-| Item | go-FuSa | c-FuSa | cpp-FuSa |
-|---|---|---|---|
-| severity enum `ERROR/WARNING/INFO` | ✅ | ✅ | ✅ |
-| tag kinds `impl/test/sec-test` | ✅ | ✅ | ✅ |
-| `.fusa-reqs.json` (un-prefixed) | ✅ | ⚠️ `.cfusa-reqs.json` (+ stray `cfusa-reqs.json`) | ✅ |
-| `.fusa.json` schema (§1.2.1) | ▫️ subset | ⚠️ drifted keys | ✅ |
-| check finding `ruleId` (camel) | ✅ | ✅ | ✅ |
-| check finding **nested `location`** | ✅ | ✅ | ✅ |
-| check finding `remediation` (not `fix`) | ✅ | ✅ | ✅ |
-| trace **`requirements/tags/coverage`** schema | ✅ | ⚠️ `total/traced/tested/matrix` | ✅ |
-| trace `--format json` | ✅ | ⚠️ | ⚠️ text-only |
-| qualify `--output` + `total/passed/failed` | ✅ | ⚠️ stdout, `tests_passed/_failed` | ✅ |
-| `sbom.json` name + `{module,components}` | ✅ | ⚠️ `<proj>.spdx.json` only | ✅ |
-| `components[].hash` = `algo:value` | ▫️ `h1:` ok | ⚠️ | ✅ |
-| audit-pack = single **ZIP** + `manifest.json` | ✅ | ⚠️ directory + `MANIFEST.json` | ✅ |
-| evidence filenames lowercase-kebab | ✅ | ⚠️ `SAFETY_CASE.md`,`TARA.md` | ✅ |
-| exit `2` for usage errors | ✅ | ⚠️ verify | ✅ |
-| exit `3` for runtime errors | ✅ | ⚠️ | ✅ |
-| `--no-color`/`NO_COLOR` | ✅ | ✅ | ✅ |
-| `--output` ⇒ no stdout copy (§2.2) | ▫️ verify | ▫️ verify | ▫️ verify |
-| `location.file`/`tags[].file` project-relative | ▫️ verify | ✅ | ✅ |
-| envelope `tool/toolVersion/language` on check + gap | ✅ | ✅ | ✅ |
-| `kind` + common header on check + gap docs (§3.1) | ✅ | ✅ | ✅ |
-| `kind` + common header on trace/qualify/sbom/pack (§3.1) | ▫️ add | ▫️ add | ▫️ add |
-| structured `error {code,message}` on check (§3.2) | ✅ | ⚠️ | ✅ |
-| `capabilities` command (MUST, §9.1) | ✅ | ✅ | ✅ |
-| `schemaVersion` on check + gap docs | ✅ | ✅ | ✅ |
-| `schemaVersion` on trace/qualify/sbom/pack | ▫️ add | ▫️ add | ▫️ add |
-| finding `category` | ✅ | ✅ | ✅ |
-| finding `standard`+`clause` | ✅ | ✅ | ✅ |
-| finding `fingerprint` (MUST, §4.2) | ✅ | ✅ | ✅ |
-| location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ |
-| `ruleId` regex + qualified `lang/ruleId` (new, §1.5) | ▫️ verify | ▫️ verify | ▫️ verify |
-| ids format-invariant across formats (new, §2.9) | ▫️ verify | ▫️ verify | ▫️ verify |
-| image: **alpine/musl base** + `/usr/local/bin/<bin>` (§15) | ✅ alpine | ⚠️ ubuntu→alpine | ✅ alpine |
-| image: OCI + `io.x-fusa.*` labels (new, §15) | ▫️ add | ▫️ add | ▫️ add |
-| standards `<std>-gap-report.json` canonical §9.3 shape | ✅ | ⚠️ | ⚠️ `summary.addressed`/`gap` vs `satisfied`/`gaps` |
+| Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa |
+|---|---|---|---|---|---|
+| severity enum `ERROR/WARNING/INFO` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| tag kinds `impl/test/sec-test` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `.fusa-reqs.json` (un-prefixed) | ✅ | ✅ (v0.5.1) | ✅ | ✅ | ✅ |
+| `.fusa.json` schema (§1.2.1) | ▫️ subset | ✅ (v0.3.0+) | ✅ | ✅ | ▫️ subset |
+| check finding `ruleId` (camel) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| check finding **nested `location`** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| check finding `remediation` (not `fix`) | ✅ | ✅ | ✅ | ✅ | ▫️ add |
+| trace **`requirements/tags/coverage`** schema | ✅ | ✅ (v0.5.1) | ✅†‡ `implementedBy/testedBy/summary` | ✅ | ✅ |
+| trace `--format json` | ✅ | ✅ (v0.5.1) | ✅†‡ file via `--output` | ✅ | ✅ |
+| qualify `--output` + `total/passed/failed` | ✅ | ✅ (v0.5.1) | ✅ | ✅ | ✅ |
+| `sbom.json` name + `{module,components}` | ✅ | ✅ (v0.3.0+) | ✅ | ✅ | ▫️ add |
+| `components[].hash` = `algo:value` | ▫️ `h1:` ok | ✅ (v0.3.0+) | ✅ | ✅ | ▫️ |
+| audit-pack = single **ZIP** + `manifest.json` | ✅ | ✅ (v0.3.0+) | ✅ | ✅ | ▫️ add |
+| evidence filenames lowercase-kebab | ✅ | ✅ (v0.3.0+) | ✅ | ✅ | ▫️ |
+| exit `2` for usage errors | ✅ | ✅ (v0.5.1) | ✅ | ✅ | ✅ |
+| exit `3` for runtime errors | ✅ | ✅ (v0.5.1) | ✅ | ✅ | ▫️ verify |
+| `--no-color`/`NO_COLOR` | ✅ | ✅ | ✅ | ✅ | ▫️ add |
+| `--output` ⇒ no stdout copy (§2.2) | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify |
+| `location.file`/`tags[].file` project-relative | ▫️ verify | ✅ | ✅ | ✅ | ✅ |
+| envelope `tool/toolVersion/language` on check + gap | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `kind` + common header on check + gap docs (§3.1) | ✅ | ✅ | ✅ | ✅ | ▫️ add |
+| `kind` + common header on trace/qualify/sbom/pack (§3.1) | ▫️ add | ▫️ add | ▫️ add | ▫️ add | ▫️ add |
+| structured `error {code,message}` on check (§3.2) | ✅ | ✅ (v0.5.1) | ✅ | ✅ | ▫️ add |
+| `capabilities` command (MUST, §9.1) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `schemaVersion` on check + gap docs | ✅ | ✅ | ✅ | ✅ | ▫️ add |
+| `schemaVersion` on trace/qualify/sbom/pack | ▫️ add | ▫️ add | ▫️ add | ▫️ add | ▫️ add |
+| finding `category` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| finding `standard`+`clause` | ✅ | ✅ | ✅ | ✅ | ▫️ add |
+| finding `fingerprint` (MUST, §4.2) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| location `endLine/endColumn` (new) | ▫️ add | ▫️ | ▫️ | ▫️ | ▫️ |
+| `ruleId` regex + qualified `lang/ruleId` (new, §1.5) | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify |
+| ids format-invariant across formats (new, §2.9) | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify | ▫️ verify |
+| image: **alpine/musl base** + `/usr/local/bin/<bin>` (§15) | ✅ alpine | ✅ alpine | ✅ alpine | ✅ alpine | ▫️ verify |
+| image: OCI + `io.x-fusa.*` labels (new, §15) | ✅ | ✅ (v0.5.1) | ✅ (v0.9.2) | ✅ | ✅ |
+| standards `iso21434` + `unece` + `iec62443` + `slsa` subcommands (§9.3) | ✅ | ✅ (v0.5.1) | ✅ (v0.9.0+) | ✅ (v0.2.0+) | ✅ (v0.1.1+) |
+| standards canonical §9.3 shape (`satisfied`/`gaps`) | ✅ | ✅ (v0.5.1) | ✅ (v0.9.1) | ✅ | ✅ |
+| trace `secTestedRequirements` (MUST, §5) | ✅ | ✅ (v0.5.1) | ▫️ | ✅ | ✅ |
+| `fusaops trace --gaps/--req-coverage/--sec-tested` (§5) | — | — | — | — | — |
+
+‡ FuSaOps normalizes the non-conformant output in `adapter/cpfusa.go`; cpp-FuSa's
+trace schema (`implementedBy`/`testedBy` per-requirement arrays, file-only output)
+diverges from the spec's flat `tags` array and stdout emission. v0.9.2 added OCI labels.
 
 The `req`/`impact`/`metrics`/`lint`/`fix`/`iec62443`/`slsa` commands are §9.3
 optional and **not consumed by FuSaOps v1** — intentionally absent from the
@@ -999,28 +1006,22 @@ audited rows above.
 
 **Net change-set to reach full conformance:**
 
-- **c-FuSa:** nest `location`; add `remediation` (MUST §4), `fingerprint` (MUST §4.2),
-  `capabilities` (MUST §9.1); emit `kind`/`schemaVersion`/common header on check + gap
-  docs; exit `2`/`3`; `--no-color`/`NO_COLOR`; structured `error {code,message}` on
-  check; add `trace --format json` with `requirements/tags/coverage` schema **incl.
-  `secTestedRequirements`** (§5); `qualify --output` with `total/passed/failed`; emit
-  `sbom.json` with `algo:value` hashes; single-ZIP `audit-pack` + `manifest.json`;
-  `.fusa-reqs.json` (delete stray no-dot file) **+ duplicate-id ERROR check** (§1.2.2);
-  lowercase evidence filenames; **flip `--spdx-version` default to `2.3`**; **change
-  `release --output-dir` default to project root**; **declare multi-ID-annotation tool**
-  (§1.4); emit project-relative paths (§4/§5); **move image base ubuntu→alpine** +
-  static binary at `/usr/local/bin/cfusa` (§15); `standard`+`clause` on findings;
-  canonical §9.3 gap-report.
-  `qualify.hash` is MAY — fine to omit rather than add a JCS serialiser in C.
-- **cpp-FuSa:** add `trace --format json` with `requirements/tags/coverage` schema (§5);
-  fix `summary` keys in gap reports: `satisfied`/`gaps` instead of `addressed`/`gap`
-  (§9.3); `kind` + common header on remaining artefact types.
-  FuSaOps works around the summary key mismatch via `RecomputeSummary()` — fix
-  preferred so the conformance check passes.
+- **c-FuSa:** emit `kind`/`schemaVersion`/common header on trace/qualify/sbom/pack
+  (§3.1) — the remaining open item shared with all tools.
+  All prior MUST gaps (exit codes, structured errors, sbom.json, ZIP audit-pack, alpine
+  image, OCI labels, trace/qualify schema, standards subcommands) are fixed in v0.3.0–v0.5.1.
+- **FuSaOps:** ✅ `secTestedRequirements` now propagated through `trace.Coverage`,
+  `AggregateCoverage`, `ComponentTrace`; `fusaops trace` accepts `--gaps`,
+  `--req-coverage N`, `--sec-tested N`; `fusaops iec62443` dispatched.
+- **cpp-FuSa:** adopt `requirements/tags/coverage` flat schema for `trace --format json`
+  (§5) — current `implementedBy`/`testedBy` per-requirement arrays + file-only output
+  normalized by FuSaOps adapter; `kind` + common header on remaining artefact types.
+  (`summary.satisfied`/`gaps` keys fixed in v0.9.1; `iso21434`+`unece` subcommands added
+  in v0.9.0.)
 - **go-FuSa:** extend `schemaVersion` + `kind` + common header to **all** docs
   (trace/qualify/sbom/audit-pack); `.fusa.json` full §1.2.1 schema; image OCI labels.
-- **all three:** `kind` + common header on trace/qualify/sbom/pack (§3.1);
-  image OCI + `io.x-fusa.*` labels (§15).
+- **all five:** `kind` + common header on trace/qualify/sbom/pack (§3.1);
+  `schemaVersion` on those same documents (§3).
 
 ---
 

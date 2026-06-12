@@ -32,6 +32,7 @@ func runDiff(args []string, stdout, stderr io.Writer) int {
 	output := fs.String("output", "", "write output to this file (default: stdout)")
 	strict := fs.Bool("strict", false, "fail on any new finding, not just new errors")
 	only := fs.String("only", "", "comma-separated list of adapters to run")
+	updateBaseline := fs.Bool("update-baseline", false, "overwrite --baseline with the current run's findings after comparing")
 
 	if err := fs.Parse(args); err != nil {
 		if err == flag.ErrHelp {
@@ -74,6 +75,13 @@ func runDiff(args []string, stdout, stderr io.Writer) int {
 	}
 
 	result := diff.Compare(bl, current)
+
+	if *updateBaseline {
+		if err := diff.SaveBaseline(baselinePath, current); err != nil {
+			fmt.Fprintf(stderr, "fusaops diff: update-baseline: %v\n", err)
+			return 1
+		}
+	}
 
 	w := io.Writer(stdout)
 	if *output != "" {

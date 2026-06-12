@@ -17,6 +17,7 @@ import (
 // any requirement is untraced or untested, making it a polyglot coverage gate.
 //
 //fusa:req REQ-FO-CLI011
+//fusa:req REQ-FO-CLI021
 func runTrace(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops trace", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -25,6 +26,9 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	format := fs.String("format", "text", "output format: text|json|html")
 	output := fs.String("output", "", "output file (default: stdout)")
 	strict := fs.Bool("strict", false, "exit non-zero when any requirement is untraced or untested")
+	gaps := fs.Bool("gaps", false, "show only untraced/untested requirements")
+	reqCoverage := fs.Int("req-coverage", -1, "fail when traced% < N (0–100)")
+	secTested := fs.Int("sec-tested", -1, "fail when sec-tested% < N (0–100)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -45,19 +49,35 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
+	renderAgg := agg
+	if *gaps {
+		renderAgg = trace.FilterGaps(agg)
+	}
+
 	if *output == "" {
-		if err := trace.Render(stdout, agg, *format); err != nil {
+		if err := trace.Render(stdout, renderAgg, *format); err != nil {
 			fmt.Fprintf(stderr, "fusaops trace: %v\n", err)
 			return 1
 		}
 	} else {
-		if err := trace.RenderToFile(agg, *format, *output); err != nil {
+		if err := trace.RenderToFile(renderAgg, *format, *output); err != nil {
 			fmt.Fprintf(stderr, "fusaops trace: %v\n", err)
 			return 1
 		}
 		fmt.Fprintf(stdout, "Wrote %s traceability matrix to %s\n", *format, *output)
 	}
+
 	if *strict && agg.HasGaps() {
+		return 1
+	}
+	if *reqCoverage >= 0 && agg.Coverage.TracedPct < *reqCoverage {
+		fmt.Fprintf(stderr, "fusaops trace: traced coverage %d%% < required %d%%\n",
+			agg.Coverage.TracedPct, *reqCoverage)
+		return 1
+	}
+	if *secTested >= 0 && agg.Coverage.SecTestedPct < *secTested {
+		fmt.Fprintf(stderr, "fusaops trace: sec-tested coverage %d%% < required %d%%\n",
+			agg.Coverage.SecTestedPct, *secTested)
 		return 1
 	}
 	return 0

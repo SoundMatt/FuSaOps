@@ -281,3 +281,110 @@ func TestCompareWithRemediation(t *testing.T) {
 		t.Errorf("category not in text output: %s", out)
 	}
 }
+
+// TestSummary verifies per-severity counts for added and removed findings.
+//
+//fusa:test REQ-FO-DIF004
+func TestSummary(t *testing.T) {
+	res := &Result{
+		Added: []fusaops.Finding{
+			{Severity: fusaops.SeverityError},
+			{Severity: fusaops.SeverityWarning},
+			{Severity: fusaops.SeverityInfo},
+		},
+		Removed: []fusaops.Finding{
+			{Severity: fusaops.SeverityError},
+		},
+	}
+	s := res.Summary()
+	if s.AddedErrors != 1 || s.AddedWarnings != 1 || s.AddedInfos != 1 {
+		t.Errorf("added summary wrong: %+v", s)
+	}
+	if s.RemovedErrors != 1 || s.RemovedWarnings != 0 {
+		t.Errorf("removed summary wrong: %+v", s)
+	}
+}
+
+// TestRenderTextSeverityDetail verifies severity breakdown appears in text output.
+//
+//fusa:test REQ-FO-DIF004
+func TestRenderTextSeverityDetail(t *testing.T) {
+	res := &Result{
+		Added: []fusaops.Finding{
+			{RuleID: "E1", Severity: fusaops.SeverityError, Message: "e", Location: fusaops.Location{File: "f.go"}},
+			{RuleID: "W1", Severity: fusaops.SeverityWarning, Message: "w", Location: fusaops.Location{File: "f.go"}},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "text", false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "1 error") {
+		t.Errorf("severity detail missing '1 error': %s", out)
+	}
+	if !strings.Contains(out, "1 warning") {
+		t.Errorf("severity detail missing '1 warning': %s", out)
+	}
+}
+
+// TestRenderJSONSummary verifies JSON output includes generatedAt and summary fields.
+//
+//fusa:test REQ-FO-DIF004
+func TestRenderJSONSummary(t *testing.T) {
+	res := &Result{
+		Added: []fusaops.Finding{
+			{Severity: fusaops.SeverityError, RuleID: "E1", Message: "e", Location: fusaops.Location{File: "f.go"}},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "json", false); err != nil {
+		t.Fatal(err)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := out["generatedAt"]; !ok {
+		t.Error("JSON missing generatedAt")
+	}
+	summary, ok := out["summary"].(map[string]any)
+	if !ok {
+		t.Fatalf("JSON missing summary, got: %v", out)
+	}
+	if summary["addedErrors"] != float64(1) {
+		t.Errorf("addedErrors want 1, got %v", summary["addedErrors"])
+	}
+}
+
+// TestSaveBaseline verifies that SaveBaseline writes a loadable flat baseline.
+//
+//fusa:test REQ-FO-DIF005
+func TestSaveBaseline(t *testing.T) {
+	f := withFP(finding("LINT001", "main.go", "unused variable", fusaops.SeverityWarning))
+	path := t.TempDir() + "/baseline.json"
+	if err := SaveBaseline(path, []fusaops.Finding{f}); err != nil {
+		t.Fatal(err)
+	}
+	b, err := LoadBaseline(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(b.Findings) != 1 || b.Findings[0].RuleID != "LINT001" {
+		t.Errorf("loaded baseline wrong: %+v", b.Findings)
+	}
+}
+
+// TestSaveBaselineEmpty verifies SaveBaseline writes an empty findings array (not null).
+//
+//fusa:test REQ-FO-DIF005
+func TestSaveBaselineEmpty(t *testing.T) {
+	path := t.TempDir() + "/baseline.json"
+	if err := SaveBaseline(path, nil); err != nil {
+		t.Fatal(err)
+	}
+	data, _ := os.ReadFile(path)
+	if !strings.Contains(string(data), `"findings": []`) {
+		t.Errorf("expected empty array, got: %s", data)
+	}
+}

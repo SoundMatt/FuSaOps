@@ -19,7 +19,7 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "0.4.0"
+const Version = "0.5.0"
 
 // Sentinel errors. Callers should use errors.Is for comparison.
 //
@@ -81,9 +81,11 @@ func (s Severity) Rank() int {
 type Language string
 
 const (
-	LangGo  Language = "go"
-	LangC   Language = "c"
-	LangCpp Language = "cpp"
+	LangGo     Language = "go"
+	LangC      Language = "c"
+	LangCpp    Language = "cpp"
+	LangRust   Language = "rust"
+	LangPython Language = "python"
 )
 
 // String implements fmt.Stringer.

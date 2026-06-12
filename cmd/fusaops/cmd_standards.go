@@ -12,12 +12,16 @@ import (
 	"github.com/SoundMatt/FuSaOps/standards"
 )
 
-// runStandards implements `fusaops iso26262`, `fusaops iec61508`, and
-// `fusaops do178`.  cmd is the CLI name; standard is the canonical §2.4.1 id.
+// runStandards implements `fusaops iso26262`, `fusaops iec61508`, `fusaops do178`,
+// `fusaops iso21434`, `fusaops unece`, and `fusaops iec62443`. cmd is the CLI
+// name; standard is the canonical §2.4.1 id returned by CommandStandard.
 //
 //fusa:req REQ-FO-CLI015
 //fusa:req REQ-FO-CLI016
 //fusa:req REQ-FO-CLI017
+//fusa:req REQ-FO-CLI019
+//fusa:req REQ-FO-CLI020
+//fusa:req REQ-FO-CLI022
 func runStandards(cmd string, args []string, stdout, stderr io.Writer) int {
 	standard := standards.CommandStandard(cmd)
 

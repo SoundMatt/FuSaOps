@@ -259,6 +259,10 @@ func displayName(standard string) string {
 		return "IEC 62443-4-1"
 	case "iec62443-4-2":
 		return "IEC 62443-4-2"
+	case "iec62443":
+		return "IEC 62443"
+	case "unece":
+		return "UNECE R155/R156"
 	default:
 		return standard
 	}

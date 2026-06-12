@@ -15,9 +15,11 @@ import (
 //
 //fusa:req REQ-FO-SCAN001
 var langExtensions = map[fusaops.Language][]string{
-	fusaops.LangGo:  {".go"},
-	fusaops.LangC:   {".c"},
-	fusaops.LangCpp: {".cpp", ".cc", ".cxx", ".hpp", ".hh"},
+	fusaops.LangGo:     {".go"},
+	fusaops.LangC:      {".c"},
+	fusaops.LangCpp:    {".cpp", ".cc", ".cxx", ".hpp", ".hh"},
+	fusaops.LangRust:   {".rs"},
+	fusaops.LangPython: {".py"},
 }
 
 // LangStat records how many source files of a language were found.

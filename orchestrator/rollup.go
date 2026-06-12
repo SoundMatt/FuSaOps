@@ -102,6 +102,7 @@ func (rn *Runner) RunTrace(ctx context.Context, root string, opts Options) (*tra
 				}
 				ct.Coverage = m.Coverage
 				ct.Requirements = m.Requirements
+				ct.Tags = m.Tags
 				// Qualification is best-effort: its absence must not drop the row.
 				if q, ok := a.(adapter.Qualifier); ok {
 					if qr, qerr := q.Qualify(tctx, root); qerr == nil {

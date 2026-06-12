@@ -15,6 +15,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
@@ -91,6 +92,46 @@ func (r *Result) HasNewErrors() bool {
 
 // HasNewFindings reports whether any findings were added.
 func (r *Result) HasNewFindings() bool { return len(r.Added) > 0 }
+
+// FindingSummary holds per-severity counts for added and removed findings.
+//
+//fusa:req REQ-FO-DIF004
+type FindingSummary struct {
+	AddedErrors     int `json:"addedErrors"`
+	AddedWarnings   int `json:"addedWarnings"`
+	AddedInfos      int `json:"addedInfos"`
+	RemovedErrors   int `json:"removedErrors"`
+	RemovedWarnings int `json:"removedWarnings"`
+	RemovedInfos    int `json:"removedInfos"`
+}
+
+// Summary returns per-severity counts for added and removed findings.
+//
+//fusa:req REQ-FO-DIF004
+func (r *Result) Summary() FindingSummary {
+	var s FindingSummary
+	for _, f := range r.Added {
+		switch f.Severity {
+		case fusaops.SeverityError:
+			s.AddedErrors++
+		case fusaops.SeverityWarning:
+			s.AddedWarnings++
+		default:
+			s.AddedInfos++
+		}
+	}
+	for _, f := range r.Removed {
+		switch f.Severity {
+		case fusaops.SeverityError:
+			s.RemovedErrors++
+		case fusaops.SeverityWarning:
+			s.RemovedWarnings++
+		default:
+			s.RemovedInfos++
+		}
+	}
+	return s
+}
 
 // gate returns the CI gate verdict string.
 func (r *Result) gate(strict bool) string {
@@ -179,8 +220,16 @@ func Render(w io.Writer, res *Result, format string, strict bool) error {
 }
 
 func renderText(w io.Writer, res *Result, strict bool) error {
-	fmt.Fprintf(w, "FuSaOps Diff — %d added, %d removed, %d unchanged\n",
-		len(res.Added), len(res.Removed), res.Unchanged)
+	s := res.Summary()
+	addedStr := fmt.Sprintf("%d added", len(res.Added))
+	if len(res.Added) > 0 {
+		addedStr += " (" + severityDetail(s.AddedErrors, s.AddedWarnings, s.AddedInfos) + ")"
+	}
+	removedStr := fmt.Sprintf("%d removed", len(res.Removed))
+	if len(res.Removed) > 0 {
+		removedStr += " (" + severityDetail(s.RemovedErrors, s.RemovedWarnings, s.RemovedInfos) + ")"
+	}
+	fmt.Fprintf(w, "FuSaOps Diff — %s, %s, %d unchanged\n", addedStr, removedStr, res.Unchanged)
 	if len(res.Added) > 0 {
 		fmt.Fprintln(w, "──── Added ────")
 		for _, f := range res.Added {
@@ -195,6 +244,33 @@ func renderText(w io.Writer, res *Result, strict bool) error {
 	}
 	fmt.Fprintf(w, "Gate: %s\n", res.gate(strict))
 	return nil
+}
+
+// severityDetail formats non-zero severity counts as a comma-separated string.
+func severityDetail(errors, warnings, infos int) string {
+	var parts []string
+	if errors > 0 {
+		noun := "error"
+		if errors != 1 {
+			noun = "errors"
+		}
+		parts = append(parts, fmt.Sprintf("%d %s", errors, noun))
+	}
+	if warnings > 0 {
+		noun := "warning"
+		if warnings != 1 {
+			noun = "warnings"
+		}
+		parts = append(parts, fmt.Sprintf("%d %s", warnings, noun))
+	}
+	if infos > 0 {
+		noun := "info"
+		if infos != 1 {
+			noun = "infos"
+		}
+		parts = append(parts, fmt.Sprintf("%d %s", infos, noun))
+	}
+	return strings.Join(parts, ", ")
 }
 
 func printFinding(w io.Writer, prefix string, f fusaops.Finding) {
@@ -218,16 +294,20 @@ func printFinding(w io.Writer, prefix string, f fusaops.Finding) {
 
 func renderJSON(w io.Writer, res *Result, strict bool) error {
 	type jsonResult struct {
-		Added     []fusaops.Finding `json:"added"`
-		Removed   []fusaops.Finding `json:"removed"`
-		Unchanged int               `json:"unchanged"`
-		Gate      string            `json:"gate"`
+		GeneratedAt time.Time         `json:"generatedAt"`
+		Added       []fusaops.Finding `json:"added"`
+		Removed     []fusaops.Finding `json:"removed"`
+		Unchanged   int               `json:"unchanged"`
+		Summary     FindingSummary    `json:"summary"`
+		Gate        string            `json:"gate"`
 	}
 	out := jsonResult{
-		Added:     res.Added,
-		Removed:   res.Removed,
-		Unchanged: res.Unchanged,
-		Gate:      res.gate(strict),
+		GeneratedAt: time.Now().UTC(),
+		Added:       res.Added,
+		Removed:     res.Removed,
+		Unchanged:   res.Unchanged,
+		Summary:     res.Summary(),
+		Gate:        res.gate(strict),
 	}
 	if out.Added == nil {
 		out.Added = []fusaops.Finding{}
@@ -238,4 +318,30 @@ func renderJSON(w io.Writer, res *Result, strict bool) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(out)
+}
+
+// SaveBaseline writes current findings to path in the flat baseline format so
+// a passing diff run can update its own baseline in place.
+//
+//fusa:req REQ-FO-DIF005
+func SaveBaseline(path string, findings []fusaops.Finding) error {
+	type baselineOut struct {
+		GeneratedAt time.Time         `json:"generatedAt"`
+		Findings    []fusaops.Finding `json:"findings"`
+	}
+	out := baselineOut{
+		GeneratedAt: time.Now().UTC(),
+		Findings:    findings,
+	}
+	if out.Findings == nil {
+		out.Findings = []fusaops.Finding{}
+	}
+	data, err := json.MarshalIndent(out, "", "  ")
+	if err != nil {
+		return fmt.Errorf("diff: marshal baseline: %w", err)
+	}
+	if err := os.WriteFile(path, data, 0o600); err != nil {
+		return fmt.Errorf("diff: write baseline %s: %w", path, err)
+	}
+	return nil
 }

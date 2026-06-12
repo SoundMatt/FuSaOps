@@ -12,7 +12,8 @@
 [![image](https://img.shields.io/badge/ghcr.io-soundmatt%2Ffusaops-blue?logo=docker&logoColor=white)](https://github.com/SoundMatt/FuSaOps/pkgs/container/fusaops)
 
 FuSaOps sits on top of the x-FuSa toolchain — [go-FuSa](https://github.com/SoundMatt/go-FuSa),
-[c-FuSa](https://github.com/SoundMatt/c-FuSa), [cpp-FuSa](https://github.com/SoundMatt/cpp-FuSa)
+[c-FuSa](https://github.com/SoundMatt/c-FuSa), [cpp-FuSa](https://github.com/SoundMatt/cpp-FuSa),
+[rust-FuSa](https://github.com/SoundMatt/rust-FuSa), [py-FuSa](https://github.com/SoundMatt/py-FuSa)
 and future language tools — and gives mixed-language repositories a single,
 intuitive way to **scan**, **aggregate**, and **report** functional safety
 evidence. One command runs the right tool for every language present and merges
@@ -32,15 +33,15 @@ IEC 61508, ISO 21434, DO-178C and related safety cases.
 ## How it works
 
 ```
-            ┌──────────────────────────── FuSaOps ────────────────────────────┐
-   repo ──▶ │  scan (detect languages) ──▶ orchestrator ──▶ aggregate report  │ ──▶ text / json / html / sarif
-            │                                   │                              │ ──▶ web dashboard (fusaops serve)
-            └───────────────────────────────────┼──────────────────────────────┘
+            ┌────────────────────────────────── FuSaOps ──────────────────────────────────┐
+   repo ──▶ │  scan (detect languages) ──▶ orchestrator ──▶ aggregate report            │ ──▶ text / json / html / sarif
+            │                                   │                                        │ ──▶ web dashboard (fusaops serve)
+            └───────────────────────────────────┼────────────────────────────────────────┘
                                                  │
-                    ┌────────────────────────────┼────────────────────────────┐
-                    ▼                            ▼                            ▼
-                 gofusa (Go)                 cfusa (C)                  cpfusa (C++)
-            check --format json         check --format json         check --format json
+          ┌──────────────┬──────────────┬────────┴─────────┬──────────────┐
+          ▼              ▼              ▼                   ▼              ▼
+       gofusa (Go)   cfusa (C)    cpfusa (C++)        rsfusa (Rust)  pyfusa (Python)
+   check --format json  …         …                   …              …
 ```
 
 Each adapter runs `<tool> check --format json`, FuSaOps decodes the common
@@ -55,7 +56,7 @@ go install github.com/SoundMatt/FuSaOps/cmd/fusaops@latest
 ```
 
 The adapter tools must be on `PATH` for the languages you want scanned
-(`gofusa`, `cfusa`, `cpfusa`). The Docker image bundles `gofusa`.
+(`gofusa`, `cfusa`, `cpfusa`, `rsfusa`, `pyfusa`). The Docker image bundles all five.
 
 ## Usage
 
@@ -74,6 +75,11 @@ fusaops audit-pack           # bundle every language's evidence into audit-pack.
 fusaops iso26262             # roll up ISO 26262 gap reports across all languages
 fusaops iec61508             # roll up IEC 61508 gap reports across all languages
 fusaops do178                # roll up DO-178C gap reports across all languages
+fusaops iso21434             # roll up ISO 21434 gap reports across all languages
+fusaops unece                # roll up UNECE R155/R156 gap reports across all languages
+fusaops iec62443             # roll up IEC 62443 gap reports across all languages
+fusaops trace --gaps         # show only untraced/untested requirements
+fusaops trace --req-coverage 80 --sec-tested 60  # threshold-based coverage gate
 fusaops conform gofusa       # check a binary against the x-FuSa spec
 fusaops serve --addr :8080   # launch the web dashboard
 fusaops init                 # write a starter .fusaops.json
@@ -98,6 +104,9 @@ produces into one cross-language view:
   tool into one cross-language PASS/GAP matrix; `--strict` exits 1 on any gap.
 - **`fusaops iec61508`** — same for IEC 61508.
 - **`fusaops do178`** — same for DO-178C (maps to the `do178c` canonical id).
+- **`fusaops iso21434`** — same for ISO 21434 (automotive cybersecurity).
+- **`fusaops unece`** — same for UNECE R155/R156 (vehicle cybersecurity management).
+- **`fusaops iec62443`** — same for IEC 62443 (industrial cybersecurity).
 
 ### Diff gating (v0.4)
 
@@ -167,11 +176,9 @@ tool — **no manual rebuild, and FuSaOps itself does not need a new release**. 
 weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
-**Bundled tools.** `gofusa` (Go) ships today. `cpfusa` (C++, v0.8.0) and
-`cfusa` (C, v0.4.0) are wired in the Dockerfile as one-line additions and
-activate as soon as each tool's image is published — adapters for all three
-already exist, so an un-bundled tool simply reports as *not installed* until
-then. Both `cpfusa` and `cfusa` are now spec v1.9 aligned.
+**Bundled tools.** The image bundles `gofusa` (Go, v0.25), `cpfusa` (C++,
+v0.9.2), `cfusa` (C, v0.5.1), `rsfusa` (Rust, v0.2.0), and `pyfusa` (Python,
+v0.1.1) — all five are spec v1.9 aligned.
 
 > The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
 > runs under emulation; add `--platform linux/amd64` if your client needs it.
@@ -211,13 +218,15 @@ orchestrates also gates FuSaOps itself.
 
 ## Supported languages
 
-| Language | Adapter  | Tool     | Bundled in image |
-|----------|----------|----------|------------------|
-| Go       | go-FuSa  | `gofusa` | ✅ (v0.25, spec v1.9) |
-| C++      | cpp-FuSa | `cpfusa` | ⏳ spec v1.9 aligned (v0.8.0); pending image publish |
-| C        | c-FuSa   | `cfusa`  | ⏳ spec v1.9 aligned (v0.4.0); pending image publish |
+| Language | Adapter    | Tool     | Bundled in image |
+|----------|------------|----------|------------------|
+| Go       | go-FuSa    | `gofusa` | ✅ (v0.25, spec v1.9) |
+| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.9.2, spec v1.9) |
+| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.1, spec v1.9) |
+| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.2.0, spec v1.9) |
+| Python   | py-FuSa    | `pyfusa` | ✅ (v0.1.1, spec v1.9, alpha) |
 
-All three adapters exist; an un-bundled tool reports as *not installed* until its
+All five adapters exist; an un-bundled tool reports as *not installed* until its
 image publishes. New languages are added by implementing the `adapter.Adapter`
 interface — see [docs/extending.md](docs/extending.md).
 

@@ -24,6 +24,7 @@ type Requirement struct {
 	Standard string `json:"standard,omitempty"`
 	Level    string `json:"level,omitempty"`
 	ASIL     string `json:"asil,omitempty"`
+	Status   string `json:"status,omitempty"` // covered | untraced | untested (§5)
 }
 
 // Tag is a single //fusa:req or //fusa:test annotation discovered in a
@@ -41,9 +42,10 @@ type Tag struct {
 //
 //fusa:req REQ-FO-TRC003
 type Coverage struct {
-	TotalRequirements  int `json:"totalRequirements"`
-	TracedRequirements int `json:"tracedRequirements"`
-	TestedRequirements int `json:"testedRequirements"`
+	TotalRequirements     int `json:"totalRequirements"`
+	TracedRequirements    int `json:"tracedRequirements"`
+	TestedRequirements    int `json:"testedRequirements"`
+	SecTestedRequirements int `json:"secTestedRequirements,omitempty"` // §5
 }
 
 // Matrix mirrors the JSON document a tool emits from "trace --format json".
@@ -76,6 +78,7 @@ type ComponentTrace struct {
 	Skipped       string         `json:"skipped,omitempty"`
 	Coverage      Coverage       `json:"coverage"`
 	Requirements  []Requirement  `json:"requirements,omitempty"`
+	Tags          []Tag          `json:"tags,omitempty"`
 	Qualification *Qualification `json:"qualification,omitempty"`
 }
 
@@ -101,15 +104,24 @@ func (c ComponentTrace) TestedPct() int {
 	return pct(c.Coverage.TestedRequirements, c.Coverage.TotalRequirements)
 }
 
+// SecTestedPct is the percentage of requirements covered by security tests.
+//
+//fusa:req REQ-FO-TRC016
+func (c ComponentTrace) SecTestedPct() int {
+	return pct(c.Coverage.SecTestedRequirements, c.Coverage.TotalRequirements)
+}
+
 // AggregateCoverage sums coverage across every component.
 //
 //fusa:req REQ-FO-TRC008
 type AggregateCoverage struct {
-	TotalRequirements  int `json:"totalRequirements"`
-	TracedRequirements int `json:"tracedRequirements"`
-	TestedRequirements int `json:"testedRequirements"`
-	TracedPct          int `json:"tracedPct"`
-	TestedPct          int `json:"testedPct"`
+	TotalRequirements     int `json:"totalRequirements"`
+	TracedRequirements    int `json:"tracedRequirements"`
+	TestedRequirements    int `json:"testedRequirements"`
+	SecTestedRequirements int `json:"secTestedRequirements,omitempty"`
+	TracedPct             int `json:"tracedPct"`
+	TestedPct             int `json:"testedPct"`
+	SecTestedPct          int `json:"secTestedPct,omitempty"`
 }
 
 // Aggregate is the cross-language traceability roll-up.
@@ -145,9 +157,11 @@ func New(root, project string, components []ComponentTrace) *Aggregate {
 		a.Coverage.TotalRequirements += c.Coverage.TotalRequirements
 		a.Coverage.TracedRequirements += c.Coverage.TracedRequirements
 		a.Coverage.TestedRequirements += c.Coverage.TestedRequirements
+		a.Coverage.SecTestedRequirements += c.Coverage.SecTestedRequirements
 	}
 	a.Coverage.TracedPct = pct(a.Coverage.TracedRequirements, a.Coverage.TotalRequirements)
 	a.Coverage.TestedPct = pct(a.Coverage.TestedRequirements, a.Coverage.TotalRequirements)
+	a.Coverage.SecTestedPct = pct(a.Coverage.SecTestedRequirements, a.Coverage.TotalRequirements)
 	return a
 }
 
@@ -169,4 +183,39 @@ func (a *Aggregate) Status() string {
 		return "GAP"
 	}
 	return "PASS"
+}
+
+// FilterGaps returns a copy of a with each component's Requirements slice
+// reduced to only those that are untraced or untested. Coverage totals are
+// preserved so the aggregate gate is unchanged. Used by "fusaops trace --gaps".
+//
+//fusa:req REQ-FO-TRC017
+func FilterGaps(a *Aggregate) *Aggregate {
+	out := *a
+	out.Components = make([]ComponentTrace, len(a.Components))
+	for i, c := range a.Components {
+		traced := map[string]bool{}
+		tested := map[string]bool{}
+		for _, t := range c.Tags {
+			switch t.Kind {
+			case "impl", "req":
+				traced[t.RequirementID] = true
+			case "test", "sec-test":
+				tested[t.RequirementID] = true
+			}
+		}
+		fc := c
+		fc.Requirements = nil
+		for _, r := range c.Requirements {
+			if r.Status == "covered" {
+				continue
+			}
+			if r.Status == "" && traced[r.ID] && tested[r.ID] {
+				continue
+			}
+			fc.Requirements = append(fc.Requirements, r)
+		}
+		out.Components[i] = fc
+	}
+	return &out
 }

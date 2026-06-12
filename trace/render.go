@@ -65,10 +65,18 @@ func renderText(w io.Writer, a *Aggregate) error {
 			fmt.Fprintf(w, "  skipped: %s\n\n", c.Skipped)
 			continue
 		}
-		fmt.Fprintf(w, "  requirements: %d  traced: %d (%d%%)  tested: %d (%d%%)\n",
-			c.Coverage.TotalRequirements,
-			c.Coverage.TracedRequirements, c.TracedPct(),
-			c.Coverage.TestedRequirements, c.TestedPct())
+		if c.Coverage.SecTestedRequirements > 0 {
+			fmt.Fprintf(w, "  requirements: %d  traced: %d (%d%%)  tested: %d (%d%%)  sec-tested: %d (%d%%)\n",
+				c.Coverage.TotalRequirements,
+				c.Coverage.TracedRequirements, c.TracedPct(),
+				c.Coverage.TestedRequirements, c.TestedPct(),
+				c.Coverage.SecTestedRequirements, c.SecTestedPct())
+		} else {
+			fmt.Fprintf(w, "  requirements: %d  traced: %d (%d%%)  tested: %d (%d%%)\n",
+				c.Coverage.TotalRequirements,
+				c.Coverage.TracedRequirements, c.TracedPct(),
+				c.Coverage.TestedRequirements, c.TestedPct())
+		}
 		if c.Qualification != nil {
 			fmt.Fprintf(w, "  qualification: %d/%d passed", c.Qualification.Passed, c.Qualification.Total)
 			if c.Qualification.Failed > 0 {
@@ -76,13 +84,31 @@ func renderText(w io.Writer, a *Aggregate) error {
 			}
 			fmt.Fprintln(w)
 		}
+		for _, r := range c.Requirements {
+			status := r.Status
+			if status == "" {
+				status = "gap"
+			}
+			if r.Title != "" {
+				fmt.Fprintf(w, "  gap  %s  %s  (%s)\n", r.ID, r.Title, status)
+			} else {
+				fmt.Fprintf(w, "  gap  %s  (%s)\n", r.ID, status)
+			}
+		}
 		fmt.Fprintln(w)
 	}
 
 	c := a.Coverage
-	fmt.Fprintf(w, "TOTAL: %s — %d requirements across %d component(s): %d traced (%d%%), %d tested (%d%%)\n",
-		a.Status(), c.TotalRequirements, len(a.Components),
-		c.TracedRequirements, c.TracedPct, c.TestedRequirements, c.TestedPct)
+	if c.SecTestedRequirements > 0 {
+		fmt.Fprintf(w, "TOTAL: %s — %d requirements across %d component(s): %d traced (%d%%), %d tested (%d%%), %d sec-tested (%d%%)\n",
+			a.Status(), c.TotalRequirements, len(a.Components),
+			c.TracedRequirements, c.TracedPct, c.TestedRequirements, c.TestedPct,
+			c.SecTestedRequirements, c.SecTestedPct)
+	} else {
+		fmt.Fprintf(w, "TOTAL: %s — %d requirements across %d component(s): %d traced (%d%%), %d tested (%d%%)\n",
+			a.Status(), c.TotalRequirements, len(a.Components),
+			c.TracedRequirements, c.TracedPct, c.TestedRequirements, c.TestedPct)
+	}
 	return nil
 }
 
@@ -97,8 +123,9 @@ func renderHTML(w io.Writer, a *Aggregate) error {
 // traceTemplate is a self-contained, dependency-free dashboard for the
 // cross-language traceability matrix.
 var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
-	"tracedPct": func(c ComponentTrace) int { return c.TracedPct() },
-	"testedPct": func(c ComponentTrace) int { return c.TestedPct() },
+	"tracedPct":    func(c ComponentTrace) int { return c.TracedPct() },
+	"testedPct":    func(c ComponentTrace) int { return c.TestedPct() },
+	"secTestedPct": func(c ComponentTrace) int { return c.SecTestedPct() },
 }).Parse(`<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -116,6 +143,8 @@ var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
  .skip{color:#9aa3b2;font-style:italic}
  .bar{height:.5rem;background:#272b34;border-radius:.25rem;overflow:hidden;min-width:90px}
  .bar>span{display:block;height:100%;background:#4f8cff}
+ .gaps{margin:.4rem 0 0 1rem;padding:0;list-style:none;font-size:.85rem;color:#f0c463}
+ .gaps li::before{content:"⚠ ";opacity:.7}
 </style></head><body>
 <header>
  <h1>FuSaOps — Cross-Language Traceability{{if .Project}}: {{.Project}}{{end}}</h1>
@@ -125,26 +154,30 @@ var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
 <main>
  <table>
   <thead><tr><th>Tool</th><th>Language</th><th class="num">Requirements</th>
-   <th>Traced</th><th>Tested</th><th class="num">Qualification</th></tr></thead>
+   <th>Traced</th><th>Tested</th><th>Sec-Tested</th><th class="num">Qualification</th></tr></thead>
   <tbody>
   {{range .Components}}
    <tr>
     <td>{{.Tool}}</td><td>{{.Language}}</td>
     {{if .Skipped}}
-     <td colspan="4" class="skip">skipped — {{.Skipped}}</td>
+     <td colspan="5" class="skip">skipped — {{.Skipped}}</td>
     {{else}}
      <td class="num">{{.Coverage.TotalRequirements}}</td>
      <td><div class="bar"><span style="width:{{tracedPct .}}%"></span></div>{{.Coverage.TracedRequirements}} ({{tracedPct .}}%)</td>
      <td><div class="bar"><span style="width:{{testedPct .}}%"></span></div>{{.Coverage.TestedRequirements}} ({{testedPct .}}%)</td>
+     <td>{{if .Coverage.SecTestedRequirements}}<div class="bar"><span style="width:{{secTestedPct .}}%"></span></div>{{.Coverage.SecTestedRequirements}} ({{secTestedPct .}}%){{else}}—{{end}}</td>
      <td class="num">{{if .Qualification}}{{.Qualification.Passed}}/{{.Qualification.Total}}{{else}}—{{end}}</td>
     {{end}}
    </tr>
+   {{if .Requirements}}<tr><td colspan="7"><ul class="gaps">{{range .Requirements}}<li>{{.ID}}{{if .Title}} — {{.Title}}{{end}}{{if .Status}} ({{.Status}}){{end}}</li>{{end}}</ul></td></tr>{{end}}
   {{end}}
   </tbody>
   <tfoot><tr><th>TOTAL</th><th></th>
    <th class="num">{{.Coverage.TotalRequirements}}</th>
    <th>{{.Coverage.TracedRequirements}} ({{.Coverage.TracedPct}}%)</th>
-   <th>{{.Coverage.TestedRequirements}} ({{.Coverage.TestedPct}}%)</th><th></th></tr></tfoot>
+   <th>{{.Coverage.TestedRequirements}} ({{.Coverage.TestedPct}}%)</th>
+   <th>{{if .Coverage.SecTestedRequirements}}{{.Coverage.SecTestedRequirements}} ({{.Coverage.SecTestedPct}}%){{else}}—{{end}}</th>
+   <th></th></tr></tfoot>
  </table>
 </main></body></html>
 `))

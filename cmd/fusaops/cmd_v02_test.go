@@ -47,6 +47,52 @@ func TestTraceBadFlag(t *testing.T) {
 	}
 }
 
+// TestTraceGapsFlag verifies --gaps is accepted and does not cause a crash.
+//
+//fusa:test REQ-FO-CLI021
+func TestTraceGapsFlag(t *testing.T) {
+	dir := goProject(t)
+	code, stdout, errb := runArgs(t, "trace", "--dir", dir, "--gaps")
+	if code != 0 {
+		t.Fatalf("trace --gaps: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(stdout, "Cross-Language Traceability") {
+		t.Errorf("trace --gaps stdout: %q", stdout)
+	}
+}
+
+// TestTraceReqCoverage verifies --req-coverage gates on traced%.
+// With 0% required coverage, any scan passes; with 101% it always fails.
+//
+//fusa:test REQ-FO-CLI021
+func TestTraceReqCoverage(t *testing.T) {
+	dir := goProject(t)
+	// 0% threshold always passes
+	code, _, errb := runArgs(t, "trace", "--dir", dir, "--req-coverage", "0")
+	if code != 0 {
+		t.Errorf("trace --req-coverage 0: expected 0, got %d (err: %s)", code, errb)
+	}
+	// 101% threshold always fails (no scanner can hit 101%)
+	code, _, _ = runArgs(t, "trace", "--dir", dir, "--req-coverage", "101")
+	if code != 1 {
+		t.Errorf("trace --req-coverage 101: expected 1, got %d", code)
+	}
+}
+
+// TestTraceSecTested verifies --sec-tested gates on secTestedPct.
+//
+//fusa:test REQ-FO-CLI021
+func TestTraceSecTested(t *testing.T) {
+	dir := goProject(t)
+	// 0% always passes; 101% always fails
+	if code, _, _ := runArgs(t, "trace", "--dir", dir, "--sec-tested", "0"); code != 0 {
+		t.Errorf("trace --sec-tested 0: expected 0, got %d", code)
+	}
+	if code, _, _ := runArgs(t, "trace", "--dir", dir, "--sec-tested", "101"); code != 1 {
+		t.Errorf("trace --sec-tested 101: expected 1, got %d", code)
+	}
+}
+
 //fusa:test REQ-FO-CLI012
 func TestSBOMCommand(t *testing.T) {
 	dir := goProject(t)

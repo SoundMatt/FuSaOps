@@ -17,7 +17,7 @@
     {
       "id": "REQ-FO-CORE003",
       "title": "Language identification",
-      "text": "FuSaOps shall define a Language type identifying each supported language (go, c, cpp).",
+      "text": "FuSaOps shall define a Language type identifying each supported language (go, c, cpp, rust, python).",
       "standard": "ISO 26262",
       "level": "ASIL-C"
     },
@@ -1018,9 +1018,93 @@
     {
       "id": "REQ-FO-CLI018",
       "title": "fusaops diff command",
-      "description": "fusaops diff --dir --baseline --format --output --strict must load a baseline, run the orchestrator, compare findings, render the result, and exit 1 on gate failure.",
+      "description": "fusaops diff --dir --baseline --format --output --strict --update-baseline must load a baseline, run the orchestrator, compare findings, render the result, exit 1 on gate failure, and optionally overwrite the baseline with the current run.",
       "priority": "MUST",
       "rationale": "Exposes diff gating as a first-class CLI command suitable for CI steps."
+    },
+    {
+      "id": "REQ-FO-DIF004",
+      "title": "Diff severity summary",
+      "description": "Result.Summary must return per-severity counts for added and removed findings; text output must include the breakdown; JSON output must include a summary object and generatedAt timestamp.",
+      "priority": "MUST",
+      "rationale": "Allows CI consumers to distinguish errors from warnings without parsing individual finding objects."
+    },
+    {
+      "id": "REQ-FO-DIF005",
+      "title": "Baseline update",
+      "description": "SaveBaseline must write current findings to a file in the flat baseline format; fusaops diff --update-baseline must call SaveBaseline after comparing.",
+      "priority": "MUST",
+      "rationale": "Enables a rolling-baseline CI workflow where a passing diff updates its own baseline in place."
+    },
+    {
+      "id": "REQ-FO-ADP024",
+      "title": "cpp-FuSa trace normalization",
+      "description": "The cpp-FuSa adapter Trace must write trace JSON to a temp file via --output, then normalize cpp-FuSa's {implementedBy/testedBy/summary} schema to trace.Matrix.",
+      "priority": "MUST",
+      "rationale": "cpp-FuSa emits a non-spec trace schema (per-requirement location arrays, non-spec summary keys); the adapter bridges the gap so FuSaOps can aggregate C++ traceability."
+    },
+    {
+      "id": "REQ-FO-ADP025",
+      "title": "cpp-FuSa standards normalization",
+      "description": "The cpp-FuSa adapter Standards must run <tool> <cmd> --output <tmp> (not --format json), map do178c→do178 subcommand name, and call RecomputeSummary on the decoded GapReport.",
+      "priority": "MUST",
+      "rationale": "cpp-FuSa writes gap reports to a file rather than stdout and does not accept --format json; the adapter normalizes the invocation."
+    },
+    {
+      "id": "REQ-FO-TRC016",
+      "title": "SecTestedRequirements coverage",
+      "description": "trace.Coverage and AggregateCoverage must include a secTestedRequirements field (§5); ComponentTrace must expose SecTestedPct(); New() must sum and compute SecTestedPct across components.",
+      "priority": "MUST",
+      "rationale": "Spec §5 requires four coverage counters including secTestedRequirements; FuSaOps must propagate the field from tool output through the aggregate so consumers can gate on security test coverage."
+    },
+    {
+      "id": "REQ-FO-TRC017",
+      "title": "FilterGaps helper",
+      "description": "FilterGaps must return a copy of an Aggregate with each component's Requirements slice reduced to only untraced or untested entries, preserving coverage totals. Used by fusaops trace --gaps.",
+      "priority": "MUST",
+      "rationale": "Enables the --gaps flag to surface only actionable gaps without re-running the orchestrator."
+    },
+    {
+      "id": "REQ-FO-CLI021",
+      "title": "fusaops trace coverage gates",
+      "description": "fusaops trace must accept --gaps (show only untraced/untested requirements), --req-coverage N (fail when tracedPct < N), and --sec-tested N (fail when secTestedPct < N).",
+      "priority": "MUST",
+      "rationale": "Spec §5 (line 594) defines these flags as part of the trace command surface; they provide threshold-based CI gates beyond the binary --strict flag."
+    },
+    {
+      "id": "REQ-FO-CLI019",
+      "title": "ISO 21434 command",
+      "description": "fusaops iso21434 shall roll up ISO 21434 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.",
+      "priority": "MUST",
+      "rationale": "Exposes ISO 21434 (automotive cybersecurity) compliance roll-up as a first-class CLI command."
+    },
+    {
+      "id": "REQ-FO-CLI020",
+      "title": "UNECE command",
+      "description": "fusaops unece shall roll up UNECE R155/R156 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.",
+      "priority": "MUST",
+      "rationale": "Exposes UNECE R155/R156 (vehicle cybersecurity management) compliance roll-up as a first-class CLI command."
+    },
+    {
+      "id": "REQ-FO-CLI022",
+      "title": "IEC 62443 command",
+      "description": "fusaops iec62443 shall roll up IEC 62443 gap reports across all applicable installed tools, render in text or json, and exit 1 under --strict when any objective has gap status.",
+      "priority": "MUST",
+      "rationale": "Exposes IEC 62443 (industrial cybersecurity) compliance roll-up as a first-class CLI command; go-FuSa and cpp-FuSa both implement the iec62443 subcommand."
+    },
+    {
+      "id": "REQ-FO-ADP026",
+      "title": "rust-FuSa adapter",
+      "description": "FuSaOps shall provide a rust-FuSa adapter (rsfusa) that detects .rs files and delegates check/trace/qualify/release/audit-pack to rsfusa via the generic cmdAdapter path. The rsfusa binary produces spec v1.9 conformant JSON (ruleId + location object for check; flat tags array for trace) so no output normalisation is required.",
+      "priority": "MUST",
+      "rationale": "Extends FuSaOps multi-language orchestration to Rust projects using rust-FuSa v0.2.0."
+    },
+    {
+      "id": "REQ-FO-ADP027",
+      "title": "py-FuSa adapter",
+      "description": "FuSaOps shall provide a py-FuSa adapter (pyfusa) that detects .py files and delegates check/trace/qualify/release/audit-pack to pyfusa via the generic cmdAdapter path. The pyfusa binary produces spec v1.9 conformant JSON so no output normalisation is required.",
+      "priority": "MUST",
+      "rationale": "Extends FuSaOps multi-language orchestration to Python projects using py-FuSa v0.1.0 (alpha)."
     }
   ]
 }

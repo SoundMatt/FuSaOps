@@ -11,14 +11,30 @@ import (
 //fusa:test REQ-FO-CLI015
 //fusa:test REQ-FO-CLI016
 //fusa:test REQ-FO-CLI017
+//fusa:test REQ-FO-CLI019
+//fusa:test REQ-FO-CLI020
+//fusa:test REQ-FO-CLI022
 func TestStandardsCommandNoLanguages(t *testing.T) {
-	for _, cmd := range []string{"iso26262", "iec61508", "do178"} {
+	for _, cmd := range []string{"iso26262", "iec61508", "do178", "iso21434", "unece", "iec62443"} {
 		var stdout, stderr bytes.Buffer
 		// TempDir has no source files → no adapters applicable → ErrNoAdapters.
 		code := runStandards(cmd, []string{"--dir", t.TempDir()}, &stdout, &stderr)
 		if code != 1 {
 			t.Errorf("%s: want exit 1 for no languages, got %d (stderr: %s)", cmd, code, stderr.String())
 		}
+	}
+}
+
+// TestIec62443Command verifies iec62443 is dispatched and the help text mentions IEC 62443.
+//
+//fusa:test REQ-FO-CLI022
+func TestIec62443Command(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runStandards("iec62443", []string{"--help"}, &stdout, &stderr)
+	_ = code
+	out := stdout.String() + stderr.String()
+	if !strings.Contains(out, "IEC 62443") {
+		t.Errorf("iec62443 usage should mention IEC 62443: %s", out)
 	}
 }
 
