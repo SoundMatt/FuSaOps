@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.21.0] — 2026-06-13
+
+### `fusaops fleet --format html` — Fleet HTML report
+
+- **`fleet.Render(w, fr, "html")`** — new format support; produces a self-contained HTML page with an overall PASS/WARN/FAIL badge, a per-repo status table (name, status badge, errors, warnings, infos, total) with colour-coded severity cells, and a summary footer. No external CSS or JS. (REQ-FO-FLT005)
+- **`fusaops fleet --format html [--output fleet.html]`** — write a fleet HTML report from the CLI. (REQ-FO-FLT005)
+- `fleet.Render` error message updated from `"want text or json"` → `"want text, json, or html"`.
+
+### Safety
+- Requirements registry at 244 requirements (added REQ-FO-FLT005)
+- 4 new tests (3 fleet package + 1 cmd); 244/244 requirements traced+tested; combined coverage 81.2%
+
 ## [1.20.0] — 2026-06-13
 
 ### `--min-severity` severity filter

@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"text/template"
 	"time"
 
 	"github.com/SoundMatt/FuSaOps/orchestrator"
@@ -140,17 +141,20 @@ func Run(ctx context.Context, cfg Config, runner *orchestrator.Runner) *FleetRep
 	return fr
 }
 
-// Render writes the FleetReport to w in the requested format (text or json).
+// Render writes the FleetReport to w in the requested format (text, json, or html).
 //
 //fusa:req REQ-FO-FLT004
+//fusa:req REQ-FO-FLT005
 func Render(w io.Writer, fr *FleetReport, format string) error {
 	switch format {
 	case "json", "":
 		return renderJSON(w, fr)
 	case "text":
 		return renderText(w, fr)
+	case "html":
+		return renderHTML(w, fr)
 	default:
-		return fmt.Errorf("fleet: unsupported format %q (want text or json)", format)
+		return fmt.Errorf("fleet: unsupported format %q (want text, json, or html)", format)
 	}
 }
 
@@ -181,6 +185,84 @@ func renderText(w io.Writer, fr *FleetReport) error {
 	fmt.Fprintf(w, "%s\n", repeatChar('-', maxName+32))
 	fmt.Fprintf(w, "%-*s  %-6s  %5d  %6d  %5d\n", maxName, "TOTAL", fr.Status(), fr.Total, fr.Errors, fr.Warnings)
 	return nil
+}
+
+var fleetHTMLTmpl = template.Must(template.New("fleet").Funcs(template.FuncMap{
+	"badgeClass": func(status string) string {
+		switch status {
+		case "PASS":
+			return "badge-pass"
+		case "WARN":
+			return "badge-warn"
+		case "FAIL", "ERROR":
+			return "badge-fail"
+		default:
+			return "badge-skip"
+		}
+	},
+}).Parse(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FuSaOps Fleet — {{.Project}}</title>
+<style>
+:root{--pass:#22c55e;--warn:#f59e0b;--fail:#ef4444;--skip:#94a3b8;--bg:#f8fafc;--card:#fff;--muted:#64748b}
+body{font-family:system-ui,sans-serif;background:var(--bg);margin:0;padding:1.5rem}
+h1{margin:0 0 .25rem;font-size:1.4rem}
+.meta{color:var(--muted);font-size:.85rem;margin-bottom:1.5rem}
+.badge{display:inline-block;padding:.2rem .6rem;border-radius:4px;font-weight:700;font-size:.8rem;color:#fff}
+.badge-pass{background:var(--pass)}.badge-warn{background:var(--warn)}.badge-fail{background:var(--fail)}.badge-skip{background:var(--skip)}
+table{border-collapse:collapse;width:100%;background:var(--card);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+th{background:#f1f5f9;text-align:left;padding:.6rem 1rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+td{padding:.6rem 1rem;border-top:1px solid #e2e8f0;font-size:.9rem}
+tr:hover td{background:#f8fafc}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.err{color:var(--fail);font-weight:600}
+.warn{color:var(--warn);font-weight:600}
+.scan-err{color:var(--fail);font-size:.85rem}
+tfoot td{font-weight:600;border-top:2px solid #e2e8f0;background:#f8fafc}
+</style>
+</head>
+<body>
+<h1>FuSaOps Fleet — {{.Project}}</h1>
+<p class="meta">Generated {{.GeneratedAt.UTC.Format "2006-01-02 15:04:05 UTC"}} &nbsp;|&nbsp; <span class="badge {{badgeClass .Status}}">{{.Status}}</span></p>
+<table>
+<thead><tr>
+<th>Repository</th><th>Status</th><th class="num">Errors</th><th class="num">Warnings</th><th class="num">Infos</th><th class="num">Total</th>
+</tr></thead>
+<tbody>
+{{range .Repos}}<tr>
+<td>{{.Name}}</td>
+<td><span class="badge {{badgeClass .Status}}">{{.Status}}</span></td>
+{{if .ScanErr}}
+<td colspan="4" class="scan-err">⚠ {{.ScanErr}}</td>
+{{else}}
+<td class="num{{if .Errors}} err{{end}}">{{.Errors}}</td>
+<td class="num{{if .Warnings}} warn{{end}}">{{.Warnings}}</td>
+<td class="num">{{.Infos}}</td>
+<td class="num">{{.Total}}</td>
+{{end}}
+</tr>{{end}}
+</tbody>
+<tfoot><tr>
+<td>TOTAL</td>
+<td><span class="badge {{badgeClass .Status}}">{{.Status}}</span></td>
+<td class="num{{if .Errors}} err{{end}}">{{.Errors}}</td>
+<td class="num{{if .Warnings}} warn{{end}}">{{.Warnings}}</td>
+<td class="num">{{.Infos}}</td>
+<td class="num">{{.Total}}</td>
+</tr></tfoot>
+</table>
+</body>
+</html>
+`))
+
+// renderHTML writes a self-contained HTML fleet report to w.
+//
+//fusa:req REQ-FO-FLT005
+func renderHTML(w io.Writer, fr *FleetReport) error {
+	return fleetHTMLTmpl.Execute(w, fr)
 }
 
 // RenderToFile writes the fleet report to path, or to w if path is empty.

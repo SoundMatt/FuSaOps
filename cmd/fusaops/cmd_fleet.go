@@ -13,11 +13,12 @@ import (
 // runFleet runs fusaops check across all repos listed in a fleet config.
 //
 //fusa:req REQ-FO-CLI023
+//fusa:req REQ-FO-FLT005
 func runFleet(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops fleet", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	config := fs.String("config", "fleet.json", "fleet configuration file")
-	format := fs.String("format", "text", "output format: text or json")
+	format := fs.String("format", "text", "output format: text, json, or html")
 	output := fs.String("output", "", "write report to file (default: stdout)")
 	strict := fs.Bool("strict", false, "exit 1 on warnings in addition to errors")
 	if err := fs.Parse(args); err != nil {

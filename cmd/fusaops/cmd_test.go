@@ -563,6 +563,25 @@ func TestCheckMinSeverityInvalid(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-FLT005
+func TestFleetHTMLFormat(t *testing.T) {
+	// Create a minimal fleet config pointing at an empty dir.
+	cfgDir := t.TempDir()
+	repoDir := t.TempDir()
+	cfgPath := filepath.Join(cfgDir, "fleet.json")
+	cfgContent := fmt.Sprintf(`{"project":"test-fleet","repos":[{"name":"repo1","dir":%q}]}`, repoDir)
+	if err := os.WriteFile(cfgPath, []byte(cfgContent), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, errb := runArgs(t, "fleet", "--config", cfgPath, "--format", "html")
+	if code == 2 {
+		t.Errorf("--format html not recognised: %s", errb)
+	}
+	if !strings.Contains(stdout, "test-fleet") {
+		t.Errorf("expected fleet project name in HTML output: %q", errb)
+	}
+}
+
 //fusa:test REQ-FO-CLI047
 func TestReportMinSeverityFlag(t *testing.T) {
 	code, _, errb := runArgs(t, "report", "--min-severity", "WARNING", "--format", "text", "--dir", goProject(t))

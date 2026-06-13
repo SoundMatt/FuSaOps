@@ -196,8 +196,76 @@ func TestRenderJSON(t *testing.T) {
 //fusa:test REQ-FO-FLT004
 func TestRenderUnsupportedFormat(t *testing.T) {
 	fr := &FleetReport{}
-	if err := Render(nil, fr, "html"); err == nil {
+	if err := Render(nil, fr, "bogus"); err == nil {
 		t.Error("expected error for unsupported format")
+	}
+}
+
+// TestRenderHTMLBasic verifies HTML output contains key fleet information.
+//
+//fusa:test REQ-FO-FLT005
+func TestRenderHTMLBasic(t *testing.T) {
+	fr := &FleetReport{
+		Project: "test-fleet",
+		Repos: []RepoResult{
+			{Name: "repo-a", Status: "PASS", Total: 0, Errors: 0, Warnings: 0},
+			{Name: "repo-b", Status: "FAIL", Total: 3, Errors: 2, Warnings: 1},
+		},
+		Total:    3,
+		Errors:   2,
+		Warnings: 1,
+	}
+	var buf strings.Builder
+	if err := Render(&buf, fr, "html"); err != nil {
+		t.Fatalf("Render html: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "test-fleet") {
+		t.Errorf("expected project name in HTML: %q", out[:200])
+	}
+	if !strings.Contains(out, "repo-a") || !strings.Contains(out, "repo-b") {
+		t.Errorf("expected repo names in HTML")
+	}
+	if !strings.Contains(out, "PASS") || !strings.Contains(out, "FAIL") {
+		t.Errorf("expected status badges in HTML")
+	}
+	if !strings.Contains(out, "badge-fail") {
+		t.Errorf("expected badge-fail CSS class in HTML")
+	}
+}
+
+//fusa:test REQ-FO-FLT005
+func TestRenderHTMLScanError(t *testing.T) {
+	fr := &FleetReport{
+		Project: "err-fleet",
+		Repos: []RepoResult{
+			{Name: "broken", Status: "ERROR", ScanErr: "tool not found"},
+		},
+	}
+	var buf strings.Builder
+	if err := Render(&buf, fr, "html"); err != nil {
+		t.Fatalf("Render html with scan error: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "tool not found") {
+		t.Errorf("expected scan error in HTML: %q", out[:200])
+	}
+}
+
+//fusa:test REQ-FO-FLT005
+func TestRenderHTMLPass(t *testing.T) {
+	fr := &FleetReport{
+		Project: "clean-fleet",
+		Repos: []RepoResult{
+			{Name: "repo-ok", Status: "PASS"},
+		},
+	}
+	var buf strings.Builder
+	if err := Render(&buf, fr, "html"); err != nil {
+		t.Fatalf("Render html pass: %v", err)
+	}
+	if !strings.Contains(buf.String(), "badge-pass") {
+		t.Errorf("expected badge-pass in clean fleet HTML")
 	}
 }
 

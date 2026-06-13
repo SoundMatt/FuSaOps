@@ -341,6 +341,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.21 — Fleet HTML report ✅
+
+**Goal:** Complete the fleet report format set to match single-project report parity.
+
+- `fleet.Render` gains `"html"` format support (REQ-FO-FLT005)
+- Self-contained HTML: overall badge, per-repo status table, summary footer, colour-coded severity cells
+- `fusaops fleet --format html [--output fleet.html]`
+- No external CSS/JS — compatible with single-project HTML report design language
+
+---
+
 ## v1.20 — Severity filter ✅
 
 **Goal:** Let CI gates and report consumers focus on only the severity levels they care about.
