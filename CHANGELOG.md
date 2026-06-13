@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.23.0] — 2026-06-13
+
+### `fusaops trace --format markdown` — GFM traceability matrix
+
+- **`trace.Render(w, a, "markdown")` / `"md"` alias** — new format; produces a GitHub-Flavoured Markdown document with a status badge header (`🟢 **PASS**` / `🟡 **GAP**`), a per-component summary table (requirements/traced%/tested%/sec-tested%/qualification), a TOTAL row, and collapsible `<details>` gap lists. (REQ-FO-TRC018)
+- **`fusaops trace --format markdown [--output REPORT.md]`** — expose the new format from the CLI.
+- Mirrors the style of rust-FuSa's `--format md` gap-report.
+
+### Safety
+- Requirements registry at 247 requirements (added REQ-FO-TRC018)
+- 3 new tests; 247/247 requirements traced+tested; combined coverage 81.3%
+
 ## [1.22.0] — 2026-06-13
 
 ### `fusaops suppress import` — bulk suppression from check report

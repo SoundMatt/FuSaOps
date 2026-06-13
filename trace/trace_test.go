@@ -295,6 +295,57 @@ func TestRenderHTML(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-TRC018
+func TestRenderMarkdown(t *testing.T) {
+	var buf bytes.Buffer
+	if err := Render(&buf, sampleAggregate(), "markdown"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"# FuSaOps Traceability", "**GAP**", "| Tool |", "gofusa", "TOTAL"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("markdown missing %q\n%s", want, out)
+		}
+	}
+}
+
+//fusa:test REQ-FO-TRC018
+func TestRenderMarkdownAlias(t *testing.T) {
+	var buf bytes.Buffer
+	if err := Render(&buf, sampleAggregate(), "md"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "# FuSaOps Traceability") {
+		t.Error("md alias: expected markdown header")
+	}
+}
+
+//fusa:test REQ-FO-TRC018
+func TestRenderMarkdownGaps(t *testing.T) {
+	a := sampleAggregate()
+	// After New(), components are sorted by tool name: cfusa (index 0), gofusa (index 1).
+	// Add gap requirements to the non-skipped component (gofusa).
+	for i, c := range a.Components {
+		if c.Tool == "gofusa" {
+			a.Components[i].Requirements = []Requirement{
+				{ID: "REQ-A001", Title: "Boot sequence", Status: "untraced"},
+			}
+			break
+		}
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, a, "markdown"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "REQ-A001") || !strings.Contains(out, "Boot sequence") {
+		t.Errorf("markdown gaps section missing requirement:\n%s", out)
+	}
+	if !strings.Contains(out, "<details>") {
+		t.Errorf("markdown should wrap gaps in <details>:\n%s", out)
+	}
+}
+
 //fusa:test REQ-FO-TRC012
 func TestRenderUnknownAndToFile(t *testing.T) {
 	if err := Render(&bytes.Buffer{}, sampleAggregate(), "yaml"); err == nil {

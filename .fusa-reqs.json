@@ -1142,6 +1142,13 @@
       "rationale": "Enables the --gaps flag to surface only actionable gaps without re-running the orchestrator."
     },
     {
+      "id": "REQ-FO-TRC018",
+      "title": "trace --format markdown",
+      "description": "Render must accept format 'markdown' or 'md' and emit a GFM document with a status badge header, a per-component summary table (requirements/traced/tested/sec-tested/qualification), a TOTAL row, and collapsible gap lists. renderMarkdown must be tested independently.",
+      "priority": "MUST",
+      "rationale": "rust-FuSa exposes --format md for its gap-report; FuSaOps should offer the same for the cross-language aggregate so teams can embed the matrix in GitHub wikis and PRs."
+    },
+    {
       "id": "REQ-FO-CLI021",
       "title": "fusaops trace coverage gates",
       "description": "fusaops trace must accept --gaps (show only untraced/untested requirements), --req-coverage N (fail when tracedPct < N), and --sec-tested N (fail when secTestedPct < N).",

@@ -23,7 +23,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	dir := fs.String("dir", ".", "project root directory")
 	only := fs.String("only", "", "comma-separated tool names to run (default: all applicable)")
-	format := fs.String("format", "text", "output format: text|json|html")
+	format := fs.String("format", "text", "output format: text|json|html|markdown")
 	output := fs.String("output", "", "output file (default: stdout)")
 	strict := fs.Bool("strict", false, "exit non-zero when any requirement is untraced or untested")
 	gaps := fs.Bool("gaps", false, "show only untraced/untested requirements")

@@ -81,6 +81,7 @@ fusaops iso21434             # roll up ISO 21434 gap reports across all language
 fusaops unece                # roll up UNECE R155/R156 gap reports across all languages
 fusaops iec62443             # roll up IEC 62443 gap reports across all languages
 fusaops trace --gaps         # show only untraced/untested requirements
+fusaops trace --format markdown --output TRACE.md  # GFM traceability matrix for wikis/PRs
 fusaops trace --req-coverage 80 --sec-tested 60  # threshold-based coverage gate
 fusaops conform gofusa       # check a binary against the x-FuSa spec
 fusaops serve --addr :8080   # launch the web dashboard
@@ -100,7 +101,9 @@ Beyond aggregating *findings*, FuSaOps rolls up the evidence each tool already
 produces into one cross-language view:
 
 - **`fusaops trace`** — merges every tool's requirement traceability matrix and
-  qualification status; `--strict` is a polyglot coverage gate.
+  qualification status; `--strict` is a polyglot coverage gate. Supports
+  `--format text|json|html|markdown`; the `markdown` format emits a
+  GitHub-Flavoured Markdown summary suitable for wikis and PR descriptions.
 - **`fusaops sbom`** — merges and de-duplicates every tool's SBOM, with an
   SPDX 2.3 output.
 - **`fusaops audit-pack`** — bundles each tool's own audit-pack plus the

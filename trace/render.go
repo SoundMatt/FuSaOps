@@ -11,6 +11,7 @@ import (
 // Render writes the aggregate matrix to w in the requested format.
 //
 //fusa:req REQ-FO-TRC012
+//fusa:req REQ-FO-TRC018
 func Render(w io.Writer, a *Aggregate, format string) error {
 	switch format {
 	case "", "text":
@@ -19,6 +20,8 @@ func Render(w io.Writer, a *Aggregate, format string) error {
 		return renderJSON(w, a)
 	case "html":
 		return renderHTML(w, a)
+	case "markdown", "md":
+		return renderMarkdown(w, a)
 	default:
 		return fmt.Errorf("trace: unsupported format %q", format)
 	}
@@ -108,6 +111,76 @@ func renderText(w io.Writer, a *Aggregate) error {
 		fmt.Fprintf(w, "TOTAL: %s — %d requirements across %d component(s): %d traced (%d%%), %d tested (%d%%)\n",
 			a.Status(), c.TotalRequirements, len(a.Components),
 			c.TracedRequirements, c.TracedPct, c.TestedRequirements, c.TestedPct)
+	}
+	return nil
+}
+
+// renderMarkdown writes a GFM traceability report.
+//
+//fusa:req REQ-FO-TRC018
+func renderMarkdown(w io.Writer, a *Aggregate) error {
+	status := a.Status()
+	badge := "🟢"
+	if status == "GAP" {
+		badge = "🟡"
+	}
+	fmt.Fprintf(w, "# FuSaOps Traceability%s\n\n", func() string {
+		if a.Project != "" {
+			return " — " + a.Project
+		}
+		return ""
+	}())
+	fmt.Fprintf(w, "%s **%s** · Generated %s\n\n", badge, status, a.GeneratedAt.Format("2006-01-02 15:04 MST"))
+
+	// Summary table.
+	fmt.Fprintln(w, "| Tool | Language | Requirements | Traced | Tested | Sec-Tested | Qualification |")
+	fmt.Fprintln(w, "|---|---|---:|---:|---:|---:|---|")
+	for _, c := range a.Components {
+		if c.Skipped != "" {
+			fmt.Fprintf(w, "| %s | %s | _(skipped — %s)_ | | | | |\n", c.Tool, c.Language, c.Skipped)
+			continue
+		}
+		qual := "—"
+		if c.Qualification != nil {
+			qual = fmt.Sprintf("%d/%d", c.Qualification.Passed, c.Qualification.Total)
+		}
+		secTested := "—"
+		if c.Coverage.SecTestedRequirements > 0 {
+			secTested = fmt.Sprintf("%d (%d%%)", c.Coverage.SecTestedRequirements, c.SecTestedPct())
+		}
+		fmt.Fprintf(w, "| %s | %s | %d | %d (%d%%) | %d (%d%%) | %s | %s |\n",
+			c.Tool, c.Language,
+			c.Coverage.TotalRequirements,
+			c.Coverage.TracedRequirements, c.TracedPct(),
+			c.Coverage.TestedRequirements, c.TestedPct(),
+			secTested, qual)
+	}
+	// Total row.
+	cv := a.Coverage
+	secTotal := "—"
+	if cv.SecTestedRequirements > 0 {
+		secTotal = fmt.Sprintf("%d (%d%%)", cv.SecTestedRequirements, cv.SecTestedPct)
+	}
+	fmt.Fprintf(w, "| **TOTAL** | | **%d** | **%d (%d%%)** | **%d (%d%%)** | **%s** | |\n\n",
+		cv.TotalRequirements,
+		cv.TracedRequirements, cv.TracedPct,
+		cv.TestedRequirements, cv.TestedPct,
+		secTotal)
+
+	// Per-component gap lists.
+	for _, c := range a.Components {
+		if c.Skipped != "" || len(c.Requirements) == 0 {
+			continue
+		}
+		fmt.Fprintf(w, "<details><summary>%s (%s) — %d gap(s)</summary>\n\n", c.Tool, c.Language, len(c.Requirements))
+		for _, r := range c.Requirements {
+			if r.Title != "" {
+				fmt.Fprintf(w, "- **%s** — %s\n", r.ID, r.Title)
+			} else {
+				fmt.Fprintf(w, "- **%s**\n", r.ID)
+			}
+		}
+		fmt.Fprintln(w, "\n</details>")
 	}
 	return nil
 }

@@ -341,6 +341,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.23 — `fusaops trace --format markdown` ✅
+
+**Goal:** Let teams embed the cross-language traceability matrix in GitHub wikis, PR descriptions, and documentation sites without converting from HTML.
+
+- `trace.Render` gains `"markdown"` (and `"md"` alias) format support (REQ-FO-TRC018)
+- GFM output: status badge header, per-component summary table (requirements/traced/tested/sec-tested/qualification), TOTAL row, and collapsible `<details>` gap lists
+- `fusaops trace --format markdown [--output REPORT.md]`
+- Mirrors rust-FuSa's `--format md` gap-report output style
+
+---
+
 ## v1.22 — Suppress import ✅
 
 **Goal:** Let teams acknowledge all existing findings in one command when onboarding FuSaOps.
