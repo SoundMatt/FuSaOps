@@ -330,6 +330,13 @@
       "rationale": "JUnit XML is the de facto standard for CI test results, enabling FuSaOps findings to appear natively in Jenkins, Azure DevOps, CircleCI, and GitLab pipelines."
     },
     {
+      "id": "REQ-FO-RPT014",
+      "title": "CSV renderer",
+      "description": "FuSaOps shall render reports in RFC 4180 CSV format (--format csv) with columns: language, tool, ruleId, severity, message, file, line, column, category, fingerprint. One row per finding; components with no findings emit no data rows.",
+      "priority": "MUST",
+      "rationale": "CSV enables auditors and project managers to import FuSaOps findings into spreadsheet tools (Excel, Google Sheets) without additional tooling."
+    },
+    {
       "id": "REQ-FO-SRV001",
       "title": "Dashboard server",
       "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.",
@@ -1462,6 +1469,13 @@
       "description": "The check and report subcommands shall accept 'junit' as a valid --format value, producing JUnit XML output via the report.Render dispatcher.",
       "priority": "MUST",
       "rationale": "Enables CI systems that natively consume JUnit XML to display FuSaOps safety findings as test results."
+    },
+    {
+      "id": "REQ-FO-CLI035",
+      "title": "fusaops check/report --format csv",
+      "description": "The check and report subcommands shall accept 'csv' as a valid --format value, producing RFC 4180 CSV output via the report.Render dispatcher.",
+      "priority": "MUST",
+      "rationale": "Enables auditors and project managers to import FuSaOps findings into spreadsheet tools."
     }
   ]
 }

@@ -251,6 +251,20 @@ func TestServeZeroRefreshInterval(t *testing.T) {
 	}
 }
 
+// TestCheckCSVFormat verifies fusaops check --format csv produces CSV output.
+//
+//fusa:test REQ-FO-CLI035
+func TestCheckCSVFormat(t *testing.T) {
+	dir := goProject(t)
+	code, out, errb := runArgs(t, "check", "--dir", dir, "--format", "csv")
+	if code != 0 {
+		t.Fatalf("check --format csv: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "language") || !strings.Contains(out, "severity") {
+		t.Errorf("csv output missing header columns: %.200s", out)
+	}
+}
+
 // TestCheckJUnitFormat verifies fusaops check --format junit produces XML output.
 //
 //fusa:test REQ-FO-CLI034

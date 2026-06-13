@@ -385,6 +385,17 @@ fusaops report --format junit --output fusaops-results.xml
 - Components with zero findings emit a synthetic `<testcase name="(no findings)"/>` (passed).
 - Skipped / unavailable tools emit `<testcase name="(skipped)"><skipped/></testcase>`.
 
+## CSV output
+
+`--format csv` on `fusaops check` or `fusaops report` produces RFC 4180 CSV for
+import into Excel, Google Sheets, or auditing spreadsheets:
+
+```bash
+fusaops report --format csv --output fusaops-findings.csv
+```
+
+Columns: `language, tool, ruleId, severity, message, file, line, column, category, fingerprint`.
+
 ## Docker quickstart
 
 The published image is **all-in-one**: it bundles the x-FuSa tools, so there is
@@ -504,7 +515,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (209 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (211 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

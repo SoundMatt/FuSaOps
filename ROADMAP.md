@@ -266,6 +266,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.8 — CSV report format ✅
+
+**Goal:** Enable auditors and project managers to import findings into spreadsheet tools.
+
+- ✅ `--format csv` on `fusaops check` and `fusaops report` — produces RFC 4180 CSV
+- ✅ Columns: language, tool, ruleId, severity, message, file, line, column, category, fingerprint
+- ✅ Skipped/unavailable components emit no data rows
+- ✅ Zero external dependencies — `encoding/csv` stdlib only
+
+---
+
 ## Adding a language adapter
 
 1. Implement `adapter.Adapter` (Name, Language, Tool, Detect, Available, Check).

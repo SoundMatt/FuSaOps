@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.8.0] — 2026-06-13
+
+### CSV report format
+
+- **`--format csv`** on `fusaops check` and `fusaops report` — produces RFC 4180 CSV with
+  columns: `language, tool, ruleId, severity, message, file, line, column, category, fingerprint`.
+  One row per finding across all components; skipped/zero-finding components emit no data rows.
+  (REQ-FO-RPT014, REQ-FO-CLI035)
+- Useful for importing findings into Excel, Google Sheets, or any spreadsheet auditing workflow.
+- Zero external dependencies — `encoding/csv` from stdlib.
+
+### Safety
+- Requirements registry at 211 requirements (added REQ-FO-RPT014, REQ-FO-CLI035)
+- 5 new tests (4 renderer, 1 CLI); 211/211 requirements traced+tested; combined coverage ≥80%
+
 ## [1.7.0] — 2026-06-13
 
 ### JUnit XML report format
@@ -320,7 +335,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.4.0...v1.5.0

@@ -19,12 +19,13 @@ import (
 //fusa:req REQ-FO-CLI008
 //fusa:req REQ-FO-CLI033
 //fusa:req REQ-FO-CLI034
+//fusa:req REQ-FO-CLI035
 func runCheck(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops check", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	dir := fs.String("dir", ".", "project root directory")
 	only := fs.String("only", "", "comma-separated tool names to run (default: all applicable)")
-	format := fs.String("format", "text", "output format: text|json|html|sarif|junit")
+	format := fs.String("format", "text", "output format: text|json|html|sarif|junit|csv")
 	strict := fs.Bool("strict", false, "exit non-zero on WARNING findings too")
 	suppressFile := fs.String("suppress-file", "", "path to .fusaops-suppress.json")
 	if err := fs.Parse(args); err != nil {
