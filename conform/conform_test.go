@@ -246,7 +246,9 @@ func TestSummaryCount(t *testing.T) {
 //fusa:test REQ-FO-CNF007
 func TestLangFromBinary(t *testing.T) {
 	cases := map[string]string{
-		"gofusa": "go", "cfusa": "c", "cpfusa": "cpp", "unknown": "",
+		"gofusa": "go", "cfusa": "c", "cpfusa": "cpp",
+		"rsfusa": "rust", "pyfusa": "python", "jfusa": "java",
+		"unknown": "",
 	}
 	for bin, want := range cases {
 		if got := langFromBinary(bin); got != want {
@@ -574,19 +576,26 @@ func TestNormalizeMessage(t *testing.T) {
 //
 //fusa:test REQ-FO-CNF005
 func TestWriteSourceFilesLanguages(t *testing.T) {
-	for _, lang := range []string{"go", "c", "cpp", "unknown"} {
+	cases := map[string]string{
+		"go":      "main.go",
+		"c":       "main.c",
+		"cpp":     "main.cpp",
+		"rust":    filepath.Join("src", "main.rs"),
+		"python":  "main.py",
+		"java":    "Main.java",
+		"unknown": "",
+	}
+	for lang, relPath := range cases {
+		lang, relPath := lang, relPath
 		t.Run(lang, func(t *testing.T) {
 			dir := t.TempDir()
 			r := &runner{dir: dir, lang: lang}
 			if err := r.writeSourceFiles(); err != nil {
 				t.Fatalf("writeSourceFiles(%q): %v", lang, err)
 			}
-			expected := map[string]string{
-				"go": "main.go", "c": "main.c", "cpp": "main.cpp",
-			}
-			if name, ok := expected[lang]; ok {
-				if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
-					t.Errorf("expected %q to exist: %v", name, err)
+			if relPath != "" {
+				if _, err := os.Stat(filepath.Join(dir, relPath)); err != nil {
+					t.Errorf("expected %q to exist: %v", relPath, err)
 				}
 			}
 		})
@@ -844,20 +853,32 @@ func TestFingerprintNonASCII(t *testing.T) {
 //
 //fusa:test REQ-FO-CNF005
 func TestScaffoldWritesFiles(t *testing.T) {
-	dir := t.TempDir()
-	r := &runner{
-		dir:    dir,
-		binary: "gofusa",
-		run:    func(d, b string, a ...string) ([]byte, []byte, int) { return nil, nil, 0 },
-		report: &Report{},
-		lang:   "go",
-	}
-	if err := r.scaffold(); err != nil {
-		t.Fatalf("scaffold: %v", err)
-	}
-	for _, name := range []string{".fusa.json", ".fusa-reqs.json", "main.go"} {
-		if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
-			t.Errorf("expected %q after scaffold: %v", name, err)
-		}
+	for _, tc := range []struct {
+		lang, binary, wantFile string
+	}{
+		{"go", "gofusa", "main.go"},
+		{"rust", "rsfusa", filepath.Join("src", "main.rs")},
+		{"python", "pyfusa", "main.py"},
+		{"java", "jfusa", "Main.java"},
+	} {
+		tc := tc
+		t.Run(tc.lang, func(t *testing.T) {
+			dir := t.TempDir()
+			r := &runner{
+				dir:    dir,
+				binary: tc.binary,
+				run:    func(d, b string, a ...string) ([]byte, []byte, int) { return nil, nil, 0 },
+				report: &Report{},
+				lang:   tc.lang,
+			}
+			if err := r.scaffold(); err != nil {
+				t.Fatalf("scaffold: %v", err)
+			}
+			for _, name := range []string{".fusa.json", ".fusa-reqs.json", tc.wantFile} {
+				if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
+					t.Errorf("expected %q after scaffold: %v", name, err)
+				}
+			}
+		})
 	}
 }

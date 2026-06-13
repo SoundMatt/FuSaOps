@@ -1,4 +1,4 @@
-// Package conform runs the x-FuSa spec v1.8 conformance checks against a tool binary.
+// Package conform runs the x-FuSa spec v1.10 conformance checks against a tool binary.
 //
 // It creates a temporary project, invokes each required command, and validates the
 // output shapes and invariants defined in the spec.  No real binary is needed in unit
@@ -264,11 +264,9 @@ func (r *runner) writeSourceFiles() error {
 	if lang == "" {
 		lang = langFromBinary(filepath.Base(r.binary))
 	}
-	var name, content string
 	switch lang {
 	case "go":
-		name = "main.go"
-		content = `package main
+		return os.WriteFile(filepath.Join(r.dir, "main.go"), []byte(`package main
 
 //fusa:req REQ-TEST-001
 //fusa:test REQ-TEST-001
@@ -276,10 +274,9 @@ func (r *runner) writeSourceFiles() error {
 //fusa:req REQ-TEST-002
 
 func main() {}
-`
+`), 0o644)
 	case "c":
-		name = "main.c"
-		content = `#include <stdio.h>
+		return os.WriteFile(filepath.Join(r.dir, "main.c"), []byte(`#include <stdio.h>
 
 //fusa:req REQ-TEST-001
 //fusa:test REQ-TEST-001
@@ -287,10 +284,9 @@ func main() {}
 //fusa:req REQ-TEST-002
 
 int main(void) { return 0; }
-`
+`), 0o644)
 	case "cpp":
-		name = "main.cpp"
-		content = `#include <iostream>
+		return os.WriteFile(filepath.Join(r.dir, "main.cpp"), []byte(`#include <iostream>
 
 //fusa:req REQ-TEST-001
 //fusa:test REQ-TEST-001
@@ -298,11 +294,44 @@ int main(void) { return 0; }
 //fusa:req REQ-TEST-002
 
 int main() { return 0; }
-`
+`), 0o644)
+	case "rust":
+		if err := os.MkdirAll(filepath.Join(r.dir, "src"), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(r.dir, "Cargo.toml"), []byte(`[package]
+name = "conform-test"
+version = "0.1.0"
+edition = "2021"
+`), 0o644); err != nil {
+			return err
+		}
+		return os.WriteFile(filepath.Join(r.dir, "src", "main.rs"), []byte(`//fusa:req REQ-TEST-001
+//fusa:test REQ-TEST-001
+
+//fusa:req REQ-TEST-002
+
+fn main() {}
+`), 0o644)
+	case "python":
+		return os.WriteFile(filepath.Join(r.dir, "main.py"), []byte(`#fusa:req REQ-TEST-001
+#fusa:test REQ-TEST-001
+
+#fusa:req REQ-TEST-002
+`), 0o644)
+	case "java":
+		return os.WriteFile(filepath.Join(r.dir, "Main.java"), []byte(`//fusa:req REQ-TEST-001
+//fusa:test REQ-TEST-001
+
+//fusa:req REQ-TEST-002
+
+public class Main {
+    public static void main(String[] args) {}
+}
+`), 0o644)
 	default:
 		return nil
 	}
-	return os.WriteFile(filepath.Join(r.dir, name), []byte(content), 0o644)
 }
 
 // langFromBinary maps a binary basename to a language id per §1.1.
@@ -316,6 +345,12 @@ func langFromBinary(base string) string {
 		return "c"
 	case "cpfusa":
 		return "cpp"
+	case "rsfusa":
+		return "rust"
+	case "pyfusa":
+		return "python"
+	case "jfusa":
+		return "java"
 	default:
 		return ""
 	}

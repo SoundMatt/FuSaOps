@@ -123,13 +123,27 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
-## v0.5 — Distribution & Dashboards
+## v0.5 — All-Language Support ✅
 
-**Goal:** Team-facing reporting.
+**Goal:** Complete the x-FuSa adapter set; extend `fusaops conform` to all 6 languages.
 
-- Historical metrics trend across runs
-- Persisted dashboard (store reports; compare over time)
-- GitHub Action and prebuilt language-bundle images (Go+C+C++)
+- rust-FuSa adapter (`rsfusa`, `LangRust`) — detects `.rs` files
+- py-FuSa adapter (`pyfusa`, `LangPython`) — detects `.py` files
+- java-FuSa adapter (`jfusa`, `LangJava`) — detects `.java` files
+- All six adapters active: go-FuSa · c-FuSa · cpp-FuSa · rust-FuSa · py-FuSa · java-FuSa
+- `fusaops conform` extended to all six languages: `langFromBinary` + `writeSourceFiles` for rust/python/java
+- x-FuSa spec v1.10.6: full §11 audit of all 6 tools; c-FuSa v0.5.10 now fully conformant
+
+---
+
+## v0.6 — Distribution & Dashboards
+
+**Goal:** Make FuSaOps easy to adopt in any CI and give teams a persistent view.
+
+- **GitHub Action** (`.github/actions/fusaops/action.yml`): composite action wrapping the `ghcr.io/soundmatt/fusaops` image; zero-install CI integration (`uses: SoundMatt/FuSaOps/.github/actions/fusaops@main`)
+- Historical metrics trend across runs — persist report summaries; trend severity counts over time
+- Persisted dashboard — `fusaops serve` stores reports; `/history` shows trend view
+- Pre-built language-bundle images (Go+C, Go+C+C++, all-6)
 
 ---
 
@@ -137,7 +151,6 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 | Version | Capability |
 |---|---|
-| v0.6 | Additional language adapters (Rust, Ada/SPARK, Python) |
 | v0.7 | REST API + multi-repo aggregation (fleet view) |
 | v0.8 | Policy engine — org-wide rules over aggregated findings |
 | v1.0 | Enterprise: auth, persistence, multi-tenant dashboards |

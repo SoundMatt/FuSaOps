@@ -7,6 +7,50 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-06-13
+
+### All-language support
+
+- **rust-FuSa adapter** (`rsfusa`, `LangRust`): detects `.rs` files; runs `rsfusa check --format json`; full `Tracer`/`Qualifier`/`SBOMer`/`Packer` capability interfaces via `cmdAdapter`
+- **py-FuSa adapter** (`pyfusa`, `LangPython`): detects `.py` files; same generic path
+- **java-FuSa adapter** (`jfusa`, `LangJava`): detects `.java` files; same generic path
+- All six adapters registered and active: go-FuSa · c-FuSa · cpp-FuSa · rust-FuSa · py-FuSa · java-FuSa
+- **`fusaops conform`** extended to all six languages: `langFromBinary` maps `rsfusa`/`pyfusa`/`jfusa`; `writeSourceFiles` scaffolds `src/main.rs`+`Cargo.toml`, `main.py`, `Main.java` with `//fusa:req`/`#fusa:req` annotations
+- Package comment updated from spec v1.8 → v1.10
+- x-FuSa spec v1.10.6: all 6 tools audited against spec §11; c-FuSa fully conformant as of v0.5.10
+
+### Safety
+- Requirements registry at 159 requirements, all traced and tested
+- Spec §11 conformance table updated to v1.10.6 (c-FuSa v0.5.10 · cpp-FuSa v0.12.4 · java-FuSa v0.2.0)
+
+## [0.4.0] — 2026-06-10
+
+### Monorepo & component model
+
+- Per-directory component pinning in `.fusaops.json` (`scan.components[].adapter`, `scan.components[].timeout`, `scan.components[].path`)
+- Parallel adapter execution with per-component and global timeouts (`run.workers`, `run.timeout`, `Options.Timeout`, `Options.Workers`)
+- Baseline + diff gating (`fusaops diff --baseline <file> --strict`): fingerprint-matched across all tools; exit 1 on new errors; `--strict` also gates on new warnings
+- `Finding.Category` and `Finding.Fingerprint` fields; `ComputeFingerprint` per spec §4.2 (sha256 over normalised `ruleId:file:message`)
+- x-FuSa spec promoted to v1.9: `category`, `fingerprint`, `remediation`, `capabilities` → MUST; `fusaops conform` updated to check all four
+
+### Safety
+- Requirements registry at 146 requirements (added DIFF, ORC, CNF, ADP requirements)
+- `fusaops conform` conformance gate per spec §16 step 7; 37 checks covering version, init, check, trace, qualify, release, audit-pack, capabilities
+
+## [0.3.0] — 2026-06-10
+
+### Standards roll-up & spec conformance
+
+- **Standards subcommands**: `fusaops iso26262`, `fusaops iec61508`, `fusaops do178`, `fusaops iso21434`, `fusaops unece`, `fusaops iec62443` — roll up each language tool's gap reports into a cross-language PASS/GAP matrix; `--strict` exits 1 on any gap; skipped components stay visible
+- **`fusaops conform <binary>`**: runs 37 checks against any x-FuSa tool binary (version, init, check, trace, qualify, release, audit-pack, capabilities); validates JSON schemas, exit codes, and key-naming invariants; exit 1 on any MUST failure; conformance gate per spec §16 step 7
+- JSON Schemas for all 9 document kinds (`spec/schemas/`)
+- Golden reference vectors with pre-computed fingerprints (`spec/vectors/`)
+- x-FuSa spec v1.8 published; `schemaVersion` field required across all documents
+
+### Safety
+- Requirements registry at 101 + CNF/STD group (added `fusaops conform` and standards requirements)
+- Docs: `docs/conformance.md`, per-standard references (`docs/standards/`)
+
 ## [0.2.0] — 2026-06-10
 
 ### Evidence aggregation
@@ -77,6 +121,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/SoundMatt/FuSaOps/releases/tag/v0.1.0
