@@ -29,7 +29,7 @@ func runStandards(cmd string, args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	dir := fs.String("dir", ".", "Project root")
 	only := fs.String("only", "", "Comma-separated tool names to run (default: all applicable)")
-	format := fs.String("format", "text", "Output format: text|json")
+	format := fs.String("format", "text", "Output format: text|json|html")
 	output := fs.String("output", "", "Write report to file (default: stdout)")
 	strict := fs.Bool("strict", false, "Exit 1 if any objective has gap status")
 	fs.Usage = func() {
@@ -39,11 +39,11 @@ Roll up %s gap reports from every applicable installed x-FuSa tool and
 print the cross-language compliance matrix.
 
 Flags:
-  --dir <path>         Project root (default: .)
-  --only <tools>       Comma-separated tool names to run
-  --format text|json   Output format (default: text)
-  --output <file>      Write report to file (default: stdout)
-  --strict             Exit 1 if any objective has gap status
+  --dir <path>              Project root (default: .)
+  --only <tools>            Comma-separated tool names to run
+  --format text|json|html   Output format (default: text)
+  --output <file>           Write report to file (default: stdout)
+  --strict                  Exit 1 if any objective has gap status
 
 Exit codes:
   0  all components satisfy or partially satisfy objectives (or are skipped)
@@ -55,7 +55,7 @@ Exit codes:
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
-	if *format != "text" && *format != "json" {
+	if *format != "text" && *format != "json" && *format != "html" {
 		fmt.Fprintf(stderr, "fusaops %s: unsupported format %q\n", cmd, *format)
 		return 2
 	}

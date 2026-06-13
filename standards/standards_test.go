@@ -398,3 +398,51 @@ func TestRecomputeSummaryEmpty(t *testing.T) {
 		t.Errorf("empty objectives: summary should not change")
 	}
 }
+
+// TestRenderHTML verifies the HTML standards report contains expected content.
+//
+//fusa:test REQ-FO-STD011
+func TestRenderHTML(t *testing.T) {
+	agg := &Aggregate{
+		Standard:  "iso26262",
+		Project:   "myproj",
+		Generated: time.Now(),
+		Components: []ComponentGap{
+			{
+				Language: "go", Tool: "gofusa",
+				Report: sampleReport("ISO 26262", 2, 1, 1),
+			},
+			{Language: "c", Tool: "cfusa", Skipped: "not installed"},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "html"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"<!doctype html>", "ISO 26262", "myproj", "gofusa", "satisfied", "cfusa", "not installed"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("html missing %q", want)
+		}
+	}
+}
+
+// TestRenderHTMLNilReport verifies nil-report component shows fallback.
+//
+//fusa:test REQ-FO-STD011
+func TestRenderHTMLNilReport(t *testing.T) {
+	agg := &Aggregate{
+		Standard:  "iec61508",
+		Generated: time.Now(),
+		Components: []ComponentGap{
+			{Language: "go", Tool: "gofusa", Report: nil},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "html"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "No report available") {
+		t.Error("html should show fallback for nil report")
+	}
+}

@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.27 — `fusaops <standard> --format html` ✅
+
+**Goal:** Complete the standards command format set so gap reports are as shareable as other report types.
+
+- `standards.Render` gains `"html"` format support (REQ-FO-STD011)
+- Self-contained HTML: per-component section with tool/language header, satisfied/partial/gap counts, and colour-coded objective table; fallback for skipped/nil components; no external CSS/JS
+- Applies to all six commands: `iso26262`, `iec61508`, `do178`, `iso21434`, `unece`, `iec62443`
+
+---
+
 ## v1.26 — `fusaops conform --format html` ✅
 
 **Goal:** Complete the conform format set so conformance reports are as shareable as other report types.

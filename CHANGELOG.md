@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.27.0] — 2026-06-13
+
+### `fusaops iso26262|iec61508|do178|iso21434|unece|iec62443 --format html` — Standards HTML report
+
+- **`standards.Render(w, agg, "html")`** — new format support; produces a self-contained HTML page with a per-component section (header showing tool/language, satisfied/partial/gap counts, and an objective table with colour-coded status), fallback text for skipped/nil components. No external CSS or JS. (REQ-FO-STD011)
+- **All six standards commands now accept `--format html [--output FILE]`**.
+- Applies to: `fusaops iso26262`, `fusaops iec61508`, `fusaops do178`, `fusaops iso21434`, `fusaops unece`, `fusaops iec62443`.
+
+### Safety
+- Requirements registry at 251 requirements (added REQ-FO-STD011)
+- 2 new tests; 251/251 requirements traced+tested; combined coverage 81.3%
+
 ## [1.26.0] — 2026-06-13
 
 ### `fusaops conform --format html` — Conformance HTML report

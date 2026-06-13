@@ -988,6 +988,13 @@
       "level": "ASIL-C"
     },
     {
+      "id": "REQ-FO-STD011",
+      "title": "Standards HTML rendering",
+      "description": "standards.Render must accept format 'html' and emit a self-contained HTML page with a per-component section (tool/language header, objective table with status colour coding), a fallback for nil/skipped components, and no external CSS or JS.",
+      "priority": "MUST",
+      "rationale": "Completes the standards command format set to match other command HTML renderers; lets teams share a visual gap report as a standalone HTML file."
+    },
+    {
       "id": "REQ-FO-ADP018",
       "title": "StandardsProvider capability",
       "text": "The adapter package shall define a StandardsProvider capability interface whose Standards method runs the tool's gap-report command for a given standard id and returns a decoded GapReport.",

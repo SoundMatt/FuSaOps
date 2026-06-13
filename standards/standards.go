@@ -6,6 +6,7 @@ package standards
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"strings"
@@ -148,10 +149,11 @@ func (a *Aggregate) TotalSkipped() int {
 	return n
 }
 
-// Render writes agg to w in the requested format (text or json).
+// Render writes agg to w in the requested format (text, json, or html).
 //
 //fusa:req REQ-FO-STD006
 //fusa:req REQ-FO-STD007
+//fusa:req REQ-FO-STD011
 func Render(w io.Writer, agg *Aggregate, format string) error {
 	switch format {
 	case "json", "":
@@ -160,10 +162,71 @@ func Render(w io.Writer, agg *Aggregate, format string) error {
 		return enc.Encode(agg)
 	case "text":
 		return renderText(w, agg)
+	case "html":
+		if err := standardsTemplate.Execute(w, agg); err != nil {
+			return fmt.Errorf("standards: html render: %w", err)
+		}
+		return nil
 	default:
 		return fmt.Errorf("standards: unsupported format %q", format)
 	}
 }
+
+// standardsTemplate is a self-contained HTML standards gap-report dashboard.
+//
+//fusa:req REQ-FO-STD011
+var standardsTemplate = template.Must(template.New("standards").Funcs(template.FuncMap{
+	"displayName": displayName,
+}).Parse(`<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FuSaOps — {{displayName .Standard}} Gap Report{{if .Project}}: {{.Project}}{{end}}</title>
+<style>
+ body{font:15px/1.5 system-ui,sans-serif;margin:0;background:#0f1115;color:#e6e6e6}
+ header{padding:1.2rem 1.6rem;background:#171a21;border-bottom:1px solid #272b34}
+ h1{margin:0;font-size:1.25rem} .meta{color:#9aa3b2;font-size:.85rem;margin-top:.3rem}
+ main{padding:1.6rem;max-width:1000px;margin:0 auto}
+ h2{font-size:1rem;color:#9aa3b2;margin:1.4rem 0 .4rem}
+ table{width:100%;border-collapse:collapse;background:#171a21;border-radius:.6rem;overflow:hidden;margin-top:.4rem}
+ th,td{padding:.55rem .8rem;text-align:left;border-bottom:1px solid #272b34;font-size:.9rem}
+ th{background:#1d2129;color:#9aa3b2;font-weight:600}
+ .sat{color:#7ee2a0} .par{color:#f0c463} .gap{color:#f07070} .skip{color:#9aa3b2;font-style:italic}
+ .ev{color:#9aa3b2;font-size:.85rem}
+</style></head><body>
+<header>
+ <h1>FuSaOps — {{displayName .Standard}} Gap Report{{if .Project}}: {{.Project}}{{end}}</h1>
+ <div class="meta">Generated {{.Generated.Format "2006-01-02 15:04 MST"}} · {{len .Components}} component(s)</div>
+</header>
+<main>
+ {{range .Components}}
+  <h2>{{.Tool}} ({{.Language}})</h2>
+  {{if .Skipped}}
+   <p class="skip">Skipped — {{.Skipped}}</p>
+  {{else if .Report}}
+   <p>{{.Report.Standard}} · {{.Report.ToolVersion}} ·
+    <span class="sat">{{.Report.Summary.Satisfied}} satisfied</span> ·
+    <span class="par">{{.Report.Summary.Partial}} partial</span> ·
+    <span class="gap">{{.Report.Summary.Gaps}} gap(s)</span>
+   </p>
+   <table>
+    <thead><tr><th>ID</th><th>Status</th><th>Title / Clause</th><th>Evidence</th></tr></thead>
+    <tbody>
+    {{range .Report.Objectives}}
+     <tr>
+      <td>{{.ID}}</td>
+      <td>{{if eq .Status "satisfied"}}<span class="sat">satisfied</span>{{else if eq .Status "partial"}}<span class="par">partial</span>{{else}}<span class="gap">gap</span>{{end}}</td>
+      <td>{{if .Title}}{{.Title}}{{end}}{{if .Clause}} <span class="ev">({{.Clause}})</span>{{end}}</td>
+      <td class="ev">{{range .Evidence}}{{.}} {{end}}</td>
+     </tr>
+    {{end}}
+    </tbody>
+   </table>
+  {{else}}
+   <p class="skip">No report available.</p>
+  {{end}}
+ {{end}}
+</main></body></html>
+`))
 
 // RenderToFile writes agg to path in format, or stdout if path is empty.
 func RenderToFile(agg *Aggregate, format, path string) error {
