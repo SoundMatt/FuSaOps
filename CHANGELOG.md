@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.30.0] — 2026-06-13
+
+### `fusaops policy --format markdown` — Policy markdown report
+
+- **`policy.Render(w, pr, "markdown")`** (alias `"md"`) — new format support; produces a GFM markdown page with a status badge (🟢 PASS / 🔴 FAIL), passed/failed counts, and a per-rule GFM table (Result / Rule / Message). Pipe characters in messages are escaped as `\|` to avoid breaking GFM table syntax. (REQ-FO-POL006)
+- **`fusaops policy --format markdown [--output FILE]`** — expose the new format from the CLI.
+- Useful for posting policy gate results directly into pull request comments and GitHub Actions job summaries.
+
+### Safety
+- Requirements registry at 254 requirements (added REQ-FO-POL006)
+- 4 new tests; combined coverage 81.3%
+
 ## [1.29.0] — 2026-06-13
 
 ### `fusaops fleet --format markdown` — Fleet markdown report

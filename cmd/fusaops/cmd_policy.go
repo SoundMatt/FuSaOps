@@ -13,13 +13,14 @@ import (
 // runPolicy evaluates a policy against the current scan report.
 //
 //fusa:req REQ-FO-CLI024
+//fusa:req REQ-FO-POL006
 func runPolicy(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops policy", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	dir := fs.String("dir", ".", "project root directory")
 	only := fs.String("only", "", "comma-separated tool names to run (default: all applicable)")
 	policyFile := fs.String("policy", "policy.json", "policy configuration file")
-	format := fs.String("format", "text", "output format: text, json, or html")
+	format := fs.String("format", "text", "output format: text, json, html, or markdown")
 	output := fs.String("output", "", "write report to file (default: stdout)")
 	if err := fs.Parse(args); err != nil {
 		return 2

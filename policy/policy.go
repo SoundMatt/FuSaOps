@@ -12,6 +12,7 @@ import (
 	"html/template"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
@@ -184,10 +185,11 @@ func scopeLabel(rule Rule) string {
 	return ""
 }
 
-// Render writes the PolicyReport to w in text, json, or html format.
+// Render writes the PolicyReport to w in text, json, html, or markdown format.
 //
 //fusa:req REQ-FO-POL004
 //fusa:req REQ-FO-POL005
+//fusa:req REQ-FO-POL006
 func Render(w io.Writer, pr *PolicyReport, format string) error {
 	switch format {
 	case "json", "":
@@ -198,8 +200,10 @@ func Render(w io.Writer, pr *PolicyReport, format string) error {
 		return renderText(w, pr)
 	case "html":
 		return renderHTML(w, pr)
+	case "markdown", "md":
+		return renderMarkdown(w, pr)
 	default:
-		return fmt.Errorf("policy: unsupported format %q (want text, json, or html)", format)
+		return fmt.Errorf("policy: unsupported format %q (want text, json, html, or markdown)", format)
 	}
 }
 
@@ -227,6 +231,39 @@ func renderHTML(w io.Writer, pr *PolicyReport) error {
 	}{pr, time.Now().UTC().Format("2006-01-02 15:04 MST")}
 	if err := policyTemplate.Execute(w, data); err != nil {
 		return fmt.Errorf("policy: html render: %w", err)
+	}
+	return nil
+}
+
+// renderMarkdown writes a GFM markdown policy report to w.
+//
+//fusa:req REQ-FO-POL006
+func renderMarkdown(w io.Writer, pr *PolicyReport) error {
+	status := pr.Status()
+	badge := "🟢"
+	switch status {
+	case "FAIL":
+		badge = "🔴"
+	}
+	name := pr.Policy
+	if name == "" {
+		name = "Policy"
+	}
+	fmt.Fprintf(w, "# FuSaOps — %s\n\n", name)
+	fmt.Fprintf(w, "%s **%s** · %d passed · %d failed\n\n", badge, status, pr.Passed, pr.Failed)
+	fmt.Fprintln(w, "| Result | Rule | Message |")
+	fmt.Fprintln(w, "|---|---|---|")
+	for _, r := range pr.Results {
+		result := "✅ PASS"
+		if !r.Passed {
+			result = "❌ FAIL"
+		}
+		ruleID := "—"
+		if r.Rule.ID != "" {
+			ruleID = r.Rule.ID
+		}
+		msg := strings.ReplaceAll(r.Message, "|", "\\|")
+		fmt.Fprintf(w, "| %s | %s | %s |\n", result, ruleID, msg)
 	}
 	return nil
 }

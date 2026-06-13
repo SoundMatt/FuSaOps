@@ -1254,6 +1254,13 @@
       "rationale": "Completes the policy report format set to match other command HTML renderers; lets teams include a visual policy gate in CI artefacts and audit packs."
     },
     {
+      "id": "REQ-FO-POL006",
+      "title": "Policy markdown rendering",
+      "description": "policy.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header line with the policy name, a status badge (🟢 PASS / 🔴 FAIL), passed/failed counts, a per-rule GFM table (Result/Rule/Message), with pipe characters in message text escaped as \\|. The fusaops policy CLI shall accept --format markdown.",
+      "priority": "MUST",
+      "rationale": "Markdown output lets CI pipelines post policy gate results directly into pull request comments and GitHub Actions job summaries."
+    },
+    {
       "id": "REQ-FO-CLI024",
       "title": "Policy command",
       "description": "fusaops policy --policy policy.json [--dir dir] [--format text|json] [--output file] shall load the policy, run the orchestrator, evaluate the policy against the report, render the result, and exit 1 when any rule fails.",

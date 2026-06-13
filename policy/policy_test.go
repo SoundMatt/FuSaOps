@@ -253,3 +253,75 @@ func TestRenderHTMLPass(t *testing.T) {
 		t.Error("html: expected PASS badge")
 	}
 }
+
+// TestRenderMarkdown verifies GFM markdown rendering contains expected content.
+//
+//fusa:test REQ-FO-POL006
+func TestRenderMarkdown(t *testing.T) {
+	pr := &PolicyReport{
+		Policy: "MyPolicy",
+		Passed: 1,
+		Failed: 1,
+		Results: []RuleResult{
+			{Rule: Rule{ID: "R001"}, Passed: false, Message: "max errors: exceeded"},
+			{Rule: Rule{ID: "R002"}, Passed: true, Message: "status: OK"},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, pr, "markdown"); err != nil {
+		t.Fatalf("Render markdown: %v", err)
+	}
+	out := buf.String()
+	for _, want := range []string{"# FuSaOps", "MyPolicy", "**FAIL**", "| Result |", "R001", "R002", "❌ FAIL", "✅ PASS"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in markdown:\n%s", want, out)
+		}
+	}
+}
+
+// TestRenderMarkdownAlias verifies "md" is accepted as an alias.
+//
+//fusa:test REQ-FO-POL006
+func TestRenderMarkdownAlias(t *testing.T) {
+	pr := &PolicyReport{Policy: "P", Passed: 1}
+	var buf bytes.Buffer
+	if err := Render(&buf, pr, "md"); err != nil {
+		t.Fatalf("Render md alias: %v", err)
+	}
+	if !strings.Contains(buf.String(), "# FuSaOps") {
+		t.Error("expected markdown header from md alias")
+	}
+}
+
+// TestRenderMarkdownPass verifies green badge for all-PASS policy.
+//
+//fusa:test REQ-FO-POL006
+func TestRenderMarkdownPass(t *testing.T) {
+	pr := &PolicyReport{Policy: "Clean", Passed: 2}
+	var buf bytes.Buffer
+	if err := Render(&buf, pr, "markdown"); err != nil {
+		t.Fatalf("Render markdown pass: %v", err)
+	}
+	if !strings.Contains(buf.String(), "🟢") {
+		t.Error("expected green badge for PASS policy")
+	}
+}
+
+// TestRenderMarkdownPipeEscape verifies pipe characters are escaped in GFM.
+//
+//fusa:test REQ-FO-POL006
+func TestRenderMarkdownPipeEscape(t *testing.T) {
+	pr := &PolicyReport{
+		Policy: "P",
+		Results: []RuleResult{
+			{Rule: Rule{ID: "R1"}, Passed: false, Message: "value a|b is invalid"},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, pr, "markdown"); err != nil {
+		t.Fatalf("Render markdown: %v", err)
+	}
+	if strings.Contains(buf.String(), "a|b") {
+		t.Error("unescaped pipe character in markdown table cell")
+	}
+}

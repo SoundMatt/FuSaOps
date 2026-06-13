@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.30 — `fusaops policy --format markdown` ✅
+
+**Goal:** Let CI pipelines post policy gate results directly into pull request comments and GitHub Actions job summaries.
+
+- `policy.Render` gains `"markdown"` / `"md"` format support (REQ-FO-POL006)
+- GFM output: policy-name header, 🟢/🔴 badge, passed/failed counts, per-rule table (Result/Rule/Message) with pipe-escaping in messages
+- `fusaops policy --format markdown [--output FILE]`
+
+---
+
 ## v1.29 — `fusaops fleet --format markdown` ✅
 
 **Goal:** Let CI pipelines post multi-repo safety summaries directly into pull request comments and GitHub Actions job summaries.
