@@ -219,9 +219,9 @@ func TestRenderToFile(t *testing.T) {
 //fusa:test REQ-FO-POL005
 func TestRenderHTML(t *testing.T) {
 	pr := &PolicyReport{
-		Policy:  "MyPolicy",
-		Passed:  2,
-		Failed:  1,
+		Policy: "MyPolicy",
+		Passed: 2,
+		Failed: 1,
 		Results: []RuleResult{
 			{Rule: Rule{ID: "R001"}, Passed: true, Message: "max errors: OK"},
 			{Rule: Rule{ID: "R002"}, Passed: true, Message: "max warnings: OK"},
