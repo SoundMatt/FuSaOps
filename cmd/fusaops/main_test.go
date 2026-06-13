@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -113,8 +114,14 @@ func TestCheckNoLanguages(t *testing.T) {
 func TestFleetCheck(t *testing.T) {
 	dir := goProject(t)
 	cfgPath := filepath.Join(dir, "fleet.json")
-	cfgContent := `{"project":"testfleet","repos":[{"name":"svc","dir":"` + dir + `"}]}`
-	if err := os.WriteFile(cfgPath, []byte(cfgContent), 0o644); err != nil {
+	cfgData, err := json.Marshal(map[string]any{
+		"project": "testfleet",
+		"repos":   []map[string]string{{"name": "svc", "dir": dir}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cfgPath, cfgData, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	code, out, errb := runArgs(t, "fleet", "--config", cfgPath, "--format", "text")
