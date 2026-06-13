@@ -9,8 +9,10 @@ package policy
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
+	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/report"
@@ -182,9 +184,10 @@ func scopeLabel(rule Rule) string {
 	return ""
 }
 
-// Render writes the PolicyReport to w in text or json format.
+// Render writes the PolicyReport to w in text, json, or html format.
 //
 //fusa:req REQ-FO-POL004
+//fusa:req REQ-FO-POL005
 func Render(w io.Writer, pr *PolicyReport, format string) error {
 	switch format {
 	case "json", "":
@@ -193,8 +196,10 @@ func Render(w io.Writer, pr *PolicyReport, format string) error {
 		return enc.Encode(pr)
 	case "text":
 		return renderText(w, pr)
+	case "html":
+		return renderHTML(w, pr)
 	default:
-		return fmt.Errorf("policy: unsupported format %q (want text or json)", format)
+		return fmt.Errorf("policy: unsupported format %q (want text, json, or html)", format)
 	}
 }
 
@@ -211,6 +216,57 @@ func renderText(w io.Writer, pr *PolicyReport) error {
 	fmt.Fprintf(w, "\nRESULT: %s\n", pr.Status())
 	return nil
 }
+
+// renderHTML writes a self-contained HTML policy report.
+//
+//fusa:req REQ-FO-POL005
+func renderHTML(w io.Writer, pr *PolicyReport) error {
+	data := struct {
+		*PolicyReport
+		Generated string
+	}{pr, time.Now().UTC().Format("2006-01-02 15:04 MST")}
+	if err := policyTemplate.Execute(w, data); err != nil {
+		return fmt.Errorf("policy: html render: %w", err)
+	}
+	return nil
+}
+
+var policyTemplate = template.Must(template.New("policy").Parse(`<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FuSaOps — Policy{{if .Policy}}: {{.Policy}}{{end}}</title>
+<style>
+ body{font:15px/1.5 system-ui,sans-serif;margin:0;background:#0f1115;color:#e6e6e6}
+ header{padding:1.2rem 1.6rem;background:#171a21;border-bottom:1px solid #272b34}
+ h1{margin:0;font-size:1.25rem} .meta{color:#9aa3b2;font-size:.85rem;margin-top:.3rem}
+ main{padding:1.6rem;max-width:900px;margin:0 auto}
+ .badge{display:inline-block;padding:.15rem .6rem;border-radius:.5rem;font-weight:600;font-size:.85rem}
+ .PASS{background:#16361f;color:#7ee2a0} .FAIL{background:#3a1212;color:#f07070}
+ table{width:100%;border-collapse:collapse;background:#171a21;border-radius:.6rem;overflow:hidden;margin-top:1rem}
+ th,td{padding:.55rem .8rem;text-align:left;border-bottom:1px solid #272b34;font-size:.9rem}
+ th{background:#1d2129;color:#9aa3b2;font-weight:600}
+ .pass{color:#7ee2a0} .fail{color:#f07070} .scope{color:#9aa3b2;font-size:.85rem}
+</style></head><body>
+<header>
+ <h1>FuSaOps — Policy Report{{if .Policy}}: {{.Policy}}{{end}}</h1>
+ <div class="meta">Generated {{.Generated}} · {{.Passed}} passed · {{.Failed}} failed ·
+  <span class="badge {{.Status}}">{{.Status}}</span></div>
+</header>
+<main>
+ <table>
+  <thead><tr><th>Result</th><th>Rule</th><th>Message</th></tr></thead>
+  <tbody>
+  {{range .Results}}
+   <tr>
+    <td>{{if .Passed}}<span class="pass">PASS</span>{{else}}<span class="fail">FAIL</span>{{end}}</td>
+    <td class="scope">{{if .Rule.ID}}{{.Rule.ID}}{{else}}—{{end}}</td>
+    <td>{{.Message}}</td>
+   </tr>
+  {{end}}
+  </tbody>
+ </table>
+</main></body></html>
+`))
 
 // RenderToFile writes the policy report to path, or to w if path is empty.
 //

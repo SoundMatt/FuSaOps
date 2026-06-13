@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -192,7 +193,7 @@ func TestRenderJSON(t *testing.T) {
 //
 //fusa:test REQ-FO-POL004
 func TestRenderUnsupportedFormat(t *testing.T) {
-	if err := Render(nil, &PolicyReport{}, "html"); err == nil {
+	if err := Render(nil, &PolicyReport{}, "bogus"); err == nil {
 		t.Error("expected error for unsupported format")
 	}
 }
@@ -210,5 +211,45 @@ func TestRenderToFile(t *testing.T) {
 	data, _ := os.ReadFile(path)
 	if !strings.Contains(string(data), `"policy"`) {
 		t.Error("output missing policy field")
+	}
+}
+
+// TestRenderHTML verifies the HTML policy report contains expected content.
+//
+//fusa:test REQ-FO-POL005
+func TestRenderHTML(t *testing.T) {
+	pr := &PolicyReport{
+		Policy:  "MyPolicy",
+		Passed:  2,
+		Failed:  1,
+		Results: []RuleResult{
+			{Rule: Rule{ID: "R001"}, Passed: true, Message: "max errors: OK"},
+			{Rule: Rule{ID: "R002"}, Passed: true, Message: "max warnings: OK"},
+			{Rule: Rule{ID: "R003"}, Passed: false, Message: "status: got FAIL, need PASS"},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, pr, "html"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"<!doctype html>", "MyPolicy", "FAIL", "R001", "max errors: OK"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("html missing %q", want)
+		}
+	}
+}
+
+// TestRenderHTMLPass verifies PASS status renders correctly.
+//
+//fusa:test REQ-FO-POL005
+func TestRenderHTMLPass(t *testing.T) {
+	pr := &PolicyReport{Policy: "P", Passed: 1}
+	var buf bytes.Buffer
+	if err := Render(&buf, pr, "html"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "PASS") {
+		t.Error("html: expected PASS badge")
 	}
 }

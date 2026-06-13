@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.25 — `fusaops policy --format html` ✅
+
+**Goal:** Complete the policy report format set so policy gates are as shareable as other report formats.
+
+- `policy.Render` gains `"html"` format support (REQ-FO-POL005)
+- Self-contained HTML: PASS/FAIL badge, passed/failed count summary, per-rule results table (result/ID/message), no external CSS/JS
+- `fusaops policy --format html [--output policy.html]`
+
+---
+
 ## v1.24 — `fusaops sbom --format html` ✅
 
 **Goal:** Complete the SBOM format set so the merged bill of materials is as shareable as the findings report.

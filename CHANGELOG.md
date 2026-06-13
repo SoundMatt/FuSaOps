@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.25.0] — 2026-06-13
+
+### `fusaops policy --format html` — Policy HTML report
+
+- **`policy.Render(w, pr, "html")`** — new format support; produces a self-contained HTML page with an overall PASS/FAIL badge, passed/failed counts, and a per-rule results table (result/rule-ID/message). No external CSS or JS. (REQ-FO-POL005)
+- **`fusaops policy --format html [--output policy.html]`** — expose the new format from the CLI.
+- Error message for unknown format updated from `"want text or json"` → `"want text, json, or html"`.
+
+### Safety
+- Requirements registry at 249 requirements (added REQ-FO-POL005)
+- 2 new tests; 249/249 requirements traced+tested; combined coverage 81.3%
+
 ## [1.24.0] — 2026-06-13
 
 ### `fusaops sbom --format html` — SBOM HTML viewer

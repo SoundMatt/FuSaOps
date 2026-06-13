@@ -19,7 +19,7 @@ func runPolicy(args []string, stdout, stderr io.Writer) int {
 	dir := fs.String("dir", ".", "project root directory")
 	only := fs.String("only", "", "comma-separated tool names to run (default: all applicable)")
 	policyFile := fs.String("policy", "policy.json", "policy configuration file")
-	format := fs.String("format", "text", "output format: text or json")
+	format := fs.String("format", "text", "output format: text, json, or html")
 	output := fs.String("output", "", "write report to file (default: stdout)")
 	if err := fs.Parse(args); err != nil {
 		return 2

@@ -1233,6 +1233,13 @@
       "rationale": "Provides human-readable and machine-readable output for CI logs and audit records."
     },
     {
+      "id": "REQ-FO-POL005",
+      "title": "Policy HTML rendering",
+      "description": "policy.Render must accept format 'html' and emit a self-contained HTML page with an overall PASS/FAIL badge, a per-rule results table (result/rule-ID/message), and no external CSS or JS.",
+      "priority": "MUST",
+      "rationale": "Completes the policy report format set to match other command HTML renderers; lets teams include a visual policy gate in CI artefacts and audit packs."
+    },
+    {
       "id": "REQ-FO-CLI024",
       "title": "Policy command",
       "description": "fusaops policy --policy policy.json [--dir dir] [--format text|json] [--output file] shall load the policy, run the orchestrator, evaluate the policy against the report, render the result, and exit 1 when any rule fails.",
