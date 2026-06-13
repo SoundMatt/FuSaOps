@@ -392,6 +392,49 @@ func TestRenderUnknownFormat(t *testing.T) {
 	}
 }
 
+// TestRenderHTML verifies HTML rendering contains expected content.
+//
+//fusa:test REQ-FO-CNF018
+func TestRenderHTML(t *testing.T) {
+	rep := &Report{
+		Binary: "/usr/local/bin/gofusa", Tool: "go-FuSa", ToolVersion: "0.30.0",
+		Language: "go", SpecVersion: "1.10",
+		Results: []Result{
+			{ID: "version/output-format", Section: "§9.1", Level: LevelMUST, Name: "version output", Status: StatusPass},
+			{ID: "check/common-header", Section: "§3.1", Level: LevelMUST, Name: "header", Status: StatusFail, Detail: "missing kind"},
+			{ID: "capabilities/schema", Section: "§9.1", Level: LevelSHOULD, Name: "caps", Status: StatusSkip},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "html"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"<!doctype html>", "go-FuSa", "§3.1", "missing kind", "FAIL"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("html missing %q", want)
+		}
+	}
+}
+
+// TestRenderHTMLPass verifies a fully-passing report shows PASS badge.
+//
+//fusa:test REQ-FO-CNF018
+func TestRenderHTMLPass(t *testing.T) {
+	rep := &Report{Tool: "go-FuSa", ToolVersion: "0.30.0", Language: "go",
+		Results: []Result{
+			{Status: StatusPass, Level: LevelMUST, Section: "§1", Name: "ok"},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "html"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), ">PASS<") {
+		t.Error("html: expected PASS badge for all-passing report")
+	}
+}
+
 // TestDecodeJSON verifies the noise-stripping JSON decoder.
 func TestDecodeJSON(t *testing.T) {
 	raw := []byte("noise\n{\"foo\":1}\nmore")

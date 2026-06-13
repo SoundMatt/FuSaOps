@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.26 — `fusaops conform --format html` ✅
+
+**Goal:** Complete the conform format set so conformance reports are as shareable as other report types.
+
+- `conform.Render` gains `"html"` format support (REQ-FO-CNF018)
+- Self-contained HTML: PASS/FAIL badge, pass/fail/skip counts, per-check results table (result/level/section/name+detail), no external CSS/JS
+- `fusaops conform <binary> --format html [--output conform.html]`
+
+---
+
 ## v1.25 — `fusaops policy --format html` ✅
 
 **Goal:** Complete the policy report format set so policy gates are as shareable as other report formats.

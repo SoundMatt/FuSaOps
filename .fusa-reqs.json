@@ -904,6 +904,13 @@
       "level": "ASIL-C"
     },
     {
+      "id": "REQ-FO-CNF018",
+      "title": "Conformance HTML rendering",
+      "description": "conform.Render must accept format 'html' and emit a self-contained HTML page with a PASS/FAIL badge, pass/fail/skip counts in the header, and a per-check results table (result/level/section/name+detail). No external CSS or JS.",
+      "priority": "MUST",
+      "rationale": "Completes the conform format set; lets teams share a visual conformance report as a standalone HTML file without a running dashboard server."
+    },
+    {
       "id": "REQ-FO-CLI014",
       "title": "Conform command",
       "text": "fusaops conform shall run x-FuSa spec conformance checks against a named binary, render the report in text or json, and exit non-zero when any MUST check fails.",

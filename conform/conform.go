@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"os/exec"
@@ -163,9 +164,10 @@ func Run(binary string, opts Options) (*Report, error) {
 	return r.report, nil
 }
 
-// Render writes the report to w in the requested format (text or json).
+// Render writes the report to w in the requested format (text, json, or html).
 //
 //fusa:req REQ-FO-CNF006
+//fusa:req REQ-FO-CNF018
 func Render(w io.Writer, rep *Report, format string) error {
 	switch format {
 	case "json", "":
@@ -200,10 +202,65 @@ func Render(w io.Writer, rep *Report, format string) error {
 			fmt.Fprintln(w, "\nRESULT: PASS")
 		}
 		return nil
+	case "html":
+		pass, fail, skip := rep.Summary()
+		data := struct {
+			*Report
+			Pass, Fail, Skip int
+		}{rep, pass, fail, skip}
+		if err := conformTemplate.Execute(w, data); err != nil {
+			return fmt.Errorf("conform: html render: %w", err)
+		}
+		return nil
 	default:
 		return fmt.Errorf("conform: unsupported format %q", format)
 	}
 }
+
+// conformTemplate is a self-contained HTML conformance report.
+//
+//fusa:req REQ-FO-CNF018
+var conformTemplate = template.Must(template.New("conform").Parse(`<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FuSaOps — Conformance: {{.Tool}}</title>
+<style>
+ body{font:15px/1.5 system-ui,sans-serif;margin:0;background:#0f1115;color:#e6e6e6}
+ header{padding:1.2rem 1.6rem;background:#171a21;border-bottom:1px solid #272b34}
+ h1{margin:0;font-size:1.25rem} .meta{color:#9aa3b2;font-size:.85rem;margin-top:.3rem}
+ main{padding:1.6rem;max-width:960px;margin:0 auto}
+ .badge{display:inline-block;padding:.15rem .6rem;border-radius:.5rem;font-weight:600;font-size:.85rem}
+ .PASS{background:#16361f;color:#7ee2a0} .FAIL{background:#3a1212;color:#f07070}
+ table{width:100%;border-collapse:collapse;background:#171a21;border-radius:.6rem;overflow:hidden;margin-top:1rem}
+ th,td{padding:.55rem .8rem;text-align:left;border-bottom:1px solid #272b34;font-size:.9rem}
+ th{background:#1d2129;color:#9aa3b2;font-weight:600}
+ .p{color:#7ee2a0} .f{color:#f07070} .s{color:#9aa3b2}
+ .detail{color:#9aa3b2;font-size:.85rem;font-style:italic}
+ .level{display:inline-block;padding:.1rem .4rem;border-radius:.3rem;font-size:.8rem;background:#1d2129;color:#9aa3b2}
+</style></head><body>
+<header>
+ <h1>FuSaOps — x-FuSa Conformance: {{.Tool}} {{.ToolVersion}}</h1>
+ <div class="meta">Binary: {{.Binary}} · Language: {{.Language}}{{if .SpecVersion}} · Spec: {{.SpecVersion}}{{end}} ·
+  Generated {{.Generated.Format "2006-01-02 15:04 MST"}} ·
+  {{.Pass}} passed · {{.Fail}} failed · {{.Skip}} skipped ·
+  <span class="badge {{if .HasFailures}}FAIL{{else}}PASS{{end}}">{{if .HasFailures}}FAIL{{else}}PASS{{end}}</span></div>
+</header>
+<main>
+ <table>
+  <thead><tr><th>Result</th><th>Level</th><th>§ Section</th><th>Check</th></tr></thead>
+  <tbody>
+  {{range .Results}}
+   <tr>
+    <td>{{if eq .Status "PASS"}}<span class="p">PASS</span>{{else if eq .Status "FAIL"}}<span class="f">FAIL</span>{{else}}<span class="s">SKIP</span>{{end}}</td>
+    <td><span class="level">{{.Level}}</span></td>
+    <td>{{.Section}}</td>
+    <td>{{.Name}}{{if .Detail}}<br><span class="detail">{{.Detail}}</span>{{end}}</td>
+   </tr>
+  {{end}}
+  </tbody>
+ </table>
+</main></body></html>
+`))
 
 // runner holds the mutable state of a single conformance run.
 type runner struct {

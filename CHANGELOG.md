@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.26.0] — 2026-06-13
+
+### `fusaops conform --format html` — Conformance HTML report
+
+- **`conform.Render(w, rep, "html")`** — new format support; produces a self-contained HTML page with a PASS/FAIL badge, pass/fail/skip counts in the header, and a per-check results table (result/level/section/name with detail inline). No external CSS or JS. (REQ-FO-CNF018)
+- **`fusaops conform <binary> --format html [--output conform.html]`** — expose the new format from the CLI.
+- Format validation in cmd_conform.go updated to allow `"html"`.
+
+### Safety
+- Requirements registry at 250 requirements (added REQ-FO-CNF018)
+- 2 new tests; 250/250 requirements traced+tested; combined coverage 81.3%
+
 ## [1.25.0] — 2026-06-13
 
 ### `fusaops policy --format html` — Policy HTML report

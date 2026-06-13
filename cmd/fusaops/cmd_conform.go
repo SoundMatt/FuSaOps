@@ -15,7 +15,7 @@ import (
 func runConform(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("conform", flag.ContinueOnError)
 	fs.SetOutput(stderr)
-	format := fs.String("format", "text", "Output format: text|json")
+	format := fs.String("format", "text", "Output format: text|json|html")
 	output := fs.String("output", "", "Write report to file (default: stdout)")
 	fs.Usage = func() {
 		fmt.Fprint(stderr, `Usage: fusaops conform <binary> [flags]
@@ -23,8 +23,8 @@ func runConform(args []string, stdout, stderr io.Writer) int {
 Run x-FuSa spec v1.8 conformance checks against <binary>.
 
 Flags:
-  --format text|json   Output format (default: text)
-  --output <file>      Write report to file (default: stdout)
+  --format text|json|html   Output format (default: text)
+  --output <file>           Write report to file (default: stdout)
 
 Exit codes:
   0  all MUST checks passed
@@ -41,7 +41,7 @@ Exit codes:
 		fs.Usage()
 		return 2
 	}
-	if *format != "text" && *format != "json" {
+	if *format != "text" && *format != "json" && *format != "html" {
 		fmt.Fprintf(stderr, "fusaops conform: unsupported format %q\n", *format)
 		return 2
 	}
