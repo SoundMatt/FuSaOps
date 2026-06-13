@@ -1037,13 +1037,6 @@
       "rationale": "Enables a rolling-baseline CI workflow where a passing diff updates its own baseline in place."
     },
     {
-      "id": "REQ-FO-ADP024",
-      "title": "cpp-FuSa trace normalization",
-      "description": "The cpp-FuSa adapter Trace must write trace JSON to a temp file via --output, then normalize cpp-FuSa's {implementedBy/testedBy/summary} schema to trace.Matrix.",
-      "priority": "MUST",
-      "rationale": "cpp-FuSa emits a non-spec trace schema (per-requirement location arrays, non-spec summary keys); the adapter bridges the gap so FuSaOps can aggregate C++ traceability."
-    },
-    {
       "id": "REQ-FO-ADP025",
       "title": "cpp-FuSa standards normalization",
       "description": "The cpp-FuSa adapter Standards must run <tool> <cmd> --output <tmp> (not --format json), map do178c→do178 subcommand name, and call RecomputeSummary on the decoded GapReport.",
