@@ -160,3 +160,125 @@ func TestDiffMissingBaseline(t *testing.T) {
 		t.Errorf("diff with missing baseline: got code=%d, want 1; err=%q", code, errOut)
 	}
 }
+
+//fusa:test REQ-FO-CLI039
+func TestSuppressUnknownSubcommand(t *testing.T) {
+	code, _, _ := runArgs(t, "suppress", "bogus")
+	if code != 2 {
+		t.Errorf("suppress bogus: got %d, want 2", code)
+	}
+}
+
+//fusa:test REQ-FO-CLI039
+func TestSuppressNoSubcommand(t *testing.T) {
+	code, _, _ := runArgs(t, "suppress")
+	if code != 2 {
+		t.Errorf("suppress (no subcommand): got %d, want 2", code)
+	}
+}
+
+//fusa:test REQ-FO-SUP005
+func TestSuppressAdd(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "s.json")
+	code, out, _ := runArgs(t, "suppress", "add",
+		"--file", f,
+		"--fingerprint", "sha256:deadbeef",
+		"--reason", "test reason",
+	)
+	if code != 0 {
+		t.Fatalf("suppress add: code=%d", code)
+	}
+	if !strings.Contains(out, "sha256:deadbeef") {
+		t.Errorf("output missing fingerprint: %q", out)
+	}
+	// Verify file was written.
+	data, err := os.ReadFile(f)
+	if err != nil {
+		t.Fatalf("file not created: %v", err)
+	}
+	if !strings.Contains(string(data), "sha256:deadbeef") {
+		t.Errorf("file missing fingerprint: %s", data)
+	}
+}
+
+//fusa:test REQ-FO-SUP005
+func TestSuppressAddMissingFingerprint(t *testing.T) {
+	code, _, errOut := runArgs(t, "suppress", "add", "--reason", "test")
+	if code != 1 {
+		t.Errorf("suppress add without fingerprint: got %d, want 1; err=%q", code, errOut)
+	}
+}
+
+//fusa:test REQ-FO-SUP005
+func TestSuppressAddBadExpires(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "s.json")
+	code, _, _ := runArgs(t, "suppress", "add",
+		"--file", f,
+		"--fingerprint", "sha256:abc",
+		"--reason", "test",
+		"--expires", "not-a-date",
+	)
+	if code != 1 {
+		t.Errorf("suppress add bad expires: got %d, want 1", code)
+	}
+}
+
+//fusa:test REQ-FO-SUP006
+func TestSuppressList(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "s.json")
+	runArgs(t, "suppress", "add", "--file", f, "--fingerprint", "sha256:abc", "--reason", "listed")
+	code, out, _ := runArgs(t, "suppress", "list", "--file", f)
+	if code != 0 {
+		t.Fatalf("suppress list: code=%d", code)
+	}
+	if !strings.Contains(out, "sha256:abc") {
+		t.Errorf("list missing fingerprint: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-SUP006
+func TestSuppressListJSON(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "s.json")
+	runArgs(t, "suppress", "add", "--file", f, "--fingerprint", "sha256:xyz", "--reason", "r")
+	code, out, _ := runArgs(t, "suppress", "list", "--file", f, "--format", "json")
+	if code != 0 {
+		t.Fatalf("suppress list json: code=%d", code)
+	}
+	if !strings.Contains(out, `"fingerprint"`) {
+		t.Errorf("json output missing fingerprint key: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-SUP007
+func TestSuppressPrune(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "s.json")
+	// Add one expired entry.
+	past := time.Now().AddDate(-1, 0, 0).Format("2006-01-02")
+	runArgs(t, "suppress", "add", "--file", f, "--fingerprint", "sha256:old", "--reason", "expired", "--expires", past)
+	runArgs(t, "suppress", "add", "--file", f, "--fingerprint", "sha256:new", "--reason", "active", "--expires", "2099-12-31")
+	code, out, _ := runArgs(t, "suppress", "prune", "--file", f)
+	if code != 0 {
+		t.Fatalf("suppress prune: code=%d", code)
+	}
+	if !strings.Contains(out, "1") {
+		t.Errorf("prune output missing count: %q", out)
+	}
+	// Verify expired entry is gone.
+	listCode, listOut, _ := runArgs(t, "suppress", "list", "--file", f)
+	if listCode != 0 || strings.Contains(listOut, "sha256:old") {
+		t.Errorf("expired entry still present after prune: %q", listOut)
+	}
+}
+
+//fusa:test REQ-FO-SUP008
+func TestSuppressVerifyNoStale(t *testing.T) {
+	dir := goProject(t)
+	f := filepath.Join(t.TempDir(), "s.json")
+	// Empty suppression file — all zero suppressions are valid.
+	runArgs(t, "suppress", "add", "--file", f, "--fingerprint", "sha256:nomatch", "--reason", "stale")
+	// Verify exits 1 because fingerprint is not in current findings.
+	code, _, _ := runArgs(t, "suppress", "verify", "--file", f, "--dir", dir)
+	if code != 1 {
+		t.Errorf("suppress verify with stale entry: got %d, want 1", code)
+	}
+}

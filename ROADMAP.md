@@ -330,14 +330,25 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
-## v1.14 — Suppression management CLI
+## v1.14 — Suppression management CLI ✅
 
 **Goal:** Make suppression list management ergonomic from the command line.
 
-- `fusaops suppress add --fingerprint sha256:<hex> --reason "text" [--expires 2026-12-31]` — append an entry to `.fusaops-suppress.json`
-- `fusaops suppress list [--format text|json]` — show all active suppressions with expiry and reason
-- `fusaops suppress prune` — remove expired entries from the suppression file
-- `fusaops suppress verify` — check that all fingerprints in the suppression file still match current findings (exit 1 if any are stale/unused)
+- ✅ `fusaops suppress add --fingerprint sha256:<hex> --reason text [--expires YYYY-MM-DD]` — append to `.fusaops-suppress.json`
+- ✅ `fusaops suppress list [--format text|json]` — show all suppressions with active/expired status, reason, expiry
+- ✅ `fusaops suppress prune` — remove expired entries; print count removed
+- ✅ `fusaops suppress verify [--dir .]` — run orchestrator, exit 1 with a per-entry report for stale (unmatched) suppressions
+
+---
+
+## v1.15 — Report annotation & inline suppression hints
+
+**Goal:** Surface suppression opportunities and explain suppressed findings in rendered reports.
+
+- Text, JSON, HTML, and Markdown renderers show a suppression hint (fingerprint + `--reason` scaffold) for any finding that is not already suppressed
+- `--format html` shows suppressed findings in a collapsed section with reason and expiry
+- `fusaops check --show-suppressed` includes suppressed findings in the output (greyed-out in HTML)
+- `AggregateReport.SuppressedComponents` tracks which components had suppressions applied
 
 ---
 

@@ -367,6 +367,15 @@ fusaops check --suppress-file .fusaops-suppress.json
 fusaops report --suppress-file .fusaops-suppress.json --format json
 ```
 
+Manage the suppression file from the CLI:
+
+```bash
+fusaops suppress add --fingerprint sha256:abc123 --reason "false positive" [--expires 2026-12-31]
+fusaops suppress list                # show all entries with active/expired status
+fusaops suppress prune               # remove expired entries
+fusaops suppress verify [--dir .]    # check for stale entries not in current findings; exit 1 if any
+```
+
 - Suppressions match on spec §4.2 `fingerprint` fields.
 - `expires` (ISO-8601 `YYYY-MM-DD`) deactivates the suppression after that day, so findings resurface automatically.
 - The aggregate text report appends `(N suppressed)` to the TOTAL line.

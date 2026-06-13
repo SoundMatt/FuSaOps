@@ -50,6 +50,38 @@ func LoadConfig(path string) (Config, error) {
 	return cfg, nil
 }
 
+// SaveConfig writes cfg to path as indented JSON.
+//
+//fusa:req REQ-FO-SUP005
+func SaveConfig(path string, cfg Config) error {
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0o644)
+}
+
+// Prune removes expired or invalid-date suppression entries from cfg.
+// Returns the pruned config and the number of entries removed.
+//
+//fusa:req REQ-FO-SUP007
+func Prune(cfg Config, now time.Time) (Config, int) {
+	var kept []Suppression
+	for _, s := range cfg.Suppressions {
+		if s.Expires == "" {
+			kept = append(kept, s)
+			continue
+		}
+		exp, err := time.Parse("2006-01-02", s.Expires)
+		if err != nil || !now.Before(exp.AddDate(0, 0, 1)) {
+			continue // expired or malformed: remove
+		}
+		kept = append(kept, s)
+	}
+	removed := len(cfg.Suppressions) - len(kept)
+	return Config{Suppressions: kept}, removed
+}
+
 // Filter partitions findings into kept and suppressed slices.
 // A finding is suppressed when its Fingerprint matches a Suppression entry
 // that has not yet expired (relative to now). Entries without Fingerprints are

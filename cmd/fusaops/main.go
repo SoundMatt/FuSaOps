@@ -16,6 +16,7 @@
 //	sbom        Merge every language's SBOM into one (json/text/spdx)
 //	audit-pack  Bundle every component's evidence into one ZIP
 //	diff        Compare a baseline check-report with the current scan
+//	suppress    Manage the .fusaops-suppress.json suppression list
 //	conform     Run x-FuSa spec conformance checks against a tool binary
 //	iso26262    Roll up ISO 26262 gap reports across all languages
 //	iec61508    Roll up IEC 61508 gap reports across all languages
@@ -71,6 +72,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runAuditPack(args[1:], stdout, stderr)
 	case "diff":
 		return runDiff(args[1:], stdout, stderr)
+	case "suppress":
+		return runSuppress(args[1:], stdout, stderr)
 	case "conform":
 		return runConform(args[1:], stdout, stderr)
 	case "iso26262", "iec61508", "do178", "iso21434", "unece", "iec62443":
@@ -112,6 +115,7 @@ Commands:
   sbom       Merge every language's SBOM into one (json/text/spdx)
   audit-pack Bundle every component's evidence into one ZIP
   diff       Compare a baseline check-report with the current scan
+  suppress   Manage the .fusaops-suppress.json suppression list
   conform    Run x-FuSa spec conformance checks against a tool binary
   iso26262   Roll up ISO 26262 gap reports across all languages
   iec61508   Roll up IEC 61508 gap reports across all languages

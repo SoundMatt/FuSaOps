@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.14.0] — 2026-06-13
+
+### Suppression management CLI (`fusaops suppress`)
+
+- **`fusaops suppress add --fingerprint sha256:<hex> --reason text [--expires YYYY-MM-DD] [--file path]`** — append a new suppression entry to `.fusaops-suppress.json` (creates the file if absent). (REQ-FO-SUP005)
+- **`fusaops suppress list [--file path] [--format text|json]`** — print all suppression entries with active/expired status, fingerprint, reason, and expiry. (REQ-FO-SUP006)
+- **`fusaops suppress prune [--file path]`** — remove expired suppression entries and print the count removed. (REQ-FO-SUP007)
+- **`fusaops suppress verify [--file path] [--dir path]`** — run the orchestrator, compare suppression fingerprints against current findings, and exit 1 with a per-entry report for any stale (unmatched) suppressions. (REQ-FO-SUP008)
+- `suppression.SaveConfig(path, cfg)` and `suppression.Prune(cfg, now)` added to the suppression package.
+
+### Safety
+- Requirements registry at 228 requirements (added REQ-FO-SUP005-008, REQ-FO-CLI039)
+- 18 new tests; 228/228 requirements traced+tested; combined coverage ≥80%
+
 ## [1.13.0] — 2026-06-13
 
 ### Per-project suppression & config in multi-project mode

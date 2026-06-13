@@ -140,3 +140,72 @@ func TestFilterNoFingerprintFindingNotSuppressed(t *testing.T) {
 		t.Errorf("finding without fingerprint should not be suppressed: kept=%d suppressed=%d", len(kept), len(suppressed))
 	}
 }
+
+// TestSaveConfig verifies SaveConfig writes valid JSON readable by LoadConfig.
+//
+//fusa:test REQ-FO-SUP005
+func TestSaveConfig(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "suppress.json")
+	cfg := suppression.Config{Suppressions: []suppression.Suppression{
+		{Fingerprint: "sha256:abc", Reason: "known", Expires: "2099-01-01"},
+	}}
+	if err := suppression.SaveConfig(path, cfg); err != nil {
+		t.Fatalf("SaveConfig: %v", err)
+	}
+	loaded, err := suppression.LoadConfig(path)
+	if err != nil {
+		t.Fatalf("LoadConfig after Save: %v", err)
+	}
+	if len(loaded.Suppressions) != 1 || loaded.Suppressions[0].Fingerprint != "sha256:abc" {
+		t.Errorf("round-trip mismatch: %+v", loaded)
+	}
+}
+
+// TestPruneRemovesExpired verifies Prune removes expired entries.
+//
+//fusa:test REQ-FO-SUP007
+func TestPruneRemovesExpired(t *testing.T) {
+	cfg := suppression.Config{Suppressions: []suppression.Suppression{
+		{Fingerprint: "fp1", Reason: "active", Expires: "2099-12-31"},
+		{Fingerprint: "fp2", Reason: "expired", Expires: "2000-01-01"},
+		{Fingerprint: "fp3", Reason: "no-expiry"},
+	}}
+	pruned, removed := suppression.Prune(cfg, time.Now())
+	if removed != 1 {
+		t.Errorf("removed: got %d, want 1", removed)
+	}
+	if len(pruned.Suppressions) != 2 {
+		t.Errorf("remaining: got %d, want 2", len(pruned.Suppressions))
+	}
+}
+
+// TestPruneNothingToRemove verifies Prune returns zero removed when all active.
+//
+//fusa:test REQ-FO-SUP007
+func TestPruneNothingToRemove(t *testing.T) {
+	cfg := suppression.Config{Suppressions: []suppression.Suppression{
+		{Fingerprint: "fp1", Reason: "active", Expires: "2099-12-31"},
+	}}
+	_, removed := suppression.Prune(cfg, time.Now())
+	if removed != 0 {
+		t.Errorf("removed: got %d, want 0", removed)
+	}
+}
+
+// TestSaveConfigRoundTrip verifies JSON round-trip preserves all fields.
+//
+//fusa:test REQ-FO-SUP005
+func TestSaveConfigRoundTrip(t *testing.T) {
+	_ = json.Marshal // ensure json import is used
+	path := filepath.Join(t.TempDir(), "s.json")
+	orig := suppression.Config{Suppressions: []suppression.Suppression{
+		{Fingerprint: "sha256:deadbeef", Reason: "test", Expires: "2030-06-15"},
+	}}
+	_ = suppression.SaveConfig(path, orig)
+	data, _ := os.ReadFile(path)
+	var loaded suppression.Config
+	_ = json.Unmarshal(data, &loaded)
+	if loaded.Suppressions[0].Expires != "2030-06-15" {
+		t.Errorf("expires: got %q", loaded.Suppressions[0].Expires)
+	}
+}

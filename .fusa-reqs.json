@@ -1520,6 +1520,41 @@
       "rationale": "Suppression must be applied before report generation so all renderers and the check exit code reflect the true active finding count."
     },
     {
+      "id": "REQ-FO-SUP005",
+      "title": "suppress add command",
+      "description": "fusaops suppress add --fingerprint sha256:<hex> --reason text [--expires YYYY-MM-DD] [--file path] shall append a new Suppression entry to the file (creating it if absent) and exit 0 on success. Missing --fingerprint or --reason exits 1. Invalid --expires date exits 1.",
+      "priority": "MUST",
+      "rationale": "Provides a safe, CLI-based way to add suppressions without manually editing JSON."
+    },
+    {
+      "id": "REQ-FO-SUP006",
+      "title": "suppress list command",
+      "description": "fusaops suppress list [--file path] [--format text|json] shall print all suppression entries with active/expired status, fingerprint, reason, and expiry date. text is the default format.",
+      "priority": "MUST",
+      "rationale": "Provides visibility into the current suppression list without direct file inspection."
+    },
+    {
+      "id": "REQ-FO-SUP007",
+      "title": "suppress prune command",
+      "description": "fusaops suppress prune [--file path] shall remove all expired suppression entries from the file and print the count of removed entries. Entries with invalid date formats are also removed. If no entries are expired, prints a confirmation and exits 0.",
+      "priority": "MUST",
+      "rationale": "Keeps the suppression file current so stale entries do not silently suppress future findings."
+    },
+    {
+      "id": "REQ-FO-SUP008",
+      "title": "suppress verify command",
+      "description": "fusaops suppress verify [--file path] [--dir path] shall run the orchestrator on dir, collect current finding fingerprints, and report any suppression entries whose fingerprint does not appear in the current scan. Exits 1 when any stale suppressions are found.",
+      "priority": "MUST",
+      "rationale": "Detects suppressions that no longer correspond to current findings, preventing silent masking of resolved issues."
+    },
+    {
+      "id": "REQ-FO-CLI039",
+      "title": "fusaops suppress subcommand",
+      "description": "The fusaops CLI shall dispatch 'fusaops suppress <subcommand>' to runSuppress(), which further dispatches to add|list|prune|verify handlers. An unknown or missing subcommand exits 2.",
+      "priority": "MUST",
+      "rationale": "Single entry point for all suppression management operations."
+    },
+    {
       "id": "REQ-FO-CLI033",
       "title": "fusaops check/report --suppress-file flag",
       "description": "The check and report subcommands shall accept --suppress-file path to apply a suppression config. The path is forwarded to Options.SuppressFile. A missing or malformed file exits 1 with a descriptive error.",
