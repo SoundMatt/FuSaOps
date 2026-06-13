@@ -597,6 +597,49 @@ func TestAuditLogWritten(t *testing.T) {
 	}
 }
 
+// TestMetricsContentType verifies /metrics returns OpenMetrics content type.
+//
+//fusa:test REQ-FO-MTR001
+func TestMetricsContentType(t *testing.T) {
+	s := newTestServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if !strings.Contains(ct, "text/plain") {
+		t.Errorf("Content-Type: got %q, want text/plain", ct)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "fusaops_findings_total") {
+		t.Errorf("metrics missing fusaops_findings_total: %s", body)
+	}
+	if !strings.Contains(body, "fusaops_status") {
+		t.Errorf("metrics missing fusaops_status: %s", body)
+	}
+}
+
+// TestMetricsStatusReflectsFindings verifies metric values match aggregate status.
+//
+//fusa:test REQ-FO-MTR001
+func TestMetricsStatusReflectsFindings(t *testing.T) {
+	s := newTestServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	body := rec.Body.String()
+	// newTestServer has a warning finding → status WARN → code 2
+	if !strings.Contains(body, "fusaops_status 2") {
+		t.Errorf("expected fusaops_status 2 (WARN) in:\n%s", body)
+	}
+	// Should have 1 warning finding
+	if !strings.Contains(body, `severity="warning"} 1`) {
+		t.Errorf("expected 1 warning finding in:\n%s", body)
+	}
+}
+
 // TestBadgeSVGContentType verifies /badge/status.svg returns image/svg+xml.
 //
 //fusa:test REQ-FO-BADGE001

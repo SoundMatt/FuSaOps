@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-06-13
+
+### OpenMetrics / Prometheus endpoint
+
+- **`GET /metrics`** — both `Server` and `MultiServer` now expose an OpenMetrics text endpoint (Content-Type: `text/plain; version=0.0.4`). Metrics emitted:
+  - `fusaops_findings_total{severity="error"|"warning"|"info"}` — finding counts as gauges
+  - `fusaops_status` — 1=PASS, 2=WARN, 3=FAIL, 0=pending/error
+- **Per-project labels** — in multi-project mode, all series carry `project="<name>"` labels so a single Prometheus scrape target covers the entire monorepo.
+- No external dependencies — full OpenMetrics text format in stdlib. (REQ-FO-MTR001, REQ-FO-MTR002)
+
+### Safety
+- Requirements registry at 202 requirements (added REQ-FO-MTR001–002)
+- 3 new tests; combined coverage 80.4%
+
 ## [1.4.0] — 2026-06-13
 
 ### Scheduled scans
@@ -277,7 +291,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.1.0...v1.2.0

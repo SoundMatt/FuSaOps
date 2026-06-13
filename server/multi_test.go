@@ -219,6 +219,30 @@ func TestMultiWithAuditLog(t *testing.T) {
 	}
 }
 
+// TestMultiMetrics verifies /metrics returns per-project OpenMetrics output.
+//
+//fusa:test REQ-FO-MTR001
+//fusa:test REQ-FO-MTR002
+func TestMultiMetrics(t *testing.T) {
+	ms := newTestMulti(t)
+	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, `project="alpha"`) {
+		t.Errorf("metrics missing project=alpha: %s", body)
+	}
+	if !strings.Contains(body, `project="beta"`) {
+		t.Errorf("metrics missing project=beta: %s", body)
+	}
+	if !strings.Contains(body, "fusaops_findings_total") {
+		t.Errorf("metrics missing fusaops_findings_total: %s", body)
+	}
+}
+
 // TestMultiWithRefreshInterval verifies WithRefreshInterval sets the interval.
 //
 //fusa:test REQ-FO-SCHD001

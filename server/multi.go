@@ -134,6 +134,7 @@ func (ms *MultiServer) Handler() http.Handler {
 	mux.HandleFunc("/healthz", ms.handleHealth)
 	mux.HandleFunc("/api/projects", ms.handleAPIProjects)
 	mux.HandleFunc("/badge/status.svg", ms.handleBadge)
+	mux.HandleFunc("/metrics", ms.handleMetrics)
 	for _, p := range ms.projects {
 		prefix := "/p/" + p.name
 		mux.HandleFunc(prefix, ms.makeProjectHandler(p))
@@ -431,6 +432,46 @@ func (ms *MultiServer) makeProjectBadgeHandler(p *projectEntry) http.HandlerFunc
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		fmt.Fprint(w, svgBadge(p.name, status, color))
 	}
+}
+
+// handleMetrics serves an OpenMetrics exposition with per-project finding counts.
+//
+//fusa:req REQ-FO-MTR001
+//fusa:req REQ-FO-MTR002
+func (ms *MultiServer) handleMetrics(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+	var b strings.Builder
+	b.WriteString("# HELP fusaops_findings_total Total findings by project and severity\n")
+	b.WriteString("# TYPE fusaops_findings_total gauge\n")
+	for _, p := range ms.projects {
+		p.mu.RLock()
+		rep, pErr := p.cached, p.err
+		p.mu.RUnlock()
+		text := buildMetrics(rep, pErr, p.name)
+		// Append the findings lines; skip the repeated HELP/TYPE headers.
+		for _, line := range strings.Split(text, "\n") {
+			if strings.HasPrefix(line, "fusaops_findings_total{") {
+				b.WriteString(line)
+				b.WriteByte('\n')
+			}
+		}
+	}
+	b.WriteString("# HELP fusaops_status Aggregate project status: 1=PASS 2=WARN 3=FAIL 0=pending/error\n")
+	b.WriteString("# TYPE fusaops_status gauge\n")
+	for _, p := range ms.projects {
+		p.mu.RLock()
+		rep, pErr := p.cached, p.err
+		p.mu.RUnlock()
+		text := buildMetrics(rep, pErr, p.name)
+		for _, line := range strings.Split(text, "\n") {
+			if strings.HasPrefix(line, "fusaops_status{") {
+				b.WriteString(line)
+				b.WriteByte('\n')
+			}
+		}
+	}
+	b.WriteString("# EOF\n")
+	fmt.Fprint(w, b.String())
 }
 
 // handleRefreshAll re-scans all projects and redirects to the overview.

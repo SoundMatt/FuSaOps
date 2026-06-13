@@ -235,6 +235,15 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.5 — OpenMetrics / Prometheus endpoint ✅
+
+**Goal:** First-class Prometheus integration with zero external dependencies.
+
+- ✅ `GET /metrics` — OpenMetrics text exposition (`text/plain; version=0.0.4`) with `fusaops_findings_total{severity}` gauges and `fusaops_status` (1=PASS, 2=WARN, 3=FAIL, 0=pending/error)
+- ✅ Multi-project mode emits per-project labels: `fusaops_findings_total{project="firmware",severity="error"}`
+
+---
+
 ## Adding a language adapter
 
 1. Implement `adapter.Adapter` (Name, Language, Tool, Detect, Available, Check).

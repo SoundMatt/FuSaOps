@@ -312,6 +312,38 @@ fusaops serve --refresh-interval 5m
 
 Rescans automatically in the background every 5 minutes without a manual `/refresh`. Accepts any Go duration (`1h`, `30s`, etc.). Compose with `--webhook` to push alerts as the status evolves.
 
+## Prometheus / OpenMetrics
+
+`GET /metrics` returns an OpenMetrics text exposition compatible with Prometheus, VictoriaMetrics, and any OpenMetrics scraper:
+
+```
+# HELP fusaops_findings_total Total findings by severity
+# TYPE fusaops_findings_total gauge
+fusaops_findings_total{severity="error"} 3
+fusaops_findings_total{severity="warning"} 12
+fusaops_findings_total{severity="info"} 0
+# HELP fusaops_status Aggregate status: 1=PASS 2=WARN 3=FAIL 0=pending/error
+# TYPE fusaops_status gauge
+fusaops_status 2
+# EOF
+```
+
+In multi-project mode (`--projects`), all series carry a `project` label:
+
+```
+fusaops_findings_total{project="firmware",severity="error"} 1
+fusaops_status{project="firmware"} 1
+```
+
+Add to your `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: fusaops
+    static_configs:
+      - targets: ["localhost:8080"]
+```
+
 ## Docker quickstart
 
 The published image is **all-in-one**: it bundles the x-FuSa tools, so there is
@@ -431,7 +463,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (200 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (202 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

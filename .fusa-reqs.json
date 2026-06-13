@@ -1399,6 +1399,20 @@
       "description": "The serve subcommand shall accept --refresh-interval d (e.g. 5m, 1h) to configure Server.WithRefreshInterval. A non-positive or unparseable value shall exit 1 with a descriptive error. The flag applies to both single-project and multi-project (--projects) modes.",
       "priority": "MUST",
       "rationale": "CLI entry point for scheduled rescan configuration."
+    },
+    {
+      "id": "REQ-FO-MTR001",
+      "title": "OpenMetrics /metrics endpoint (single-project)",
+      "description": "Server shall expose GET /metrics returning an OpenMetrics text exposition (Content-Type: text/plain; version=0.0.4; charset=utf-8) with at minimum: fusaops_findings_total{severity} for error/warning/info counts and fusaops_status with values 1=PASS, 2=WARN, 3=FAIL, 0=pending/error. Output shall end with # EOF.",
+      "priority": "MUST",
+      "rationale": "Enables Prometheus/Grafana integration for safety metric dashboards without an additional exporter."
+    },
+    {
+      "id": "REQ-FO-MTR002",
+      "title": "OpenMetrics /metrics endpoint (multi-project)",
+      "description": "MultiServer shall expose GET /metrics returning per-project metrics with a project label on all time series (e.g. fusaops_findings_total{project=\"firmware\",severity=\"error\"}). Each project's metrics are aggregated independently.",
+      "priority": "MUST",
+      "rationale": "Monorepo operators can track per-component safety metrics in a single Prometheus scrape target."
     }
   ]
 }

@@ -217,6 +217,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/refresh", s.handleRefresh)
 	mux.HandleFunc("/healthz", s.handleHealth)
 	mux.HandleFunc("/badge/status.svg", s.handleBadge)
+	mux.HandleFunc("/metrics", s.handleMetrics)
 	if s.fleetCfg != "" {
 		mux.HandleFunc("/fleet", s.handleFleet)
 		mux.HandleFunc("/api/fleet", s.handleAPIFleet)
@@ -760,6 +761,71 @@ func fireWebhook(url, prev, current string, errors int) {
 			time.Sleep(2 * time.Second)
 		}
 	}
+}
+
+// handleMetrics serves an OpenMetrics / Prometheus text exposition of current findings.
+//
+//fusa:req REQ-FO-MTR001
+func (s *Server) handleMetrics(w http.ResponseWriter, _ *http.Request) {
+	s.mu.RLock()
+	rep, rErr := s.cached, s.err
+	s.mu.RUnlock()
+	w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+	fmt.Fprint(w, buildMetrics(rep, rErr, ""))
+}
+
+// buildMetrics produces an OpenMetrics text exposition from an aggregate report.
+// project is an optional label value added to all metrics (empty = single-project mode).
+//
+//fusa:req REQ-FO-MTR001
+func buildMetrics(rep *report.AggregateReport, rErr error, project string) string {
+	var errors, warnings, infos int
+	status := "pending"
+	if rErr != nil {
+		status = "error"
+	} else if rep != nil {
+		status = rep.Summary.Status()
+		errors = rep.Summary.Errors
+		warnings = rep.Summary.Warnings
+		infos = rep.Summary.Total - errors - warnings
+		if infos < 0 {
+			infos = 0
+		}
+	}
+	statusCode := 0
+	switch status {
+	case "PASS":
+		statusCode = 1
+	case "WARN":
+		statusCode = 2
+	case "FAIL":
+		statusCode = 3
+	}
+
+	plabel := ""
+	if project != "" {
+		plabel = `project="` + project + `",`
+	}
+	plabelTrimmed := strings.TrimSuffix(plabel, ",")
+	if plabelTrimmed == "" {
+		plabelTrimmed = ""
+	}
+
+	var b strings.Builder
+	b.WriteString("# HELP fusaops_findings_total Total findings by severity\n")
+	b.WriteString("# TYPE fusaops_findings_total gauge\n")
+	fmt.Fprintf(&b, "fusaops_findings_total{%sseverity=\"error\"} %d\n", plabel, errors)
+	fmt.Fprintf(&b, "fusaops_findings_total{%sseverity=\"warning\"} %d\n", plabel, warnings)
+	fmt.Fprintf(&b, "fusaops_findings_total{%sseverity=\"info\"} %d\n", plabel, infos)
+	b.WriteString("# HELP fusaops_status Aggregate status: 1=PASS 2=WARN 3=FAIL 0=pending/error\n")
+	b.WriteString("# TYPE fusaops_status gauge\n")
+	if plabelTrimmed != "" {
+		fmt.Fprintf(&b, "fusaops_status{%s} %d\n", plabelTrimmed, statusCode)
+	} else {
+		fmt.Fprintf(&b, "fusaops_status %d\n", statusCode)
+	}
+	b.WriteString("# EOF\n")
+	return b.String()
 }
 
 // openAppend opens a JSONL file in dir for appending, creating it if needed.
