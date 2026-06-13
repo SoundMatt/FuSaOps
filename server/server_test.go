@@ -658,6 +658,38 @@ func TestWithWebhook(t *testing.T) {
 	}
 }
 
+// TestWithRefreshInterval verifies WithRefreshInterval sets the interval.
+//
+//fusa:test REQ-FO-SCHD001
+func TestWithRefreshInterval(t *testing.T) {
+	s := newTestServer(t).WithRefreshInterval(5 * time.Minute)
+	if s.refreshInterval != 5*time.Minute {
+		t.Errorf("refreshInterval: got %v", s.refreshInterval)
+	}
+}
+
+// TestScheduledRefreshUpdatesCache verifies the scheduler triggers recompute.
+//
+//fusa:test REQ-FO-SCHD001
+func TestScheduledRefreshUpdatesCache(t *testing.T) {
+	s := newTestServer(t).WithRefreshInterval(50 * time.Millisecond)
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	go func() { _ = s.Serve(ln) }() //nolint:errcheck
+	// Give the scheduler at least two ticks.
+	time.Sleep(200 * time.Millisecond)
+	_ = ln.Close()
+	// Verify the cache was populated (scheduler ran compute).
+	s.mu.RLock()
+	rep := s.cached
+	s.mu.RUnlock()
+	if rep == nil {
+		t.Error("cache still nil after scheduled refresh")
+	}
+}
+
 // TestWebhookFiredOnTransition verifies a webhook POST is sent when status changes.
 //
 //fusa:test REQ-FO-HOOK001

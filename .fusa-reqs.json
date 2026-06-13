@@ -1385,6 +1385,20 @@
       "description": "The serve subcommand shall accept --webhook url to configure status-change webhook notifications on the single-project Server. The flag is not available in --projects (multi-project) mode.",
       "priority": "MUST",
       "rationale": "CLI entry point for webhook configuration."
+    },
+    {
+      "id": "REQ-FO-SCHD001",
+      "title": "Scheduled background rescan",
+      "description": "Server and MultiServer shall support an optional refresh interval configured via WithRefreshInterval(d). When set, the server shall launch a background goroutine that calls compute() at every tick of d after the initial startup scan. A zero or negative interval disables scheduled rescans. The interval does not interrupt in-flight scans.",
+      "priority": "MUST",
+      "rationale": "Enables the dashboard to stay current without manual /refresh requests in unattended deployments."
+    },
+    {
+      "id": "REQ-FO-CLI032",
+      "title": "fusaops serve --refresh-interval flag",
+      "description": "The serve subcommand shall accept --refresh-interval d (e.g. 5m, 1h) to configure Server.WithRefreshInterval. A non-positive or unparseable value shall exit 1 with a descriptive error. The flag applies to both single-project and multi-project (--projects) modes.",
+      "priority": "MUST",
+      "rationale": "CLI entry point for scheduled rescan configuration."
     }
   ]
 }

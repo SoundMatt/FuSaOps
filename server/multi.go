@@ -51,11 +51,12 @@ type MultiServer struct {
 	runner   *orchestrator.Runner
 	projects []*projectEntry
 
-	authUser   string
-	authPass   string
-	authROUser string
-	authROPass string
-	auditDir   string
+	authUser        string
+	authPass        string
+	authROUser      string
+	authROPass      string
+	auditDir        string
+	refreshInterval time.Duration // zero = no scheduled refresh
 }
 
 // NewMulti returns a MultiServer from a ProjectsConfig.
@@ -94,6 +95,14 @@ func (ms *MultiServer) WithAuthRO(user, pass string) *MultiServer {
 //fusa:req REQ-FO-AUDIT001
 func (ms *MultiServer) WithAuditLog(dir string) *MultiServer {
 	ms.auditDir = dir
+	return ms
+}
+
+// WithRefreshInterval enables automatic background rescans on the MultiServer.
+//
+//fusa:req REQ-FO-SCHD001
+func (ms *MultiServer) WithRefreshInterval(d time.Duration) *MultiServer {
+	ms.refreshInterval = d
 	return ms
 }
 
@@ -453,13 +462,30 @@ func (ms *MultiServer) ListenAndServe(addr string) error {
 // Serve computes all projects then serves on ln. Closing ln stops the server.
 //
 //fusa:req REQ-FO-MPJ002
+//fusa:req REQ-FO-SCHD001
 func (ms *MultiServer) Serve(ln net.Listener) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	ms.compute(ctx)
 	cancel()
+	if ms.refreshInterval > 0 {
+		go ms.runScheduler()
+	}
 	srv := &http.Server{
 		Handler:           ms.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	return srv.Serve(ln)
+}
+
+// runScheduler fires periodic rescans on ms.refreshInterval until the process exits.
+//
+//fusa:req REQ-FO-SCHD001
+func (ms *MultiServer) runScheduler() {
+	ticker := time.NewTicker(ms.refreshInterval)
+	defer ticker.Stop()
+	for range ticker.C {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		ms.compute(ctx)
+		cancel()
+	}
 }

@@ -32,18 +32,19 @@ import (
 //
 //fusa:req REQ-FO-SRV001
 type Server struct {
-	root       string
-	project    string
-	runner     *orchestrator.Runner
-	opts       orchestrator.Options
-	histDir    string // empty = history persistence disabled
-	authUser   string // empty = no authentication required (rw)
-	authPass   string
-	authROUser string // read-only credentials (optional)
-	authROPass string
-	auditDir   string // empty = no audit log
-	fleetCfg   string // empty = fleet dashboard disabled
-	webhookURL string // empty = no webhook notifications
+	root            string
+	project         string
+	runner          *orchestrator.Runner
+	opts            orchestrator.Options
+	histDir         string // empty = history persistence disabled
+	authUser        string // empty = no authentication required (rw)
+	authPass        string
+	authROUser      string // read-only credentials (optional)
+	authROPass      string
+	auditDir        string        // empty = no audit log
+	fleetCfg        string        // empty = fleet dashboard disabled
+	webhookURL      string        // empty = no webhook notifications
+	refreshInterval time.Duration // zero = no scheduled refresh
 
 	mu         sync.RWMutex
 	cached     *report.AggregateReport
@@ -141,6 +142,17 @@ func (s *Server) WithFleetConfig(path string) *Server {
 //fusa:req REQ-FO-HOOK001
 func (s *Server) WithWebhook(url string) *Server {
 	s.webhookURL = url
+	return s
+}
+
+// WithRefreshInterval enables automatic background rescans at the given
+// interval. The first scan always runs at startup; subsequent scans fire
+// after each tick until the listener is closed. A zero or negative interval
+// disables scheduled rescans.
+//
+//fusa:req REQ-FO-SCHD001
+func (s *Server) WithRefreshInterval(d time.Duration) *Server {
+	s.refreshInterval = d
 	return s
 }
 
@@ -658,15 +670,32 @@ func (s *Server) ListenAndServeTLS(addr, certFile, keyFile string) error {
 // an ephemeral listener.
 //
 //fusa:req REQ-FO-SRV005
+//fusa:req REQ-FO-SCHD001
 func (s *Server) Serve(ln net.Listener) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	s.compute(ctx)
 	cancel()
+	if s.refreshInterval > 0 {
+		go s.runScheduler()
+	}
 	srv := &http.Server{
 		Handler:           s.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	return srv.Serve(ln)
+}
+
+// runScheduler fires periodic rescans on s.refreshInterval until the process exits.
+//
+//fusa:req REQ-FO-SCHD001
+func (s *Server) runScheduler() {
+	ticker := time.NewTicker(s.refreshInterval)
+	defer ticker.Stop()
+	for range ticker.C {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		s.compute(ctx)
+		cancel()
+	}
 }
 
 // handleBadge renders an SVG status badge in shields.io flat style.

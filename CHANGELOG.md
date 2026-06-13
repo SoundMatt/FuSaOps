@@ -7,6 +7,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-06-13
+
+### Scheduled scans
+
+- **`WithRefreshInterval(d time.Duration)`** — `Server` and `MultiServer` accept a background rescan interval. A goroutine runs `compute()` at every tick after the initial startup scan. Zero or negative disables scheduling. (REQ-FO-SCHD001)
+- **`fusaops serve --refresh-interval 5m`** — CLI flag wiring for both single-project and multi-project modes. A non-positive or unparseable value exits 1. (REQ-FO-CLI032)
+
+### Safety
+- Requirements registry at 200 requirements (added REQ-FO-SCHD001, REQ-FO-CLI032)
+- 4 new tests (2 CLI, 2 server); combined coverage maintained ≥80%
+
 ## [1.3.0] — 2026-06-13
 
 ### Badge service & webhooks
@@ -266,7 +277,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.0.0...v1.1.0

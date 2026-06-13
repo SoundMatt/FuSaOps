@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
@@ -215,6 +216,16 @@ func TestMultiWithAuditLog(t *testing.T) {
 	ms := newTestMulti(t).WithAuditLog("/tmp/audit")
 	if ms.auditDir != "/tmp/audit" {
 		t.Errorf("auditDir: got %q", ms.auditDir)
+	}
+}
+
+// TestMultiWithRefreshInterval verifies WithRefreshInterval sets the interval.
+//
+//fusa:test REQ-FO-SCHD001
+func TestMultiWithRefreshInterval(t *testing.T) {
+	ms := newTestMulti(t).WithRefreshInterval(5 * time.Minute)
+	if ms.refreshInterval != 5*time.Minute {
+		t.Errorf("refreshInterval: got %v", ms.refreshInterval)
 	}
 }
 

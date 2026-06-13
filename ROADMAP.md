@@ -226,6 +226,15 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.4 — Scheduled scans ✅
+
+**Goal:** Keep the dashboard current without manual intervention in unattended deployments.
+
+- ✅ `fusaops serve --refresh-interval 5m` — background goroutine rescans every tick after startup (both single-project `Server` and `MultiServer`)
+- ✅ Invalid or non-positive interval exits 1 with a descriptive error
+
+---
+
 ## Adding a language adapter
 
 1. Implement `adapter.Adapter` (Name, Language, Tool, Detect, Available, Check).

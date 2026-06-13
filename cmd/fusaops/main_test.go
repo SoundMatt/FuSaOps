@@ -218,6 +218,26 @@ func TestServeMissingProjectsConfig(t *testing.T) {
 	}
 }
 
+// TestServeBadRefreshInterval verifies --refresh-interval with invalid duration returns exit 1.
+//
+//fusa:test REQ-FO-CLI032
+func TestServeBadRefreshInterval(t *testing.T) {
+	code, _, errb := runArgs(t, "serve", "--refresh-interval", "not-a-duration")
+	if code != 1 || !strings.Contains(errb, "refresh-interval") {
+		t.Errorf("bad refresh-interval: code=%d err=%q", code, errb)
+	}
+}
+
+// TestServeZeroRefreshInterval verifies --refresh-interval 0 returns exit 1.
+//
+//fusa:test REQ-FO-CLI032
+func TestServeZeroRefreshInterval(t *testing.T) {
+	code, _, errb := runArgs(t, "serve", "--refresh-interval", "0")
+	if code != 1 || !strings.Contains(errb, "refresh-interval") {
+		t.Errorf("zero refresh-interval: code=%d err=%q", code, errb)
+	}
+}
+
 func TestSplitCSV(t *testing.T) {
 	got := splitCSV("a,b,,c")
 	if len(got) != 3 || got[0] != "a" || got[2] != "c" {

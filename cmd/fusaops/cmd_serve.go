@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/server"
@@ -22,6 +23,7 @@ import (
 //fusa:req REQ-FO-CLI029
 //fusa:req REQ-FO-CLI030
 //fusa:req REQ-FO-CLI031
+//fusa:req REQ-FO-CLI032
 func runServe(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops serve", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -36,6 +38,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	webhook := fs.String("webhook", "", "URL to POST status-change notifications to")
 	tlsCert := fs.String("tls-cert", "", "TLS certificate file (PEM); enables HTTPS")
 	tlsKey := fs.String("tls-key", "", "TLS key file (PEM); required with --tls-cert")
+	refreshInterval := fs.String("refresh-interval", "", "automatic rescan interval (e.g. 5m, 1h); default disabled")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -64,6 +67,15 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "fusaops serve: --tls-key is required with --tls-cert")
 		return 1
 	}
+	var interval time.Duration
+	if *refreshInterval != "" {
+		var err error
+		interval, err = time.ParseDuration(*refreshInterval)
+		if err != nil || interval <= 0 {
+			fmt.Fprintln(stderr, "fusaops serve: --refresh-interval must be a positive duration (e.g. 5m)")
+			return 1
+		}
+	}
 	_ = authOK
 
 	scheme := "http"
@@ -74,7 +86,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	// Multi-project mode.
 	if *projectsCfg != "" {
 		return runServeMulti(*projectsCfg, *addr, scheme, *tlsCert, *tlsKey,
-			rwUser, rwPass, roUser, roPass, *auditLog, stdout, stderr)
+			rwUser, rwPass, roUser, roPass, *auditLog, interval, stdout, stderr)
 	}
 
 	// Single-project mode.
@@ -99,6 +111,9 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	if *webhook != "" {
 		srv = srv.WithWebhook(*webhook)
 	}
+	if interval > 0 {
+		srv = srv.WithRefreshInterval(interval)
+	}
 
 	fmt.Fprintf(stdout, "FuSaOps dashboard for %s\n", root)
 	fmt.Fprintf(stdout, "Listening on %s://localhost%s  (Ctrl-C to stop)\n", scheme, *addr)
@@ -120,8 +135,9 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 // runServeMulti handles fusaops serve --projects.
 //
 //fusa:req REQ-FO-CLI030
+//fusa:req REQ-FO-CLI032
 func runServeMulti(cfgPath, addr, scheme, tlsCert, tlsKey,
-	rwUser, rwPass, roUser, roPass, auditDir string,
+	rwUser, rwPass, roUser, roPass, auditDir string, interval time.Duration,
 	stdout, stderr io.Writer) int {
 	data, err := os.ReadFile(cfgPath)
 	if err != nil {
@@ -142,6 +158,9 @@ func runServeMulti(cfgPath, addr, scheme, tlsCert, tlsKey,
 	}
 	if auditDir != "" {
 		ms = ms.WithAuditLog(auditDir)
+	}
+	if interval > 0 {
+		ms = ms.WithRefreshInterval(interval)
 	}
 	fmt.Fprintf(stdout, "FuSaOps multi-project dashboard (%d projects)\n", len(cfg.Projects))
 	fmt.Fprintf(stdout, "Listening on %s://localhost%s  (Ctrl-C to stop)\n", scheme, addr)
