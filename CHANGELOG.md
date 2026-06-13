@@ -7,6 +7,22 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.9.0] — 2026-06-13
+
+### Markdown report format
+
+- **`--format markdown`** (alias `--format md`) on `fusaops check` and `fusaops report` —
+  produces GitHub-Flavored Markdown suitable for PR comments, wiki pages, and Markdown-capable
+  documents. (REQ-FO-RPT015, REQ-FO-CLI036)
+- Output includes: a status badge (shields.io-style), summary table with emoji severity icons,
+  per-component sections with GFM finding tables, skip reasons for unavailable tools, and
+  "no findings" notes for clean components.
+- Pipe characters in messages and rule IDs are escaped so they don't break GFM tables.
+
+### Safety
+- Requirements registry at 213 requirements (added REQ-FO-RPT015, REQ-FO-CLI036)
+- 8 new tests (7 renderer, 1 CLI); 213/213 requirements traced+tested; combined coverage ≥80%
+
 ## [1.8.0] — 2026-06-13
 
 ### CSV report format
@@ -335,7 +351,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.5.0...v1.6.0

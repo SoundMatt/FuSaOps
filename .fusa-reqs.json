@@ -337,6 +337,13 @@
       "rationale": "CSV enables auditors and project managers to import FuSaOps findings into spreadsheet tools (Excel, Google Sheets) without additional tooling."
     },
     {
+      "id": "REQ-FO-RPT015",
+      "title": "Markdown renderer",
+      "description": "FuSaOps shall render reports in GitHub-Flavored Markdown (--format markdown or --format md) with a status badge, summary table, and per-component GFM finding tables. Pipe characters in messages and rule IDs shall be escaped. Skipped components shall show the skip reason; zero-finding components shall show a 'no findings' note.",
+      "priority": "MUST",
+      "rationale": "GFM output enables posting FuSaOps reports directly into GitHub/GitLab PR comments and wiki pages without manual reformatting."
+    },
+    {
       "id": "REQ-FO-SRV001",
       "title": "Dashboard server",
       "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.",
@@ -1476,6 +1483,13 @@
       "description": "The check and report subcommands shall accept 'csv' as a valid --format value, producing RFC 4180 CSV output via the report.Render dispatcher.",
       "priority": "MUST",
       "rationale": "Enables auditors and project managers to import FuSaOps findings into spreadsheet tools."
+    },
+    {
+      "id": "REQ-FO-CLI036",
+      "title": "fusaops check/report --format markdown",
+      "description": "The check and report subcommands shall accept 'markdown' (and 'md' as an alias) as a valid --format value, producing GitHub-Flavored Markdown output via the report.Render dispatcher.",
+      "priority": "MUST",
+      "rationale": "Enables posting FuSaOps reports into GitHub/GitLab PR comments and wikis."
     }
   ]
 }

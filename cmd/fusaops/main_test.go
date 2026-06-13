@@ -251,6 +251,20 @@ func TestServeZeroRefreshInterval(t *testing.T) {
 	}
 }
 
+// TestCheckMarkdownFormat verifies fusaops check --format markdown produces Markdown output.
+//
+//fusa:test REQ-FO-CLI036
+func TestCheckMarkdownFormat(t *testing.T) {
+	dir := goProject(t)
+	code, out, errb := runArgs(t, "check", "--dir", dir, "--format", "markdown")
+	if code != 0 {
+		t.Fatalf("check --format markdown: code=%d err=%q", code, errb)
+	}
+	if !strings.HasPrefix(out, "# FuSaOps Report") {
+		t.Errorf("markdown output missing heading: %.100s", out)
+	}
+}
+
 // TestCheckCSVFormat verifies fusaops check --format csv produces CSV output.
 //
 //fusa:test REQ-FO-CLI035

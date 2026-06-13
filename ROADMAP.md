@@ -277,6 +277,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.9 — Markdown report format ✅
+
+**Goal:** Enable posting FuSaOps reports directly into PR comments and wiki pages.
+
+- ✅ `--format markdown` (alias `--format md`) on `fusaops check` and `fusaops report`
+- ✅ Output: status badge, summary table with emoji severity icons, per-component GFM tables
+- ✅ Skipped components show skip reason; clean components show "no findings" note
+- ✅ Pipe characters escaped to avoid GFM table breakage
+
+---
+
 ## Adding a language adapter
 
 1. Implement `adapter.Adapter` (Name, Language, Tool, Detect, Available, Check).

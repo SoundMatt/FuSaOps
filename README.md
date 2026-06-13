@@ -396,6 +396,20 @@ fusaops report --format csv --output fusaops-findings.csv
 
 Columns: `language, tool, ruleId, severity, message, file, line, column, category, fingerprint`.
 
+## Markdown output
+
+`--format markdown` (or `--format md`) on `fusaops check` or `fusaops report` produces
+GitHub-Flavored Markdown for PR comments, wiki pages, or any GFM-capable destination:
+
+```bash
+fusaops report --format markdown --output fusaops-report.md
+# Paste into a GitHub PR comment:
+fusaops check --format markdown >> $GITHUB_STEP_SUMMARY
+```
+
+Output includes a shields.io status badge, a summary table, and per-component finding tables
+with emoji severity icons. Pipe characters in messages are escaped for GFM compatibility.
+
 ## Docker quickstart
 
 The published image is **all-in-one**: it bundles the x-FuSa tools, so there is
@@ -515,7 +529,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (211 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (213 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

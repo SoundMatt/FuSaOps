@@ -1,5 +1,5 @@
 // Package report defines the aggregated multi-language FuSaOps report and its
-// renderers (text, json, html, sarif, junit, csv).
+// renderers (text, json, html, sarif, junit, csv, markdown).
 //
 // An AggregateReport is the union of every per-language component report
 // produced by the orchestrator. It is the single artefact the CLI prints, the
@@ -124,6 +124,7 @@ func (r *AggregateReport) HasErrors() bool { return r.Summary.Errors > 0 }
 //fusa:req REQ-FO-RPT007
 //fusa:req REQ-FO-RPT013
 //fusa:req REQ-FO-RPT014
+//fusa:req REQ-FO-RPT015
 func Render(w io.Writer, r *AggregateReport, format string) error {
 	switch format {
 	case "", "text":
@@ -138,6 +139,8 @@ func Render(w io.Writer, r *AggregateReport, format string) error {
 		return renderJUnit(w, r)
 	case "csv":
 		return renderCSV(w, r)
+	case "markdown", "md":
+		return renderMarkdown(w, r)
 	default:
 		return fmt.Errorf("report: unsupported format %q", format)
 	}
