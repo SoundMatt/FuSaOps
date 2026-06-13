@@ -12,6 +12,7 @@ import (
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
+	"github.com/SoundMatt/FuSaOps/history"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 )
 
@@ -147,5 +148,103 @@ func TestListenAndServeBindError(t *testing.T) {
 	err := s.ListenAndServe("!invalid-addr!")
 	if err == nil {
 		t.Fatal("expected bind error for invalid address")
+	}
+}
+
+// TestWithHistoryDir verifies WithHistoryDir sets the history directory.
+//
+//fusa:test REQ-FO-HST003
+func TestWithHistoryDir(t *testing.T) {
+	reg := adapter.NewRegistry()
+	dir := t.TempDir()
+	s := New(dir, orchestrator.New(reg), orchestrator.Options{}).WithHistoryDir(dir)
+	if s.histDir != dir {
+		t.Errorf("histDir: got %q, want %q", s.histDir, dir)
+	}
+}
+
+// TestAPIHistoryEmpty verifies /api/history returns [] when no history stored.
+//
+//fusa:test REQ-FO-HST004
+func TestAPIHistoryEmpty(t *testing.T) {
+	s := newTestServer(t).WithHistoryDir(t.TempDir())
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/history", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var out []any
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if len(out) != 0 {
+		t.Errorf("want empty array, got %d items", len(out))
+	}
+}
+
+// TestAPIHistoryReturnsSnapshots verifies stored snapshots are served as JSON.
+//
+//fusa:test REQ-FO-HST004
+func TestAPIHistoryReturnsSnapshots(t *testing.T) {
+	dir := t.TempDir()
+	_ = history.Store(dir, history.Snapshot{RunAt: time.Now().UTC(), Status: "PASS", Total: 2})
+	_ = history.Store(dir, history.Snapshot{RunAt: time.Now().UTC(), Status: "FAIL", Total: 5, Errors: 1})
+
+	reg := adapter.NewRegistry()
+	s := New(dir, orchestrator.New(reg), orchestrator.Options{}).WithHistoryDir(dir)
+
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/history", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var snaps []history.Snapshot
+	if err := json.Unmarshal(rec.Body.Bytes(), &snaps); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if len(snaps) != 2 {
+		t.Fatalf("want 2 snapshots, got %d", len(snaps))
+	}
+	if snaps[1].Status != "FAIL" || snaps[1].Errors != 1 {
+		t.Errorf("second snapshot: %+v", snaps[1])
+	}
+}
+
+// TestHistoryPageHTML verifies /history returns an HTML page.
+//
+//fusa:test REQ-FO-HST004
+func TestHistoryPageHTML(t *testing.T) {
+	dir := t.TempDir()
+	_ = history.Store(dir, history.Snapshot{RunAt: time.Now().UTC(), Status: "PASS", Total: 3, Warnings: 1})
+
+	reg := adapter.NewRegistry()
+	s := New(dir, orchestrator.New(reg), orchestrator.Options{}).WithHistoryDir(dir)
+
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/history", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "<!DOCTYPE html>") {
+		t.Error("response is not HTML")
+	}
+	if !strings.Contains(body, "PASS") {
+		t.Error("PASS badge not found in history page")
+	}
+}
+
+// TestHistoryPageNoHistDir verifies /history renders empty page when histDir unset.
+//
+//fusa:test REQ-FO-HST004
+func TestHistoryPageNoHistDir(t *testing.T) {
+	s := newTestServer(t) // histDir not set
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/history", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "No history yet") {
+		t.Error("expected 'No history yet' message")
 	}
 }

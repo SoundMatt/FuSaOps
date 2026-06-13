@@ -136,14 +136,14 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
-## v0.6 — Distribution & Dashboards
+## v0.6 — Distribution & Dashboards ✅
 
 **Goal:** Make FuSaOps easy to adopt in any CI and give teams a persistent view.
 
-- **GitHub Action** (`.github/actions/fusaops/action.yml`): composite action wrapping the `ghcr.io/soundmatt/fusaops` image; zero-install CI integration (`uses: SoundMatt/FuSaOps/.github/actions/fusaops@main`)
-- Historical metrics trend across runs — persist report summaries; trend severity counts over time
-- Persisted dashboard — `fusaops serve` stores reports; `/history` shows trend view
-- Pre-built language-bundle images (Go+C, Go+C+C++, all-6)
+- ✅ **GitHub Action** (`.github/actions/fusaops/action.yml`) — shipped in v0.5.1
+- ✅ Historical metrics trend — `history` package persists Snapshots to `.fusaops-history.jsonl`; `fusaops serve` appends on every refresh
+- ✅ Persisted dashboard — `/history` HTML trend page (PASS/FAIL badges, severity bars, per-language breakdown); `/api/history` JSON endpoint
+- Pre-built language-bundle images (Go+C, Go+C+C++, all-6) — deferred to v0.7
 
 ---
 

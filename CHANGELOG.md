@@ -7,6 +7,24 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-06-13
+
+### Run-history trend
+
+- **`history` package** — persists check-run outcomes to `.fusaops-history.jsonl` (JSONL, one object per line) in the project root
+  - `Snapshot` records: run time, PASS/FAIL status, total/error/warning/info counts, per-language summary
+  - `FromReport(rep)` builds a Snapshot from an `AggregateReport`
+  - `Store(dir, snap)` appends and trims to `MaxSnapshots = 100` entries
+  - `Load(dir, limit)` returns the most-recent entries oldest-first; missing file returns empty slice
+- **`server.WithHistoryDir(dir)`** — opt-in fluent method; when set, each successful `/refresh` or startup compute appends a Snapshot
+- **`/api/history`** — JSON array of all stored Snapshots
+- **`/history`** — self-contained HTML trend page: PASS/FAIL badges, per-severity counts, proportional severity bar, per-language breakdown; links back to the main dashboard
+- **`fusaops serve`** — now calls `WithHistoryDir(root)` automatically; history accumulates with every dashboard refresh
+
+### Safety
+- Requirements registry at 163 requirements (added REQ-FO-HST001 – HST004)
+- 7 new tests in `history` package; 5 new tests in `server` package
+
 ## [0.5.1] — 2026-06-13
 
 ### GitHub Action

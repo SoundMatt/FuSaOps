@@ -1105,6 +1105,34 @@
       "description": "FuSaOps shall provide a java-FuSa adapter (jfusa) that detects .java files and delegates check/trace/qualify/release/audit-pack to jfusa via the generic cmdAdapter path. The jfusa binary produces spec v1.10 conformant JSON so no output normalisation is required.",
       "priority": "MUST",
       "rationale": "Extends FuSaOps multi-language orchestration to Java projects using java-FuSa v0.1.0."
+    },
+    {
+      "id": "REQ-FO-HST001",
+      "title": "Run snapshot model",
+      "description": "FuSaOps shall define a Snapshot type recording a single check run outcome (runAt, status PASS/FAIL, total/error/warning/info counts, per-language summaries) and a FromReport function that builds a Snapshot from an AggregateReport.",
+      "priority": "MUST",
+      "rationale": "A persistent record of each run outcome is required to render a severity trend over time."
+    },
+    {
+      "id": "REQ-FO-HST002",
+      "title": "Run history persistence",
+      "description": "FuSaOps shall provide Store and Load functions for appending Snapshot records to .fusaops-history.jsonl (JSONL, one object per line) and reading back the most recent entries, trimming the file to at most MaxSnapshots=100 entries on each write. A missing file is not an error.",
+      "priority": "MUST",
+      "rationale": "JSONL append is atomic and efficient; a fixed cap prevents unbounded disk growth."
+    },
+    {
+      "id": "REQ-FO-HST003",
+      "title": "Server history integration",
+      "description": "The Server shall expose a WithHistoryDir(dir) method that, when set, causes each successful report compute to append a Snapshot to .fusaops-history.jsonl in dir.",
+      "priority": "MUST",
+      "rationale": "Opt-in persistence via a fluent method avoids breaking the existing New() signature while enabling historical data collection in fusaops serve."
+    },
+    {
+      "id": "REQ-FO-HST004",
+      "title": "History HTTP routes",
+      "description": "The Server shall expose /api/history (JSON array of Snapshots) and /history (HTML trend page showing last 30 runs with PASS/FAIL badges, per-severity counts, and a proportional severity bar) routes.",
+      "priority": "MUST",
+      "rationale": "Provides both machine-readable and human-readable access to run history for CI integration and team dashboards."
     }
   ]
 }

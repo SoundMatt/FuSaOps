@@ -28,7 +28,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	srv := server.New(root, orchestrator.New(nil), opts)
+	srv := server.New(root, orchestrator.New(nil), opts).WithHistoryDir(root)
 	fmt.Fprintf(stdout, "FuSaOps dashboard for %s\n", root)
 	fmt.Fprintf(stdout, "Listening on http://localhost%s  (Ctrl-C to stop)\n", *addr)
 	if err := srv.ListenAndServe(*addr); err != nil {
