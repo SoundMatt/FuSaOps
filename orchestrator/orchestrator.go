@@ -186,14 +186,18 @@ func (rn *Runner) Run(ctx context.Context, root string, opts Options) (*report.A
 			if err != nil {
 				comp.Skipped = fmt.Sprintf("check failed: %v", err)
 			} else {
-				// Auto-compute fingerprint for any finding that the tool did not provide.
+				// Copy before modifying: the adapter may return a slice it owns,
+				// and multiple goroutines (e.g. fleet) can call the same adapter.
+				//
 				//fusa:req REQ-FO-ORC011
-				for k := range findings {
-					if findings[k].Fingerprint == "" {
-						findings[k].Fingerprint = fusaops.ComputeFingerprint(findings[k])
+				safe := make([]fusaops.Finding, len(findings))
+				copy(safe, findings)
+				for k := range safe {
+					if safe[k].Fingerprint == "" {
+						safe[k].Fingerprint = fusaops.ComputeFingerprint(safe[k])
 					}
 				}
-				comp.Findings = findings
+				comp.Findings = safe
 			}
 			results[i] = comp
 		}(i, j)
