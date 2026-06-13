@@ -24,6 +24,7 @@ import (
 //fusa:req REQ-FO-CLI030
 //fusa:req REQ-FO-CLI031
 //fusa:req REQ-FO-CLI032
+//fusa:req REQ-FO-CLI038
 func runServe(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops serve", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -39,6 +40,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	tlsCert := fs.String("tls-cert", "", "TLS certificate file (PEM); enables HTTPS")
 	tlsKey := fs.String("tls-key", "", "TLS key file (PEM); required with --tls-cert")
 	refreshInterval := fs.String("refresh-interval", "", "automatic rescan interval (e.g. 5m, 1h); default disabled")
+	baseline := fs.String("baseline", "", "path to baseline JSON file for /api/v1/diff and POST /api/v1/baseline")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -86,7 +88,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	// Multi-project mode.
 	if *projectsCfg != "" {
 		return runServeMulti(*projectsCfg, *addr, scheme, *tlsCert, *tlsKey,
-			rwUser, rwPass, roUser, roPass, *auditLog, interval, stdout, stderr)
+			rwUser, rwPass, roUser, roPass, *auditLog, *baseline, interval, stdout, stderr)
 	}
 
 	// Single-project mode.
@@ -114,6 +116,9 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	if interval > 0 {
 		srv = srv.WithRefreshInterval(interval)
 	}
+	if *baseline != "" {
+		srv = srv.WithBaseline(*baseline)
+	}
 
 	fmt.Fprintf(stdout, "FuSaOps dashboard for %s\n", root)
 	fmt.Fprintf(stdout, "Listening on %s://localhost%s  (Ctrl-C to stop)\n", scheme, *addr)
@@ -136,8 +141,9 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 //
 //fusa:req REQ-FO-CLI030
 //fusa:req REQ-FO-CLI032
+//fusa:req REQ-FO-CLI038
 func runServeMulti(cfgPath, addr, scheme, tlsCert, tlsKey,
-	rwUser, rwPass, roUser, roPass, auditDir string, interval time.Duration,
+	rwUser, rwPass, roUser, roPass, auditDir, baselineFile string, interval time.Duration,
 	stdout, stderr io.Writer) int {
 	data, err := os.ReadFile(cfgPath)
 	if err != nil {
@@ -161,6 +167,9 @@ func runServeMulti(cfgPath, addr, scheme, tlsCert, tlsKey,
 	}
 	if interval > 0 {
 		ms = ms.WithRefreshInterval(interval)
+	}
+	if baselineFile != "" {
+		ms = ms.WithBaseline(baselineFile)
 	}
 	fmt.Fprintf(stdout, "FuSaOps multi-project dashboard (%d projects)\n", len(cfg.Projects))
 	fmt.Fprintf(stdout, "Listening on %s://localhost%s  (Ctrl-C to stop)\n", scheme, addr)

@@ -308,14 +308,25 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
-## v1.12 — Diff gate in CI
+## v1.12 — Diff gate in CI ✅
 
 **Goal:** Expose the baseline-diff feature through the REST API and server, enabling zero-config CI gating based on new-findings-only.
 
-- `GET /api/v1/diff?baseline=<path>` — run `fusaops diff` against a baseline file and return the delta report as JSON or SARIF
-- `POST /api/v1/baseline` — snapshot the current report as a new baseline file
-- `fusaops serve --baseline baseline.json` — optional pre-loaded baseline for the diff endpoint
-- Exit code propagation: `/api/v1/diff` returns 409 Conflict when `--strict` findings exist (mirrors `fusaops diff --strict`)
+- ✅ `GET /api/v1/diff?baseline=PATH[&strict=true][&format=json|text]` — compare cached report against a baseline file; 409 Conflict when `strict=true` and new ERRORs exist
+- ✅ `POST /api/v1/baseline` — save the current cached findings as a baseline file; returns `{"saved":"path","findings":N}`
+- ✅ `fusaops serve --baseline baseline.json` — set a default baseline path without per-request query parameters
+- ✅ Multi-project mode merges all project findings before diff and save
+
+---
+
+## v1.13 — Per-project suppression & config override
+
+**Goal:** Give multi-project setups independent suppression lists and config without a separate server per project.
+
+- `fusaops serve --projects projects.json` now supports per-project `suppression` and `config` keys in the projects config
+- `MultiServer` loads each project's suppression file before computing its report
+- `/api/v1/diff` supports `?project=name` to diff a single project in fleet mode
+- `fusaops serve --projects projects.json` validates project paths at startup and exits 1 with a descriptive error for missing directories
 
 ---
 

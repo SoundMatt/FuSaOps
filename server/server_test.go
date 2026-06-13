@@ -14,6 +14,7 @@ import (
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
+	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/history"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 )
@@ -822,5 +823,100 @@ func TestExportPending(t *testing.T) {
 	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/export", nil))
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("status: got %d, want 503", rec.Code)
+	}
+}
+
+// TestWithBaseline verifies WithBaseline sets the baseline path.
+//
+//fusa:test REQ-FO-SRV007
+func TestWithBaseline(t *testing.T) {
+	s := newTestServer(t).WithBaseline("/tmp/bl.json")
+	if s.baselineFile != "/tmp/bl.json" {
+		t.Errorf("baselineFile: got %q", s.baselineFile)
+	}
+}
+
+// TestAPIDiffNoBaseline verifies /api/v1/diff returns 400 when no baseline is configured.
+//
+//fusa:test REQ-FO-SRV007
+func TestAPIDiffNoBaseline(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff", nil))
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status: got %d, want 400", rec.Code)
+	}
+}
+
+// TestAPIDiffWithBaseline verifies /api/v1/diff returns JSON when a valid baseline exists.
+//
+//fusa:test REQ-FO-SRV007
+func TestAPIDiffWithBaseline(t *testing.T) {
+	s := newTestServer(t)
+	bl := filepath.Join(t.TempDir(), "baseline.json")
+	if err := diff.SaveBaseline(bl, []fusaops.Finding{}); err != nil {
+		t.Fatalf("save baseline: %v", err)
+	}
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline="+bl, nil))
+	if rec.Code != http.StatusOK {
+		t.Errorf("status: got %d, want 200", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); !strings.Contains(ct, "application/json") {
+		t.Errorf("Content-Type: %q", ct)
+	}
+}
+
+// TestAPIDiffStrictConflict verifies /api/v1/diff?strict=true returns 409 when
+// there are new ERROR findings relative to the baseline.
+//
+//fusa:test REQ-FO-SRV007
+func TestAPIDiffStrictConflict(t *testing.T) {
+	reg := adapter.NewRegistry()
+	reg.MustRegister(&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, findings: []fusaops.Finding{
+		{RuleID: "ERR001", Severity: fusaops.SeverityError, Message: "error finding"},
+	}})
+	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{})
+	s.compute(context.Background())
+	bl := filepath.Join(t.TempDir(), "baseline.json")
+	if err := diff.SaveBaseline(bl, []fusaops.Finding{}); err != nil {
+		t.Fatalf("save baseline: %v", err)
+	}
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline="+bl+"&strict=true", nil))
+	if rec.Code != http.StatusConflict {
+		t.Errorf("status: got %d, want 409", rec.Code)
+	}
+}
+
+// TestAPIBaselineNoPath verifies POST /api/v1/baseline returns 400 when not configured.
+//
+//fusa:test REQ-FO-SRV008
+func TestAPIBaselineNoPath(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/v1/baseline", nil))
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status: got %d, want 400", rec.Code)
+	}
+}
+
+// TestAPIBaselineSave verifies POST /api/v1/baseline saves the baseline file.
+//
+//fusa:test REQ-FO-SRV008
+func TestAPIBaselineSave(t *testing.T) {
+	bl := filepath.Join(t.TempDir(), "baseline.json")
+	s := newTestServer(t).WithBaseline(bl)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/v1/baseline", nil))
+	if rec.Code != http.StatusOK {
+		t.Errorf("status: got %d, want 200", rec.Code)
+	}
+	if _, err := os.Stat(bl); err != nil {
+		t.Errorf("baseline file not created: %v", err)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, `"saved"`) {
+		t.Errorf("response missing 'saved': %s", body)
 	}
 }

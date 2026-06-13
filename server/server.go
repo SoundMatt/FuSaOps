@@ -22,6 +22,8 @@ import (
 	"sync"
 	"time"
 
+	fusaops "github.com/SoundMatt/FuSaOps"
+	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/fleet"
 	"github.com/SoundMatt/FuSaOps/history"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
@@ -45,6 +47,7 @@ type Server struct {
 	fleetCfg        string        // empty = fleet dashboard disabled
 	webhookURL      string        // empty = no webhook notifications
 	refreshInterval time.Duration // zero = no scheduled refresh
+	baselineFile    string        // empty = no baseline configured
 
 	mu         sync.RWMutex
 	cached     *report.AggregateReport
@@ -156,6 +159,15 @@ func (s *Server) WithRefreshInterval(d time.Duration) *Server {
 	return s
 }
 
+// WithBaseline sets the path to a baseline JSON file used by /api/v1/diff and
+// saved by POST /api/v1/baseline.
+//
+//fusa:req REQ-FO-SRV007
+func (s *Server) WithBaseline(path string) *Server {
+	s.baselineFile = path
+	return s
+}
+
 // compute runs the orchestrator, caches the result, and persists a snapshot.
 //
 //fusa:req REQ-FO-SRV003
@@ -205,6 +217,8 @@ func (s *Server) computeFleet(ctx context.Context) {
 //
 //fusa:req REQ-FO-SRV004
 //fusa:req REQ-FO-SRV006
+//fusa:req REQ-FO-SRV007
+//fusa:req REQ-FO-SRV008
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleIndex)
@@ -215,6 +229,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/findings", s.handleAPIFindings)
 	mux.HandleFunc("/api/v1/history", s.handleAPIHistory)
 	mux.HandleFunc("/api/v1/export", s.handleExport)
+	mux.HandleFunc("/api/v1/diff", s.handleAPIDiff)
+	mux.HandleFunc("/api/v1/baseline", s.handleAPIBaseline)
 	mux.HandleFunc("/history", s.handleHistory)
 	mux.HandleFunc("/refresh", s.handleRefresh)
 	mux.HandleFunc("/healthz", s.handleHealth)
@@ -476,6 +492,97 @@ func exportMIME(format string) (contentType, ext string) {
 	default:
 		return "text/plain; charset=utf-8", "txt"
 	}
+}
+
+// handleAPIDiff compares the cached report against a baseline and returns the
+// delta. The baseline path is taken from ?baseline= (required unless
+// --baseline was given at startup). ?strict=true causes a 409 response when
+// new ERROR-severity findings are present. ?format=json|text controls output.
+//
+//fusa:req REQ-FO-SRV007
+func (s *Server) handleAPIDiff(w http.ResponseWriter, r *http.Request) {
+	s.mu.RLock()
+	rep, cErr := s.cached, s.err
+	s.mu.RUnlock()
+	if cErr != nil {
+		http.Error(w, cErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rep == nil {
+		http.Error(w, "no report available yet", http.StatusServiceUnavailable)
+		return
+	}
+	baselinePath := r.URL.Query().Get("baseline")
+	if baselinePath == "" {
+		baselinePath = s.baselineFile
+	}
+	if baselinePath == "" {
+		http.Error(w, "baseline path required: set ?baseline= or configure --baseline", http.StatusBadRequest)
+		return
+	}
+	bl, err := diff.LoadBaseline(baselinePath)
+	if err != nil {
+		http.Error(w, "load baseline: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	var current []fusaops.Finding
+	for _, c := range rep.Components {
+		current = append(current, c.Findings...)
+	}
+	result := diff.Compare(bl, current)
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "json"
+	}
+	strict := r.URL.Query().Get("strict") == "true"
+	if strict && result.HasNewErrors() {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusConflict)
+		_ = diff.Render(w, result, format, strict)
+		return
+	}
+	if format == "json" {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	} else {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	}
+	_ = diff.Render(w, result, format, strict)
+}
+
+// handleAPIBaseline saves the current cached report findings as a baseline file.
+// The file path must be configured via WithBaseline; returns 400 otherwise.
+//
+//fusa:req REQ-FO-SRV008
+func (s *Server) handleAPIBaseline(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	if s.baselineFile == "" {
+		http.Error(w, "no baseline path configured: use --baseline", http.StatusBadRequest)
+		return
+	}
+	s.mu.RLock()
+	rep, cErr := s.cached, s.err
+	s.mu.RUnlock()
+	if cErr != nil {
+		http.Error(w, cErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rep == nil {
+		http.Error(w, "no report available yet", http.StatusServiceUnavailable)
+		return
+	}
+	var findings []fusaops.Finding
+	for _, c := range rep.Components {
+		findings = append(findings, c.Findings...)
+	}
+	if err := diff.SaveBaseline(s.baselineFile, findings); err != nil {
+		http.Error(w, "save baseline: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	fmt.Fprintf(w, `{"saved":%q,"findings":%d}`+"\n", s.baselineFile, len(findings))
 }
 
 // handleAPIHistory serves the run-history snapshots as JSON.

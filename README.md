@@ -168,6 +168,8 @@ filterable findings table. The page is fully self-contained (no external assets)
 | `/api/v1/report` | Versioned alias for `/api/report` |
 | `/api/v1/history` | Versioned alias for `/api/history` |
 | `/api/v1/export?format=FORMAT` | Download the cached report in any supported format (json, text, html, sarif, junit, csv, markdown). Response carries `Content-Disposition: attachment` so browsers save it directly. Multi-project mode exports a merged fleet report. |
+| `GET /api/v1/diff?baseline=PATH[&strict=true][&format=json\|text]` | Compare the cached report against a baseline file. Returns the delta (added/removed findings). `strict=true` → 409 Conflict when new ERROR findings exist. Multi-project mode diffs the merged fleet. |
+| `POST /api/v1/baseline` | Save the current cached findings as a baseline file (path set via `--baseline`). Returns `{"saved":"path","findings":N}`. |
 
 Run history is persisted to `.fusaops-history.jsonl` automatically; the `/history` trend page
 and `/api/history` endpoint are available after the first run.

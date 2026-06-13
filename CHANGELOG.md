@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.12.0] — 2026-06-13
+
+### Diff gate via REST API
+
+- **`GET /api/v1/diff?baseline=PATH[&strict=true][&format=json|text]`** — compares the cached report against a baseline JSON file and returns the delta. When `strict=true` and new ERROR findings exist, the response is `409 Conflict`. Both `Server` and `MultiServer` supported. (REQ-FO-SRV007)
+- **`POST /api/v1/baseline`** — saves the current cached findings to the configured baseline file and returns `{"saved":"path","findings":N}`. (REQ-FO-SRV008)
+- **`fusaops serve --baseline path`** — sets a default baseline file for both endpoints without requiring a per-request query parameter. (REQ-FO-CLI038)
+- Multi-project mode merges all project findings before diffing and saving.
+
+### Safety
+- Requirements registry at 219 requirements (added REQ-FO-SRV007, REQ-FO-SRV008, REQ-FO-CLI038)
+- 14 new tests; 219/219 requirements traced+tested; combined coverage ≥80%
+
 ## [1.11.0] — 2026-06-13
 
 ### Server export endpoint

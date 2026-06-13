@@ -393,6 +393,20 @@
       "level": "ASIL-C"
     },
     {
+      "id": "REQ-FO-SRV007",
+      "title": "Diff endpoint",
+      "text": "The dashboard shall expose GET /api/v1/diff?baseline=PATH[&strict=true][&format=json|text] that compares the cached report against a baseline file and returns the delta; when strict=true and new ERROR findings exist the response status shall be 409 Conflict.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
+      "id": "REQ-FO-SRV008",
+      "title": "Baseline save endpoint",
+      "text": "The dashboard shall expose POST /api/v1/baseline that saves the current cached findings to the configured baseline file and returns a JSON confirmation.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
       "id": "REQ-FO-CLI001",
       "title": "Command dispatch",
       "text": "The fusaops CLI shall dispatch a single invocation to the requested subcommand and return a process exit code.",
@@ -1511,6 +1525,13 @@
       "description": "The check subcommand shall accept --output path to write the report to a file instead of stdout, using report.RenderToFile. When --output is specified a confirmation message is printed to stdout. Exit code reflects gate result regardless of output destination.",
       "priority": "MUST",
       "rationale": "Completes API symmetry between fusaops check and fusaops report; enables writing formatted check output to CI artifact files."
+    },
+    {
+      "id": "REQ-FO-CLI038",
+      "title": "fusaops serve --baseline flag",
+      "description": "The serve subcommand shall accept --baseline path to set the default baseline file used by GET /api/v1/diff and POST /api/v1/baseline on both single-project and multi-project servers.",
+      "priority": "MUST",
+      "rationale": "Allows persistent baseline configuration without per-request path parameters; enables CI gating via the dashboard's diff endpoint."
     }
   ]
 }

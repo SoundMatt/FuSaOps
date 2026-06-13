@@ -82,6 +82,15 @@ func TestServeBadFlag(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI038
+func TestServeBaselineFlagParsed(t *testing.T) {
+	// --baseline with a nonexistent path still fails fast (no listener), not on flag parsing.
+	code, _, _ := runArgs(t, "serve", "--baseline", "/nonexistent/path.json", "--bogus-to-fail-fast")
+	if code != 2 {
+		t.Errorf("serve --baseline with bogus extra flag: got %d, want 2", code)
+	}
+}
+
 //fusa:test REQ-FO-CLI007
 func TestLoadOptionsOnlyOverride(t *testing.T) {
 	dir := goProject(t)

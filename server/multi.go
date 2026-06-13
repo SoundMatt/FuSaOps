@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	fusaops "github.com/SoundMatt/FuSaOps"
+	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/report"
 )
@@ -57,6 +59,7 @@ type MultiServer struct {
 	authROPass      string
 	auditDir        string
 	refreshInterval time.Duration // zero = no scheduled refresh
+	baselineFile    string        // empty = no baseline configured
 }
 
 // NewMulti returns a MultiServer from a ProjectsConfig.
@@ -98,6 +101,15 @@ func (ms *MultiServer) WithAuditLog(dir string) *MultiServer {
 	return ms
 }
 
+// WithBaseline sets the path to a baseline JSON file used by /api/v1/diff and
+// saved by POST /api/v1/baseline on the MultiServer.
+//
+//fusa:req REQ-FO-SRV007
+func (ms *MultiServer) WithBaseline(path string) *MultiServer {
+	ms.baselineFile = path
+	return ms
+}
+
 // WithRefreshInterval enables automatic background rescans on the MultiServer.
 //
 //fusa:req REQ-FO-SCHD001
@@ -128,6 +140,8 @@ func (ms *MultiServer) compute(ctx context.Context) {
 //
 //fusa:req REQ-FO-MPJ003
 //fusa:req REQ-FO-SRV006
+//fusa:req REQ-FO-SRV007
+//fusa:req REQ-FO-SRV008
 func (ms *MultiServer) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ms.handleOverview)
@@ -135,6 +149,8 @@ func (ms *MultiServer) Handler() http.Handler {
 	mux.HandleFunc("/healthz", ms.handleHealth)
 	mux.HandleFunc("/api/projects", ms.handleAPIProjects)
 	mux.HandleFunc("/api/v1/export", ms.handleExport)
+	mux.HandleFunc("/api/v1/diff", ms.handleAPIDiff)
+	mux.HandleFunc("/api/v1/baseline", ms.handleAPIBaseline)
 	mux.HandleFunc("/badge/status.svg", ms.handleBadge)
 	mux.HandleFunc("/metrics", ms.handleMetrics)
 	for _, p := range ms.projects {
@@ -466,6 +482,97 @@ func (ms *MultiServer) handleExport(w http.ResponseWriter, r *http.Request) {
 	if err := report.Render(w, combined, format); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// handleAPIDiff compares the merged fleet report against a baseline.
+//
+//fusa:req REQ-FO-SRV007
+func (ms *MultiServer) handleAPIDiff(w http.ResponseWriter, r *http.Request) {
+	var allComponents []report.Component
+	for _, p := range ms.projects {
+		p.mu.RLock()
+		rep, pErr := p.cached, p.err
+		p.mu.RUnlock()
+		if pErr != nil || rep == nil {
+			continue
+		}
+		allComponents = append(allComponents, rep.Components...)
+	}
+	if len(allComponents) == 0 {
+		http.Error(w, "no report available yet", http.StatusServiceUnavailable)
+		return
+	}
+	baselinePath := r.URL.Query().Get("baseline")
+	if baselinePath == "" {
+		baselinePath = ms.baselineFile
+	}
+	if baselinePath == "" {
+		http.Error(w, "baseline path required: set ?baseline= or configure --baseline", http.StatusBadRequest)
+		return
+	}
+	bl, err := diff.LoadBaseline(baselinePath)
+	if err != nil {
+		http.Error(w, "load baseline: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	var current []fusaops.Finding
+	for _, c := range allComponents {
+		current = append(current, c.Findings...)
+	}
+	result := diff.Compare(bl, current)
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "json"
+	}
+	strict := r.URL.Query().Get("strict") == "true"
+	if strict && result.HasNewErrors() {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusConflict)
+		_ = diff.Render(w, result, format, strict)
+		return
+	}
+	if format == "json" {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	} else {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	}
+	_ = diff.Render(w, result, format, strict)
+}
+
+// handleAPIBaseline saves the merged fleet findings as a baseline file.
+//
+//fusa:req REQ-FO-SRV008
+func (ms *MultiServer) handleAPIBaseline(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	if ms.baselineFile == "" {
+		http.Error(w, "no baseline path configured: use --baseline", http.StatusBadRequest)
+		return
+	}
+	var findings []fusaops.Finding
+	for _, p := range ms.projects {
+		p.mu.RLock()
+		rep, pErr := p.cached, p.err
+		p.mu.RUnlock()
+		if pErr != nil || rep == nil {
+			continue
+		}
+		for _, c := range rep.Components {
+			findings = append(findings, c.Findings...)
+		}
+	}
+	if findings == nil {
+		http.Error(w, "no report available yet", http.StatusServiceUnavailable)
+		return
+	}
+	if err := diff.SaveBaseline(ms.baselineFile, findings); err != nil {
+		http.Error(w, "save baseline: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	fmt.Fprintf(w, `{"saved":%q,"findings":%d}`+"\n", ms.baselineFile, len(findings))
 }
 
 // handleMetrics serves an OpenMetrics exposition with per-project finding counts.

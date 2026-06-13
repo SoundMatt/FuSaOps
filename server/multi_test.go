@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
+	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 )
 
@@ -304,5 +307,74 @@ func TestMultiExportCSV(t *testing.T) {
 	}
 	if body := rec.Body.String(); !strings.Contains(body, "language") {
 		t.Errorf("CSV body missing header: %q", body)
+	}
+}
+
+// TestMultiWithBaseline verifies WithBaseline sets the baseline path on MultiServer.
+//
+//fusa:test REQ-FO-SRV007
+func TestMultiWithBaseline(t *testing.T) {
+	ms := newTestMulti(t).WithBaseline("/tmp/bl.json")
+	if ms.baselineFile != "/tmp/bl.json" {
+		t.Errorf("baselineFile: got %q", ms.baselineFile)
+	}
+}
+
+// TestMultiAPIDiffNoBaseline verifies /api/v1/diff returns 400 when no baseline configured.
+//
+//fusa:test REQ-FO-SRV007
+func TestMultiAPIDiffNoBaseline(t *testing.T) {
+	ms := newTestMulti(t)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff", nil))
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status: got %d, want 400", rec.Code)
+	}
+}
+
+// TestMultiAPIDiffWithBaseline verifies /api/v1/diff returns JSON given a valid baseline.
+//
+//fusa:test REQ-FO-SRV007
+func TestMultiAPIDiffWithBaseline(t *testing.T) {
+	ms := newTestMulti(t)
+	bl := filepath.Join(t.TempDir(), "baseline.json")
+	if err := diff.SaveBaseline(bl, []fusaops.Finding{}); err != nil {
+		t.Fatalf("save baseline: %v", err)
+	}
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline="+bl, nil))
+	if rec.Code != http.StatusOK {
+		t.Errorf("status: got %d, want 200", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); !strings.Contains(ct, "application/json") {
+		t.Errorf("Content-Type: %q", ct)
+	}
+}
+
+// TestMultiAPIBaselineNoPath verifies POST /api/v1/baseline returns 400 when not configured.
+//
+//fusa:test REQ-FO-SRV008
+func TestMultiAPIBaselineNoPath(t *testing.T) {
+	ms := newTestMulti(t)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/v1/baseline", nil))
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status: got %d, want 400", rec.Code)
+	}
+}
+
+// TestMultiAPIBaselineSave verifies POST /api/v1/baseline saves the baseline file.
+//
+//fusa:test REQ-FO-SRV008
+func TestMultiAPIBaselineSave(t *testing.T) {
+	bl := filepath.Join(t.TempDir(), "baseline.json")
+	ms := newTestMulti(t).WithBaseline(bl)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodPost, "/api/v1/baseline", nil))
+	if rec.Code != http.StatusOK {
+		t.Errorf("status: got %d, want 200", rec.Code)
+	}
+	if _, err := os.Stat(bl); err != nil {
+		t.Errorf("baseline file not created: %v", err)
 	}
 }
