@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.10.0] — 2026-06-13
+
+### HTML dashboard text search filter
+- **Live search box** in the findings table — filters rows by matching text against rule ID, message, and category simultaneously as you type. (REQ-FO-RPT016)
+- The severity filter buttons and the text search compose with AND logic; a result counter badge appears when the filter is active (e.g. "12 / 47 shown").
+
+### `fusaops check --output` file flag
+- `fusaops check --output path` writes the report to a file instead of stdout, with a format-specific extension (e.g. `--format junit --output results.xml`). A confirmation message is printed to stdout; the exit code still reflects the gate result. (REQ-FO-CLI037)
+
+### Safety
+- Requirements registry at 215 requirements (added REQ-FO-RPT016, REQ-FO-CLI037)
+- 2 new tests; 215/215 requirements traced+tested; combined coverage ≥80%
+
 ## [1.9.0] — 2026-06-13
 
 ### Markdown report format
@@ -351,7 +364,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.6.0...v1.7.0

@@ -89,6 +89,7 @@ func TestRenderText(t *testing.T) {
 }
 
 //fusa:test REQ-FO-RPT012
+//fusa:test REQ-FO-RPT016
 func TestRenderHTML(t *testing.T) {
 	r := New("/root", "demo", sampleComponents())
 	var buf bytes.Buffer
@@ -96,7 +97,10 @@ func TestRenderHTML(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	for _, want := range []string{"<!DOCTYPE html>", "FuSaOps", "status-fail", "LINT001"} {
+	for _, want := range []string{
+		"<!DOCTYPE html>", "FuSaOps", "status-fail", "LINT001",
+		"search-box", "applyFilters", "search-count",
+	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("html output missing %q", want)
 		}

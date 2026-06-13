@@ -251,6 +251,28 @@ func TestServeZeroRefreshInterval(t *testing.T) {
 	}
 }
 
+// TestCheckOutputFlag verifies fusaops check --output writes report to a file.
+//
+//fusa:test REQ-FO-CLI037
+func TestCheckOutputFlag(t *testing.T) {
+	dir := goProject(t)
+	out := filepath.Join(t.TempDir(), "report.txt")
+	code, stdout, errb := runArgs(t, "check", "--dir", dir, "--output", out)
+	if code != 0 {
+		t.Fatalf("check --output: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(stdout, "report.txt") {
+		t.Errorf("expected confirmation in stdout: %q", stdout)
+	}
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatalf("output file not created: %v", err)
+	}
+	if len(data) == 0 {
+		t.Error("output file is empty")
+	}
+}
+
 // TestCheckMarkdownFormat verifies fusaops check --format markdown produces Markdown output.
 //
 //fusa:test REQ-FO-CLI036

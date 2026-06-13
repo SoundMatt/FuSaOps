@@ -344,6 +344,13 @@
       "rationale": "GFM output enables posting FuSaOps reports directly into GitHub/GitLab PR comments and wiki pages without manual reformatting."
     },
     {
+      "id": "REQ-FO-RPT016",
+      "title": "HTML dashboard text search filter",
+      "description": "The HTML dashboard findings table shall include a real-time text search input that filters rows by matching against rule ID, message, and category columns. The search filter shall compose with the severity filter buttons (AND logic). A result count badge shall show 'N / total shown' when the filter is active.",
+      "priority": "MUST",
+      "rationale": "Large codebases may have hundreds of findings; text search lets engineers quickly locate a specific rule or keyword without leaving the dashboard."
+    },
+    {
       "id": "REQ-FO-SRV001",
       "title": "Dashboard server",
       "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.",
@@ -1490,6 +1497,13 @@
       "description": "The check and report subcommands shall accept 'markdown' (and 'md' as an alias) as a valid --format value, producing GitHub-Flavored Markdown output via the report.Render dispatcher.",
       "priority": "MUST",
       "rationale": "Enables posting FuSaOps reports into GitHub/GitLab PR comments and wikis."
+    },
+    {
+      "id": "REQ-FO-CLI037",
+      "title": "fusaops check --output flag",
+      "description": "The check subcommand shall accept --output path to write the report to a file instead of stdout, using report.RenderToFile. When --output is specified a confirmation message is printed to stdout. Exit code reflects gate result regardless of output destination.",
+      "priority": "MUST",
+      "rationale": "Completes API symmetry between fusaops check and fusaops report; enables writing formatted check output to CI artifact files."
     }
   ]
 }

@@ -288,6 +288,15 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.10 — Dashboard search & check --output ✅
+
+**Goal:** Improve CI ergonomics and dashboard usability.
+
+- ✅ **HTML dashboard text search** — live `<input type="search">` filters findings by rule ID, message, and category; composes with severity buttons (AND logic); shows result count badge
+- ✅ **`fusaops check --output`** — write check report to a file (like `fusaops report --output`); exit code still reflects gate result
+
+---
+
 ## Adding a language adapter
 
 1. Implement `adapter.Adapter` (Name, Language, Tool, Detect, Available, Check).
