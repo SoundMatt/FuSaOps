@@ -1394,6 +1394,34 @@
       "rationale": "Allows drilling into a specific project's findings from the overview without a separate serve process."
     },
     {
+      "id": "REQ-FO-MPJ005",
+      "title": "Per-project suppression",
+      "description": "ProjectConfig shall accept a 'suppression' JSON field (path to a .fusaops-suppress.json file). When set, the file is applied as SuppressFile in that project's orchestrator Options so suppressed findings are excluded from its report.",
+      "priority": "MUST",
+      "rationale": "Different components in a monorepo have independent known-finding lists; a single global suppression file is insufficient."
+    },
+    {
+      "id": "REQ-FO-MPJ006",
+      "title": "Per-project config auto-load",
+      "description": "NewMulti shall automatically load .fusaops.json from each project's directory and apply it to that project's orchestrator Options (project name override, adapter filter). Missing or invalid config files are silently ignored.",
+      "priority": "MUST",
+      "rationale": "Allows each sub-project to carry its own .fusaops.json, consistent with single-project mode behaviour."
+    },
+    {
+      "id": "REQ-FO-MPJ007",
+      "title": "Startup directory validation",
+      "description": "runServeMulti shall call ValidateProjectDirs() after NewMulti and exit 1 with a descriptive error for each project whose directory does not exist.",
+      "priority": "MUST",
+      "rationale": "Surfaces mis-configured project paths at startup rather than silently returning empty reports at runtime."
+    },
+    {
+      "id": "REQ-FO-SRV009",
+      "title": "Diff project filter",
+      "description": "MultiServer GET /api/v1/diff shall support an optional ?project=name query parameter that restricts the diff to a single named project instead of the merged fleet.",
+      "priority": "MUST",
+      "rationale": "Allows per-project CI gating without spinning up separate server processes."
+    },
+    {
       "id": "REQ-FO-CLI030",
       "title": "fusaops serve --projects flag",
       "description": "The serve subcommand shall accept --projects path that switches to multi-project mode using MultiServer. A missing or malformed file exits 1 with a descriptive error. All auth, ro, and audit-log flags apply equally to the MultiServer.",

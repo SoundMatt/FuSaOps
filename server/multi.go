@@ -7,11 +7,14 @@ import (
 	"html"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
+	"github.com/SoundMatt/FuSaOps/config"
 	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/report"
@@ -20,10 +23,13 @@ import (
 // ProjectConfig is one entry in a multi-project serve configuration.
 //
 //fusa:req REQ-FO-MPJ001
+//fusa:req REQ-FO-MPJ005
+//fusa:req REQ-FO-MPJ006
 type ProjectConfig struct {
-	Name    string `json:"name"`
-	Dir     string `json:"dir"`
-	Adapter string `json:"adapter,omitempty"`
+	Name        string `json:"name"`
+	Dir         string `json:"dir"`
+	Adapter     string `json:"adapter,omitempty"`
+	Suppression string `json:"suppression,omitempty"`
 }
 
 // ProjectsConfig is the JSON file format for fusaops serve --projects.
@@ -65,6 +71,8 @@ type MultiServer struct {
 // NewMulti returns a MultiServer from a ProjectsConfig.
 //
 //fusa:req REQ-FO-MPJ001
+//fusa:req REQ-FO-MPJ005
+//fusa:req REQ-FO-MPJ006
 func NewMulti(cfg ProjectsConfig, runner *orchestrator.Runner) *MultiServer {
 	ms := &MultiServer{runner: runner}
 	for _, p := range cfg.Projects {
@@ -72,9 +80,35 @@ func NewMulti(cfg ProjectsConfig, runner *orchestrator.Runner) *MultiServer {
 		if p.Adapter != "" {
 			opts.Only = []string{p.Adapter}
 		}
+		if p.Suppression != "" {
+			opts.SuppressFile = p.Suppression
+		}
+		// Auto-load .fusaops.json from the project directory if present.
+		if cfgData, err := config.Load(filepath.Join(p.Dir, config.ConfigFile)); err == nil && cfgData != nil {
+			if cfgData.Project.Name != "" {
+				opts.Project = cfgData.Project.Name
+			}
+			if len(cfgData.Scan.Adapters) > 0 && p.Adapter == "" {
+				opts.Only = cfgData.Scan.Adapters
+			}
+		}
 		ms.projects = append(ms.projects, &projectEntry{name: p.Name, dir: p.Dir, opts: opts})
 	}
 	return ms
+}
+
+// ValidateProjectDirs checks that every project directory exists and returns a
+// slice of errors for any that are missing.
+//
+//fusa:req REQ-FO-MPJ007
+func (ms *MultiServer) ValidateProjectDirs() []error {
+	var errs []error
+	for _, p := range ms.projects {
+		if _, err := os.Stat(p.dir); err != nil {
+			errs = append(errs, fmt.Errorf("project %q: directory %q not found", p.name, p.dir))
+		}
+	}
+	return errs
 }
 
 // WithAuth enables HTTP Basic Auth (rw) on all routes of the MultiServer.
@@ -484,12 +518,18 @@ func (ms *MultiServer) handleExport(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleAPIDiff compares the merged fleet report against a baseline.
+// handleAPIDiff compares the merged fleet report (or a single project when
+// ?project=name is set) against a baseline.
 //
 //fusa:req REQ-FO-SRV007
+//fusa:req REQ-FO-SRV009
 func (ms *MultiServer) handleAPIDiff(w http.ResponseWriter, r *http.Request) {
+	projectFilter := r.URL.Query().Get("project")
 	var allComponents []report.Component
 	for _, p := range ms.projects {
+		if projectFilter != "" && p.name != projectFilter {
+			continue
+		}
 		p.mu.RLock()
 		rep, pErr := p.cached, p.err
 		p.mu.RUnlock()

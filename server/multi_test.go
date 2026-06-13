@@ -378,3 +378,94 @@ func TestMultiAPIBaselineSave(t *testing.T) {
 		t.Errorf("baseline file not created: %v", err)
 	}
 }
+
+// TestProjectConfigSuppression verifies per-project suppression field is wired into opts.
+//
+//fusa:test REQ-FO-MPJ005
+func TestProjectConfigSuppression(t *testing.T) {
+	reg := adapter.NewRegistry()
+	cfg := ProjectsConfig{
+		Projects: []ProjectConfig{
+			{Name: "alpha", Dir: t.TempDir(), Suppression: "/tmp/suppress.json"},
+		},
+	}
+	ms := NewMulti(cfg, orchestrator.New(reg))
+	if ms.projects[0].opts.SuppressFile != "/tmp/suppress.json" {
+		t.Errorf("SuppressFile: got %q", ms.projects[0].opts.SuppressFile)
+	}
+}
+
+// TestProjectConfigAutoLoad verifies .fusaops.json is auto-loaded from project dir.
+//
+//fusa:test REQ-FO-MPJ006
+func TestProjectConfigAutoLoad(t *testing.T) {
+	dir := t.TempDir()
+	cfg := `{"version":"1","project":{"name":"myproj"},"scan":{"adapters":["gofusa"]},"report":{"format":"text"}}`
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops.json"), []byte(cfg), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	reg := adapter.NewRegistry()
+	ms := NewMulti(ProjectsConfig{Projects: []ProjectConfig{{Name: "alpha", Dir: dir}}}, orchestrator.New(reg))
+	if ms.projects[0].opts.Project != "myproj" {
+		t.Errorf("project name override: got %q, want myproj", ms.projects[0].opts.Project)
+	}
+	if len(ms.projects[0].opts.Only) == 0 || ms.projects[0].opts.Only[0] != "gofusa" {
+		t.Errorf("adapter filter: got %v", ms.projects[0].opts.Only)
+	}
+}
+
+// TestValidateProjectDirsOK verifies ValidateProjectDirs returns nil for valid dirs.
+//
+//fusa:test REQ-FO-MPJ007
+func TestValidateProjectDirsOK(t *testing.T) {
+	ms := newTestMulti(t)
+	if errs := ms.ValidateProjectDirs(); len(errs) > 0 {
+		t.Errorf("unexpected errors: %v", errs)
+	}
+}
+
+// TestValidateProjectDirsMissing verifies ValidateProjectDirs returns errors for missing dirs.
+//
+//fusa:test REQ-FO-MPJ007
+func TestValidateProjectDirsMissing(t *testing.T) {
+	reg := adapter.NewRegistry()
+	ms := NewMulti(ProjectsConfig{Projects: []ProjectConfig{
+		{Name: "ghost", Dir: "/nonexistent/path/xyz"},
+	}}, orchestrator.New(reg))
+	errs := ms.ValidateProjectDirs()
+	if len(errs) == 0 {
+		t.Error("expected error for missing dir, got none")
+	}
+}
+
+// TestMultiAPIDiffProjectFilter verifies ?project=name restricts diff to one project.
+//
+//fusa:test REQ-FO-SRV009
+func TestMultiAPIDiffProjectFilter(t *testing.T) {
+	ms := newTestMulti(t)
+	bl := filepath.Join(t.TempDir(), "baseline.json")
+	if err := diff.SaveBaseline(bl, []fusaops.Finding{}); err != nil {
+		t.Fatalf("save baseline: %v", err)
+	}
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline="+bl+"&project=alpha", nil))
+	if rec.Code != http.StatusOK {
+		t.Errorf("status: got %d, want 200 (project filter)", rec.Code)
+	}
+}
+
+// TestMultiAPIDiffUnknownProject verifies ?project=unknown returns 503 (no components).
+//
+//fusa:test REQ-FO-SRV009
+func TestMultiAPIDiffUnknownProject(t *testing.T) {
+	ms := newTestMulti(t)
+	bl := filepath.Join(t.TempDir(), "baseline.json")
+	if err := diff.SaveBaseline(bl, []fusaops.Finding{}); err != nil {
+		t.Fatalf("save baseline: %v", err)
+	}
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline="+bl+"&project=unknown", nil))
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("status: got %d, want 503 (unknown project)", rec.Code)
+	}
+}

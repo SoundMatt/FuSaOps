@@ -142,6 +142,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 //fusa:req REQ-FO-CLI030
 //fusa:req REQ-FO-CLI032
 //fusa:req REQ-FO-CLI038
+//fusa:req REQ-FO-MPJ007
 func runServeMulti(cfgPath, addr, scheme, tlsCert, tlsKey,
 	rwUser, rwPass, roUser, roPass, auditDir, baselineFile string, interval time.Duration,
 	stdout, stderr io.Writer) int {
@@ -156,6 +157,12 @@ func runServeMulti(cfgPath, addr, scheme, tlsCert, tlsKey,
 		return 1
 	}
 	ms := server.NewMulti(cfg, orchestrator.New(nil))
+	if errs := ms.ValidateProjectDirs(); len(errs) > 0 {
+		for _, e := range errs {
+			fmt.Fprintf(stderr, "fusaops serve: %v\n", e)
+		}
+		return 1
+	}
 	if rwUser != "" {
 		ms = ms.WithAuth(rwUser, rwPass)
 	}

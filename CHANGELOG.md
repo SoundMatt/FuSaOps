@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.13.0] — 2026-06-13
+
+### Per-project suppression & config in multi-project mode
+
+- **Per-project `"suppression"` field** in `projects.json` — set a path to a `.fusaops-suppress.json` file and it is applied to that project's scan independently of other projects. (REQ-FO-MPJ005)
+- **Auto-load `.fusaops.json`** from each project's directory — `MultiServer` now mirrors the single-project behaviour: project name override, adapter filter, and future settings apply per-project without an extra flag. (REQ-FO-MPJ006)
+- **Startup directory validation** — `fusaops serve --projects projects.json` now validates all project directories before binding a port and exits 1 with a descriptive error for each missing path. (REQ-FO-MPJ007)
+- **`/api/v1/diff?project=name`** — diff a single named project in fleet mode instead of the merged fleet. Unknown project names return 503. (REQ-FO-SRV009)
+
+### Safety
+- Requirements registry at 223 requirements (added REQ-FO-MPJ005-007, REQ-FO-SRV009)
+- 8 new tests; 223/223 requirements traced+tested; combined coverage ≥80%
+
 ## [1.12.0] — 2026-06-13
 
 ### Diff gate via REST API
