@@ -247,6 +247,73 @@ func TestAutoComputeFingerprint(t *testing.T) {
 
 // TestRunSuppressFileMissing returns an error when the suppress file is invalid.
 //
+// TestMinSeverityFilter verifies that findings below MinSeverity are excluded.
+//
+//fusa:test REQ-FO-ORC012
+func TestMinSeverityFilter(t *testing.T) {
+	findings := []fusaops.Finding{
+		{Language: fusaops.LangGo, Severity: fusaops.SeverityInfo, RuleID: "INFO1"},
+		{Language: fusaops.LangGo, Severity: fusaops.SeverityWarning, RuleID: "WARN1"},
+		{Language: fusaops.LangGo, Severity: fusaops.SeverityError, RuleID: "ERR1"},
+	}
+	reg := regWith(&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true, findings: findings})
+
+	// Only WARNING and above.
+	opts := Options{MinSeverity: fusaops.SeverityWarning}
+	rep, err := New(reg).Run(context.Background(), t.TempDir(), opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rep.Components) != 1 {
+		t.Fatalf("expected 1 component, got %d", len(rep.Components))
+	}
+	for _, f := range rep.Components[0].Findings {
+		if f.Severity == fusaops.SeverityInfo {
+			t.Errorf("INFO finding should have been filtered: %v", f)
+		}
+	}
+	if rep.Summary.Total != 2 {
+		t.Errorf("expected 2 findings (WARN+ERR), got %d", rep.Summary.Total)
+	}
+}
+
+//fusa:test REQ-FO-ORC012
+func TestMinSeverityErrorOnly(t *testing.T) {
+	findings := []fusaops.Finding{
+		{Language: fusaops.LangGo, Severity: fusaops.SeverityInfo, RuleID: "INFO1"},
+		{Language: fusaops.LangGo, Severity: fusaops.SeverityWarning, RuleID: "WARN1"},
+		{Language: fusaops.LangGo, Severity: fusaops.SeverityError, RuleID: "ERR1"},
+	}
+	reg := regWith(&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true, findings: findings})
+
+	opts := Options{MinSeverity: fusaops.SeverityError}
+	rep, err := New(reg).Run(context.Background(), t.TempDir(), opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Summary.Total != 1 || rep.Summary.Errors != 1 {
+		t.Errorf("expected 1 ERROR only; got total=%d errors=%d", rep.Summary.Total, rep.Summary.Errors)
+	}
+}
+
+//fusa:test REQ-FO-ORC012
+func TestMinSeverityEmpty(t *testing.T) {
+	findings := []fusaops.Finding{
+		{Language: fusaops.LangGo, Severity: fusaops.SeverityInfo, RuleID: "INFO1"},
+		{Language: fusaops.LangGo, Severity: fusaops.SeverityWarning, RuleID: "WARN1"},
+	}
+	reg := regWith(&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true, findings: findings})
+
+	opts := Options{} // MinSeverity empty = no filter
+	rep, err := New(reg).Run(context.Background(), t.TempDir(), opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Summary.Total != 2 {
+		t.Errorf("expected all 2 findings with empty MinSeverity, got %d", rep.Summary.Total)
+	}
+}
+
 //fusa:test REQ-FO-SUP004
 func TestRunSuppressFileMissing(t *testing.T) {
 	reg := regWith(

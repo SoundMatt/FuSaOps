@@ -61,6 +61,13 @@ type Options struct {
 	//
 	//fusa:req REQ-FO-SUP004
 	SuppressFile string
+	// MinSeverity, when set, filters out findings below the given severity rank
+	// before they are stored in the report. INFO removes INFO findings; WARNING
+	// removes INFO and WARNING; ERROR keeps only ERROR findings. Empty string
+	// (the zero value) disables filtering and keeps all findings.
+	//
+	//fusa:req REQ-FO-ORC012
+	MinSeverity fusaops.Severity
 }
 
 // Runner executes adapters against a project root. It wraps a registry so the
@@ -196,6 +203,19 @@ func (rn *Runner) Run(ctx context.Context, root string, opts Options) (*report.A
 					if safe[k].Fingerprint == "" {
 						safe[k].Fingerprint = fusaops.ComputeFingerprint(safe[k])
 					}
+				}
+				// Filter by minimum severity if set.
+				//
+				//fusa:req REQ-FO-ORC012
+				if opts.MinSeverity != "" {
+					minRank := opts.MinSeverity.Rank()
+					kept := safe[:0]
+					for _, f := range safe {
+						if f.Severity.Rank() >= minRank {
+							kept = append(kept, f)
+						}
+					}
+					safe = kept
 				}
 				comp.Findings = safe
 			}

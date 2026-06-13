@@ -544,6 +544,33 @@ func TestHistoryUnknownSubcommand(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI047
+func TestCheckMinSeverityFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "check", "--min-severity", "ERROR", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--min-severity not recognised: %s", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI047
+func TestCheckMinSeverityInvalid(t *testing.T) {
+	code, _, errb := runArgs(t, "check", "--min-severity", "BOGUS", "--dir", goProject(t))
+	if code != 2 {
+		t.Errorf("invalid --min-severity: want code=2, got %d (err=%s)", code, errb)
+	}
+	if !strings.Contains(errb, "--min-severity") {
+		t.Errorf("expected --min-severity in error: %q", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI047
+func TestReportMinSeverityFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "report", "--min-severity", "WARNING", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--min-severity not recognised: %s", errb)
+	}
+}
+
 //fusa:test REQ-FO-CLI045
 //fusa:test REQ-FO-CLI046
 func TestHistoryNoSubcommand(t *testing.T) {

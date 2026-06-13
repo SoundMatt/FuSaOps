@@ -341,6 +341,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.20 — Severity filter ✅
+
+**Goal:** Let CI gates and report consumers focus on only the severity levels they care about.
+
+- `Options.MinSeverity` — orchestrator filters findings below the threshold before storing them (REQ-FO-ORC012)
+- `fusaops check --min-severity ERROR|WARNING|INFO` (REQ-FO-CLI047)
+- `fusaops report --min-severity ERROR|WARNING|INFO` (REQ-FO-CLI047)
+- Invalid value exits 2; empty value (default) disables filtering
+
+---
+
 ## v1.19 — History CLI ✅
 
 **Goal:** Make check-run history accessible from the CLI without a running dashboard server.

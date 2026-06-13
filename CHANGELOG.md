@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.20.0] — 2026-06-13
+
+### `--min-severity` severity filter
+
+- **`Options.MinSeverity fusaops.Severity`** — new field on `orchestrator.Options`. When set, findings whose `Severity.Rank()` is below `MinSeverity.Rank()` are filtered out after fingerprint enrichment and before suppression. Empty string (the zero value) disables filtering. (REQ-FO-ORC012)
+- **`fusaops check --min-severity INFO|WARNING|ERROR`** and **`fusaops report --min-severity INFO|WARNING|ERROR`** — new flag forwarding the value to `Options.MinSeverity`. An invalid value (not one of the three) exits 2 with a descriptive error. (REQ-FO-CLI047)
+- Common use: `fusaops check --min-severity ERROR` to suppress INFO and WARNING findings in a blocking CI gate.
+
+### Safety
+- Requirements registry at 243 requirements (added REQ-FO-ORC012, REQ-FO-CLI047)
+- 6 new tests (3 orchestrator, 3 cmd); 243/243 requirements traced+tested; combined coverage 81.1%
+
 ## [1.19.0] — 2026-06-13
 
 ### `fusaops history list|prune` subcommands & `history.Prune`

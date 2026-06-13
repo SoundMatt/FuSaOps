@@ -26,6 +26,7 @@ import (
 //fusa:req REQ-FO-CLI040
 //fusa:req REQ-FO-CLI041
 //fusa:req REQ-FO-CLI042
+//fusa:req REQ-FO-CLI047
 func runCheck(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops check", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -38,6 +39,7 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	showSuppressed := fs.Bool("show-suppressed", false, "include suppressed findings in output")
 	showFingerprints := fs.Bool("show-fingerprints", false, "show fingerprint and suppress scaffold per finding")
 	saveBaseline := fs.String("save-baseline", "", "save current findings as a diff baseline to this file after check")
+	minSeverity := fs.String("min-severity", "", "hide findings below this severity: INFO, WARNING, or ERROR")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -48,6 +50,14 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	opts.SuppressFile = *suppressFile
+	if *minSeverity != "" {
+		sev := fusaops.Severity(*minSeverity)
+		if sev.Rank() == 0 {
+			fmt.Fprintf(stderr, "fusaops check: --min-severity must be INFO, WARNING, or ERROR\n")
+			return 2
+		}
+		opts.MinSeverity = sev
+	}
 
 	rn := orchestrator.New(nil)
 	rep, err := rn.Run(context.Background(), root, opts)

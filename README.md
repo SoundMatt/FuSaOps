@@ -66,6 +66,7 @@ fusaops scan                 # detect languages and applicable adapters
 fusaops adapters             # list adapters and whether each tool is installed
 fusaops check                # run every applicable tool; exit 1 on ERROR findings
 fusaops check --strict       # also exit 1 on WARNING findings
+fusaops check --min-severity ERROR   # show only ERROR findings (suppress INFO and WARNING)
 fusaops report --format html --output fusaops-report.html
 fusaops diff --baseline check-report.json   # compare baseline; exit 1 on new errors
 fusaops diff --strict        # exit 1 on any new finding (not just errors)

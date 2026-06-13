@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/report"
 )
@@ -20,6 +21,7 @@ import (
 //fusa:req REQ-FO-CLI036
 //fusa:req REQ-FO-CLI040
 //fusa:req REQ-FO-CLI041
+//fusa:req REQ-FO-CLI047
 func runReport(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops report", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -30,6 +32,7 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 	suppressFile := fs.String("suppress-file", "", "path to .fusaops-suppress.json")
 	showSuppressed := fs.Bool("show-suppressed", false, "include suppressed findings in output")
 	showFingerprints := fs.Bool("show-fingerprints", false, "show fingerprint and suppress scaffold per finding")
+	minSeverity := fs.String("min-severity", "", "hide findings below this severity: INFO, WARNING, or ERROR")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -40,6 +43,14 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	opts.SuppressFile = *suppressFile
+	if *minSeverity != "" {
+		sev := fusaops.Severity(*minSeverity)
+		if sev.Rank() == 0 {
+			fmt.Fprintf(stderr, "fusaops report: --min-severity must be INFO, WARNING, or ERROR\n")
+			return 2
+		}
+		opts.MinSeverity = sev
+	}
 
 	rn := orchestrator.New(nil)
 	rep, err := rn.Run(context.Background(), root, opts)
