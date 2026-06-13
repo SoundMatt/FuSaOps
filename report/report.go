@@ -101,9 +101,13 @@ type AggregateReport struct {
 // RenderOptions controls optional behaviour during report rendering.
 //
 //fusa:req REQ-FO-RPT017
+//fusa:req REQ-FO-RPT019
 type RenderOptions struct {
 	// ShowSuppressed causes suppressed findings to be included in the output.
 	ShowSuppressed bool
+	// ShowFingerprints causes each finding's fingerprint to be shown inline,
+	// together with a scaffold fusaops suppress add command.
+	ShowFingerprints bool
 }
 
 // New builds an AggregateReport from a set of components, computing per

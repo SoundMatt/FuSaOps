@@ -365,6 +365,13 @@
       "rationale": "Consumers of the aggregate report need to quickly identify which language components are affected by suppression without scanning every component."
     },
     {
+      "id": "REQ-FO-RPT019",
+      "title": "Fingerprint hints in report output",
+      "description": "When RenderOptions.ShowFingerprints is true, text renderer shall append 'fingerprint: <fp>' and a 'fusaops suppress add' scaffold below each finding. HTML renderer shall show the fingerprint as a monospace chip in the message cell with a tooltip. Markdown renderer shall add a Fingerprint column to the findings table. The orchestrator shall auto-compute the fingerprint for any finding where Fingerprint is empty.",
+      "priority": "MUST",
+      "rationale": "Engineers need fingerprints immediately visible in report output to efficiently create suppression entries without computing them manually."
+    },
+    {
       "id": "REQ-FO-SRV001",
       "title": "Dashboard server",
       "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.",
@@ -1058,6 +1065,13 @@
       "rationale": "Supports monorepo layouts where multiple Go or C modules coexist under one root."
     },
     {
+      "id": "REQ-FO-ORC011",
+      "title": "Auto-compute missing fingerprints",
+      "description": "After collecting findings from each adapter, the orchestrator shall set Finding.Fingerprint via fusaops.ComputeFingerprint for any finding where the field is empty. This ensures fingerprints are always available downstream for suppression matching and report display.",
+      "priority": "MUST",
+      "rationale": "Not all x-FuSa tool versions emit fingerprints; computing them in one place avoids duplication in every consumer."
+    },
+    {
       "id": "REQ-FO-DIF001",
       "title": "Baseline loading",
       "description": "LoadBaseline must parse both the FuSaOps aggregate report format (components[].findings) and the flat single-tool format (findings[]) and return a Baseline value.",
@@ -1574,6 +1588,13 @@
       "description": "The check and report subcommands shall accept --show-suppressed to include suppressed findings in the rendered output. When set, RenderWithOptions is called with ShowSuppressed:true; otherwise suppressed findings appear collapsed (markdown/html) or as a count hint (text).",
       "priority": "MUST",
       "rationale": "CI pipelines and engineers need to opt-in to viewing suppressed findings for audit and triage purposes."
+    },
+    {
+      "id": "REQ-FO-CLI041",
+      "title": "fusaops check/report --show-fingerprints flag",
+      "description": "The check and report subcommands shall accept --show-fingerprints to include per-finding fingerprint hints in rendered output. When set, RenderWithOptions is called with ShowFingerprints:true.",
+      "priority": "MUST",
+      "rationale": "Engineers need a direct path from a finding in a report to the suppress add command without manual fingerprint computation."
     },
     {
       "id": "REQ-FO-CLI033",

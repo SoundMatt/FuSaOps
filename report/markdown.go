@@ -16,6 +16,7 @@ import (
 //
 //fusa:req REQ-FO-RPT015
 //fusa:req REQ-FO-RPT017
+//fusa:req REQ-FO-RPT019
 func renderMarkdown(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 	status := r.Summary.Status()
 	badge := markdownBadge(status)
@@ -57,11 +58,20 @@ func renderMarkdown(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 		if len(c.Findings) == 0 {
 			fmt.Fprintf(w, "_No findings._\n\n")
 		} else {
-			fmt.Fprintf(w, "| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
-			for _, f := range c.Findings {
-				fmt.Fprintf(w, "| %s | `%s` | %s | %s |\n",
-					markdownSeverityIcon(f.Severity), markdownEscape(f.RuleID),
-					markdownEscape(f.Message), markdownLoc(f))
+			if opts.ShowFingerprints {
+				fmt.Fprintf(w, "| Severity | Rule | Message | Location | Fingerprint |\n|---|---|---|---|---|\n")
+				for _, f := range c.Findings {
+					fmt.Fprintf(w, "| %s | `%s` | %s | %s | `%s` |\n",
+						markdownSeverityIcon(f.Severity), markdownEscape(f.RuleID),
+						markdownEscape(f.Message), markdownLoc(f), markdownEscape(f.Fingerprint))
+				}
+			} else {
+				fmt.Fprintf(w, "| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
+				for _, f := range c.Findings {
+					fmt.Fprintf(w, "| %s | `%s` | %s | %s |\n",
+						markdownSeverityIcon(f.Severity), markdownEscape(f.RuleID),
+						markdownEscape(f.Message), markdownLoc(f))
+				}
 			}
 			fmt.Fprintln(w)
 		}

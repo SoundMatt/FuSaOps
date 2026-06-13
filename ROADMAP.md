@@ -341,6 +341,18 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.16 — Finding fingerprint hints & quick-suppress scaffolding ✅
+
+**Goal:** Close the loop between seeing a finding and suppressing it — show the fingerprint and a ready-to-run scaffold in all rendered formats.
+
+- Orchestrator auto-computes `sha256:` fingerprint for any finding without one (REQ-FO-ORC011)
+- `RenderOptions.ShowFingerprints` added; `--show-fingerprints` flag on `check` and `report` (REQ-FO-CLI041)
+- Text: `fingerprint: <fp>` + `$ fusaops suppress add --fingerprint <fp> --reason ""` per finding
+- HTML: monospace `.fp-chip` chip with tooltip in message cell
+- Markdown: `Fingerprint` column added to the per-component GFM table
+
+---
+
 ## v1.15 — Report annotation & inline suppression hints ✅
 
 **Goal:** Surface suppression opportunities and explain suppressed findings in rendered reports.

@@ -210,6 +210,41 @@ func TestRunSuppressFile(t *testing.T) {
 	}
 }
 
+// TestAutoComputeFingerprint verifies the orchestrator fills in missing fingerprints.
+//
+//fusa:test REQ-FO-ORC011
+func TestAutoComputeFingerprint(t *testing.T) {
+	const fp = ""
+	reg := regWith(
+		&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true,
+			findings: []fusaops.Finding{
+				{RuleID: "G1", Severity: fusaops.SeverityError, Message: "err"},
+				{RuleID: "G2", Severity: fusaops.SeverityWarning, Message: "warn", Fingerprint: "existing"},
+			}},
+	)
+	_ = fp
+	rep, err := New(reg).Run(context.Background(), t.TempDir(), Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range rep.Components {
+		if c.Tool != "gofusa" {
+			continue
+		}
+		for _, f := range c.Findings {
+			if f.Fingerprint == "" {
+				t.Errorf("finding %q has empty fingerprint after orchestrator run", f.RuleID)
+			}
+		}
+		// Pre-existing fingerprint should be preserved.
+		for _, f := range c.Findings {
+			if f.RuleID == "G2" && f.Fingerprint != "existing" {
+				t.Errorf("pre-existing fingerprint overwritten: got %q", f.Fingerprint)
+			}
+		}
+	}
+}
+
 // TestRunSuppressFileMissing returns an error when the suppress file is invalid.
 //
 //fusa:test REQ-FO-SUP004

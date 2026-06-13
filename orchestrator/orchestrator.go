@@ -186,6 +186,13 @@ func (rn *Runner) Run(ctx context.Context, root string, opts Options) (*report.A
 			if err != nil {
 				comp.Skipped = fmt.Sprintf("check failed: %v", err)
 			} else {
+				// Auto-compute fingerprint for any finding that the tool did not provide.
+				//fusa:req REQ-FO-ORC011
+				for k := range findings {
+					if findings[k].Fingerprint == "" {
+						findings[k].Fingerprint = fusaops.ComputeFingerprint(findings[k])
+					}
+				}
 				comp.Findings = findings
 			}
 			results[i] = comp

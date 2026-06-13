@@ -397,6 +397,20 @@ fusaops report --suppress-file .fusaops-suppress.json --show-suppressed --format
 - **Markdown**: same `<details>` pattern; `--show-suppressed` adds the `open` attribute.
 - **JSON**: `suppressedFindings` always serialised regardless of the flag.
 
+### Fingerprint hints — quick-suppress scaffolding
+
+Use `--show-fingerprints` to print the fingerprint (and a ready-to-run `suppress add` command) beside each active finding:
+
+```bash
+fusaops check --show-fingerprints
+fusaops report --show-fingerprints --format markdown > report.md
+```
+
+- **Text**: two lines per finding — `fingerprint: sha256:<hex>` and `$ fusaops suppress add --fingerprint sha256:<hex> --reason ""`.
+- **HTML**: a monospace chip below the message cell with a tooltip holding the full scaffold command.
+- **Markdown**: a `Fingerprint` column added to the GFM findings table.
+- The orchestrator auto-computes a fingerprint for any finding the tool did not provide.
+
 ## JUnit XML output
 
 `--format junit` on `fusaops check` or `fusaops report` produces JUnit XML for CI

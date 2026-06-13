@@ -299,3 +299,19 @@ func TestReportShowSuppressedFlag(t *testing.T) {
 		t.Errorf("--show-suppressed not recognised: %s", errb)
 	}
 }
+
+//fusa:test REQ-FO-CLI041
+func TestCheckShowFingerprintsFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "check", "--show-fingerprints", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--show-fingerprints not recognised: %s", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI041
+func TestReportShowFingerprintsFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "report", "--show-fingerprints", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--show-fingerprints not recognised: %s", errb)
+	}
+}

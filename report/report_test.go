@@ -130,6 +130,20 @@ func TestRenderUnsupported(t *testing.T) {
 	}
 }
 
+func fingerprintComponents() []Component {
+	return []Component{
+		{
+			Language:  fusaops.LangGo,
+			Tool:      "gofusa",
+			Available: true,
+			Findings: []fusaops.Finding{
+				{Language: fusaops.LangGo, Tool: "gofusa", RuleID: "LINT001", Severity: fusaops.SeverityWarning,
+					Message: "warn", Fingerprint: "sha256:deadbeef", Location: fusaops.Location{File: "a.go", Line: 1}},
+			},
+		},
+	}
+}
+
 func suppressedComponents() []Component {
 	return []Component{
 		{
@@ -280,6 +294,101 @@ func TestRenderWithOptionsUnsupported(t *testing.T) {
 	r := New("/root", "proj", nil)
 	if err := RenderWithOptions(&bytes.Buffer{}, r, "xml", RenderOptions{}); err == nil {
 		t.Error("expected error for unsupported format")
+	}
+}
+
+//fusa:test REQ-FO-RPT019
+func TestRenderTextShowFingerprints(t *testing.T) {
+	r := New("/root", "proj", fingerprintComponents())
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "text", RenderOptions{ShowFingerprints: true}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "sha256:deadbeef") {
+		t.Error("expected fingerprint in text output")
+	}
+	if !strings.Contains(out, "fusaops suppress add") {
+		t.Error("expected suppress scaffold in text output")
+	}
+}
+
+//fusa:test REQ-FO-RPT019
+func TestRenderTextHideFingerprintsDefault(t *testing.T) {
+	r := New("/root", "proj", fingerprintComponents())
+
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "text"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "fusaops suppress add") {
+		t.Error("unexpected suppress scaffold without --show-fingerprints")
+	}
+}
+
+//fusa:test REQ-FO-RPT019
+func TestRenderMarkdownShowFingerprints(t *testing.T) {
+	r := New("/root", "proj", fingerprintComponents())
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "markdown", RenderOptions{ShowFingerprints: true}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "Fingerprint") {
+		t.Error("expected Fingerprint column in markdown with ShowFingerprints")
+	}
+	if !strings.Contains(out, "sha256:deadbeef") {
+		t.Error("expected fingerprint value in markdown output")
+	}
+}
+
+//fusa:test REQ-FO-RPT019
+func TestRenderMarkdownHideFingerprintsDefault(t *testing.T) {
+	r := New("/root", "proj", fingerprintComponents())
+
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "markdown"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "Fingerprint") {
+		t.Error("unexpected Fingerprint column without ShowFingerprints")
+	}
+}
+
+//fusa:test REQ-FO-RPT019
+func TestRenderHTMLShowFingerprints(t *testing.T) {
+	r := New("/root", "proj", fingerprintComponents())
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "html", RenderOptions{ShowFingerprints: true}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "fp-chip") {
+		t.Error("expected fp-chip class in HTML with ShowFingerprints")
+	}
+	if !strings.Contains(out, "sha256:deadbeef") {
+		t.Error("expected fingerprint value in HTML output")
+	}
+}
+
+//fusa:test REQ-FO-RPT019
+func TestRenderHTMLHideFingerprintsDefault(t *testing.T) {
+	r := New("/root", "proj", fingerprintComponents())
+
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "html"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	// The fp-chip CSS class is always present in the stylesheet; verify the
+	// actual fingerprint value does NOT appear in finding rows by default.
+	if strings.Count(out, "sha256:deadbeef") > 0 {
+		t.Error("unexpected fingerprint value in HTML without ShowFingerprints")
 	}
 }
 

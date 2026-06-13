@@ -19,6 +19,7 @@ import (
 //fusa:req REQ-FO-CLI035
 //fusa:req REQ-FO-CLI036
 //fusa:req REQ-FO-CLI040
+//fusa:req REQ-FO-CLI041
 func runReport(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops report", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -28,6 +29,7 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 	output := fs.String("output", "", "output file (default: stdout)")
 	suppressFile := fs.String("suppress-file", "", "path to .fusaops-suppress.json")
 	showSuppressed := fs.Bool("show-suppressed", false, "include suppressed findings in output")
+	showFingerprints := fs.Bool("show-fingerprints", false, "show fingerprint and suppress scaffold per finding")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -46,7 +48,7 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	renderOpts := report.RenderOptions{ShowSuppressed: *showSuppressed}
+	renderOpts := report.RenderOptions{ShowSuppressed: *showSuppressed, ShowFingerprints: *showFingerprints}
 	if err := report.RenderToFileWithOptions(rep, *format, *output, renderOpts); err != nil {
 		fmt.Fprintf(stderr, "fusaops report: %v\n", err)
 		return 1

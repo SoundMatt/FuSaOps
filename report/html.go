@@ -11,7 +11,8 @@ import (
 // htmlData is the template data envelope carrying the report and render options.
 type htmlData struct {
 	*AggregateReport
-	ShowSuppressed bool
+	ShowSuppressed   bool
+	ShowFingerprints bool
 }
 
 // renderHTML writes a self-contained HTML dashboard for the aggregate report.
@@ -21,12 +22,13 @@ type htmlData struct {
 //fusa:req REQ-FO-RPT012
 //fusa:req REQ-FO-RPT016
 //fusa:req REQ-FO-RPT017
+//fusa:req REQ-FO-RPT019
 func renderHTML(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 	t, err := template.New("dashboard").Funcs(htmlFuncs).Parse(dashboardTemplate)
 	if err != nil {
 		return fmt.Errorf("report: parse html template: %w", err)
 	}
-	if err := t.Execute(w, htmlData{r, opts.ShowSuppressed}); err != nil {
+	if err := t.Execute(w, htmlData{r, opts.ShowSuppressed, opts.ShowFingerprints}); err != nil {
 		return fmt.Errorf("report: execute html template: %w", err)
 	}
 	return nil
@@ -102,6 +104,9 @@ const dashboardTemplate = `<!DOCTYPE html>
   .sev-warning { background:rgba(241,196,15,.15); color:var(--warn); }
   .sev-info { background:rgba(138,147,166,.15); color:var(--muted); }
   .loc { color:var(--muted); font-family:ui-monospace,Menlo,monospace; font-size:12px; }
+  .fp-chip { display:inline-block; font-family:ui-monospace,Menlo,monospace; font-size:10px;
+             color:var(--muted); background:rgba(138,147,166,.08); border:1px solid var(--line);
+             border-radius:4px; padding:1px 5px; margin-top:3px; cursor:default; }
   .empty { color:var(--muted); padding:40px; text-align:center; }
   footer { color:var(--muted); font-size:12px; padding:24px 32px; border-top:1px solid var(--line); }
 </style>
@@ -153,13 +158,14 @@ const dashboardTemplate = `<!DOCTYPE html>
   <table id="findings">
     <thead><tr><th>Severity</th><th>Lang</th><th>Rule</th><th>Category</th><th>Message</th><th>Location</th></tr></thead>
     <tbody>
+    {{$showFP := .ShowFingerprints}}
     {{range .Components}}{{$lang := .Language}}{{range .Findings}}
       <tr data-sev="{{.Severity}}">
         <td><span class="pill {{sevClass .Severity}}">{{.Severity}}</span></td>
         <td>{{$lang}}</td>
         <td>{{.RuleID}}</td>
         <td>{{.Category}}</td>
-        <td>{{.Message}}{{if .Remediation}}<br><span class="loc">→ {{.Remediation}}</span>{{end}}</td>
+        <td>{{.Message}}{{if .Remediation}}<br><span class="loc">→ {{.Remediation}}</span>{{end}}{{if and $showFP .Fingerprint}}<br><span class="fp-chip" title="fusaops suppress add --fingerprint {{.Fingerprint}} --reason &quot;&quot;">{{.Fingerprint}}</span>{{end}}</td>
         <td class="loc">{{.Location.File}}{{if .Location.Line}}:{{.Location.Line}}{{end}}</td>
       </tr>
     {{end}}{{end}}

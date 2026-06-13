@@ -11,6 +11,7 @@ import (
 //
 //fusa:req REQ-FO-RPT010
 //fusa:req REQ-FO-RPT017
+//fusa:req REQ-FO-RPT019
 func renderText(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 	fmt.Fprintln(w, "FuSaOps Multi-Language Safety Report")
 	fmt.Fprintf(w, "Generated: %s\n", r.GeneratedAt.Format("2006-01-02 15:04:05 MST"))
@@ -29,12 +30,12 @@ func renderText(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 		fmt.Fprintf(w, "  %s  %d findings (%d errors, %d warnings, %d infos)\n\n",
 			c.Summary.Status(), c.Summary.Total, c.Summary.Errors, c.Summary.Warnings, c.Summary.Infos)
 		for _, f := range c.Findings {
-			printTextFinding(w, f, "")
+			printTextFindingOpts(w, f, "", opts.ShowFingerprints)
 		}
 		if opts.ShowSuppressed && len(c.SuppressedFindings) > 0 {
 			fmt.Fprintf(w, "  --- suppressed (%d) ---\n", len(c.SuppressedFindings))
 			for _, f := range c.SuppressedFindings {
-				printTextFinding(w, f, "[SUPPRESSED] ")
+				printTextFindingOpts(w, f, "[SUPPRESSED] ", opts.ShowFingerprints)
 			}
 		} else if !opts.ShowSuppressed && len(c.SuppressedFindings) > 0 {
 			fmt.Fprintf(w, "  (%d suppressed — use --show-suppressed to view)\n", len(c.SuppressedFindings))
@@ -55,6 +56,10 @@ func renderText(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 }
 
 func printTextFinding(w io.Writer, f fusaops.Finding, prefix string) {
+	printTextFindingOpts(w, f, prefix, false)
+}
+
+func printTextFindingOpts(w io.Writer, f fusaops.Finding, prefix string, showFP bool) {
 	fmt.Fprintf(w, "  %s[%s] %-10s", prefix, f.Severity, f.RuleID)
 	if f.Category != "" {
 		fmt.Fprintf(w, " [%s]", f.Category)
@@ -70,5 +75,9 @@ func printTextFinding(w io.Writer, f fusaops.Finding, prefix string) {
 	fmt.Fprintln(w)
 	if f.Remediation != "" {
 		fmt.Fprintf(w, "    → %s\n", f.Remediation)
+	}
+	if showFP && f.Fingerprint != "" {
+		fmt.Fprintf(w, "    fingerprint: %s\n", f.Fingerprint)
+		fmt.Fprintf(w, "    $ fusaops suppress add --fingerprint %s --reason \"\"\n", f.Fingerprint)
 	}
 }

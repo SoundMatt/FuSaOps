@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.16.0] — 2026-06-13
+
+### Finding fingerprint hints & quick-suppress scaffolding
+
+- **Auto-compute fingerprints in orchestrator** — if an x-FuSa tool does not include a `fingerprint` field in a finding, the orchestrator now computes one via `fusaops.ComputeFingerprint` (§4.2 sha256 algorithm) before storing the finding. This ensures fingerprints are always available downstream for suppression matching and report display. (REQ-FO-ORC011)
+- **`RenderOptions.ShowFingerprints bool`** — new field on the options struct passed to `RenderWithOptions`. (REQ-FO-RPT019)
+- **Text renderer** — when `ShowFingerprints: true`, each finding is followed by two lines: `fingerprint: <fp>` and `$ fusaops suppress add --fingerprint <fp> --reason ""`. (REQ-FO-RPT019)
+- **HTML renderer** — when `ShowFingerprints: true`, each finding in the findings table shows a monospace `.fp-chip` span below the message, with a tooltip holding the full `fusaops suppress add` command. (REQ-FO-RPT019)
+- **Markdown renderer** — when `ShowFingerprints: true`, a `Fingerprint` column is added to the per-component GFM table. (REQ-FO-RPT019)
+- **`fusaops check --show-fingerprints`** and **`fusaops report --show-fingerprints`** — new flag wiring `ShowFingerprints: true`. (REQ-FO-CLI041)
+
+### Safety
+- Requirements registry at 234 requirements (added REQ-FO-ORC011, REQ-FO-RPT019, REQ-FO-CLI041)
+- 11 new tests; 234/234 requirements traced+tested; combined coverage 80.9%
+
 ## [1.15.0] — 2026-06-13
 
 ### Report annotation & inline suppression hints
