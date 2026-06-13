@@ -65,19 +65,22 @@ func (s Summary) Status() string {
 // Component is one language's contribution to the aggregate report.
 //
 //fusa:req REQ-FO-RPT003
+//fusa:req REQ-FO-RPT017
 type Component struct {
-	Language  fusaops.Language  `json:"language"`
-	Tool      string            `json:"tool"`
-	Dir       string            `json:"dir,omitempty"` // relative path when component-pinned
-	Available bool              `json:"available"`
-	Skipped   string            `json:"skipped,omitempty"` // reason, if not run
-	Findings  []fusaops.Finding `json:"findings"`
-	Summary   Summary           `json:"summary"`
+	Language           fusaops.Language  `json:"language"`
+	Tool               string            `json:"tool"`
+	Dir                string            `json:"dir,omitempty"` // relative path when component-pinned
+	Available          bool              `json:"available"`
+	Skipped            string            `json:"skipped,omitempty"` // reason, if not run
+	Findings           []fusaops.Finding `json:"findings"`
+	SuppressedFindings []fusaops.Finding `json:"suppressedFindings,omitempty"`
+	Summary            Summary           `json:"summary"`
 }
 
 // AggregateReport is the top-level multi-language FuSaOps report.
 //
 //fusa:req REQ-FO-RPT004
+//fusa:req REQ-FO-RPT018
 type AggregateReport struct {
 	GeneratedAt time.Time   `json:"generatedAt"`
 	Root        string      `json:"root"`
@@ -88,6 +91,19 @@ type AggregateReport struct {
 	//
 	//fusa:req REQ-FO-SUP004
 	Suppressed int `json:"suppressed,omitempty"`
+	// SuppressedComponents lists the tool names of components that had one or
+	// more findings suppressed.
+	//
+	//fusa:req REQ-FO-RPT018
+	SuppressedComponents []string `json:"suppressedComponents,omitempty"`
+}
+
+// RenderOptions controls optional behaviour during report rendering.
+//
+//fusa:req REQ-FO-RPT017
+type RenderOptions struct {
+	// ShowSuppressed causes suppressed findings to be included in the output.
+	ShowSuppressed bool
 }
 
 // New builds an AggregateReport from a set of components, computing per
@@ -126,13 +142,20 @@ func (r *AggregateReport) HasErrors() bool { return r.Summary.Errors > 0 }
 //fusa:req REQ-FO-RPT014
 //fusa:req REQ-FO-RPT015
 func Render(w io.Writer, r *AggregateReport, format string) error {
+	return RenderWithOptions(w, r, format, RenderOptions{})
+}
+
+// RenderWithOptions writes r to w in the requested format, honouring opts.
+//
+//fusa:req REQ-FO-RPT017
+func RenderWithOptions(w io.Writer, r *AggregateReport, format string, opts RenderOptions) error {
 	switch format {
 	case "", "text":
-		return renderText(w, r)
+		return renderText(w, r, opts)
 	case "json":
 		return renderJSON(w, r)
 	case "html":
-		return renderHTML(w, r)
+		return renderHTML(w, r, opts)
 	case "sarif":
 		return renderSARIF(w, r)
 	case "junit":
@@ -140,7 +163,7 @@ func Render(w io.Writer, r *AggregateReport, format string) error {
 	case "csv":
 		return renderCSV(w, r)
 	case "markdown", "md":
-		return renderMarkdown(w, r)
+		return renderMarkdown(w, r, opts)
 	default:
 		return fmt.Errorf("report: unsupported format %q", format)
 	}
@@ -150,13 +173,20 @@ func Render(w io.Writer, r *AggregateReport, format string) error {
 //
 //fusa:req REQ-FO-RPT008
 func RenderToFile(r *AggregateReport, format, path string) error {
+	return RenderToFileWithOptions(r, format, path, RenderOptions{})
+}
+
+// RenderToFileWithOptions writes r to path in format with opts, or to stdout if path is empty.
+//
+//fusa:req REQ-FO-RPT017
+func RenderToFileWithOptions(r *AggregateReport, format, path string, opts RenderOptions) error {
 	if path == "" {
-		return Render(os.Stdout, r, format)
+		return RenderWithOptions(os.Stdout, r, format, opts)
 	}
 	f, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("report: create %s: %w", path, err)
 	}
 	defer func() { _ = f.Close() }()
-	return Render(f, r, format)
+	return RenderWithOptions(f, r, format, opts)
 }

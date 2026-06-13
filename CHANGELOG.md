@@ -7,6 +7,24 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.15.0] — 2026-06-13
+
+### Report annotation & inline suppression hints
+
+- **`Component.SuppressedFindings []fusaops.Finding`** — the orchestrator now stores suppressed findings on each component rather than discarding them, preserving full auditability of what was filtered. (REQ-FO-RPT017)
+- **`AggregateReport.SuppressedComponents []string`** — lists the tool names of every component that had at least one finding suppressed. (REQ-FO-RPT018)
+- **`report.RenderWithOptions(w, r, format, RenderOptions{ShowSuppressed bool})`** — new public function; `Render` delegates to it with `ShowSuppressed: false`. (REQ-FO-RPT017)
+- **`report.RenderToFileWithOptions`** — file-writing companion to `RenderWithOptions`. (REQ-FO-RPT017)
+- **Text renderer** — when `ShowSuppressed: true`, suppressed findings are printed after active findings with a `[SUPPRESSED]` prefix; when false, a per-component hint line `(N suppressed — use --show-suppressed to view)` is shown. (REQ-FO-RPT017)
+- **HTML renderer** — each component with suppressions gets a collapsible `<details>` section below the main table; `ShowSuppressed: true` expands it by default (`open` attribute). The per-component card also shows the suppressed count. (REQ-FO-RPT017)
+- **Markdown renderer** — suppressed findings appear in a `<details>` block per component (collapsed by default, `open` when `ShowSuppressed: true`). (REQ-FO-RPT017)
+- **JSON renderer** — `suppressedFindings` field serialised from the struct automatically; no format change needed. (REQ-FO-RPT017)
+- **`fusaops check --show-suppressed`** and **`fusaops report --show-suppressed`** — new flag that passes `ShowSuppressed: true` to the renderer. (REQ-FO-CLI040)
+
+### Safety
+- Requirements registry at 231 requirements (added REQ-FO-RPT017, REQ-FO-RPT018, REQ-FO-CLI040)
+- 14 new tests; 231/231 requirements traced+tested; combined coverage 80.8%
+
 ## [1.14.0] — 2026-06-13
 
 ### Suppression management CLI (`fusaops suppress`)

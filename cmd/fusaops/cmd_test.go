@@ -282,3 +282,20 @@ func TestSuppressVerifyNoStale(t *testing.T) {
 		t.Errorf("suppress verify with stale entry: got %d, want 1", code)
 	}
 }
+
+//fusa:test REQ-FO-CLI040
+func TestCheckShowSuppressedFlag(t *testing.T) {
+	// Flag must parse; unknown flag exits 2.
+	code, _, errb := runArgs(t, "check", "--show-suppressed", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--show-suppressed not recognised: %s", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI040
+func TestReportShowSuppressedFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "report", "--show-suppressed", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--show-suppressed not recognised: %s", errb)
+	}
+}

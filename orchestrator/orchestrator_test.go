@@ -190,6 +190,24 @@ func TestRunSuppressFile(t *testing.T) {
 	if rep.Summary.Warnings != 1 {
 		t.Errorf("non-suppressed warning should remain, got %d", rep.Summary.Warnings)
 	}
+	// v1.15: SuppressedFindings must be stored on the component.
+	//fusa:test REQ-FO-RPT017
+	//fusa:test REQ-FO-RPT018
+	var found bool
+	for _, c := range rep.Components {
+		if c.Tool == "gofusa" {
+			if len(c.SuppressedFindings) != 1 {
+				t.Errorf("expected 1 SuppressedFinding on gofusa component, got %d", len(c.SuppressedFindings))
+			}
+			found = true
+		}
+	}
+	if !found {
+		t.Error("gofusa component not found in report")
+	}
+	if len(rep.SuppressedComponents) != 1 || rep.SuppressedComponents[0] != "gofusa" {
+		t.Errorf("SuppressedComponents wrong: %v", rep.SuppressedComponents)
+	}
 }
 
 // TestRunSuppressFileMissing returns an error when the suppress file is invalid.

@@ -351,6 +351,20 @@
       "rationale": "Large codebases may have hundreds of findings; text search lets engineers quickly locate a specific rule or keyword without leaving the dashboard."
     },
     {
+      "id": "REQ-FO-RPT017",
+      "title": "Report annotation and suppressed-finding hints",
+      "description": "Component.SuppressedFindings shall store findings filtered by a suppression config. RenderWithOptions(w, r, format, RenderOptions{ShowSuppressed}) shall include suppressed findings in text/html/markdown output when ShowSuppressed is true; text and markdown renderers shall show a collapsed section when false. The JSON renderer always serialises SuppressedFindings. RenderToFileWithOptions shall delegate to RenderWithOptions.",
+      "priority": "MUST",
+      "rationale": "Engineers need to inspect which findings are suppressed and why, both in CI output and generated reports, without losing audit traceability."
+    },
+    {
+      "id": "REQ-FO-RPT018",
+      "title": "SuppressedComponents tracking",
+      "description": "AggregateReport.SuppressedComponents shall be a []string listing the tool names of components that had one or more findings suppressed. It shall be populated by the orchestrator when a suppression config is applied.",
+      "priority": "MUST",
+      "rationale": "Consumers of the aggregate report need to quickly identify which language components are affected by suppression without scanning every component."
+    },
+    {
       "id": "REQ-FO-SRV001",
       "title": "Dashboard server",
       "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.",
@@ -1553,6 +1567,13 @@
       "description": "The fusaops CLI shall dispatch 'fusaops suppress <subcommand>' to runSuppress(), which further dispatches to add|list|prune|verify handlers. An unknown or missing subcommand exits 2.",
       "priority": "MUST",
       "rationale": "Single entry point for all suppression management operations."
+    },
+    {
+      "id": "REQ-FO-CLI040",
+      "title": "fusaops check/report --show-suppressed flag",
+      "description": "The check and report subcommands shall accept --show-suppressed to include suppressed findings in the rendered output. When set, RenderWithOptions is called with ShowSuppressed:true; otherwise suppressed findings appear collapsed (markdown/html) or as a count hint (text).",
+      "priority": "MUST",
+      "rationale": "CI pipelines and engineers need to opt-in to viewing suppressed findings for audit and triage purposes."
     },
     {
       "id": "REQ-FO-CLI033",

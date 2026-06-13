@@ -22,6 +22,7 @@ import (
 //fusa:req REQ-FO-CLI035
 //fusa:req REQ-FO-CLI036
 //fusa:req REQ-FO-CLI037
+//fusa:req REQ-FO-CLI040
 func runCheck(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops check", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -31,6 +32,7 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	output := fs.String("output", "", "write report to file instead of stdout")
 	strict := fs.Bool("strict", false, "exit non-zero on WARNING findings too")
 	suppressFile := fs.String("suppress-file", "", "path to .fusaops-suppress.json")
+	showSuppressed := fs.Bool("show-suppressed", false, "include suppressed findings in output")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -53,14 +55,15 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
+	renderOpts := report.RenderOptions{ShowSuppressed: *showSuppressed}
 	if *output != "" {
-		if err := report.RenderToFile(rep, *format, *output); err != nil {
+		if err := report.RenderToFileWithOptions(rep, *format, *output, renderOpts); err != nil {
 			fmt.Fprintf(stderr, "fusaops check: %v\n", err)
 			return 1
 		}
 		fmt.Fprintf(stdout, "Wrote %s report to %s\n", *format, *output)
 	} else {
-		if err := report.Render(stdout, rep, *format); err != nil {
+		if err := report.RenderWithOptions(stdout, rep, *format, renderOpts); err != nil {
 			fmt.Fprintf(stderr, "fusaops check: %v\n", err)
 			return 1
 		}

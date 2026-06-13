@@ -380,6 +380,22 @@ fusaops suppress verify [--dir .]    # check for stale entries not in current fi
 - `expires` (ISO-8601 `YYYY-MM-DD`) deactivates the suppression after that day, so findings resurface automatically.
 - The aggregate text report appends `(N suppressed)` to the TOTAL line.
 - `AggregateReport.Suppressed` in the JSON output holds the count.
+- `AggregateReport.SuppressedComponents` lists the tool names of components with suppressions applied.
+- Each `Component.SuppressedFindings` holds the filtered findings for audit traceability.
+
+### Viewing suppressed findings
+
+Use `--show-suppressed` on `check` or `report` to include suppressed findings in output:
+
+```bash
+fusaops check --suppress-file .fusaops-suppress.json --show-suppressed
+fusaops report --suppress-file .fusaops-suppress.json --show-suppressed --format html > report.html
+```
+
+- **Text**: suppressed findings printed after active findings with `[SUPPRESSED]` prefix; omitted by default with a count hint.
+- **HTML**: a collapsible `<details>` section per component; `--show-suppressed` expands it.
+- **Markdown**: same `<details>` pattern; `--show-suppressed` adds the `open` attribute.
+- **JSON**: `suppressedFindings` always serialised regardless of the flag.
 
 ## JUnit XML output
 

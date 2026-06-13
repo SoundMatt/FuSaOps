@@ -341,14 +341,14 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
-## v1.15 — Report annotation & inline suppression hints
+## v1.15 — Report annotation & inline suppression hints ✅
 
 **Goal:** Surface suppression opportunities and explain suppressed findings in rendered reports.
 
-- Text, JSON, HTML, and Markdown renderers show a suppression hint (fingerprint + `--reason` scaffold) for any finding that is not already suppressed
-- `--format html` shows suppressed findings in a collapsed section with reason and expiry
-- `fusaops check --show-suppressed` includes suppressed findings in the output (greyed-out in HTML)
+- `Component.SuppressedFindings` stores suppressed findings per component for audit traceability
 - `AggregateReport.SuppressedComponents` tracks which components had suppressions applied
+- `RenderWithOptions(ShowSuppressed bool)` — text renderer shows `[SUPPRESSED]` prefix or count hint; HTML shows collapsible `<details>` per component; Markdown uses `<details open>` toggle; JSON always serialises suppressed findings
+- `fusaops check --show-suppressed` / `fusaops report --show-suppressed` expands suppressed findings in output
 
 ---
 

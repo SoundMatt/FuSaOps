@@ -129,3 +129,176 @@ func TestRenderUnsupported(t *testing.T) {
 		t.Error("expected error for unsupported format")
 	}
 }
+
+func suppressedComponents() []Component {
+	return []Component{
+		{
+			Language:  fusaops.LangGo,
+			Tool:      "gofusa",
+			Available: true,
+			Findings: []fusaops.Finding{
+				{Language: fusaops.LangGo, Tool: "gofusa", RuleID: "LINT001", Severity: fusaops.SeverityWarning, Message: "active warn"},
+			},
+			SuppressedFindings: []fusaops.Finding{
+				{Language: fusaops.LangGo, Tool: "gofusa", RuleID: "FUSA001", Severity: fusaops.SeverityError, Message: "suppressed err", Location: fusaops.Location{File: "main.go", Line: 10}},
+			},
+		},
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+//fusa:test REQ-FO-RPT018
+func TestSuppressedComponentsField(t *testing.T) {
+	comps := suppressedComponents()
+	r := New("/root", "proj", comps)
+	r.Suppressed = 1
+	r.SuppressedComponents = []string{"gofusa"}
+	if len(r.SuppressedComponents) != 1 || r.SuppressedComponents[0] != "gofusa" {
+		t.Errorf("SuppressedComponents wrong: %v", r.SuppressedComponents)
+	}
+	if len(r.Components[0].SuppressedFindings) != 1 {
+		t.Errorf("SuppressedFindings wrong length: %d", len(r.Components[0].SuppressedFindings))
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+func TestRenderTextShowSuppressed(t *testing.T) {
+	comps := suppressedComponents()
+	r := New("/root", "proj", comps)
+	r.Suppressed = 1
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "text", RenderOptions{ShowSuppressed: true}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "[SUPPRESSED]") {
+		t.Error("expected [SUPPRESSED] prefix in text output")
+	}
+	if !strings.Contains(out, "FUSA001") {
+		t.Error("expected suppressed finding rule ID in output")
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+func TestRenderTextHideSuppressedHint(t *testing.T) {
+	comps := suppressedComponents()
+	r := New("/root", "proj", comps)
+	r.Suppressed = 1
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "text", RenderOptions{ShowSuppressed: false}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "[SUPPRESSED]") {
+		t.Error("unexpected [SUPPRESSED] prefix when ShowSuppressed is false")
+	}
+	if !strings.Contains(out, "suppressed") {
+		t.Error("expected suppressed count hint in text output")
+	}
+	if !strings.Contains(out, "--show-suppressed") {
+		t.Error("expected --show-suppressed hint in text output")
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+func TestRenderMarkdownSuppressedCollapsed(t *testing.T) {
+	comps := suppressedComponents()
+	r := New("/root", "proj", comps)
+	r.Suppressed = 1
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "markdown", RenderOptions{ShowSuppressed: false}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "<details>") {
+		t.Error("expected collapsed <details> in markdown when ShowSuppressed false")
+	}
+	if strings.Contains(out, "<details open>") {
+		t.Error("unexpected open <details> when ShowSuppressed false")
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+func TestRenderMarkdownSuppressedOpen(t *testing.T) {
+	comps := suppressedComponents()
+	r := New("/root", "proj", comps)
+	r.Suppressed = 1
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "markdown", RenderOptions{ShowSuppressed: true}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "<details open>") {
+		t.Error("expected open <details> in markdown when ShowSuppressed true")
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+func TestRenderHTMLSuppressedSection(t *testing.T) {
+	comps := suppressedComponents()
+	r := New("/root", "proj", comps)
+	r.Suppressed = 1
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "html", RenderOptions{ShowSuppressed: false}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "<details") {
+		t.Error("expected <details> section in HTML for suppressed findings")
+	}
+	if !strings.Contains(out, "suppressed") {
+		t.Error("expected 'suppressed' in HTML output")
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+func TestRenderHTMLSuppressedOpen(t *testing.T) {
+	comps := suppressedComponents()
+	r := New("/root", "proj", comps)
+	r.Suppressed = 1
+
+	var buf bytes.Buffer
+	if err := RenderWithOptions(&buf, r, "html", RenderOptions{ShowSuppressed: true}); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "<details") {
+		t.Error("expected <details> in HTML for suppressed findings")
+	}
+	if !strings.Contains(out, "open") {
+		t.Error("expected open attribute in HTML details when ShowSuppressed true")
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+func TestRenderWithOptionsUnsupported(t *testing.T) {
+	r := New("/root", "proj", nil)
+	if err := RenderWithOptions(&bytes.Buffer{}, r, "xml", RenderOptions{}); err == nil {
+		t.Error("expected error for unsupported format")
+	}
+}
+
+//fusa:test REQ-FO-RPT017
+func TestRenderToFileWithOptions(t *testing.T) {
+	comps := suppressedComponents()
+	r := New("/root", "proj", comps)
+	r.Suppressed = 1
+
+	var buf bytes.Buffer
+	if err := RenderToFileWithOptions(r, "text", "", RenderOptions{ShowSuppressed: true}); err != nil {
+		// stdout write won't fail in test
+		t.Fatal(err)
+	}
+	// Write to buffer path
+	if err := RenderWithOptions(&buf, r, "text", RenderOptions{ShowSuppressed: true}); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "[SUPPRESSED]") {
+		t.Error("expected suppressed output via RenderToFileWithOptions")
+	}
+}

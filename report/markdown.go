@@ -15,7 +15,8 @@ import (
 // browser-rendered Markdown.
 //
 //fusa:req REQ-FO-RPT015
-func renderMarkdown(w io.Writer, r *AggregateReport) error {
+//fusa:req REQ-FO-RPT017
+func renderMarkdown(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 	status := r.Summary.Status()
 	badge := markdownBadge(status)
 	fmt.Fprintf(w, "# FuSaOps Report %s\n\n", badge)
@@ -55,23 +56,29 @@ func renderMarkdown(w io.Writer, r *AggregateReport) error {
 		}
 		if len(c.Findings) == 0 {
 			fmt.Fprintf(w, "_No findings._\n\n")
-			continue
-		}
-		fmt.Fprintf(w, "| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
-		for _, f := range c.Findings {
-			sev := markdownSeverityIcon(f.Severity)
-			loc := ""
-			if f.Location.File != "" {
-				if f.Location.Line > 0 {
-					loc = fmt.Sprintf("`%s:%d`", f.Location.File, f.Location.Line)
-				} else {
-					loc = fmt.Sprintf("`%s`", f.Location.File)
-				}
+		} else {
+			fmt.Fprintf(w, "| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
+			for _, f := range c.Findings {
+				fmt.Fprintf(w, "| %s | `%s` | %s | %s |\n",
+					markdownSeverityIcon(f.Severity), markdownEscape(f.RuleID),
+					markdownEscape(f.Message), markdownLoc(f))
 			}
-			fmt.Fprintf(w, "| %s | `%s` | %s | %s |\n",
-				sev, markdownEscape(f.RuleID), markdownEscape(f.Message), loc)
+			fmt.Fprintln(w)
 		}
-		fmt.Fprintln(w)
+		if len(c.SuppressedFindings) > 0 {
+			openAttr := ""
+			if opts.ShowSuppressed {
+				openAttr = " open"
+			}
+			fmt.Fprintf(w, "<details%s>\n<summary>%d suppressed finding(s)</summary>\n\n", openAttr, len(c.SuppressedFindings))
+			fmt.Fprintf(w, "| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
+			for _, f := range c.SuppressedFindings {
+				fmt.Fprintf(w, "| %s | `%s` | %s | %s |\n",
+					markdownSeverityIcon(f.Severity), markdownEscape(f.RuleID),
+					markdownEscape(f.Message), markdownLoc(f))
+			}
+			fmt.Fprintf(w, "\n</details>\n\n")
+		}
 	}
 	return nil
 }
@@ -98,6 +105,16 @@ func markdownSeverityIcon(s fusaops.Severity) string {
 	default:
 		return "ℹ️ INFO"
 	}
+}
+
+func markdownLoc(f fusaops.Finding) string {
+	if f.Location.File == "" {
+		return ""
+	}
+	if f.Location.Line > 0 {
+		return fmt.Sprintf("`%s:%d`", f.Location.File, f.Location.Line)
+	}
+	return fmt.Sprintf("`%s`", f.Location.File)
 }
 
 // markdownEscape escapes pipe characters so they don't break GFM tables.

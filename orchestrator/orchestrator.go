@@ -215,12 +215,14 @@ func (rn *Runner) Run(ctx context.Context, root string, opts Options) (*report.A
 			kept, suppressed := suppression.Filter(rep.Components[i].Findings, supCfg, now)
 			if len(suppressed) > 0 {
 				rep.Components[i].Findings = kept
+				rep.Components[i].SuppressedFindings = suppressed
 				// Recompute component summary.
 				rep.Components[i].Summary = report.Summary{}
 				for _, f := range kept {
 					rep.Components[i].Summary.AddFinding(f.Severity)
 				}
 				rep.Suppressed += len(suppressed)
+				rep.SuppressedComponents = append(rep.SuppressedComponents, rep.Components[i].Tool)
 			}
 		}
 		if rep.Suppressed > 0 {
