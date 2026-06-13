@@ -274,9 +274,10 @@ func renderHTML(w io.Writer, fr *FleetReport) error {
 func renderMarkdown(w io.Writer, fr *FleetReport) error {
 	status := fr.Status()
 	badge := "🟢"
-	if status == "WARN" {
+	switch status {
+	case "WARN":
 		badge = "🟡"
-	} else if status == "FAIL" || status == "ERROR" {
+	case "FAIL", "ERROR":
 		badge = "🔴"
 	}
 	fmt.Fprintf(w, "# FuSaOps Fleet — %s\n\n", fr.Project)
