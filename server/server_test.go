@@ -771,3 +771,56 @@ func TestWebhookFiredOnTransition(t *testing.T) {
 		t.Fatal("webhook not received within timeout")
 	}
 }
+
+// TestExportJSON verifies /api/v1/export returns JSON by default.
+//
+//fusa:test REQ-FO-SRV006
+func TestExportJSON(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/export", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if !strings.Contains(ct, "application/json") {
+		t.Errorf("Content-Type: got %q, want application/json", ct)
+	}
+	cd := rec.Header().Get("Content-Disposition")
+	if !strings.Contains(cd, "fusaops-report.json") {
+		t.Errorf("Content-Disposition: got %q", cd)
+	}
+}
+
+// TestExportCSV verifies /api/v1/export?format=csv returns CSV with header row.
+//
+//fusa:test REQ-FO-SRV006
+func TestExportCSV(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/export?format=csv", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if !strings.Contains(ct, "text/csv") {
+		t.Errorf("Content-Type: got %q, want text/csv", ct)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "language") || !strings.Contains(body, "severity") {
+		t.Errorf("CSV body missing header columns: %q", body)
+	}
+}
+
+// TestExportPending verifies /api/v1/export returns 503 when no report is cached.
+//
+//fusa:test REQ-FO-SRV006
+func TestExportPending(t *testing.T) {
+	reg := adapter.NewRegistry()
+	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{})
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/export", nil))
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("status: got %d, want 503", rec.Code)
+	}
+}

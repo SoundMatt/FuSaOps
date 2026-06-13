@@ -268,3 +268,41 @@ func TestMultiRefreshAll(t *testing.T) {
 		t.Errorf("Location: got %q, want /", loc)
 	}
 }
+
+// TestMultiExportJSON verifies /api/v1/export merges all projects and returns JSON.
+//
+//fusa:test REQ-FO-SRV006
+func TestMultiExportJSON(t *testing.T) {
+	ms := newTestMulti(t)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/export", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if !strings.Contains(ct, "application/json") {
+		t.Errorf("Content-Type: got %q, want application/json", ct)
+	}
+	cd := rec.Header().Get("Content-Disposition")
+	if !strings.Contains(cd, "fusaops-report.json") {
+		t.Errorf("Content-Disposition: got %q", cd)
+	}
+}
+
+// TestMultiExportCSV verifies /api/v1/export?format=csv returns CSV with header.
+//
+//fusa:test REQ-FO-SRV006
+func TestMultiExportCSV(t *testing.T) {
+	ms := newTestMulti(t)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/export?format=csv", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); !strings.Contains(ct, "text/csv") {
+		t.Errorf("Content-Type: got %q", ct)
+	}
+	if body := rec.Body.String(); !strings.Contains(body, "language") {
+		t.Errorf("CSV body missing header: %q", body)
+	}
+}

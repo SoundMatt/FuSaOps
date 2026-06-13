@@ -127,12 +127,14 @@ func (ms *MultiServer) compute(ctx context.Context) {
 // Handler returns the HTTP routes for the multi-project dashboard.
 //
 //fusa:req REQ-FO-MPJ003
+//fusa:req REQ-FO-SRV006
 func (ms *MultiServer) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", ms.handleOverview)
 	mux.HandleFunc("/refresh", ms.handleRefreshAll)
 	mux.HandleFunc("/healthz", ms.handleHealth)
 	mux.HandleFunc("/api/projects", ms.handleAPIProjects)
+	mux.HandleFunc("/api/v1/export", ms.handleExport)
 	mux.HandleFunc("/badge/status.svg", ms.handleBadge)
 	mux.HandleFunc("/metrics", ms.handleMetrics)
 	for _, p := range ms.projects {
@@ -431,6 +433,38 @@ func (ms *MultiServer) makeProjectBadgeHandler(p *projectEntry) http.HandlerFunc
 		w.Header().Set("Content-Type", "image/svg+xml")
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		fmt.Fprint(w, svgBadge(p.name, status, color))
+	}
+}
+
+// handleExport serves the merged fleet report in the requested format as a download.
+// All project components are combined into a single AggregateReport.
+//
+//fusa:req REQ-FO-SRV006
+func (ms *MultiServer) handleExport(w http.ResponseWriter, r *http.Request) {
+	var allComponents []report.Component
+	for _, p := range ms.projects {
+		p.mu.RLock()
+		rep, pErr := p.cached, p.err
+		p.mu.RUnlock()
+		if pErr != nil || rep == nil {
+			continue
+		}
+		allComponents = append(allComponents, rep.Components...)
+	}
+	if len(allComponents) == 0 {
+		http.Error(w, "no report available yet", http.StatusServiceUnavailable)
+		return
+	}
+	combined := report.New("", "fleet", allComponents)
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "json"
+	}
+	ct, ext := exportMIME(format)
+	w.Header().Set("Content-Type", ct)
+	w.Header().Set("Content-Disposition", `attachment; filename="fusaops-report.`+ext+`"`)
+	if err := report.Render(w, combined, format); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 

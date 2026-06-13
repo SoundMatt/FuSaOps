@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.11.0] — 2026-06-13
+
+### Server export endpoint
+
+- **`GET /api/v1/export?format=FORMAT`** on both `Server` (single-project) and `MultiServer` (multi-project) — returns the cached aggregate report rendered in the requested format as a file download. (REQ-FO-SRV006)
+- Supported formats: `json` (default), `text`, `html`, `sarif`, `junit`, `csv`, `markdown`/`md`.
+- Response includes `Content-Type` and `Content-Disposition: attachment; filename="fusaops-report.<ext>"` so browsers and CI tools download the file directly.
+- Multi-project mode merges all project components into a single fleet-level `AggregateReport` before rendering.
+
+### Safety
+- Requirements registry at 216 requirements (added REQ-FO-SRV006)
+- 5 new tests; 216/216 requirements traced+tested; combined coverage ≥80%
+
 ## [1.10.0] — 2026-06-13
 
 ### HTML dashboard text search filter

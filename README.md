@@ -167,6 +167,7 @@ filterable findings table. The page is fully self-contained (no external assets)
 | `/api/v1/findings` | Filtered findings: `?severity=ERROR&language=go&tool=gofusa` |
 | `/api/v1/report` | Versioned alias for `/api/report` |
 | `/api/v1/history` | Versioned alias for `/api/history` |
+| `/api/v1/export?format=FORMAT` | Download the cached report in any supported format (json, text, html, sarif, junit, csv, markdown). Response carries `Content-Disposition: attachment` so browsers save it directly. Multi-project mode exports a merged fleet report. |
 
 Run history is persisted to `.fusaops-history.jsonl` automatically; the `/history` trend page
 and `/api/history` endpoint are available after the first run.

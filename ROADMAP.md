@@ -297,6 +297,28 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.11 — Server export endpoint ✅
+
+**Goal:** Allow CI and IDE integrations to pull the cached report directly from the dashboard server.
+
+- ✅ **`GET /api/v1/export?format=FORMAT`** on both `Server` and `MultiServer` — returns the cached report in the requested format as a file download
+- ✅ Supported formats: json (default), text, html, sarif, junit, csv, markdown/md
+- ✅ `Content-Disposition: attachment` with format-appropriate filename and MIME type
+- ✅ Multi-project mode merges all project components into a fleet-level aggregate before rendering
+
+---
+
+## v1.12 — Diff gate in CI
+
+**Goal:** Expose the baseline-diff feature through the REST API and server, enabling zero-config CI gating based on new-findings-only.
+
+- `GET /api/v1/diff?baseline=<path>` — run `fusaops diff` against a baseline file and return the delta report as JSON or SARIF
+- `POST /api/v1/baseline` — snapshot the current report as a new baseline file
+- `fusaops serve --baseline baseline.json` — optional pre-loaded baseline for the diff endpoint
+- Exit code propagation: `/api/v1/diff` returns 409 Conflict when `--strict` findings exist (mirrors `fusaops diff --strict`)
+
+---
+
 ## Adding a language adapter
 
 1. Implement `adapter.Adapter` (Name, Language, Tool, Detect, Available, Check).

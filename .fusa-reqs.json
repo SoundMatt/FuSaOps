@@ -386,6 +386,13 @@
       "level": "ASIL-C"
     },
     {
+      "id": "REQ-FO-SRV006",
+      "title": "Export endpoint",
+      "text": "The dashboard shall expose GET /api/v1/export?format=FORMAT that returns the cached aggregate report rendered in the requested format as a file download with appropriate Content-Type and Content-Disposition headers.",
+      "standard": "ISO 26262",
+      "level": "ASIL-C"
+    },
+    {
       "id": "REQ-FO-CLI001",
       "title": "Command dispatch",
       "text": "The fusaops CLI shall dispatch a single invocation to the requested subcommand and return a process exit code.",

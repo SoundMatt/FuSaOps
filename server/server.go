@@ -204,6 +204,7 @@ func (s *Server) computeFleet(ctx context.Context) {
 // Handler returns the HTTP routes for the dashboard and API.
 //
 //fusa:req REQ-FO-SRV004
+//fusa:req REQ-FO-SRV006
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleIndex)
@@ -213,6 +214,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/status", s.handleAPIStatus)
 	mux.HandleFunc("/api/v1/findings", s.handleAPIFindings)
 	mux.HandleFunc("/api/v1/history", s.handleAPIHistory)
+	mux.HandleFunc("/api/v1/export", s.handleExport)
 	mux.HandleFunc("/history", s.handleHistory)
 	mux.HandleFunc("/refresh", s.handleRefresh)
 	mux.HandleFunc("/healthz", s.handleHealth)
@@ -425,6 +427,55 @@ func (s *Server) handleAPIFindings(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	_ = enc.Encode(out)
+}
+
+// handleExport serves the cached report in the requested format as a download.
+// The format is taken from the ?format= query parameter (default: json).
+// Supported: text, json, html, sarif, junit, csv, markdown, md.
+//
+//fusa:req REQ-FO-SRV006
+func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
+	s.mu.RLock()
+	rep, cErr := s.cached, s.err
+	s.mu.RUnlock()
+	if cErr != nil {
+		http.Error(w, cErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rep == nil {
+		http.Error(w, "no report available yet", http.StatusServiceUnavailable)
+		return
+	}
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "json"
+	}
+	ct, ext := exportMIME(format)
+	w.Header().Set("Content-Type", ct)
+	w.Header().Set("Content-Disposition", "attachment; filename=\"fusaops-report."+ext+"\"")
+	if err := report.Render(w, rep, format); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// exportMIME maps a report format to a MIME type and file extension.
+func exportMIME(format string) (contentType, ext string) {
+	switch format {
+	case "json":
+		return "application/json; charset=utf-8", "json"
+	case "csv":
+		return "text/csv; charset=utf-8", "csv"
+	case "junit":
+		return "application/xml; charset=utf-8", "xml"
+	case "sarif":
+		return "application/json; charset=utf-8", "sarif.json"
+	case "html":
+		return "text/html; charset=utf-8", "html"
+	case "markdown", "md":
+		return "text/markdown; charset=utf-8", "md"
+	default:
+		return "text/plain; charset=utf-8", "txt"
+	}
 }
 
 // handleAPIHistory serves the run-history snapshots as JSON.
