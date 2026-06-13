@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.31.0] — 2026-06-13
+
+### `fusaops conform --format markdown` — Conformance markdown report
+
+- **`conform.Render(w, rep, "markdown")`** (alias `"md"`) — new format support; produces a GFM markdown page with a status badge (🟢 PASS / 🔴 FAIL), pass/fail/skip counts, and a per-check GFM table (Result / Level / Section / Check with detail). Pipe characters are escaped to avoid breaking GFM table syntax. (REQ-FO-CNF019)
+- **`fusaops conform <binary> --format markdown [--output FILE]`** — expose the new format from the CLI.
+- Useful for posting x-FuSa tool conformance check summaries into pull request comments and GitHub Actions job summaries.
+
+### Safety
+- Requirements registry at 255 requirements (added REQ-FO-CNF019)
+- 3 new tests; combined coverage 81.4%
+
 ## [1.30.0] — 2026-06-13
 
 ### `fusaops policy --format markdown` — Policy markdown report

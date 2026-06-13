@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.31 — `fusaops conform --format markdown` ✅
+
+**Goal:** Let CI pipelines post x-FuSa tool conformance summaries directly into PR comments and job summaries.
+
+- `conform.Render` gains `"markdown"` / `"md"` format support (REQ-FO-CNF019)
+- GFM output: tool header, 🟢/🔴 badge, pass/fail/skip counts, per-check table (Result/Level/Section/Check+detail) with pipe-escaping
+- `fusaops conform <binary> --format markdown [--output FILE]`
+
+---
+
 ## v1.30 — `fusaops policy --format markdown` ✅
 
 **Goal:** Let CI pipelines post policy gate results directly into pull request comments and GitHub Actions job summaries.

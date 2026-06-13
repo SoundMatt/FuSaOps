@@ -435,6 +435,65 @@ func TestRenderHTMLPass(t *testing.T) {
 	}
 }
 
+// TestRenderMarkdown verifies GFM markdown rendering contains expected content.
+//
+//fusa:test REQ-FO-CNF019
+func TestRenderMarkdown(t *testing.T) {
+	rep := &Report{
+		Tool:        "gofusa",
+		ToolVersion: "0.30.0",
+		Language:    "go",
+		SpecVersion: "1.9",
+		Results: []Result{
+			{Status: StatusPass, Level: LevelMUST, Section: "§3.1", Name: "valid kind"},
+			{Status: StatusFail, Level: LevelMUST, Section: "§4.1", Name: "missing kind", Detail: "got nil"},
+			{Status: StatusSkip, Level: LevelSHOULD, Section: "§5", Name: "skipped check"},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "markdown"); err != nil {
+		t.Fatalf("Render markdown: %v", err)
+	}
+	out := buf.String()
+	for _, want := range []string{"# FuSaOps", "gofusa", "**FAIL**", "| Result |", "§3.1", "missing kind", "got nil", "⏭"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in markdown:\n%s", want, out)
+		}
+	}
+}
+
+// TestRenderMarkdownAlias verifies "md" is accepted as an alias.
+//
+//fusa:test REQ-FO-CNF019
+func TestRenderMarkdownAlias(t *testing.T) {
+	rep := &Report{Tool: "gofusa", ToolVersion: "0.30.0", Results: []Result{
+		{Status: StatusPass, Level: LevelMUST, Section: "§1", Name: "ok"},
+	}}
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "md"); err != nil {
+		t.Fatalf("Render md alias: %v", err)
+	}
+	if !strings.Contains(buf.String(), "# FuSaOps") {
+		t.Error("expected markdown header from md alias")
+	}
+}
+
+// TestRenderMarkdownPass verifies green badge for all-PASS report.
+//
+//fusa:test REQ-FO-CNF019
+func TestRenderMarkdownPass(t *testing.T) {
+	rep := &Report{Tool: "gofusa", ToolVersion: "0.30.0", Results: []Result{
+		{Status: StatusPass, Level: LevelMUST, Section: "§1", Name: "ok"},
+	}}
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "markdown"); err != nil {
+		t.Fatalf("Render markdown pass: %v", err)
+	}
+	if !strings.Contains(buf.String(), "🟢") {
+		t.Error("expected green badge for PASS conformance report")
+	}
+}
+
 // TestDecodeJSON verifies the noise-stripping JSON decoder.
 func TestDecodeJSON(t *testing.T) {
 	raw := []byte("noise\n{\"foo\":1}\nmore")

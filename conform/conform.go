@@ -164,10 +164,11 @@ func Run(binary string, opts Options) (*Report, error) {
 	return r.report, nil
 }
 
-// Render writes the report to w in the requested format (text, json, or html).
+// Render writes the report to w in the requested format (text, json, html, or markdown).
 //
 //fusa:req REQ-FO-CNF006
 //fusa:req REQ-FO-CNF018
+//fusa:req REQ-FO-CNF019
 func Render(w io.Writer, rep *Report, format string) error {
 	switch format {
 	case "json", "":
@@ -212,9 +213,46 @@ func Render(w io.Writer, rep *Report, format string) error {
 			return fmt.Errorf("conform: html render: %w", err)
 		}
 		return nil
+	case "markdown", "md":
+		return renderMarkdown(w, rep)
 	default:
 		return fmt.Errorf("conform: unsupported format %q", format)
 	}
+}
+
+// renderMarkdown writes a GFM markdown conformance report to w.
+//
+//fusa:req REQ-FO-CNF019
+func renderMarkdown(w io.Writer, rep *Report) error {
+	pass, fail, skip := rep.Summary()
+	badge := "🟢"
+	if rep.HasFailures() {
+		badge = "🔴"
+	}
+	status := "PASS"
+	if rep.HasFailures() {
+		status = "FAIL"
+	}
+	fmt.Fprintf(w, "# FuSaOps — Conformance: %s\n\n", rep.Tool)
+	fmt.Fprintf(w, "%s **%s** · %s %s · spec %s\n\n", badge, status, rep.Tool, rep.ToolVersion, rep.SpecVersion)
+	fmt.Fprintf(w, "%d pass · %d fail · %d skip\n\n", pass, fail, skip)
+	fmt.Fprintln(w, "| Result | Level | Section | Check |")
+	fmt.Fprintln(w, "|---|---|---|---|")
+	for _, res := range rep.Results {
+		sym := "✅"
+		switch res.Status {
+		case StatusFail:
+			sym = "❌"
+		case StatusSkip:
+			sym = "⏭"
+		}
+		name := strings.ReplaceAll(res.Name, "|", "\\|")
+		if res.Detail != "" {
+			name += " — " + strings.ReplaceAll(res.Detail, "|", "\\|")
+		}
+		fmt.Fprintf(w, "| %s | %s | %s | %s |\n", sym, res.Level, res.Section, name)
+	}
+	return nil
 }
 
 // conformTemplate is a self-contained HTML conformance report.

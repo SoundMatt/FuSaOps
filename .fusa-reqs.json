@@ -911,6 +911,13 @@
       "rationale": "Completes the conform format set; lets teams share a visual conformance report as a standalone HTML file without a running dashboard server."
     },
     {
+      "id": "REQ-FO-CNF019",
+      "title": "Conformance markdown rendering",
+      "description": "conform.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header with the tool name, a status badge (🟢 PASS / 🔴 FAIL), pass/fail/skip counts, and a per-check GFM table (Result/Level/Section/Check) with detail appended to name and pipe characters escaped as \\|. The fusaops conform CLI shall accept --format markdown.",
+      "priority": "MUST",
+      "rationale": "Markdown output lets CI pipelines post conformance check summaries directly into pull request comments and GitHub Actions job summaries."
+    },
+    {
       "id": "REQ-FO-CLI014",
       "title": "Conform command",
       "text": "fusaops conform shall run x-FuSa spec conformance checks against a named binary, render the report in text or json, and exit non-zero when any MUST check fails.",
