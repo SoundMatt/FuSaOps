@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
@@ -15,6 +16,7 @@ import (
 //
 //fusa:req REQ-FO-SBM006
 //fusa:req REQ-FO-SBM010
+//fusa:req REQ-FO-SBM011
 func Render(w io.Writer, a *Aggregate, format string) error {
 	switch format {
 	case "", "json":
@@ -25,6 +27,8 @@ func Render(w io.Writer, a *Aggregate, format string) error {
 		return renderSPDX(w, a)
 	case "html":
 		return renderHTML(w, a)
+	case "markdown", "md":
+		return renderMarkdown(w, a)
 	default:
 		return fmt.Errorf("sbom: unsupported format %q", format)
 	}
@@ -171,6 +175,44 @@ var sbomTemplate = template.Must(template.New("sbom").Parse(`<!doctype html>
  </table>
 </main></body></html>
 `))
+
+// renderMarkdown writes a GFM markdown SBOM summary to w.
+//
+//fusa:req REQ-FO-SBM011
+func renderMarkdown(w io.Writer, a *Aggregate) error {
+	fmt.Fprintf(w, "# FuSaOps — Software Bill of Materials")
+	if a.Project != "" {
+		fmt.Fprintf(w, ": %s", a.Project)
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintln(w)
+	fmt.Fprintf(w, "Generated %s · %d package(s) across %d component(s)\n\n",
+		a.GeneratedAt.Format("2006-01-02 15:04 MST"), a.TotalPackages, len(a.Components))
+	fmt.Fprintln(w, "## Components")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "| Tool | Language | Module | Packages |")
+	fmt.Fprintln(w, "|---|---|---|---:|")
+	for _, c := range a.Components {
+		if c.Skipped != "" {
+			fmt.Fprintf(w, "| %s | %s | _skipped — %s_ | |\n", c.Tool, c.Language, c.Skipped)
+		} else {
+			fmt.Fprintf(w, "| %s | %s | %s | %d |\n", c.Tool, c.Language, c.Module, len(c.Packages))
+		}
+	}
+	fmt.Fprintln(w)
+	fmt.Fprintf(w, "## Packages (%d total, de-duplicated)\n\n", a.TotalPackages)
+	fmt.Fprintln(w, "| Name | Version | Language |")
+	fmt.Fprintln(w, "|---|---|---|")
+	for _, p := range a.Packages {
+		ver := p.Version
+		if ver == "" {
+			ver = "—"
+		}
+		name := strings.ReplaceAll(p.Name, "|", "\\|")
+		fmt.Fprintf(w, "| %s | %s | %s |\n", name, ver, p.Language)
+	}
+	return nil
+}
 
 //fusa:req REQ-FO-SBM009
 func renderSPDX(w io.Writer, a *Aggregate) error {

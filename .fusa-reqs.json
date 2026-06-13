@@ -694,6 +694,13 @@
       "rationale": "Completes the SBOM format set to match the single-project report and trace HTML renderers; lets teams share the SBOM as a standalone HTML file."
     },
     {
+      "id": "REQ-FO-SBM011",
+      "title": "SBOM markdown rendering",
+      "description": "sbom.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: project/SBOM header, generation metadata, a Components GFM table (Tool/Language/Module/Packages with skipped-component inline note), and a Packages GFM table (Name/Version/Language) with pipe-escaped names. The fusaops sbom CLI shall accept --format markdown.",
+      "priority": "MUST",
+      "rationale": "Markdown output lets CI pipelines post SBOM summaries directly into pull request comments and GitHub Actions job summaries."
+    },
+    {
       "id": "REQ-FO-PCK001",
       "title": "Pack source",
       "text": "The auditpack package shall accept bundle sources supplied either by file path or in-memory data, keyed by archive path.",

@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.33.0] — 2026-06-13
+
+### `fusaops sbom --format markdown` — SBOM markdown report
+
+- **`sbom.Render(w, a, "markdown")`** (alias `"md"`) — new format support; produces a GFM markdown page with project metadata, a Components table (Tool / Language / Module / Packages, with skipped-component inline note), and a de-duplicated Packages table (Name / Version / Language). Pipe characters in package names are escaped. (REQ-FO-SBM011)
+- **`fusaops sbom --format markdown [--output FILE]`** — expose the new format from the CLI.
+- Useful for embedding SBOM summaries in pull request comments and GitHub Actions job summaries.
+
+### Safety
+- Requirements registry at 257 requirements (added REQ-FO-SBM011)
+- 3 new tests; combined coverage 81.6%
+
 ## [1.32.0] — 2026-06-13
 
 ### `fusaops <standard> --format markdown` — Standards markdown report

@@ -188,3 +188,54 @@ func TestRenderHTMLNoPackages(t *testing.T) {
 		t.Error("html should include project name")
 	}
 }
+
+// TestRenderMarkdown verifies GFM markdown SBOM rendering contains expected content.
+//
+//fusa:test REQ-FO-SBM011
+func TestRenderMarkdown(t *testing.T) {
+	comps := []ComponentSBOM{
+		{Tool: "gofusa", Language: "go", Module: "github.com/foo/bar", Packages: []Package{
+			{Name: "golang.org/x/sys", Version: "v0.21.0", Language: "go"},
+		}},
+	}
+	a := New("/repo", "myproj", comps)
+	var buf bytes.Buffer
+	if err := Render(&buf, a, "markdown"); err != nil {
+		t.Fatalf("Render markdown: %v", err)
+	}
+	out := buf.String()
+	for _, want := range []string{"# FuSaOps", "myproj", "| Tool |", "gofusa", "golang.org/x/sys", "## Packages"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in markdown:\n%s", want, out)
+		}
+	}
+}
+
+// TestRenderMarkdownAlias verifies "md" is accepted as an alias.
+//
+//fusa:test REQ-FO-SBM011
+func TestRenderMarkdownAlias(t *testing.T) {
+	a := New("/r", "p", nil)
+	var buf bytes.Buffer
+	if err := Render(&buf, a, "md"); err != nil {
+		t.Fatalf("Render md alias: %v", err)
+	}
+	if !strings.Contains(buf.String(), "# FuSaOps") {
+		t.Error("expected markdown header from md alias")
+	}
+}
+
+// TestRenderMarkdownSkipped verifies skipped components appear in markdown.
+//
+//fusa:test REQ-FO-SBM011
+func TestRenderMarkdownSkipped(t *testing.T) {
+	comps := []ComponentSBOM{{Tool: "rsfusa", Language: "rust", Skipped: "not installed"}}
+	a := New("/r", "p", comps)
+	var buf bytes.Buffer
+	if err := Render(&buf, a, "markdown"); err != nil {
+		t.Fatalf("Render markdown: %v", err)
+	}
+	if !strings.Contains(buf.String(), "not installed") {
+		t.Error("expected skip reason in markdown output")
+	}
+}

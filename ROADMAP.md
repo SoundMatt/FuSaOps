@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.33 — `fusaops sbom --format markdown` ✅
+
+**Goal:** Let CI pipelines embed SBOM summaries in PR comments and GitHub Actions job summaries.
+
+- `sbom.Render` gains `"markdown"` / `"md"` format support (REQ-FO-SBM011)
+- GFM output: project/SBOM header, metadata, Components table (Tool/Language/Module/Packages with skipped-inline), Packages table (Name/Version/Language) with pipe-escaped names
+- `fusaops sbom --format markdown [--output FILE]`
+
+---
+
 ## v1.32 — `fusaops <standard> --format markdown` ✅
 
 **Goal:** Complete the standards command format set so gap reports can be posted directly into PR comments and job summaries.
