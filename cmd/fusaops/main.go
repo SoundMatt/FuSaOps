@@ -28,6 +28,7 @@
 //	iec62443    Roll up IEC 62443 gap reports across all languages
 //	policy      Evaluate org-wide safety rules over the aggregated report
 //	fleet       Run check across all repos in a fleet config file
+//	coverage    DO-178C structural coverage report from a Go coverage profile
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -84,6 +85,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runPolicy(args[1:], stdout, stderr)
 	case "fleet":
 		return runFleet(args[1:], stdout, stderr)
+	case "coverage":
+		return runCoverage(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -133,6 +136,7 @@ Commands:
   iec62443   Roll up IEC 62443 gap reports across all languages
   policy     Evaluate org-wide safety rules over the aggregated report
   fleet      Run check across all repos in a fleet config file
+  coverage   DO-178C structural coverage report from a Go coverage profile
   serve      Launch the web reporting dashboard
   version    Print the FuSaOps version
 

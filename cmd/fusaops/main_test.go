@@ -328,6 +328,82 @@ func TestCheckJUnitFormat(t *testing.T) {
 	}
 }
 
+// TestCoverageText verifies fusaops coverage produces a DO-178C text report.
+//
+//fusa:test REQ-FO-CLI051
+func TestCoverageText(t *testing.T) {
+	dir := t.TempDir()
+	profile := "mode: set\npkg/foo.go:1.10,3.2 2 1\npkg/foo.go:5.10,7.2 2 0\n"
+	path := filepath.Join(dir, "coverage.out")
+	if err := os.WriteFile(path, []byte(profile), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "coverage", "--format", "text", "--dal", "DAL-B", path)
+	if code != 0 {
+		t.Fatalf("coverage: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "DO-178C") {
+		t.Errorf("coverage text missing DO-178C header: %q", out)
+	}
+	if !strings.Contains(out, "DAL-B") {
+		t.Errorf("coverage text missing DAL-B: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI051
+func TestCoverageJSON(t *testing.T) {
+	dir := t.TempDir()
+	profile := "mode: set\npkg/foo.go:1.10,3.2 2 1\n"
+	path := filepath.Join(dir, "coverage.out")
+	if err := os.WriteFile(path, []byte(profile), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "coverage", "--format", "json", path)
+	if code != 0 {
+		t.Fatalf("coverage json: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, `"stmtTotal"`) {
+		t.Errorf("coverage json missing stmtTotal: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI051
+func TestCoverageMissingProfile(t *testing.T) {
+	code, _, errb := runArgs(t, "coverage", "/nonexistent/coverage.out")
+	if code != 1 || !strings.Contains(errb, "coverage") {
+		t.Errorf("missing profile: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI051
+func TestCoverageInvalidDAL(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "coverage.out")
+	_ = os.WriteFile(path, []byte("mode: set\n"), 0o600)
+	code, _, errb := runArgs(t, "coverage", "--dal", "DAL-Z", path)
+	if code != 2 || !strings.Contains(errb, "dal") {
+		t.Errorf("invalid dal: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI051
+func TestCoverageOutputFlag(t *testing.T) {
+	dir := t.TempDir()
+	profile := "mode: set\npkg/foo.go:1.10,3.2 2 1\n"
+	inPath := filepath.Join(dir, "coverage.out")
+	outPath := filepath.Join(dir, "report.txt")
+	if err := os.WriteFile(inPath, []byte(profile), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, _, errb := runArgs(t, "coverage", "--output", outPath, inPath)
+	if code != 0 {
+		t.Fatalf("coverage --output: code=%d err=%q", code, errb)
+	}
+	if _, err := os.Stat(outPath); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
 func TestSplitCSV(t *testing.T) {
 	got := splitCSV("a,b,,c")
 	if len(got) != 3 || got[0] != "a" || got[2] != "c" {

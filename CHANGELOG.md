@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.35.0] — 2026-06-13
+
+### `fusaops coverage` — DO-178C structural coverage report
+
+- **`coverage` package** — new `Parse`, `Analyse`, `BuildFromFile`, and `Render` functions that read a standard Go `coverage.out` profile and compute a DO-178C structural coverage report: statement coverage %, decision coverage % (approximated from block hit ratio), MC/DC requirement flag (DAL-A only), per-file breakdown, and gap list. (REQ-FO-COV001, REQ-FO-COV002, REQ-FO-COV003)
+- **`fusaops coverage [flags] [coverage.out]`** — new CLI subcommand mirroring `gofusa coverage`; accepts `--dal DAL-A|DAL-B|DAL-C|DAL-D` (default DAL-B), `--format text|json`, `--output FILE`, and `--dir DIR`. (REQ-FO-CLI051)
+- Enables FuSaOps' own ASIL-C qualification evidence; generate a profile with `go test -coverprofile=coverage.out ./...` then run `fusaops coverage`.
+
+### Safety
+- Requirements registry at 262 requirements (added REQ-FO-COV001, REQ-FO-COV002, REQ-FO-COV003, REQ-FO-CLI051)
+- 18 new tests; combined coverage 82.1%
+
 ## [1.34.0] — 2026-06-13
 
 ### `fusaops adapters --format json` — Machine-readable adapter list

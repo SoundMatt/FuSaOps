@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.35 — `fusaops coverage` — DO-178C structural coverage ✅
+
+**Goal:** Give FuSaOps the same DO-178C structural coverage reporting that `gofusa coverage` provides, applied to FuSaOps's own Go source.
+
+- `coverage` package: `Parse` (Go profile reader), `Analyse` (DO-178C report: statement%, decision%, MC/DC flag, gaps), `BuildFromFile`, `Render` (text/json) (REQ-FO-COV001/002/003)
+- `fusaops coverage [flags] [coverage.out]` — `--dal DAL-A|B|C|D`, `--format text|json`, `--output`, `--dir` (REQ-FO-CLI051)
+- Mirrors `gofusa coverage`; enables ASIL-C DO-178C evidence from `go test -coverprofile=coverage.out ./...`
+
+---
+
 ## v1.34 — `fusaops adapters --format json` ✅
 
 **Goal:** Let CI scripts and tooling introspect installed adapters without parsing human-readable text.

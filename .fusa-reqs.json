@@ -1,6 +1,34 @@
 {
   "requirements": [
     {
+      "id": "REQ-FO-COV001",
+      "title": "DO-178C coverage report and analysis",
+      "description": "FuSaOps shall define a Report struct capturing DAL, statement coverage percentage, decision coverage, MC/DC requirement flag, per-file statistics, and coverage gaps; and an Analyse function that computes these fields from parsed profile blocks.",
+      "priority": "MUST",
+      "rationale": "Enables DO-178C §6.4.4 structural coverage evidence generation from Go test profiles."
+    },
+    {
+      "id": "REQ-FO-COV002",
+      "title": "Coverage profile parse and file load",
+      "description": "FuSaOps shall provide a Parse function that reads Go coverage profile format (mode line + block records) and a BuildFromFile function that opens the profile file, parses it, and returns an analysed Report.",
+      "priority": "MUST",
+      "rationale": "Enables consumption of standard 'go test -coverprofile' output without external dependencies."
+    },
+    {
+      "id": "REQ-FO-COV003",
+      "title": "Coverage report rendering",
+      "description": "FuSaOps shall provide a Render function that writes the DO-178C coverage report in 'text' or 'json' format; unknown formats return an error.",
+      "priority": "MUST",
+      "rationale": "Supports human-readable CI output and machine-readable JSON for downstream tooling."
+    },
+    {
+      "id": "REQ-FO-CLI051",
+      "title": "fusaops coverage subcommand",
+      "description": "The fusaops CLI shall provide a 'coverage' subcommand that reads a Go coverage profile and emits a DO-178C structural coverage report, accepting --dal (DAL-A/B/C/D), --format (text/json), --output, and an optional positional profile path.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa coverage for FuSaOps's own Go codebase; enables ASIL-C DO-178C evidence generation."
+    },
+    {
       "id": "REQ-FO-CORE001",
       "title": "Severity classification",
       "text": "FuSaOps shall define a Severity type with INFO, WARNING, and ERROR levels that serialises as a string and is value-compatible with every x-FuSa tool's severity scheme.",

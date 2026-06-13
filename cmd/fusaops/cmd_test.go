@@ -162,6 +162,51 @@ func TestDiffMissingBaseline(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI018
+func TestDiffEmptyBaseline(t *testing.T) {
+	dir := goProject(t)
+	bl := filepath.Join(dir, "baseline.json")
+	// Write a minimal valid aggregate report as baseline (no findings).
+	if err := os.WriteFile(bl, []byte(`{"generatedAt":"2026-01-01T00:00:00Z","components":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// diff should succeed: fresh scan vs empty baseline → no new errors.
+	code, _, errOut := runArgs(t, "diff", "--dir", dir, "--baseline", bl)
+	if code != 0 && code != 1 {
+		t.Fatalf("diff empty baseline: unexpected code=%d err=%q", code, errOut)
+	}
+}
+
+//fusa:test REQ-FO-CLI018
+func TestDiffInvalidBaselineJSON(t *testing.T) {
+	dir := goProject(t)
+	bl := filepath.Join(dir, "bad.json")
+	if err := os.WriteFile(bl, []byte(`{not json}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, _, _ := runArgs(t, "diff", "--dir", dir, "--baseline", bl)
+	if code != 1 {
+		t.Errorf("diff bad json baseline: got code=%d, want 1", code)
+	}
+}
+
+//fusa:test REQ-FO-CLI018
+func TestDiffOutputToFile(t *testing.T) {
+	dir := goProject(t)
+	bl := filepath.Join(dir, "baseline.json")
+	out := filepath.Join(dir, "diff.txt")
+	if err := os.WriteFile(bl, []byte(`{"generatedAt":"2026-01-01T00:00:00Z","components":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, _, errOut := runArgs(t, "diff", "--dir", dir, "--baseline", bl, "--output", out)
+	if code != 0 && code != 1 {
+		t.Fatalf("diff --output: unexpected code=%d err=%q", code, errOut)
+	}
+	if _, err := os.Stat(out); err != nil {
+		t.Errorf("diff --output: output file not created: %v", err)
+	}
+}
+
 //fusa:test REQ-FO-CLI039
 func TestSuppressUnknownSubcommand(t *testing.T) {
 	code, _, _ := runArgs(t, "suppress", "bogus")
