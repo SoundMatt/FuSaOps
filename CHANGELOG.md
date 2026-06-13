@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-06-13
+
+### Badge service & webhooks
+
+- **SVG status badge** — `GET /badge/status.svg` returns a shields.io-style flat SVG badge: label `fusaops`, message `pass`/`warn`/`fail`/`pending`/`error`, colored green/yellow/red/gray respectively. `Content-Type: image/svg+xml` with `Cache-Control: no-cache`. (REQ-FO-BADGE001)
+- **Per-project badge** — `MultiServer` exposes `GET /badge/{name}/status.svg` for each configured project, labeled with the project name; `GET /badge/status.svg` shows the aggregate status across all projects. (REQ-FO-BADGE002)
+- **Webhook notifications** — `fusaops serve --webhook url` POSTs `{"status":"…","prev":"…","errors":N}` whenever the aggregate status transitions between runs. The first compute never fires (no prior state). Retries once after 2 seconds on failure. (REQ-FO-HOOK001/002, REQ-FO-CLI031)
+
+### Safety
+- Requirements registry at 198 requirements (added REQ-FO-BADGE001–002, REQ-FO-HOOK001–002, REQ-FO-CLI031)
+- 10 new tests in `server` package; combined coverage maintained ≥80%
+
 ## [1.2.0] — 2026-06-13
 
 ### Multi-project dashboard
@@ -254,7 +266,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.9.0...v1.0.0

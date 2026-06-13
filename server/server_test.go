@@ -596,3 +596,103 @@ func TestAuditLogWritten(t *testing.T) {
 		t.Errorf("audit log missing user: %s", data)
 	}
 }
+
+// TestBadgeSVGContentType verifies /badge/status.svg returns image/svg+xml.
+//
+//fusa:test REQ-FO-BADGE001
+func TestBadgeSVGContentType(t *testing.T) {
+	s := newTestServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/badge/status.svg", nil)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if ct != "image/svg+xml" {
+		t.Errorf("Content-Type: got %q, want image/svg+xml", ct)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "<svg") {
+		t.Errorf("badge body not SVG: %s", body)
+	}
+}
+
+// TestBadgeStatusReflectsFindings verifies badge text matches aggregate status.
+//
+//fusa:test REQ-FO-BADGE001
+//fusa:test REQ-FO-BADGE002
+func TestBadgeStatusReflectsFindings(t *testing.T) {
+	s := newTestServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/badge/status.svg", nil)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	body := rec.Body.String()
+	// newTestServer has a warning finding so status should be WARN.
+	if !strings.Contains(body, "warn") {
+		t.Errorf("expected warn in badge: %s", body)
+	}
+}
+
+// TestBadgeCacheControl verifies badge carries no-cache headers.
+//
+//fusa:test REQ-FO-BADGE001
+func TestBadgeCacheControl(t *testing.T) {
+	s := newTestServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/badge/status.svg", nil)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	cc := rec.Header().Get("Cache-Control")
+	if !strings.Contains(cc, "no-cache") {
+		t.Errorf("Cache-Control missing no-cache: %q", cc)
+	}
+}
+
+// TestWithWebhook verifies WithWebhook sets the URL.
+//
+//fusa:test REQ-FO-HOOK001
+func TestWithWebhook(t *testing.T) {
+	s := newTestServer(t).WithWebhook("http://example.com/hook")
+	if s.webhookURL != "http://example.com/hook" {
+		t.Errorf("webhookURL: got %q", s.webhookURL)
+	}
+}
+
+// TestWebhookFiredOnTransition verifies a webhook POST is sent when status changes.
+//
+//fusa:test REQ-FO-HOOK001
+//fusa:test REQ-FO-HOOK002
+func TestWebhookFiredOnTransition(t *testing.T) {
+	var received []byte
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		buf := make([]byte, 4096)
+		n, _ := r.Body.Read(buf)
+		received = buf[:n]
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	s := newTestServer(t).WithWebhook(srv.URL)
+	// Seed prevStatus so the next compute triggers a transition check.
+	s.prevStatus = "PASS"
+	// newTestServer has a warning finding → status becomes WARN → triggers webhook.
+	s.compute(context.Background())
+
+	// Wait briefly for the goroutine.
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if len(received) > 0 {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if len(received) == 0 {
+		t.Fatal("webhook not received")
+	}
+	if !strings.Contains(string(received), `"prev"`) {
+		t.Errorf("webhook payload missing 'prev': %s", received)
+	}
+	if !strings.Contains(string(received), `"status"`) {
+		t.Errorf("webhook payload missing 'status': %s", received)
+	}
+}

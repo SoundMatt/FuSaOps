@@ -217,9 +217,12 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
-## Future / Advanced
+## v1.3 — Badge service & webhooks ✅
 
-_(All planned roadmap items are now shipped in v0.1–v1.2)_
+**Goal:** Make FuSaOps status embeddable and observable.
+
+- ✅ SVG status badge at `/badge/status.svg` (PASS=green, WARN=yellow, FAIL=red, PENDING=gray) in shields.io style; multi-project badge at `/badge/{name}/status.svg`
+- ✅ Webhook notifications: `fusaops serve --webhook url` POSTs `{"status":"FAIL","prev":"PASS","errors":3}` when the status transitions; retries once on failure
 
 ---
 

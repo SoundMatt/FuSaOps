@@ -169,3 +169,67 @@ func TestMultiROBlocksRefresh(t *testing.T) {
 		t.Fatalf("want 403, got %d", rec.Code)
 	}
 }
+
+// TestMultiBadgeSVG verifies /badge/status.svg returns SVG on MultiServer.
+//
+//fusa:test REQ-FO-BADGE001
+//fusa:test REQ-FO-MPJ003
+func TestMultiBadgeSVG(t *testing.T) {
+	ms := newTestMulti(t)
+	req := httptest.NewRequest(http.MethodGet, "/badge/status.svg", nil)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); ct != "image/svg+xml" {
+		t.Errorf("Content-Type: got %q", ct)
+	}
+	if !strings.Contains(rec.Body.String(), "<svg") {
+		t.Errorf("not SVG: %s", rec.Body.String())
+	}
+}
+
+// TestMultiProjectBadge verifies /badge/{name}/status.svg uses the project name.
+//
+//fusa:test REQ-FO-BADGE002
+//fusa:test REQ-FO-MPJ003
+func TestMultiProjectBadge(t *testing.T) {
+	ms := newTestMulti(t)
+	req := httptest.NewRequest(http.MethodGet, "/badge/alpha/status.svg", nil)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "alpha") {
+		t.Errorf("badge missing project name 'alpha': %s", body)
+	}
+}
+
+// TestMultiWithAuditLog verifies WithAuditLog sets the audit directory.
+//
+//fusa:test REQ-FO-AUDIT001
+func TestMultiWithAuditLog(t *testing.T) {
+	ms := newTestMulti(t).WithAuditLog("/tmp/audit")
+	if ms.auditDir != "/tmp/audit" {
+		t.Errorf("auditDir: got %q", ms.auditDir)
+	}
+}
+
+// TestMultiRefreshAll verifies /refresh redirects to / after recomputing.
+//
+//fusa:test REQ-FO-MPJ002
+func TestMultiRefreshAll(t *testing.T) {
+	ms := newTestMulti(t)
+	req := httptest.NewRequest(http.MethodGet, "/refresh", nil)
+	rec := httptest.NewRecorder()
+	ms.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("want 303, got %d", rec.Code)
+	}
+	if loc := rec.Header().Get("Location"); loc != "/" {
+		t.Errorf("Location: got %q, want /", loc)
+	}
+}

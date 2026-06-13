@@ -1350,6 +1350,41 @@
       "description": "The serve subcommand shall accept --projects path that switches to multi-project mode using MultiServer. A missing or malformed file exits 1 with a descriptive error. All auth, ro, and audit-log flags apply equally to the MultiServer.",
       "priority": "MUST",
       "rationale": "Single entry point for multi-project dashboard mode."
+    },
+    {
+      "id": "REQ-FO-BADGE001",
+      "title": "SVG status badge endpoint",
+      "description": "The server shall expose GET /badge/status.svg returning a shields.io-style flat SVG badge with label 'fusaops' and message PASS/WARN/FAIL/pending/error colored green/yellow/red/gray respectively. Content-Type shall be image/svg+xml and Cache-Control shall be no-cache.",
+      "priority": "MUST",
+      "rationale": "Embeddable status badge for README files and CI dashboards without polling the full report endpoint."
+    },
+    {
+      "id": "REQ-FO-BADGE002",
+      "title": "Per-project badge endpoint",
+      "description": "MultiServer shall expose GET /badge/{name}/status.svg for each configured project, returning a badge labeled with the project name. The aggregate badge at /badge/status.svg uses the overall status across all projects.",
+      "priority": "MUST",
+      "rationale": "Allows per-project embeddable badges in monorepo READMEs."
+    },
+    {
+      "id": "REQ-FO-HOOK001",
+      "title": "Webhook status-change notification",
+      "description": "When configured via WithWebhook(url), the server shall POST a JSON payload {\"status\":\"...\",\"prev\":\"...\",\"errors\":N} to url whenever the aggregate status transitions between runs. The first compute does not fire (no prior state). The POST uses Content-Type application/json.",
+      "priority": "MUST",
+      "rationale": "Enables push-based alerting without external polling, integrating with Slack, PagerDuty, and CI webhooks."
+    },
+    {
+      "id": "REQ-FO-HOOK002",
+      "title": "Webhook retry on failure",
+      "description": "If the initial webhook POST fails, the server shall retry exactly once after a 2-second delay. Subsequent failures are silently dropped to avoid blocking the dashboard.",
+      "priority": "MUST",
+      "rationale": "Provides basic reliability for transient network failures without unbounded retries."
+    },
+    {
+      "id": "REQ-FO-CLI031",
+      "title": "fusaops serve --webhook flag",
+      "description": "The serve subcommand shall accept --webhook url to configure status-change webhook notifications on the single-project Server. The flag is not available in --projects (multi-project) mode.",
+      "priority": "MUST",
+      "rationale": "CLI entry point for webhook configuration."
     }
   ]
 }

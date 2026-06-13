@@ -124,10 +124,12 @@ func (ms *MultiServer) Handler() http.Handler {
 	mux.HandleFunc("/refresh", ms.handleRefreshAll)
 	mux.HandleFunc("/healthz", ms.handleHealth)
 	mux.HandleFunc("/api/projects", ms.handleAPIProjects)
+	mux.HandleFunc("/badge/status.svg", ms.handleBadge)
 	for _, p := range ms.projects {
 		prefix := "/p/" + p.name
 		mux.HandleFunc(prefix, ms.makeProjectHandler(p))
 		mux.HandleFunc(prefix+"/", ms.makeProjectHandler(p))
+		mux.HandleFunc("/badge/"+p.name+"/status.svg", ms.makeProjectBadgeHandler(p))
 	}
 	if ms.authUser != "" || ms.authROUser != "" {
 		return ms.authWrap(mux)
@@ -362,6 +364,63 @@ tr:last-child td{border-bottom:none}
 			fmt.Fprint(w, `</tbody></table>`)
 		}
 		fmt.Fprint(w, `</body></html>`)
+	}
+}
+
+// handleBadge renders the overall fleet status badge.
+//
+//fusa:req REQ-FO-BADGE001
+func (ms *MultiServer) handleBadge(w http.ResponseWriter, _ *http.Request) {
+	status, color := "pending", "#9f9f9f"
+	for _, p := range ms.projects {
+		p.mu.RLock()
+		rep, pErr := p.cached, p.err
+		p.mu.RUnlock()
+		if pErr != nil || rep == nil {
+			continue
+		}
+		switch rep.Summary.Status() {
+		case "FAIL":
+			status, color = "fail", "#e05d44"
+		case "WARN":
+			if status != "fail" {
+				status, color = "warn", "#dfb317"
+			}
+		case "PASS":
+			if status == "pending" {
+				status, color = "pass", "#4c1"
+			}
+		}
+	}
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	fmt.Fprint(w, svgBadge("fusaops", status, color))
+}
+
+// makeProjectBadgeHandler returns a badge handler for one project.
+//
+//fusa:req REQ-FO-BADGE002
+func (ms *MultiServer) makeProjectBadgeHandler(p *projectEntry) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		p.mu.RLock()
+		rep, pErr := p.cached, p.err
+		p.mu.RUnlock()
+		status, color := "pending", "#9f9f9f"
+		if pErr != nil {
+			status, color = "error", "#e05d44"
+		} else if rep != nil {
+			switch rep.Summary.Status() {
+			case "PASS":
+				status, color = "pass", "#4c1"
+			case "WARN":
+				status, color = "warn", "#dfb317"
+			default:
+				status, color = "fail", "#e05d44"
+			}
+		}
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		fmt.Fprint(w, svgBadge(p.name, status, color))
 	}
 }
 

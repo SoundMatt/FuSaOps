@@ -272,6 +272,38 @@ All projects are scanned in parallel on startup and on `/refresh`. Routes:
 
 All enterprise flags (`--auth`, `--auth-ro`, `--audit-log`, `--tls-cert`) compose with `--projects`.
 
+## Badge service & webhooks
+
+### SVG status badges
+
+Both `Server` and `MultiServer` expose embeddable SVG badges:
+
+| Route | Description |
+|---|---|
+| `/badge/status.svg` | Overall PASS/WARN/FAIL/pending badge |
+| `/badge/{name}/status.svg` | Per-project badge (multi-project mode) |
+
+Embed in a README:
+```markdown
+![FuSaOps status](http://localhost:8080/badge/status.svg)
+```
+
+Badge colours follow shields.io convention: green (PASS), yellow (WARN), red (FAIL/error), gray (pending). Responses carry `Cache-Control: no-cache`.
+
+### Webhook notifications
+
+```bash
+fusaops serve --webhook https://hooks.example.com/fusaops
+```
+
+When the aggregate status transitions (e.g. PASS → FAIL), FuSaOps POSTs:
+
+```json
+{"status":"FAIL","prev":"PASS","errors":3}
+```
+
+The server retries once after 2 seconds on failure. Webhooks integrate with Slack, PagerDuty, or any HTTP receiver.
+
 ## Docker quickstart
 
 The published image is **all-in-one**: it bundles the x-FuSa tools, so there is
@@ -391,7 +423,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (193 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (198 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

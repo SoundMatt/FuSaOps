@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -42,10 +43,12 @@ type Server struct {
 	authROPass string
 	auditDir   string // empty = no audit log
 	fleetCfg   string // empty = fleet dashboard disabled
+	webhookURL string // empty = no webhook notifications
 
-	mu     sync.RWMutex
-	cached *report.AggregateReport
-	err    error
+	mu         sync.RWMutex
+	cached     *report.AggregateReport
+	err        error
+	prevStatus string // previous status for webhook change detection
 
 	fleetMu  sync.RWMutex
 	fleetRep *fleet.FleetReport
@@ -131,17 +134,38 @@ func (s *Server) WithFleetConfig(path string) *Server {
 	return s
 }
 
+// WithWebhook sets a URL to POST status-change notifications to. When the
+// aggregate status transitions (e.g. PASS→FAIL), the server sends a JSON
+// payload with the old and new status and error counts. One retry on failure.
+//
+//fusa:req REQ-FO-HOOK001
+func (s *Server) WithWebhook(url string) *Server {
+	s.webhookURL = url
+	return s
+}
+
 // compute runs the orchestrator, caches the result, and persists a snapshot.
 //
 //fusa:req REQ-FO-SRV003
 func (s *Server) compute(ctx context.Context) {
 	rep, err := s.runner.Run(ctx, s.root, s.opts)
 	s.mu.Lock()
+	prev := s.prevStatus
 	s.cached, s.err = rep, err
+	newStatus := ""
+	if err == nil && rep != nil {
+		newStatus = rep.Summary.Status()
+		s.prevStatus = newStatus
+	}
 	s.mu.Unlock()
-	if err == nil && rep != nil && s.histDir != "" {
-		snap := history.FromReport(rep)
-		_ = history.Store(s.histDir, snap)
+	if err == nil && rep != nil {
+		if s.histDir != "" {
+			snap := history.FromReport(rep)
+			_ = history.Store(s.histDir, snap)
+		}
+		if s.webhookURL != "" && prev != "" && newStatus != prev {
+			go fireWebhook(s.webhookURL, prev, newStatus, rep.Summary.Errors)
+		}
 	}
 	if s.fleetCfg != "" {
 		s.computeFleet(ctx)
@@ -180,6 +204,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/history", s.handleHistory)
 	mux.HandleFunc("/refresh", s.handleRefresh)
 	mux.HandleFunc("/healthz", s.handleHealth)
+	mux.HandleFunc("/badge/status.svg", s.handleBadge)
 	if s.fleetCfg != "" {
 		mux.HandleFunc("/fleet", s.handleFleet)
 		mux.HandleFunc("/api/fleet", s.handleAPIFleet)
@@ -642,6 +667,70 @@ func (s *Server) Serve(ln net.Listener) error {
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	return srv.Serve(ln)
+}
+
+// handleBadge renders an SVG status badge in shields.io flat style.
+//
+//fusa:req REQ-FO-BADGE001
+func (s *Server) handleBadge(w http.ResponseWriter, _ *http.Request) {
+	s.mu.RLock()
+	rep, cErr := s.cached, s.err
+	s.mu.RUnlock()
+
+	status, color := "pending", "#9f9f9f"
+	if cErr != nil {
+		status, color = "error", "#e05d44"
+	} else if rep != nil {
+		switch rep.Summary.Status() {
+		case "PASS":
+			status, color = "pass", "#4c1"
+		case "WARN":
+			status, color = "warn", "#dfb317"
+		default:
+			status, color = "fail", "#e05d44"
+		}
+	}
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	fmt.Fprint(w, svgBadge("fusaops", status, color))
+}
+
+// svgBadge returns a minimal shields.io-style flat SVG badge.
+func svgBadge(label, message, color string) string {
+	lw := len(label)*6 + 10
+	mw := len(message)*6 + 10
+	total := lw + mw
+	lx := lw/2 + 1
+	mx := lw + mw/2
+	return fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="20">
+<linearGradient id="s" x2="0" y2="100%%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient>
+<rect width="%d" height="20" rx="3" fill="#555"/>
+<rect x="%d" width="%d" height="20" rx="3" fill="%s"/>
+<rect width="%d" height="20" rx="3" fill="url(#s)"/>
+<g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+<text x="%d" y="15" fill="#010101" fill-opacity=".3">%s</text>
+<text x="%d" y="14">%s</text>
+<text x="%d" y="15" fill="#010101" fill-opacity=".3">%s</text>
+<text x="%d" y="14">%s</text>
+</g></svg>`, total, total, lw, mw, color, total, lx, label, lx, label, mx, message, mx, message)
+}
+
+// fireWebhook POSTs a status-change notification to url. Retries once on failure.
+//
+//fusa:req REQ-FO-HOOK001
+//fusa:req REQ-FO-HOOK002
+func fireWebhook(url, prev, current string, errors int) {
+	body := fmt.Sprintf(`{"status":%q,"prev":%q,"errors":%d}`+"\n", current, prev, errors)
+	for i := range 2 {
+		resp, err := http.Post(url, "application/json", strings.NewReader(body)) //nolint:noctx
+		if err == nil {
+			_ = resp.Body.Close()
+			return
+		}
+		if i == 0 {
+			time.Sleep(2 * time.Second)
+		}
+	}
 }
 
 // openAppend opens a JSONL file in dir for appending, creating it if needed.

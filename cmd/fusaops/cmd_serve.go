@@ -21,6 +21,7 @@ import (
 //fusa:req REQ-FO-CLI028
 //fusa:req REQ-FO-CLI029
 //fusa:req REQ-FO-CLI030
+//fusa:req REQ-FO-CLI031
 func runServe(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops serve", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -32,6 +33,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	auditLog := fs.String("audit-log", "", "directory for .fusaops-audit.jsonl request audit log")
 	fleetCfg := fs.String("fleet", "", "path to fleet.json — adds /fleet dashboard")
 	projectsCfg := fs.String("projects", "", "path to projects.json — multi-project dashboard mode")
+	webhook := fs.String("webhook", "", "URL to POST status-change notifications to")
 	tlsCert := fs.String("tls-cert", "", "TLS certificate file (PEM); enables HTTPS")
 	tlsKey := fs.String("tls-key", "", "TLS key file (PEM); required with --tls-cert")
 	if err := fs.Parse(args); err != nil {
@@ -93,6 +95,9 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	}
 	if *fleetCfg != "" {
 		srv = srv.WithFleetConfig(*fleetCfg)
+	}
+	if *webhook != "" {
+		srv = srv.WithWebhook(*webhook)
 	}
 
 	fmt.Fprintf(stdout, "FuSaOps dashboard for %s\n", root)
