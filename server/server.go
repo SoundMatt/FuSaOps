@@ -10,6 +10,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -18,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/SoundMatt/FuSaOps/fleet"
 	"github.com/SoundMatt/FuSaOps/history"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/report"
@@ -27,15 +29,22 @@ import (
 //
 //fusa:req REQ-FO-SRV001
 type Server struct {
-	root    string
-	project string
-	runner  *orchestrator.Runner
-	opts    orchestrator.Options
-	histDir string // empty = history persistence disabled
+	root     string
+	project  string
+	runner   *orchestrator.Runner
+	opts     orchestrator.Options
+	histDir  string // empty = history persistence disabled
+	authUser string // empty = no authentication required
+	authPass string
+	fleetCfg string // empty = fleet dashboard disabled
 
 	mu     sync.RWMutex
 	cached *report.AggregateReport
 	err    error
+
+	fleetMu  sync.RWMutex
+	fleetRep *fleet.FleetReport
+	fleetErr error
 }
 
 // New returns a Server that scans root using the given runner and options.
@@ -55,6 +64,26 @@ func (s *Server) WithHistoryDir(dir string) *Server {
 	return s
 }
 
+// WithAuth enables HTTP Basic Auth on all routes. Requests without valid
+// credentials receive 401 Unauthorized with a WWW-Authenticate challenge.
+// Calling with empty user and pass disables authentication.
+//
+//fusa:req REQ-FO-AUTH001
+func (s *Server) WithAuth(user, pass string) *Server {
+	s.authUser, s.authPass = user, pass
+	return s
+}
+
+// WithFleetConfig sets the path to a fleet.json config file. When set,
+// the server exposes a /fleet HTML dashboard and /api/fleet JSON endpoint
+// showing the status of all repos in the fleet.
+//
+//fusa:req REQ-FO-FLT005
+func (s *Server) WithFleetConfig(path string) *Server {
+	s.fleetCfg = path
+	return s
+}
+
 // compute runs the orchestrator, caches the result, and persists a snapshot.
 //
 //fusa:req REQ-FO-SRV003
@@ -67,6 +96,26 @@ func (s *Server) compute(ctx context.Context) {
 		snap := history.FromReport(rep)
 		_ = history.Store(s.histDir, snap)
 	}
+	if s.fleetCfg != "" {
+		s.computeFleet(ctx)
+	}
+}
+
+// computeFleet loads the fleet config, runs a parallel fleet check, and caches the result.
+//
+//fusa:req REQ-FO-FLT005
+func (s *Server) computeFleet(ctx context.Context) {
+	cfg, err := fleet.LoadConfig(s.fleetCfg)
+	if err != nil {
+		s.fleetMu.Lock()
+		s.fleetRep, s.fleetErr = nil, err
+		s.fleetMu.Unlock()
+		return
+	}
+	fr := fleet.Run(ctx, cfg, s.runner)
+	s.fleetMu.Lock()
+	s.fleetRep, s.fleetErr = fr, nil
+	s.fleetMu.Unlock()
 }
 
 // Handler returns the HTTP routes for the dashboard and API.
@@ -84,7 +133,31 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/history", s.handleHistory)
 	mux.HandleFunc("/refresh", s.handleRefresh)
 	mux.HandleFunc("/healthz", s.handleHealth)
+	if s.fleetCfg != "" {
+		mux.HandleFunc("/fleet", s.handleFleet)
+		mux.HandleFunc("/api/fleet", s.handleAPIFleet)
+	}
+	if s.authUser != "" {
+		return s.authMiddleware(mux)
+	}
 	return mux
+}
+
+// authMiddleware wraps h with HTTP Basic Auth. Unauthenticated requests
+// receive 401 Unauthorized with a WWW-Authenticate challenge.
+//
+//fusa:req REQ-FO-AUTH001
+//fusa:req REQ-FO-AUTH002
+func (s *Server) authMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		u, p, ok := r.BasicAuth()
+		if !ok || u != s.authUser || p != s.authPass {
+			w.Header().Set("WWW-Authenticate", `Basic realm="fusaops"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 // handleIndex renders the HTML dashboard from the cached report.
@@ -350,11 +423,118 @@ tr:last-child td{border-bottom:none}
 </body></html>`, len(snaps))
 }
 
+// handleFleet renders the HTML fleet status dashboard.
+//
+//fusa:req REQ-FO-FLT006
+func (s *Server) handleFleet(w http.ResponseWriter, _ *http.Request) {
+	s.fleetMu.RLock()
+	fr, fErr := s.fleetRep, s.fleetErr
+	s.fleetMu.RUnlock()
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if fErr != nil {
+		http.Error(w, "fleet scan failed: "+fErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	if fr == nil {
+		http.Error(w, "fleet report not available yet", http.StatusServiceUnavailable)
+		return
+	}
+	fmt.Fprint(w, `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FuSaOps — Fleet</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f4f6f9;color:#1a1a2e;padding:1.5rem}
+h1{font-size:1.4rem;margin-bottom:.5rem}
+.sub{font-size:.85rem;color:#718096;margin-bottom:1rem}
+a{color:#4361ee;text-decoration:none}a:hover{text-decoration:underline}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+th,td{padding:.6rem .9rem;text-align:left;border-bottom:1px solid #edf2f7;font-size:.85rem}
+th{background:#f8fafc;font-weight:600;color:#4a5568}
+tr:last-child td{border-bottom:none}
+.pass{display:inline-block;padding:.15rem .5rem;border-radius:4px;background:#d1fae5;color:#065f46;font-weight:600;font-size:.78rem}
+.warn{display:inline-block;padding:.15rem .5rem;border-radius:4px;background:#fef3c7;color:#92400e;font-weight:600;font-size:.78rem}
+.fail{display:inline-block;padding:.15rem .5rem;border-radius:4px;background:#fee2e2;color:#7f1d1d;font-weight:600;font-size:.78rem}
+.err{color:#c53030;font-weight:600}.wc{color:#d97706}.ic{color:#4a5568}
+</style>
+</head>
+<body>
+`)
+	statusBadge := func(st string) string {
+		switch st {
+		case "FAIL":
+			return `<span class="fail">FAIL</span>`
+		case "WARN":
+			return `<span class="warn">WARN</span>`
+		default:
+			return `<span class="pass">PASS</span>`
+		}
+	}
+	fmt.Fprintf(w, `<h1>FuSaOps — Fleet: %s &nbsp;<a href="/" style="font-size:.8rem;font-weight:400">← dashboard</a></h1>`,
+		html.EscapeString(fr.Project))
+	fmt.Fprintf(w, `<p class="sub">%s · Overall: %s · %d repos · %d errors · %d warnings</p>`,
+		fr.GeneratedAt.UTC().Format("2006-01-02 15:04 UTC"),
+		statusBadge(fr.Status()), len(fr.Repos), fr.Errors, fr.Warnings)
+	fmt.Fprint(w, `<table>
+<thead><tr><th>Repo</th><th>Status</th><th>Total</th><th>Errors</th><th>Warnings</th><th>Infos</th></tr></thead><tbody>`)
+	for _, r := range fr.Repos {
+		fmt.Fprintf(w,
+			`<tr><td>%s</td><td>%s</td><td>%d</td><td class="err">%d</td><td class="wc">%d</td><td class="ic">%d</td></tr>`,
+			html.EscapeString(r.Name), statusBadge(r.Status), r.Total, r.Errors, r.Warnings, r.Infos)
+	}
+	fmt.Fprint(w, `</tbody></table>
+<p style="margin-top:1rem;font-size:.8rem;color:#a0aec0"><a href="/api/fleet">JSON</a> · <a href="/refresh">Refresh</a></p>
+</body></html>`)
+}
+
+// handleAPIFleet serves the cached fleet report as JSON.
+//
+//fusa:req REQ-FO-FLT006
+func (s *Server) handleAPIFleet(w http.ResponseWriter, _ *http.Request) {
+	s.fleetMu.RLock()
+	fr, fErr := s.fleetRep, s.fleetErr
+	s.fleetMu.RUnlock()
+	if fErr != nil {
+		http.Error(w, fErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	if fr == nil {
+		http.Error(w, "fleet report not available yet", http.StatusServiceUnavailable)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(fr)
+}
+
 // ListenAndServe computes the initial report then serves the dashboard on addr.
 //
 //fusa:req REQ-FO-SRV005
 func (s *Server) ListenAndServe(addr string) error {
 	ln, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", addr)
+	if err != nil {
+		return err
+	}
+	return s.Serve(ln)
+}
+
+// ListenAndServeTLS computes the initial report then serves the dashboard over
+// HTTPS on addr using the provided certificate and key files.
+//
+//fusa:req REQ-FO-TLS001
+func (s *Server) ListenAndServeTLS(addr, certFile, keyFile string) error {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return err
+	}
+	ln, err := tls.Listen("tcp", addr, &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
+	})
 	if err != nil {
 		return err
 	}

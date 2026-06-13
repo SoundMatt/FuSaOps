@@ -179,11 +179,23 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.0 — Enterprise readiness ✅
+
+**Goal:** Secure, enterprise-grade `fusaops serve` with authentication, HTTPS, and a fleet dashboard.
+
+- ✅ **HTTP Basic Auth** — `fusaops serve --auth user:pass` protects all routes with RFC 7617 Basic Auth; unauthenticated requests get 401 + `WWW-Authenticate` challenge
+- ✅ **TLS / HTTPS** — `fusaops serve --tls-cert cert.pem --tls-key key.pem` switches to HTTPS (TLS 1.2+)
+- ✅ **Fleet web dashboard** — `fusaops serve --fleet fleet.json` adds `/fleet` HTML page and `/api/fleet` JSON endpoint to the serve dashboard; fleet scan runs in parallel on each refresh
+- README and CHANGELOG footer links updated for all v0.6–v0.9 releases
+
+---
+
 ## Future / Advanced
 
 | Version | Capability |
 |---|---|
-| v1.0 | Enterprise: auth, persistence, multi-tenant dashboards |
+| v1.1 | Role-based access (read-only vs. refresh), audit log of dashboard actions |
+| v1.2 | Multi-project config: serve multiple repos from one dashboard process |
 
 ---
 

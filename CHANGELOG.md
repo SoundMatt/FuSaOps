@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-06-13
+
+### Enterprise readiness
+
+- **HTTP Basic Auth** — `fusaops serve --auth user:pass` enables authentication on all routes (dashboard, API, history). Unauthenticated requests receive `401 Unauthorized` with a `WWW-Authenticate: Basic realm="fusaops"` challenge. Implemented via `Server.WithAuth(user, pass string)` (REQ-FO-AUTH001/002).
+- **TLS / HTTPS** — `fusaops serve --tls-cert cert.pem --tls-key key.pem` switches the server to HTTPS using `Server.ListenAndServeTLS` (TLS 1.2+); `--tls-key` is required when `--tls-cert` is set (REQ-FO-TLS001).
+- **Fleet web dashboard** — `fusaops serve --fleet fleet.json` adds a `/fleet` HTML status page and `/api/fleet` JSON endpoint to the dashboard. The fleet scan runs in parallel (reusing the existing `fleet.Run()`) on every `compute()` call. Shows overall PASS/WARN/FAIL badge, per-repo status table with error/warning counts, and links back to the main dashboard (REQ-FO-FLT005/006).
+
+### Docs
+- README: added fleet view, policy engine, and REST API sections with usage examples; updated action reference to `@v0.9.0`; c-FuSa version corrected to v0.5.16; requirements count updated to 183
+- CHANGELOG: footer links corrected for all releases v0.1.0–v0.9.0
+- ROADMAP: v1.0 marked ✅; added v1.1/v1.2 placeholders
+
+### Safety
+- Requirements registry at 183 requirements (added REQ-FO-AUTH001–002, REQ-FO-FLT005–006, REQ-FO-TLS001, REQ-FO-CLI025–027)
+- 13 new tests in `server` package; 2 new CLI tests; combined coverage 81.3%
+
 ## [0.9.0] — 2026-06-13
 
 ### Policy engine — org-wide safety rules
@@ -211,7 +228,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.9.0...v1.0.0
+[0.9.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/SoundMatt/FuSaOps/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.3.0...v0.4.0

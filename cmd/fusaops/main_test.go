@@ -177,6 +177,27 @@ func TestFleetMissingConfig(t *testing.T) {
 	}
 }
 
+// TestServeBadAuthFormat verifies --auth without colon returns exit 1.
+//
+//fusa:test REQ-FO-CLI025
+func TestServeBadAuthFormat(t *testing.T) {
+	code, _, errb := runArgs(t, "serve", "--auth", "nocolon")
+	if code != 1 || !strings.Contains(errb, "user:pass") {
+		t.Errorf("bad auth format: code=%d err=%q", code, errb)
+	}
+}
+
+// TestServeTLSMissingKey verifies --tls-cert without --tls-key returns exit 1.
+//
+//fusa:test REQ-FO-CLI027
+func TestServeTLSMissingKey(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "serve", "--dir", dir, "--tls-cert", "cert.pem")
+	if code != 1 || !strings.Contains(errb, "tls-key") {
+		t.Errorf("missing tls-key: code=%d err=%q", code, errb)
+	}
+}
+
 func TestSplitCSV(t *testing.T) {
 	got := splitCSV("a,b,,c")
 	if len(got) != 3 || got[0] != "a" || got[2] != "c" {

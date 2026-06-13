@@ -1217,6 +1217,62 @@
       "description": "The Server shall expose /api/history (JSON array of Snapshots) and /history (HTML trend page showing last 30 runs with PASS/FAIL badges, per-severity counts, and a proportional severity bar) routes.",
       "priority": "MUST",
       "rationale": "Provides both machine-readable and human-readable access to run history for CI integration and team dashboards."
+    },
+    {
+      "id": "REQ-FO-AUTH001",
+      "title": "HTTP Basic Auth middleware",
+      "description": "The Server shall expose a WithAuth(user, pass string) fluent method that, when set, wraps all HTTP routes with Basic Auth enforcement via an authMiddleware. Requests with correct credentials pass through; missing or invalid credentials receive 401 Unauthorized.",
+      "priority": "MUST",
+      "rationale": "Protects the dashboard and API from unauthenticated access in enterprise deployments without requiring an external proxy."
+    },
+    {
+      "id": "REQ-FO-AUTH002",
+      "title": "WWW-Authenticate challenge",
+      "description": "The authMiddleware shall set the WWW-Authenticate: Basic realm=fusaops header on all 401 Unauthorized responses so browsers and HTTP clients can prompt for credentials.",
+      "priority": "MUST",
+      "rationale": "Required by RFC 7617 to allow interactive authentication from browser clients."
+    },
+    {
+      "id": "REQ-FO-FLT005",
+      "title": "Fleet dashboard integration",
+      "description": "The Server shall expose a WithFleetConfig(path string) fluent method that, when set, runs a parallel fleet scan on each compute() call and caches the FleetReport. The Handler() shall register /fleet (HTML) and /api/fleet (JSON) routes when a fleet config is configured.",
+      "priority": "MUST",
+      "rationale": "Enables a multi-repo fleet status view inside the fusaops serve dashboard without a separate fleet command."
+    },
+    {
+      "id": "REQ-FO-FLT006",
+      "title": "Fleet HTML and JSON routes",
+      "description": "The /fleet route shall render an HTML page showing the fleet project name, generation time, overall status badge, and a per-repo table (name, status badge, total/errors/warnings/infos). The /api/fleet route shall serve the cached FleetReport as JSON.",
+      "priority": "MUST",
+      "rationale": "Provides both human-readable and machine-readable fleet status for team dashboards and CI polling."
+    },
+    {
+      "id": "REQ-FO-TLS001",
+      "title": "HTTPS/TLS support",
+      "description": "The Server shall expose a ListenAndServeTLS(addr, certFile, keyFile string) method that loads the X.509 certificate pair and serves the dashboard over TLS 1.2+ using tls.Listen. The fusaops serve CLI shall accept --tls-cert and --tls-key flags that enable HTTPS; --tls-key is required when --tls-cert is set.",
+      "priority": "MUST",
+      "rationale": "HTTPS is required for enterprise deployments where the dashboard is exposed over a network."
+    },
+    {
+      "id": "REQ-FO-CLI025",
+      "title": "fusaops serve --auth flag",
+      "description": "The serve subcommand shall accept a --auth user:pass flag that enables HTTP Basic Auth on the dashboard. If the value does not contain a colon the command shall exit 1 with a descriptive error.",
+      "priority": "MUST",
+      "rationale": "Gives operators a single-flag way to password-protect the serve dashboard."
+    },
+    {
+      "id": "REQ-FO-CLI026",
+      "title": "fusaops serve --fleet flag",
+      "description": "The serve subcommand shall accept a --fleet path flag that enables the fleet web dashboard at /fleet and /api/fleet.",
+      "priority": "MUST",
+      "rationale": "Exposes the multi-repo fleet view inside the serve dashboard without requiring a separate command."
+    },
+    {
+      "id": "REQ-FO-CLI027",
+      "title": "fusaops serve --tls-cert and --tls-key flags",
+      "description": "The serve subcommand shall accept --tls-cert and --tls-key flags. When --tls-cert is set, --tls-key is required; the server switches to HTTPS via ListenAndServeTLS. Missing --tls-key exits 1 with a descriptive error.",
+      "priority": "MUST",
+      "rationale": "Enables HTTPS without an external reverse proxy for enterprise deployments."
     }
   ]
 }

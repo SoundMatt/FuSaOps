@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -346,5 +347,165 @@ func TestHistoryPageNoHistDir(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), "No history yet") {
 		t.Error("expected 'No history yet' message")
+	}
+}
+
+// TestWithAuth verifies WithAuth sets credentials on the server.
+//
+//fusa:test REQ-FO-AUTH001
+func TestWithAuth(t *testing.T) {
+	s := newTestServer(t).WithAuth("admin", "secret")
+	if s.authUser != "admin" || s.authPass != "secret" {
+		t.Errorf("auth fields: user=%q pass=%q", s.authUser, s.authPass)
+	}
+}
+
+// TestAuthMiddlewareBlocks verifies unauthenticated requests return 401.
+//
+//fusa:test REQ-FO-AUTH001
+//fusa:test REQ-FO-AUTH002
+func TestAuthMiddlewareBlocks(t *testing.T) {
+	s := newTestServer(t).WithAuth("admin", "secret")
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("want 401, got %d", rec.Code)
+	}
+	if rec.Header().Get("WWW-Authenticate") == "" {
+		t.Error("missing WWW-Authenticate header")
+	}
+}
+
+// TestAuthMiddlewareAllows verifies valid credentials pass through.
+//
+//fusa:test REQ-FO-AUTH001
+func TestAuthMiddlewareAllows(t *testing.T) {
+	s := newTestServer(t).WithAuth("admin", "secret")
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req.SetBasicAuth("admin", "secret")
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("want 200, got %d", rec.Code)
+	}
+}
+
+// TestAuthWrongPassword verifies wrong password returns 401.
+//
+//fusa:test REQ-FO-AUTH002
+func TestAuthWrongPassword(t *testing.T) {
+	s := newTestServer(t).WithAuth("admin", "secret")
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req.SetBasicAuth("admin", "wrong")
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("want 401, got %d", rec.Code)
+	}
+}
+
+// TestWithFleetConfig verifies WithFleetConfig sets the fleet config path.
+//
+//fusa:test REQ-FO-FLT005
+func TestWithFleetConfig(t *testing.T) {
+	s := newTestServer(t).WithFleetConfig("/tmp/fleet.json")
+	if s.fleetCfg != "/tmp/fleet.json" {
+		t.Errorf("fleetCfg: got %q", s.fleetCfg)
+	}
+}
+
+// TestFleetPageNoConfig verifies /fleet returns 404 when fleet is not configured.
+//
+//fusa:test REQ-FO-FLT005
+func TestFleetPageNoConfig(t *testing.T) {
+	s := newTestServer(t) // no fleet config
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/fleet", nil))
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("want 404 when fleet not configured, got %d", rec.Code)
+	}
+}
+
+// TestFleetPageHTML verifies /fleet returns an HTML page with repo names.
+//
+//fusa:test REQ-FO-FLT006
+func TestFleetPageHTML(t *testing.T) {
+	reg := adapter.NewRegistry()
+	reg.MustRegister(&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo})
+	dir := t.TempDir()
+	cfgData, err := json.Marshal(map[string]any{
+		"project": "testfleet",
+		"repos":   []map[string]string{{"name": "svc", "dir": dir}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfgPath := dir + "/fleet.json"
+	if err := os.WriteFile(cfgPath, cfgData, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	s := New(dir, orchestrator.New(reg), orchestrator.Options{}).WithFleetConfig(cfgPath)
+	s.compute(context.Background())
+
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/fleet", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "<!DOCTYPE html>") {
+		t.Error("not HTML")
+	}
+	if !strings.Contains(body, "svc") {
+		t.Error("repo name 'svc' not found in fleet page")
+	}
+}
+
+// TestAPIFleetJSON verifies /api/fleet returns JSON when fleet is configured.
+//
+//fusa:test REQ-FO-FLT006
+func TestAPIFleetJSON(t *testing.T) {
+	reg := adapter.NewRegistry()
+	reg.MustRegister(&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo})
+	dir := t.TempDir()
+	cfgData, err := json.Marshal(map[string]any{
+		"project": "testfleet",
+		"repos":   []map[string]string{{"name": "svc", "dir": dir}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfgPath := dir + "/fleet.json"
+	if err := os.WriteFile(cfgPath, cfgData, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	s := New(dir, orchestrator.New(reg), orchestrator.Options{}).WithFleetConfig(cfgPath)
+	s.compute(context.Background())
+
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/fleet", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	var out map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if out["project"] != "testfleet" {
+		t.Errorf("project: got %v", out["project"])
+	}
+}
+
+// TestListenAndServeTLSBadCert verifies ListenAndServeTLS fails on a missing cert.
+//
+//fusa:test REQ-FO-TLS001
+func TestListenAndServeTLSBadCert(t *testing.T) {
+	reg := adapter.NewRegistry()
+	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{})
+	err := s.ListenAndServeTLS(":0", "/nonexistent/cert.pem", "/nonexistent/key.pem")
+	if err == nil {
+		t.Fatal("expected error for missing cert/key")
 	}
 }

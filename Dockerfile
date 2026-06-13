@@ -23,7 +23,7 @@
 FROM ghcr.io/soundmatt/go-fusa:latest AS gofusa
 # cpp-FuSa v0.12.5 is spec v1.10 aligned; enable once ghcr.io/soundmatt/cpp-fusa is published
 # FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa
-# c-FuSa v0.5.14 is spec v1.10 aligned; enable once ghcr.io/soundmatt/c-fusa is published
+# c-FuSa v0.5.16 is spec v1.10 aligned; enable once ghcr.io/soundmatt/c-fusa is published
 # FROM ghcr.io/soundmatt/c-fusa:latest   AS cfusa
 # rust-FuSa v0.2.6 is spec v1.10 aligned; enable once ghcr.io/soundmatt/rust-fusa is published
 # FROM ghcr.io/soundmatt/rust-fusa:latest AS rsfusa

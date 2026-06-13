@@ -83,6 +83,9 @@ fusaops trace --gaps         # show only untraced/untested requirements
 fusaops trace --req-coverage 80 --sec-tested 60  # threshold-based coverage gate
 fusaops conform gofusa       # check a binary against the x-FuSa spec
 fusaops serve --addr :8080   # launch the web dashboard
+fusaops serve --auth user:pass           # enable HTTP Basic Auth
+fusaops serve --tls-cert c.pem --tls-key k.pem  # HTTPS
+fusaops serve --fleet fleet.json         # add /fleet multi-repo dashboard
 fusaops init                 # write a starter .fusaops.json
 ```
 
@@ -143,7 +146,7 @@ everything in parallel:
 
 See [`docs/commands/`](docs/commands/) for each command.
 
-### Web dashboard
+### Web dashboard (v0.1 / v0.6 / v0.7)
 
 ```bash
 fusaops serve
@@ -151,8 +154,98 @@ fusaops serve
 ```
 
 The dashboard shows an overall status badge, per-language summary cards, and a
-filterable findings table. JSON is available at `/api/report`; `/refresh`
-re-runs the scan. The page is fully self-contained (no external assets).
+filterable findings table. The page is fully self-contained (no external assets).
+
+| Endpoint | Description |
+|---|---|
+| `/` | HTML dashboard — PASS/WARN/FAIL badge, per-language cards, findings table |
+| `/history` | HTML trend page — PASS/FAIL badges, severity bars, per-language breakdown |
+| `/refresh` | Re-runs the scan and updates the dashboard |
+| `/api/report` | Full aggregate JSON report |
+| `/api/history` | JSON array of run snapshots (persisted in `.fusaops-history.jsonl`) |
+| `/api/v1/status` | Lightweight poll endpoint: `{"status":"PASS","errors":0,"warnings":1,"total":1}` |
+| `/api/v1/findings` | Filtered findings: `?severity=ERROR&language=go&tool=gofusa` |
+| `/api/v1/report` | Versioned alias for `/api/report` |
+| `/api/v1/history` | Versioned alias for `/api/history` |
+
+Run history is persisted to `.fusaops-history.jsonl` automatically; the `/history` trend page
+and `/api/history` endpoint are available after the first run.
+
+### Fleet view (v0.8)
+
+Scan multiple repositories with one command:
+
+```bash
+fusaops fleet --config fleet.json              # columnar text output
+fusaops fleet --config fleet.json --format json
+fusaops fleet --config fleet.json --strict     # exit 1 on any WARNING
+```
+
+**Fleet config format:**
+
+```json
+{
+  "project": "my-system",
+  "repos": [
+    { "name": "firmware", "dir": "/path/to/firmware", "adapter": "cfusa" },
+    { "name": "app",      "dir": "/path/to/app" }
+  ]
+}
+```
+
+Each repo is scanned in parallel. `adapter` is optional — omitting it detects
+languages automatically. The output is a columnar table (or JSON) with per-repo
+PASS/WARN/FAIL status and finding counts.
+
+### Policy engine (v0.9)
+
+Codify org-wide safety gates in a JSON policy file:
+
+```bash
+fusaops policy --policy policy.json              # evaluate against current scan
+fusaops policy --policy policy.json --dir ./src
+fusaops policy --policy policy.json --format json
+```
+
+**Policy config format:**
+
+```json
+{
+  "name": "ci-gate",
+  "rules": [
+    { "id": "no-errors",        "requireStatus": "WARN" },
+    { "id": "go-strict",        "language": "go",  "requireStatus": "PASS" },
+    { "id": "cpp-error-budget", "language": "cpp", "maxErrors": 5 }
+  ]
+}
+```
+
+Each rule can scope to a `language` and/or `tool`, and can enforce `maxFindings`,
+`maxErrors`, `maxWarnings`, and/or `requireStatus` (`PASS` = zero errors + zero
+warnings; `WARN` = zero errors, warnings allowed). `fusaops policy` exits 1 if
+any rule fails.
+
+### Enterprise features (v1.0)
+
+`fusaops serve` can be hardened for team and enterprise use:
+
+```bash
+# Password-protect the dashboard (HTTP Basic Auth)
+fusaops serve --auth admin:secret
+
+# HTTPS (TLS 1.2+)
+fusaops serve --tls-cert /etc/certs/server.pem --tls-key /etc/certs/server-key.pem
+
+# Combined fleet + auth + HTTPS
+fusaops serve \
+  --fleet fleet.json \
+  --auth admin:secret \
+  --tls-cert server.pem --tls-key server.key
+```
+
+When `--fleet` is set, the server adds two routes to the existing dashboard:
+- `/fleet` — HTML page: per-repo PASS/WARN/FAIL badge, error/warning counts
+- `/api/fleet` — JSON: full `FleetReport` for CI polling
 
 ## Docker quickstart
 
@@ -179,7 +272,7 @@ weekly scheduled rebuild is the safety net. See
 
 **Bundled tools.** The image currently bundles `gofusa` (Go, v0.30.0). All six
 adapters are registered; the other tools' Docker images will be added to the
-bundle as they publish to GHCR (cpp-FuSa v0.12.5, c-FuSa v0.5.14, rust-FuSa v0.2.6,
+bundle as they publish to GHCR (cpp-FuSa v0.12.5, c-FuSa v0.5.16, rust-FuSa v0.2.6,
 py-FuSa v0.1.4, java-FuSa v0.2.0 are each spec v1.10 aligned). The java-FuSa
 image requires a JVM in the runtime stage; the Dockerfile will add `openjdk-21-jre`
 when the image is wired in.
@@ -215,11 +308,11 @@ setup needed in your CI:
 ```yaml
 steps:
   - uses: actions/checkout@v4
-  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.6.0
+  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.9.0
     # Runs "fusaops check" by default; exit 1 on any ERROR finding, any language.
 
   # With options:
-  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.6.0
+  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.9.0
     with:
       args: '--strict'        # also gate on WARNING findings
       upload-report: 'true'  # attach fusaops-report.html as a workflow artifact
@@ -257,7 +350,7 @@ orchestrates also gates FuSaOps itself.
 |----------|------------|----------|------------------|
 | Go       | go-FuSa    | `gofusa` | ✅ (v0.30.0, spec v1.10) |
 | C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.12.5, spec v1.10) |
-| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.14, spec v1.10) |
+| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.16, spec v1.10) |
 | Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.2.6, spec v1.10) |
 | Python   | py-FuSa    | `pyfusa` | ✅ (v0.1.4, spec v1.10, alpha) |
 | Java     | java-FuSa  | `jfusa`  | ✅ (v0.2.0, spec v1.10, alpha) |
@@ -273,7 +366,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (159 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (183 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)
