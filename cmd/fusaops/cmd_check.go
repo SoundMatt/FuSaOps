@@ -8,6 +8,7 @@ import (
 	"io"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
+	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/report"
 )
@@ -24,6 +25,7 @@ import (
 //fusa:req REQ-FO-CLI037
 //fusa:req REQ-FO-CLI040
 //fusa:req REQ-FO-CLI041
+//fusa:req REQ-FO-CLI042
 func runCheck(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops check", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -35,6 +37,7 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	suppressFile := fs.String("suppress-file", "", "path to .fusaops-suppress.json")
 	showSuppressed := fs.Bool("show-suppressed", false, "include suppressed findings in output")
 	showFingerprints := fs.Bool("show-fingerprints", false, "show fingerprint and suppress scaffold per finding")
+	saveBaseline := fs.String("save-baseline", "", "save current findings as a diff baseline to this file after check")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -69,6 +72,18 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "fusaops check: %v\n", err)
 			return 1
 		}
+	}
+
+	if *saveBaseline != "" {
+		var all []fusaops.Finding
+		for _, c := range rep.Components {
+			all = append(all, c.Findings...)
+		}
+		if err := diff.SaveBaseline(*saveBaseline, all); err != nil {
+			fmt.Fprintf(stderr, "fusaops check: save-baseline: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "Saved baseline to %s (%d findings)\n", *saveBaseline, len(all))
 	}
 
 	if rep.HasErrors() || (*strict && rep.Summary.Warnings > 0) {

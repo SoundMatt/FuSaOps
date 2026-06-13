@@ -388,3 +388,85 @@ func TestSaveBaselineEmpty(t *testing.T) {
 		t.Errorf("expected empty array, got: %s", data)
 	}
 }
+
+//fusa:test REQ-FO-DIF006
+func TestRenderDiffHTML(t *testing.T) {
+	f := withFP(finding("SAFETY001", "main.go", "critical err", fusaops.SeverityError))
+	baseline := &Baseline{Findings: []fusaops.Finding{}}
+	res := Compare(baseline, []fusaops.Finding{f})
+
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "html", false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "<!DOCTYPE html>") {
+		t.Error("expected HTML doctype")
+	}
+	if !strings.Contains(out, "SAFETY001") {
+		t.Error("expected finding rule ID in HTML output")
+	}
+	if !strings.Contains(out, "gate-fail") {
+		t.Error("expected fail gate in HTML output")
+	}
+}
+
+//fusa:test REQ-FO-DIF006
+func TestRenderDiffHTMLPass(t *testing.T) {
+	baseline := &Baseline{Findings: []fusaops.Finding{}}
+	res := Compare(baseline, []fusaops.Finding{})
+
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "html", false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "gate-pass") {
+		t.Error("expected pass gate in HTML output")
+	}
+}
+
+//fusa:test REQ-FO-DIF006
+func TestRenderDiffMarkdown(t *testing.T) {
+	f := withFP(finding("SAFETY001", "main.go", "critical err", fusaops.SeverityError))
+	baseline := &Baseline{Findings: []fusaops.Finding{}}
+	res := Compare(baseline, []fusaops.Finding{f})
+
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "markdown", false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "# FuSaOps Diff") {
+		t.Error("expected markdown heading")
+	}
+	if !strings.Contains(out, "SAFETY001") {
+		t.Error("expected finding rule ID in markdown output")
+	}
+	if !strings.Contains(out, "Added") {
+		t.Error("expected Added section in markdown output")
+	}
+}
+
+//fusa:test REQ-FO-DIF006
+func TestRenderDiffMarkdownAlias(t *testing.T) {
+	baseline := &Baseline{Findings: []fusaops.Finding{}}
+	res := Compare(baseline, []fusaops.Finding{})
+
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "md", false); err != nil {
+		t.Fatalf("md alias failed: %v", err)
+	}
+	if !strings.Contains(buf.String(), "# FuSaOps Diff") {
+		t.Error("md alias should produce same output as markdown")
+	}
+}
+
+//fusa:test REQ-FO-DIF006
+func TestRenderDiffUnsupportedFormat(t *testing.T) {
+	baseline := &Baseline{}
+	res := Compare(baseline, nil)
+	if err := Render(&bytes.Buffer{}, res, "xml", false); err == nil {
+		t.Error("expected error for unsupported format")
+	}
+}

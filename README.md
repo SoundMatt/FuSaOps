@@ -399,6 +399,20 @@ fusaops report --suppress-file .fusaops-suppress.json --show-suppressed --format
 
 ### Fingerprint hints — quick-suppress scaffolding
 
+### Diff baseline from check
+
+Save the current findings as a baseline in a single step:
+
+```bash
+fusaops check --save-baseline baseline.json
+# later, in CI:
+fusaops diff --baseline baseline.json --strict
+```
+
+`--save-baseline` calls `diff.SaveBaseline` after the scan and prints `Saved baseline to baseline.json (N findings)`.
+
+### Fingerprint hints — quick-suppress scaffolding
+
 Use `--show-fingerprints` to print the fingerprint (and a ready-to-run `suppress add` command) beside each active finding:
 
 ```bash

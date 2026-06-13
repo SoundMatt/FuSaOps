@@ -203,17 +203,22 @@ func Compare(baseline *Baseline, current []fusaops.Finding) *Result {
 }
 
 // Render writes the Result in the requested format to w.
-// format is "text" or "json"; empty defaults to "text".
+// format is "text", "json", "html", or "markdown"/"md"; empty defaults to "text".
 // strict causes Render to treat any new finding (not just errors) as a failure
 // in the gate verdict.
 //
 //fusa:req REQ-FO-DIF003
+//fusa:req REQ-FO-DIF006
 func Render(w io.Writer, res *Result, format string, strict bool) error {
 	switch format {
 	case "", "text":
 		return renderText(w, res, strict)
 	case "json":
 		return renderJSON(w, res, strict)
+	case "html":
+		return renderDiffHTML(w, res, strict)
+	case "markdown", "md":
+		return renderDiffMarkdown(w, res, strict)
 	default:
 		return fmt.Errorf("diff: unsupported format %q", format)
 	}
@@ -318,6 +323,85 @@ func renderJSON(w io.Writer, res *Result, strict bool) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(out)
+}
+
+// renderDiffHTML writes the diff result as a self-contained HTML report.
+//
+//fusa:req REQ-FO-DIF006
+func renderDiffHTML(w io.Writer, res *Result, strict bool) error {
+	s := res.Summary()
+	gate := res.gate(strict)
+	gateClass := "pass"
+	if gate == "FAIL" {
+		gateClass = "fail"
+	}
+	fmt.Fprintf(w, `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>FuSaOps Diff</title>
+<style>
+body{font:14px/1.5 -apple-system,sans-serif;background:#0f1115;color:#e6e9ef;margin:0;padding:24px}
+h1{margin:0 0 4px;font-size:20px}
+.gate-pass{color:#2ecc71;font-weight:700} .gate-fail{color:#e74c3c;font-weight:700}
+table{width:100%%;border-collapse:collapse;font-size:13px;margin-top:12px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #262b36}
+th{color:#8a93a6} .add{color:#2ecc71} .rem{color:#e74c3c} .unch{color:#8a93a6}
+</style></head><body>
+<h1>FuSaOps Diff — Gate: <span class="gate-%s">%s</span></h1>
+<p>%d added (%d err, %d warn, %d info) · %d removed (%d err, %d warn, %d info) · %d unchanged</p>
+`, gateClass, gate,
+		len(res.Added), s.AddedErrors, s.AddedWarnings, s.AddedInfos,
+		len(res.Removed), s.RemovedErrors, s.RemovedWarnings, s.RemovedInfos,
+		res.Unchanged)
+
+	if len(res.Added) > 0 || len(res.Removed) > 0 {
+		fmt.Fprintf(w, "<table><thead><tr><th>Δ</th><th>Severity</th><th>Rule</th><th>Message</th><th>Location</th></tr></thead><tbody>\n")
+		for _, f := range res.Added {
+			fmt.Fprintf(w, "<tr class=\"add\"><td>+</td><td>%s</td><td>%s</td><td>%s</td><td>%s:%d</td></tr>\n",
+				f.Severity, f.RuleID, f.Message, f.Location.File, f.Location.Line)
+		}
+		for _, f := range res.Removed {
+			fmt.Fprintf(w, "<tr class=\"rem\"><td>-</td><td>%s</td><td>%s</td><td>%s</td><td>%s:%d</td></tr>\n",
+				f.Severity, f.RuleID, f.Message, f.Location.File, f.Location.Line)
+		}
+		fmt.Fprintf(w, "</tbody></table>\n")
+	} else {
+		fmt.Fprintf(w, "<p>No changes.</p>\n")
+	}
+	fmt.Fprintf(w, "</body></html>\n")
+	return nil
+}
+
+// renderDiffMarkdown writes the diff result as GitHub-Flavored Markdown.
+//
+//fusa:req REQ-FO-DIF006
+func renderDiffMarkdown(w io.Writer, res *Result, strict bool) error {
+	s := res.Summary()
+	gate := res.gate(strict)
+	gateBadge := "![PASS](https://img.shields.io/badge/Diff-PASS-brightgreen)"
+	if gate == "FAIL" {
+		gateBadge = "![FAIL](https://img.shields.io/badge/Diff-FAIL-red)"
+	}
+	fmt.Fprintf(w, "# FuSaOps Diff %s\n\n", gateBadge)
+	fmt.Fprintf(w, "| | Count |\n|---|---|\n")
+	fmt.Fprintf(w, "| ➕ Added | %d (%d err, %d warn, %d info) |\n", len(res.Added), s.AddedErrors, s.AddedWarnings, s.AddedInfos)
+	fmt.Fprintf(w, "| ➖ Removed | %d (%d err, %d warn, %d info) |\n", len(res.Removed), s.RemovedErrors, s.RemovedWarnings, s.RemovedInfos)
+	fmt.Fprintf(w, "| 🔁 Unchanged | %d |\n\n", res.Unchanged)
+
+	if len(res.Added) > 0 {
+		fmt.Fprintf(w, "## ➕ Added\n\n| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
+		for _, f := range res.Added {
+			fmt.Fprintf(w, "| %s | `%s` | %s | `%s:%d` |\n", f.Severity, f.RuleID, f.Message, f.Location.File, f.Location.Line)
+		}
+		fmt.Fprintln(w)
+	}
+	if len(res.Removed) > 0 {
+		fmt.Fprintf(w, "## ➖ Removed\n\n| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
+		for _, f := range res.Removed {
+			fmt.Fprintf(w, "| %s | `%s` | %s | `%s:%d` |\n", f.Severity, f.RuleID, f.Message, f.Location.File, f.Location.Line)
+		}
+		fmt.Fprintln(w)
+	}
+	return nil
 }
 
 // SaveBaseline writes current findings to path in the flat baseline format so

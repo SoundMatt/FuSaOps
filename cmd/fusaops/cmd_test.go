@@ -315,3 +315,22 @@ func TestReportShowFingerprintsFlag(t *testing.T) {
 		t.Errorf("--show-fingerprints not recognised: %s", errb)
 	}
 }
+
+//fusa:test REQ-FO-CLI042
+func TestCheckSaveBaselineFlag(t *testing.T) {
+	dir := goProject(t)
+	bPath := filepath.Join(t.TempDir(), "baseline.json")
+	code, stdout, errb := runArgs(t, "check", "--save-baseline", bPath, "--format", "text", "--dir", dir)
+	if code == 2 {
+		t.Errorf("--save-baseline not recognised: %s", errb)
+	}
+	if code != 0 && code != 1 {
+		t.Fatalf("unexpected exit code %d", code)
+	}
+	if !strings.Contains(stdout, "Saved baseline") {
+		t.Errorf("expected 'Saved baseline' in stdout: %q", stdout)
+	}
+	if _, err := os.Stat(bPath); err != nil {
+		t.Errorf("baseline file not created: %v", err)
+	}
+}

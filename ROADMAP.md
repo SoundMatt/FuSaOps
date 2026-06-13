@@ -341,6 +341,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.17 — Diff HTML/Markdown & `check --save-baseline` ✅
+
+**Goal:** Complete the diff workflow loop and add richer diff report output formats.
+
+- `diff.Render` gains `"html"` and `"markdown"`/`"md"` format support (REQ-FO-DIF006)
+- HTML: self-contained dashboard with added/removed tables and gate badge
+- Markdown: GFM shield badge, summary table, per-section finding tables
+- `fusaops check --save-baseline PATH` — save findings as diff baseline in one command (REQ-FO-CLI042)
+
+---
+
 ## v1.16 — Finding fingerprint hints & quick-suppress scaffolding ✅
 
 **Goal:** Close the loop between seeing a finding and suppressing it — show the fingerprint and a ready-to-run scaffold in all rendered formats.

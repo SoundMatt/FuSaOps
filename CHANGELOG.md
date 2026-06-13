@@ -7,6 +7,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.17.0] — 2026-06-13
+
+### Diff HTML/Markdown renderers & `fusaops check --save-baseline`
+
+- **`diff.Render` now supports `"html"` and `"markdown"`/`"md"` formats** — the HTML renderer produces a self-contained dashboard with added/removed finding tables and a gate verdict badge; the Markdown renderer produces a GFM report with shield badge, summary table, and per-section finding tables. `fusaops diff --format html/markdown` works out of the box. (REQ-FO-DIF006)
+- **`fusaops check --save-baseline PATH`** — after a successful scan, saves the current findings to PATH as a diff baseline (calls `diff.SaveBaseline`). Prints `Saved baseline to PATH (N findings)`. Allows CI pipelines to roll the baseline forward from one command instead of a separate `diff --update-baseline` step. (REQ-FO-CLI042)
+
+### Safety
+- Requirements registry at 236 requirements (added REQ-FO-DIF006, REQ-FO-CLI042)
+- 9 new tests; 236/236 requirements traced+tested; combined coverage 81.0%
+
 ## [1.16.0] — 2026-06-13
 
 ### Finding fingerprint hints & quick-suppress scaffolding

@@ -1114,6 +1114,13 @@
       "rationale": "Enables a rolling-baseline CI workflow where a passing diff updates its own baseline in place."
     },
     {
+      "id": "REQ-FO-DIF006",
+      "title": "Diff HTML and Markdown renderers",
+      "description": "diff.Render must support 'html' and 'markdown'/'md' format strings in addition to 'text' and 'json'. The HTML renderer shall produce a self-contained dashboard with added/removed tables and a gate verdict badge. The Markdown renderer shall produce a GFM report with shield badge, summary table, and per-section finding tables.",
+      "priority": "MUST",
+      "rationale": "CI pipelines and PR comments benefit from richer diff output beyond plain text or raw JSON."
+    },
+    {
       "id": "REQ-FO-ADP025",
       "title": "cpp-FuSa standards normalization",
       "description": "The cpp-FuSa adapter Standards must run <tool> <cmd> --output <tmp> (not --format json), map do178c→do178 subcommand name, and call RecomputeSummary on the decoded GapReport.",
@@ -1595,6 +1602,13 @@
       "description": "The check and report subcommands shall accept --show-fingerprints to include per-finding fingerprint hints in rendered output. When set, RenderWithOptions is called with ShowFingerprints:true.",
       "priority": "MUST",
       "rationale": "Engineers need a direct path from a finding in a report to the suppress add command without manual fingerprint computation."
+    },
+    {
+      "id": "REQ-FO-CLI042",
+      "title": "fusaops check --save-baseline flag",
+      "description": "The check subcommand shall accept --save-baseline PATH. After a successful scan, it shall call diff.SaveBaseline(PATH, findings) to persist current findings as a diff baseline, and print 'Saved baseline to PATH (N findings)' to stdout.",
+      "priority": "MUST",
+      "rationale": "Allows CI to roll the baseline forward from a single check command without a separate save step."
     },
     {
       "id": "REQ-FO-CLI033",
