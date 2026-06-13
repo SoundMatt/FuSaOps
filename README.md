@@ -104,8 +104,9 @@ produces into one cross-language view:
   qualification status; `--strict` is a polyglot coverage gate. Supports
   `--format text|json|html|markdown`; the `markdown` format emits a
   GitHub-Flavoured Markdown summary suitable for wikis and PR descriptions.
-- **`fusaops sbom`** — merges and de-duplicates every tool's SBOM, with an
-  SPDX 2.3 output.
+- **`fusaops sbom`** — merges and de-duplicates every tool's SBOM. Supports
+  `--format json|text|spdx|html`; the `html` format produces a self-contained
+  HTML viewer with a per-component summary and a full de-duplicated package list.
 - **`fusaops audit-pack`** — bundles each tool's own audit-pack plus the
   FuSaOps aggregate report, trace matrix, and SBOM into one ZIP with a hashed
   manifest.

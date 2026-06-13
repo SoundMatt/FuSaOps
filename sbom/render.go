@@ -3,6 +3,7 @@ package sbom
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"time"
@@ -13,6 +14,7 @@ import (
 // Render writes the aggregate SBOM to w in the requested format.
 //
 //fusa:req REQ-FO-SBM006
+//fusa:req REQ-FO-SBM010
 func Render(w io.Writer, a *Aggregate, format string) error {
 	switch format {
 	case "", "json":
@@ -21,6 +23,8 @@ func Render(w io.Writer, a *Aggregate, format string) error {
 		return renderText(w, a)
 	case "spdx":
 		return renderSPDX(w, a)
+	case "html":
+		return renderHTML(w, a)
 	default:
 		return fmt.Errorf("sbom: unsupported format %q", format)
 	}
@@ -103,6 +107,70 @@ type spdxRelationship struct {
 	RelatedSPDXElement string `json:"relatedSpdxElement"`
 	RelationshipType   string `json:"relationshipType"`
 }
+
+// renderHTML writes a self-contained HTML SBOM dashboard.
+//
+//fusa:req REQ-FO-SBM010
+func renderHTML(w io.Writer, a *Aggregate) error {
+	if err := sbomTemplate.Execute(w, a); err != nil {
+		return fmt.Errorf("sbom: html render: %w", err)
+	}
+	return nil
+}
+
+// sbomTemplate is a self-contained, dependency-free SBOM viewer.
+var sbomTemplate = template.Must(template.New("sbom").Parse(`<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FuSaOps — SBOM{{if .Project}}: {{.Project}}{{end}}</title>
+<style>
+ body{font:15px/1.5 system-ui,sans-serif;margin:0;background:#0f1115;color:#e6e6e6}
+ header{padding:1.2rem 1.6rem;background:#171a21;border-bottom:1px solid #272b34}
+ h1{margin:0;font-size:1.25rem} .meta{color:#9aa3b2;font-size:.85rem;margin-top:.3rem}
+ main{padding:1.6rem;max-width:1000px;margin:0 auto}
+ h2{font-size:1rem;color:#9aa3b2;margin:1.4rem 0 .4rem}
+ table{width:100%;border-collapse:collapse;background:#171a21;border-radius:.6rem;overflow:hidden}
+ th,td{padding:.55rem .8rem;text-align:left;border-bottom:1px solid #272b34;font-size:.9rem}
+ th{background:#1d2129;color:#9aa3b2;font-weight:600}
+ .skip{color:#9aa3b2;font-style:italic} .ver{color:#9aa3b2;font-size:.85rem}
+ .lang{display:inline-block;padding:.1rem .45rem;border-radius:.35rem;font-size:.8rem;background:#1d2129;color:#9aa3b2}
+</style></head><body>
+<header>
+ <h1>FuSaOps — Software Bill of Materials{{if .Project}}: {{.Project}}{{end}}</h1>
+ <div class="meta">Generated {{.GeneratedAt.Format "2006-01-02 15:04 MST"}} · {{.TotalPackages}} package(s) across {{len .Components}} component(s)</div>
+</header>
+<main>
+ <h2>Components</h2>
+ <table>
+  <thead><tr><th>Tool</th><th>Language</th><th>Module</th><th class="num">Packages</th></tr></thead>
+  <tbody>
+  {{range .Components}}
+   <tr>
+    <td>{{.Tool}}</td><td>{{.Language}}</td>
+    {{if .Skipped}}
+     <td colspan="2" class="skip">skipped — {{.Skipped}}</td>
+    {{else}}
+     <td>{{.Module}}</td><td>{{len .Packages}}</td>
+    {{end}}
+   </tr>
+  {{end}}
+  </tbody>
+ </table>
+ <h2>Packages ({{.TotalPackages}} total, de-duplicated)</h2>
+ <table>
+  <thead><tr><th>Name</th><th>Version</th><th>Language</th></tr></thead>
+  <tbody>
+  {{range .Packages}}
+   <tr>
+    <td>{{.Name}}</td>
+    <td class="ver">{{if .Version}}{{.Version}}{{else}}—{{end}}</td>
+    <td>{{if .Language}}<span class="lang">{{.Language}}</span>{{end}}</td>
+   </tr>
+  {{end}}
+  </tbody>
+ </table>
+</main></body></html>
+`))
 
 //fusa:req REQ-FO-SBM009
 func renderSPDX(w io.Writer, a *Aggregate) error {

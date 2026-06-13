@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.24.0] — 2026-06-13
+
+### `fusaops sbom --format html` — SBOM HTML viewer
+
+- **`sbom.Render(w, a, "html")`** — new format support; produces a self-contained HTML page with a component summary table (tool/language/module/package count, skipped rows) and a full de-duplicated package table (name/version/language). No external CSS or JS. (REQ-FO-SBM010)
+- **`fusaops sbom --format html [--output sbom.html]`** — expose the new format from the CLI.
+- Completes the SBOM format set to match the single-project report and trace HTML renderers.
+
+### Safety
+- Requirements registry at 248 requirements (added REQ-FO-SBM010)
+- 2 new tests; 248/248 requirements traced+tested; combined coverage 81.3%
+
 ## [1.23.0] — 2026-06-13
 
 ### `fusaops trace --format markdown` — GFM traceability matrix

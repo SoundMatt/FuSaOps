@@ -341,6 +341,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.24 — `fusaops sbom --format html` ✅
+
+**Goal:** Complete the SBOM format set so the merged bill of materials is as shareable as the findings report.
+
+- `sbom.Render` gains `"html"` format support (REQ-FO-SBM010)
+- Self-contained HTML: component summary table + full de-duplicated package table, no external CSS/JS
+- `fusaops sbom --format html [--output sbom.html]`
+- Matches the design language of the single-project HTML report and trace HTML renderer
+
+---
+
 ## v1.23 — `fusaops trace --format markdown` ✅
 
 **Goal:** Let teams embed the cross-language traceability matrix in GitHub wikis, PR descriptions, and documentation sites without converting from HTML.

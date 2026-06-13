@@ -687,6 +687,13 @@
       "level": "ASIL-C"
     },
     {
+      "id": "REQ-FO-SBM010",
+      "title": "SBOM HTML rendering",
+      "description": "sbom.Render must accept format 'html' and emit a self-contained HTML page showing a component summary table and a de-duplicated full package table. No external CSS or JS.",
+      "priority": "MUST",
+      "rationale": "Completes the SBOM format set to match the single-project report and trace HTML renderers; lets teams share the SBOM as a standalone HTML file."
+    },
+    {
       "id": "REQ-FO-PCK001",
       "title": "Pack source",
       "text": "The auditpack package shall accept bundle sources supplied either by file path or in-memory data, keyed by archive path.",

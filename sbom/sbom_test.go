@@ -162,3 +162,29 @@ func TestRenderSPDXNoProject(t *testing.T) {
 		t.Error("spdx should fall back to default name")
 	}
 }
+
+//fusa:test REQ-FO-SBM010
+func TestRenderHTML(t *testing.T) {
+	var buf bytes.Buffer
+	if err := Render(&buf, sampleAgg(), "html"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"<!doctype html>", "Software Bill of Materials", "gofusa", "golang.org/x/sys", "skipped"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("html missing %q", want)
+		}
+	}
+}
+
+//fusa:test REQ-FO-SBM010
+func TestRenderHTMLNoPackages(t *testing.T) {
+	var buf bytes.Buffer
+	a := New("/r", "myproj", nil)
+	if err := Render(&buf, a, "html"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "myproj") {
+		t.Error("html should include project name")
+	}
+}
