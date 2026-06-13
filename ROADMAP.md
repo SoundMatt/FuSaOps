@@ -341,6 +341,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.19 — History CLI ✅
+
+**Goal:** Make check-run history accessible from the CLI without a running dashboard server.
+
+- `fusaops history list [--dir|--file] [--format text|json] [--limit N]` — lists snapshots from `.fusaops-history.jsonl` newest-first (REQ-FO-CLI045)
+- `fusaops history prune [--dir|--file] [--keep N]` — trims old entries to `--keep` most-recent (REQ-FO-CLI046)
+- `history.Prune(dir, keep)` — exported function for programmatic access (REQ-FO-HST003)
+- Spec snapshot: rust-FuSa v0.2.8 (gap-report `--format md` support)
+
+---
+
 ## v1.18 — Config validation CLI ✅
 
 **Goal:** Surface config errors early and make the effective config inspectable from the command line.

@@ -969,7 +969,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.16 · rust-FuSa v0.2.6 · py-FuSa v0.1.4 · java-FuSa v0.2.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.16 · rust-FuSa v0.2.8 · py-FuSa v0.1.4 · java-FuSa v0.2.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -1077,6 +1077,12 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.10.9 — 2026-06-13 (rust-FuSa v0.2.8 gap-report --format md; 100% coverage)
+
+- **Version snapshot updated (§11):** rust-FuSa v0.2.8.
+- **rust-FuSa v0.2.8:** all 8 standards gap-report commands (`iso26262`, `iec61508`, `do178c`, `iso21434`, `unece`, `misra`, `iec62443`, `slsa`) now support `--format md` output. 10 new requirements added to `.fusa-reqs.json`; 100% traced and tested (174 requirements). DCO enforcement added to CI. No new or closed MUST conformance gaps; no §11 table changes.
+- **rust-FuSa open SHOULD gap:** `--format text --output <file>` still echoes text to stdout while writing to file (§2.2 nuance). JSON-only `--output` already conformant.
 
 ### 1.10.8 — 2026-06-13 (c-FuSa v0.5.16 exit-code fixes)
 

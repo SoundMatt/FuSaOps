@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.19.0] — 2026-06-13
+
+### `fusaops history list|prune` subcommands & `history.Prune`
+
+- **`history.Prune(dir string, keep int) (int, error)`** — new exported function in the `history` package; retains the `keep` most-recent snapshots, writes the file back, and returns the count removed. `keep <= 0` defaults to `MaxSnapshots`. A missing file returns `0, nil`. (REQ-FO-HST003)
+- **`fusaops history list [--dir DIR] [--file PATH] [--format text|json] [--limit N]`** — lists check-run snapshots from `.fusaops-history.jsonl` newest-first in a human-readable table (text) or JSON array. Missing file prints `No history entries found.` and exits 0. (REQ-FO-CLI045)
+- **`fusaops history prune [--dir DIR] [--file PATH] [--keep N]`** — removes old entries keeping at most `--keep` (default 100) most-recent snapshots; prints `Pruned N entries, M remaining.`; exits 0. (REQ-FO-CLI046)
+- Both commands accept `--file PATH` to override the default `.fusaops-history.jsonl` search location.
+- x-FuSa spec snapshot updated: rust-FuSa v0.2.6 → **v0.2.8** (added `--format md` for all 8 standards gap-report commands; 100% requirement coverage).
+
+### Safety
+- Requirements registry at 241 requirements (added REQ-FO-HST003, REQ-FO-CLI045, REQ-FO-CLI046)
+- 11 new tests (8 cmd-level + 3 history package); 241/241 requirements traced+tested; combined coverage 81.1%
+
 ## [1.18.0] — 2026-06-13
 
 ### `fusaops config validate|show` subcommands

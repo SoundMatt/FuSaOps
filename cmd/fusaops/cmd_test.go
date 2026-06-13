@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -447,6 +448,108 @@ func TestConfigNoSubcommand(t *testing.T) {
 	code, _, stderr := runArgs(t, "config")
 	if code != 2 {
 		t.Fatalf("config (no sub): got code=%d, want 2", code)
+	}
+	if !strings.Contains(stderr, "subcommand required") {
+		t.Errorf("expected 'subcommand required': %q", stderr)
+	}
+}
+
+//fusa:test REQ-FO-CLI045
+func TestHistoryListEmpty(t *testing.T) {
+	dir := t.TempDir()
+	code, stdout, _ := runArgs(t, "history", "list", "--dir", dir)
+	if code != 0 {
+		t.Fatalf("history list empty: code=%d", code)
+	}
+	if !strings.Contains(stdout, "No history") {
+		t.Errorf("expected 'No history' message: %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI045
+func TestHistoryListText(t *testing.T) {
+	dir := t.TempDir()
+	// Write a minimal history entry directly.
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops-history.jsonl"),
+		[]byte(`{"runAt":"2026-06-01T10:00:00Z","status":"PASS","total":5,"errors":0,"warnings":2,"infos":3,"languages":[]}`+"\n"),
+		0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, _ := runArgs(t, "history", "list", "--dir", dir)
+	if code != 0 {
+		t.Fatalf("history list: code=%d", code)
+	}
+	if !strings.Contains(stdout, "PASS") {
+		t.Errorf("expected PASS in output: %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI045
+func TestHistoryListJSON(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops-history.jsonl"),
+		[]byte(`{"runAt":"2026-06-01T10:00:00Z","status":"FAIL","total":1,"errors":1,"warnings":0,"infos":0,"languages":[]}`+"\n"),
+		0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, _ := runArgs(t, "history", "list", "--dir", dir, "--format", "json")
+	if code != 0 {
+		t.Fatalf("history list --format json: code=%d", code)
+	}
+	if !strings.Contains(stdout, `"status"`) {
+		t.Errorf("expected JSON output with 'status' field: %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI046
+func TestHistoryPruneEmpty(t *testing.T) {
+	dir := t.TempDir()
+	code, stdout, _ := runArgs(t, "history", "prune", "--dir", dir, "--keep", "10")
+	if code != 0 {
+		t.Fatalf("history prune empty: code=%d", code)
+	}
+	if !strings.Contains(stdout, "Pruned 0") {
+		t.Errorf("expected 'Pruned 0': %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI046
+func TestHistoryPruneKeep(t *testing.T) {
+	dir := t.TempDir()
+	lines := ""
+	for i := range 8 {
+		lines += fmt.Sprintf(`{"runAt":"2026-06-01T%02d:00:00Z","status":"PASS","total":%d,"errors":0,"warnings":0,"infos":0,"languages":[]}`+"\n", i, i)
+	}
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops-history.jsonl"), []byte(lines), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, _ := runArgs(t, "history", "prune", "--dir", dir, "--keep", "5")
+	if code != 0 {
+		t.Fatalf("history prune: code=%d", code)
+	}
+	if !strings.Contains(stdout, "Pruned 3") || !strings.Contains(stdout, "5 remaining") {
+		t.Errorf("expected 'Pruned 3 entries, 5 remaining.': %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI045
+//fusa:test REQ-FO-CLI046
+func TestHistoryUnknownSubcommand(t *testing.T) {
+	code, _, stderr := runArgs(t, "history", "bogus")
+	if code != 2 {
+		t.Fatalf("history bogus: got code=%d, want 2", code)
+	}
+	if !strings.Contains(stderr, "unknown subcommand") {
+		t.Errorf("expected 'unknown subcommand': %q", stderr)
+	}
+}
+
+//fusa:test REQ-FO-CLI045
+//fusa:test REQ-FO-CLI046
+func TestHistoryNoSubcommand(t *testing.T) {
+	code, _, stderr := runArgs(t, "history")
+	if code != 2 {
+		t.Fatalf("history (no sub): got code=%d, want 2", code)
 	}
 	if !strings.Contains(stderr, "subcommand required") {
 		t.Errorf("expected 'subcommand required': %q", stderr)

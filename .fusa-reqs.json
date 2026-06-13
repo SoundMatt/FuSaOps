@@ -1611,6 +1611,27 @@
       "rationale": "Allows CI to roll the baseline forward from a single check command without a separate save step."
     },
     {
+      "id": "REQ-FO-HST003",
+      "title": "history.Prune function",
+      "description": "The history package shall export a Prune(dir string, keep int) (int, error) function that loads the .fusaops-history.jsonl in dir, retains only the keep most-recent entries, writes the result back, and returns the number of entries removed. A missing file shall return 0, nil. If keep <= 0, MaxSnapshots shall be used.",
+      "priority": "MUST",
+      "rationale": "Allows operators and CI to manage history file size without a running server."
+    },
+    {
+      "id": "REQ-FO-CLI045",
+      "title": "fusaops history list subcommand",
+      "description": "The history list subcommand shall read .fusaops-history.jsonl from --dir (default '.') or --file, and print snapshots newest-first in text (default) or json format. --limit N caps the number of entries returned. Missing file shall print 'No history entries found.' and exit 0. Errors exit 1 to stderr.",
+      "priority": "MUST",
+      "rationale": "Enables operators to inspect check run history from the CLI without a running dashboard server."
+    },
+    {
+      "id": "REQ-FO-CLI046",
+      "title": "fusaops history prune subcommand",
+      "description": "The history prune subcommand shall remove old entries from .fusaops-history.jsonl in --dir (or --file), retaining at most --keep entries (default MaxSnapshots=100). It shall print 'Pruned N entries, M remaining.' to stdout and exit 0. Errors exit 1 to stderr.",
+      "priority": "MUST",
+      "rationale": "Allows teams to bound the history file size in long-running CI environments."
+    },
+    {
       "id": "REQ-FO-CLI043",
       "title": "fusaops config validate subcommand",
       "description": "The config validate subcommand shall load and validate the .fusaops.json file at --file or --dir/.fusaops.json. On success it shall print 'OK <path>' with a summary of key fields to stdout and exit 0. On validation error or missing file it shall print a descriptive error to stderr and exit 1.",

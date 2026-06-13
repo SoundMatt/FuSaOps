@@ -140,6 +140,50 @@ func TestStoreTrim(t *testing.T) {
 	}
 }
 
+// TestPrune verifies that Prune removes old entries and returns the count.
+//
+//fusa:test REQ-FO-HST003
+func TestPrune(t *testing.T) {
+	dir := t.TempDir()
+	for i := range 10 {
+		_ = Store(dir, Snapshot{RunAt: time.Now(), Total: i})
+	}
+	removed, err := Prune(dir, 6)
+	if err != nil {
+		t.Fatalf("Prune: %v", err)
+	}
+	if removed != 4 {
+		t.Errorf("removed: want 4, got %d", removed)
+	}
+	got, _ := Load(dir, 0)
+	if len(got) != 6 {
+		t.Errorf("after prune: want 6, got %d", len(got))
+	}
+	if got[len(got)-1].Total != 9 {
+		t.Errorf("last entry should be newest (Total=9), got %d", got[len(got)-1].Total)
+	}
+}
+
+//fusa:test REQ-FO-HST003
+func TestPruneMissingFile(t *testing.T) {
+	removed, err := Prune(t.TempDir(), 10)
+	if err != nil || removed != 0 {
+		t.Errorf("missing file: want 0, nil; got %d, %v", removed, err)
+	}
+}
+
+//fusa:test REQ-FO-HST003
+func TestPruneNothingToRemove(t *testing.T) {
+	dir := t.TempDir()
+	for range 3 {
+		_ = Store(dir, Snapshot{RunAt: time.Now(), Total: 1})
+	}
+	removed, err := Prune(dir, 10)
+	if err != nil || removed != 0 {
+		t.Errorf("nothing to remove: want 0, nil; got %d, %v", removed, err)
+	}
+}
+
 // TestCorruptLineSkipped verifies that a corrupt JSONL line is silently skipped.
 func TestCorruptLineSkipped(t *testing.T) {
 	dir := t.TempDir()

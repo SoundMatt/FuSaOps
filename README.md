@@ -89,6 +89,8 @@ fusaops serve --fleet fleet.json         # add /fleet multi-repo dashboard
 fusaops init                 # write a starter .fusaops.json
 fusaops config validate      # validate .fusaops.json; exit 1 on error
 fusaops config show          # print effective config as formatted JSON
+fusaops history list         # list check-run history (text or json)
+fusaops history prune --keep 50  # trim history to 50 most-recent entries
 ```
 
 ### Evidence aggregation (v0.2)

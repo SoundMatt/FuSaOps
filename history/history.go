@@ -140,6 +140,27 @@ func loadAll(path string) ([]Snapshot, error) {
 	return out, sc.Err()
 }
 
+// Prune removes old entries from the JSONL history file in dir, retaining at
+// most keep entries (newest). Returns the number of entries removed. A missing
+// file is not an error; returns 0, nil. If keep <= 0, MaxSnapshots is used.
+//
+//fusa:req REQ-FO-HST003
+func Prune(dir string, keep int) (int, error) {
+	if keep <= 0 {
+		keep = MaxSnapshots
+	}
+	path := filepath.Join(dir, Filename)
+	all, err := loadAll(path)
+	if err != nil {
+		return 0, err
+	}
+	if len(all) <= keep {
+		return 0, nil
+	}
+	removed := len(all) - keep
+	return removed, writeAll(path, all[removed:])
+}
+
 func writeAll(path string, snaps []Snapshot) error {
 	f, err := os.Create(path)
 	if err != nil {
