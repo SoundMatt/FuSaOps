@@ -663,11 +663,14 @@ func TestWithWebhook(t *testing.T) {
 //fusa:test REQ-FO-HOOK001
 //fusa:test REQ-FO-HOOK002
 func TestWebhookFiredOnTransition(t *testing.T) {
-	var received []byte
+	done := make(chan []byte, 1)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		buf := make([]byte, 4096)
 		n, _ := r.Body.Read(buf)
-		received = buf[:n]
+		select {
+		case done <- buf[:n]:
+		default:
+		}
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
@@ -678,21 +681,15 @@ func TestWebhookFiredOnTransition(t *testing.T) {
 	// newTestServer has a warning finding → status becomes WARN → triggers webhook.
 	s.compute(context.Background())
 
-	// Wait briefly for the goroutine.
-	deadline := time.Now().Add(2 * time.Second)
-	for time.Now().Before(deadline) {
-		if len(received) > 0 {
-			break
+	select {
+	case received := <-done:
+		if !strings.Contains(string(received), `"prev"`) {
+			t.Errorf("webhook payload missing 'prev': %s", received)
 		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	if len(received) == 0 {
-		t.Fatal("webhook not received")
-	}
-	if !strings.Contains(string(received), `"prev"`) {
-		t.Errorf("webhook payload missing 'prev': %s", received)
-	}
-	if !strings.Contains(string(received), `"status"`) {
-		t.Errorf("webhook payload missing 'status': %s", received)
+		if !strings.Contains(string(received), `"status"`) {
+			t.Errorf("webhook payload missing 'status': %s", received)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("webhook not received within timeout")
 	}
 }
