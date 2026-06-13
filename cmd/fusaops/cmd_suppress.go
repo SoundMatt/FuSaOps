@@ -11,21 +11,24 @@ import (
 	"time"
 
 	"github.com/SoundMatt/FuSaOps/orchestrator"
+	"github.com/SoundMatt/FuSaOps/report"
 	"github.com/SoundMatt/FuSaOps/suppression"
 )
 
 const defaultSuppressFile = ".fusaops-suppress.json"
 
-// runSuppress dispatches suppress subcommands: add, list, prune, verify.
+// runSuppress dispatches suppress subcommands: add, list, prune, verify, import.
 //
 //fusa:req REQ-FO-CLI039
+//fusa:req REQ-FO-CLI048
 //fusa:req REQ-FO-SUP005
 //fusa:req REQ-FO-SUP006
 //fusa:req REQ-FO-SUP007
 //fusa:req REQ-FO-SUP008
+//fusa:req REQ-FO-SUP009
 func runSuppress(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "fusaops suppress: subcommand required: add|list|prune|verify")
+		fmt.Fprintln(stderr, "fusaops suppress: subcommand required: add|list|prune|verify|import")
 		return 2
 	}
 	switch args[0] {
@@ -37,6 +40,8 @@ func runSuppress(args []string, stdout, stderr io.Writer) int {
 		return runSuppressPrune(args[1:], stdout, stderr)
 	case "verify":
 		return runSuppressVerify(args[1:], stdout, stderr)
+	case "import":
+		return runSuppressImport(args[1:], stdout, stderr)
 	default:
 		fmt.Fprintf(stderr, "fusaops suppress: unknown subcommand %q\n", args[0])
 		return 2
@@ -217,4 +222,75 @@ func runSuppressVerify(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "  %s  %s\n", s.Fingerprint, s.Reason)
 	}
 	return 1
+}
+
+// runSuppressImport bulk-adds fingerprints from a fusaops check JSON report.
+//
+//fusa:req REQ-FO-SUP009
+//fusa:req REQ-FO-CLI048
+func runSuppressImport(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("fusaops suppress import", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	file := fs.String("file", defaultSuppressFile, "path to .fusaops-suppress.json")
+	from := fs.String("from", "", "path to a fusaops check --format json report")
+	reason := fs.String("reason", "imported", "reason for all imported suppressions")
+	expires := fs.String("expires", "", "expiry date for imported suppressions (YYYY-MM-DD; optional)")
+	if err := fs.Parse(args); err != nil {
+		return 2
+	}
+	if *from == "" {
+		fmt.Fprintln(stderr, "fusaops suppress import: --from is required")
+		return 2
+	}
+
+	data, err := os.ReadFile(*from)
+	if err != nil {
+		fmt.Fprintf(stderr, "fusaops suppress import: read %s: %v\n", *from, err)
+		return 1
+	}
+	var rep report.AggregateReport
+	if err := json.Unmarshal(data, &rep); err != nil {
+		fmt.Fprintf(stderr, "fusaops suppress import: parse %s: %v\n", *from, err)
+		return 1
+	}
+
+	cfg, loadErr := suppression.LoadConfig(*file)
+	if loadErr != nil && !os.IsNotExist(loadErr) {
+		fmt.Fprintf(stderr, "fusaops suppress import: load suppress file: %v\n", loadErr)
+		return 1
+	}
+
+	existing := make(map[string]struct{}, len(cfg.Suppressions))
+	for _, s := range cfg.Suppressions {
+		existing[s.Fingerprint] = struct{}{}
+	}
+
+	total, newCount := 0, 0
+	for _, c := range rep.Components {
+		for _, f := range c.Findings {
+			if f.Fingerprint == "" {
+				continue
+			}
+			total++
+			if _, ok := existing[f.Fingerprint]; ok {
+				continue
+			}
+			cfg.Suppressions = append(cfg.Suppressions, suppression.Suppression{
+				Fingerprint: f.Fingerprint,
+				Reason:      *reason,
+				Expires:     *expires,
+			})
+			existing[f.Fingerprint] = struct{}{}
+			newCount++
+		}
+	}
+
+	if err := suppression.SaveConfig(*file, cfg); err != nil {
+		fmt.Fprintf(stderr, "fusaops suppress import: save suppress file: %v\n", err)
+		return 1
+	}
+
+	already := total - newCount
+	fmt.Fprintf(stdout, "Imported %d findings (%d new, %d already present).\n", total, newCount, already)
+	return 0
 }

@@ -1611,6 +1611,20 @@
       "rationale": "Fleet operators need a shareable HTML report for audit reviews and team dashboards, matching the HTML capability already available in the single-project report."
     },
     {
+      "id": "REQ-FO-SUP009",
+      "title": "fusaops suppress import — bulk suppression from check report",
+      "description": "The suppress import subcommand shall read a fusaops check --format json report from --from PATH, extract all finding fingerprints, and add them as new entries to the .fusaops-suppress.json file at --file (default .fusaops-suppress.json). Fingerprints already present in the suppress file shall be skipped (no duplicates). Optional --reason and --expires flags apply to all imported entries. On success prints 'Imported N findings (M new, K already present).' and exits 0. Errors exit 1.",
+      "priority": "MUST",
+      "rationale": "Teams onboarding FuSaOps to a project with many pre-existing findings need a one-command way to acknowledge them all rather than adding entries one-by-one."
+    },
+    {
+      "id": "REQ-FO-CLI048",
+      "title": "fusaops suppress import subcommand",
+      "description": "The suppress subcommand dispatcher shall recognise 'import' as a valid subcommand and route it to runSuppressImport. --from is required and exits 2 if missing. --file, --reason, --expires are optional.",
+      "priority": "MUST",
+      "rationale": "CLI entry point for REQ-FO-SUP009."
+    },
+    {
       "id": "REQ-FO-ORC012",
       "title": "Options.MinSeverity severity filter",
       "description": "When Options.MinSeverity is set to a valid severity (INFO/WARNING/ERROR), the orchestrator shall filter out findings whose Severity.Rank() is less than MinSeverity.Rank() before storing them in the report. Empty string (zero value) disables filtering. The filter is applied after fingerprint enrichment and before suppression.",

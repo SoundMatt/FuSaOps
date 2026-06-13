@@ -341,6 +341,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.22 — Suppress import ✅
+
+**Goal:** Let teams acknowledge all existing findings in one command when onboarding FuSaOps.
+
+- `fusaops suppress import --from check.json [--file suppress.json] [--reason TEXT] [--expires DATE]` (REQ-FO-CLI048)
+- Reads fingerprints from a `fusaops check --format json` report; de-duplicates against existing entries
+- Prints `Imported N findings (M new, K already present).` (REQ-FO-SUP009)
+- `--from` required; exits 2 if missing
+
+---
+
 ## v1.21 — Fleet HTML report ✅
 
 **Goal:** Complete the fleet report format set to match single-project report parity.

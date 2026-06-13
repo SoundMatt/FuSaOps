@@ -376,6 +376,7 @@ Manage the suppression file from the CLI:
 
 ```bash
 fusaops suppress add --fingerprint sha256:abc123 --reason "false positive" [--expires 2026-12-31]
+fusaops suppress import --from check.json --reason "acknowledged"   # bulk-import from check report
 fusaops suppress list                # show all entries with active/expired status
 fusaops suppress prune               # remove expired entries
 fusaops suppress verify [--dir .]    # check for stale entries not in current findings; exit 1 if any

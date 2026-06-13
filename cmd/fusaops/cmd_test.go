@@ -590,6 +590,81 @@ func TestReportMinSeverityFlag(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-SUP009
+//fusa:test REQ-FO-CLI048
+func TestSuppressImportBasic(t *testing.T) {
+	dir := t.TempDir()
+	// Write a minimal check report JSON with one finding with a fingerprint.
+	reportJSON := `{"generatedAt":"2026-06-01T00:00:00Z","root":".","components":[{"language":"go","tool":"gofusa","available":true,"findings":[{"language":"go","tool":"gofusa","ruleId":"RULE1","severity":"WARNING","message":"test","location":{"file":"main.go","line":1},"fingerprint":"sha256:abc123"}],"summary":{"total":1,"errors":0,"warnings":1,"infos":0}}],"summary":{"total":1,"errors":0,"warnings":1,"infos":0}}`
+	reportPath := filepath.Join(dir, "check.json")
+	if err := os.WriteFile(reportPath, []byte(reportJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	supPath := filepath.Join(dir, ".fusaops-suppress.json")
+
+	code, stdout, errb := runArgs(t, "suppress", "import", "--from", reportPath, "--file", supPath, "--reason", "test import")
+	if code != 0 {
+		t.Fatalf("suppress import: code=%d err=%s", code, errb)
+	}
+	if !strings.Contains(stdout, "Imported 1") || !strings.Contains(stdout, "1 new") {
+		t.Errorf("expected 'Imported 1 findings (1 new, 0 already present).' got: %q", stdout)
+	}
+	// File should exist and contain the fingerprint.
+	data, err := os.ReadFile(supPath)
+	if err != nil {
+		t.Fatalf("suppress file not created: %v", err)
+	}
+	if !strings.Contains(string(data), "sha256:abc123") {
+		t.Errorf("fingerprint not found in suppress file: %s", data)
+	}
+}
+
+//fusa:test REQ-FO-SUP009
+//fusa:test REQ-FO-CLI048
+func TestSuppressImportDeduplicate(t *testing.T) {
+	dir := t.TempDir()
+	reportJSON := `{"generatedAt":"2026-06-01T00:00:00Z","root":".","components":[{"language":"go","tool":"gofusa","available":true,"findings":[{"language":"go","tool":"gofusa","ruleId":"R1","severity":"ERROR","message":"x","location":{"file":"f.go"},"fingerprint":"sha256:dup"}],"summary":{}}],"summary":{}}`
+	reportPath := filepath.Join(dir, "check.json")
+	if err := os.WriteFile(reportPath, []byte(reportJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	supPath := filepath.Join(dir, ".fusaops-suppress.json")
+
+	// Import twice — second import should show 0 new.
+	runArgs(t, "suppress", "import", "--from", reportPath, "--file", supPath, "--reason", "first")
+	code, stdout, _ := runArgs(t, "suppress", "import", "--from", reportPath, "--file", supPath, "--reason", "second")
+	if code != 0 {
+		t.Fatalf("suppress import second: code=%d", code)
+	}
+	if !strings.Contains(stdout, "0 new") {
+		t.Errorf("expected 0 new on second import: %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI048
+func TestSuppressImportMissingFrom(t *testing.T) {
+	code, _, errb := runArgs(t, "suppress", "import")
+	if code != 2 {
+		t.Fatalf("suppress import no --from: want code=2, got %d", code)
+	}
+	if !strings.Contains(errb, "--from") {
+		t.Errorf("expected --from in error: %q", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI048
+func TestSuppressImportBadReport(t *testing.T) {
+	dir := t.TempDir()
+	bad := filepath.Join(dir, "bad.json")
+	if err := os.WriteFile(bad, []byte("not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, _, _ := runArgs(t, "suppress", "import", "--from", bad, "--file", filepath.Join(dir, "s.json"))
+	if code != 1 {
+		t.Fatalf("suppress import bad json: want code=1, got %d", code)
+	}
+}
+
 //fusa:test REQ-FO-CLI045
 //fusa:test REQ-FO-CLI046
 func TestHistoryNoSubcommand(t *testing.T) {

@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.22.0] — 2026-06-13
+
+### `fusaops suppress import` — bulk suppression from check report
+
+- **`fusaops suppress import --from PATH [--file SUPPRESS_FILE] [--reason TEXT] [--expires DATE]`** — reads a `fusaops check --format json` report, extracts all finding fingerprints, and appends new entries to `.fusaops-suppress.json`. Fingerprints already present in the suppress file are skipped (no duplicates). Prints `Imported N findings (M new, K already present).` and exits 0. (REQ-FO-SUP009, REQ-FO-CLI048)
+- `--from` is required; exits 2 if missing.
+- `--reason` (default `"imported"`) and `--expires` (optional, `YYYY-MM-DD`) apply to all new entries.
+- Typical workflow: `fusaops check --format json --output check.json && fusaops suppress import --from check.json --reason "acknowledged on YYYY-MM-DD"`
+
+### Safety
+- Requirements registry at 246 requirements (added REQ-FO-SUP009, REQ-FO-CLI048)
+- 4 new tests; 246/246 requirements traced+tested; combined coverage 81.1%
+
 ## [1.21.0] — 2026-06-13
 
 ### `fusaops fleet --format html` — Fleet HTML report
