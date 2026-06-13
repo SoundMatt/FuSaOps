@@ -408,6 +408,7 @@ func TestAuthWrongPassword(t *testing.T) {
 // TestWithFleetConfig verifies WithFleetConfig sets the fleet config path.
 //
 //fusa:test REQ-FO-FLT005
+//fusa:test REQ-FO-CLI026
 func TestWithFleetConfig(t *testing.T) {
 	s := newTestServer(t).WithFleetConfig("/tmp/fleet.json")
 	if s.fleetCfg != "/tmp/fleet.json" {
@@ -564,6 +565,7 @@ func TestAuthROOnlyBlocksUnauthenticated(t *testing.T) {
 // TestWithAuditLog verifies WithAuditLog sets the audit directory.
 //
 //fusa:test REQ-FO-AUDIT001
+//fusa:test REQ-FO-CLI029
 func TestWithAuditLog(t *testing.T) {
 	s := newTestServer(t).WithAuditLog("/tmp/audit")
 	if s.auditDir != "/tmp/audit" {
@@ -694,6 +696,7 @@ func TestBadgeCacheControl(t *testing.T) {
 // TestWithWebhook verifies WithWebhook sets the URL.
 //
 //fusa:test REQ-FO-HOOK001
+//fusa:test REQ-FO-CLI031
 func TestWithWebhook(t *testing.T) {
 	s := newTestServer(t).WithWebhook("http://example.com/hook")
 	if s.webhookURL != "http://example.com/hook" {

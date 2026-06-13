@@ -28,6 +28,15 @@ type Summary struct {
 
 // add folds a finding's severity into the summary.
 func (s *Summary) add(sev fusaops.Severity) {
+	s.AddFinding(sev)
+}
+
+// AddFinding increments the appropriate counter for a finding's severity.
+// Exported for use by packages that recompute summaries after post-processing
+// (e.g. suppression filtering).
+//
+//fusa:req REQ-FO-SUP004
+func (s *Summary) AddFinding(sev fusaops.Severity) {
 	s.Total++
 	switch sev {
 	case fusaops.SeverityError:
@@ -75,6 +84,10 @@ type AggregateReport struct {
 	Project     string      `json:"project,omitempty"`
 	Components  []Component `json:"components"`
 	Summary     Summary     `json:"summary"`
+	// Suppressed is the count of findings filtered by a suppression config.
+	//
+	//fusa:req REQ-FO-SUP004
+	Suppressed int `json:"suppressed,omitempty"`
 }
 
 // New builds an AggregateReport from a set of components, computing per

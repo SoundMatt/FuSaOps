@@ -46,8 +46,14 @@ func renderText(w io.Writer, r *AggregateReport) error {
 		fmt.Fprintln(w)
 	}
 
-	fmt.Fprintf(w, "TOTAL: %s — %d findings across %d component(s): %d errors, %d warnings, %d infos\n",
-		r.Summary.Status(), r.Summary.Total, len(r.Components),
-		r.Summary.Errors, r.Summary.Warnings, r.Summary.Infos)
+	if r.Suppressed > 0 {
+		fmt.Fprintf(w, "TOTAL: %s — %d findings across %d component(s): %d errors, %d warnings, %d infos (%d suppressed)\n",
+			r.Summary.Status(), r.Summary.Total, len(r.Components),
+			r.Summary.Errors, r.Summary.Warnings, r.Summary.Infos, r.Suppressed)
+	} else {
+		fmt.Fprintf(w, "TOTAL: %s — %d findings across %d component(s): %d errors, %d warnings, %d infos\n",
+			r.Summary.Status(), r.Summary.Total, len(r.Components),
+			r.Summary.Errors, r.Summary.Warnings, r.Summary.Infos)
+	}
 	return nil
 }

@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
@@ -153,5 +154,54 @@ func TestRunWithWorkers(t *testing.T) {
 	// Both adapters detected — both should appear regardless of concurrency.
 	if len(rep.Components) != 2 {
 		t.Errorf("expected 2 components with workers=2, got %d", len(rep.Components))
+	}
+}
+
+// TestRunSuppressFile verifies suppressed findings are excluded from the summary.
+//
+//fusa:test REQ-FO-SUP004
+func TestRunSuppressFile(t *testing.T) {
+	const fp = "deadbeef"
+	reg := regWith(
+		&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true,
+			findings: []fusaops.Finding{
+				{RuleID: "G1", Severity: fusaops.SeverityError, Fingerprint: fp},
+				{RuleID: "G2", Severity: fusaops.SeverityWarning, Fingerprint: "other"},
+			}},
+	)
+	// Write a suppression config.
+	dir := t.TempDir()
+	supPath := dir + "/.fusaops-suppress.json"
+	content := `{"suppressions":[{"fingerprint":"` + fp + `","reason":"accepted risk"}]}`
+	if err := os.WriteFile(supPath, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	opts := Options{SuppressFile: supPath}
+	rep, err := New(reg).Run(context.Background(), dir, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Suppressed != 1 {
+		t.Errorf("expected 1 suppressed finding, got %d", rep.Suppressed)
+	}
+	if rep.Summary.Errors != 0 {
+		t.Errorf("suppressed error should not appear in summary, got %d", rep.Summary.Errors)
+	}
+	if rep.Summary.Warnings != 1 {
+		t.Errorf("non-suppressed warning should remain, got %d", rep.Summary.Warnings)
+	}
+}
+
+// TestRunSuppressFileMissing returns an error when the suppress file is invalid.
+//
+//fusa:test REQ-FO-SUP004
+func TestRunSuppressFileMissing(t *testing.T) {
+	reg := regWith(
+		&fakeAdapter{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true},
+	)
+	opts := Options{SuppressFile: "/nonexistent/suppress.json"}
+	_, err := New(reg).Run(context.Background(), t.TempDir(), opts)
+	if err == nil {
+		t.Error("expected error for missing suppress file")
 	}
 }

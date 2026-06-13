@@ -60,6 +60,7 @@ func TestLoadPolicyMissing(t *testing.T) {
 
 // TestEvaluatePass verifies a clean report passes all rules.
 //
+//fusa:test REQ-FO-POL002
 //fusa:test REQ-FO-POL003
 func TestEvaluatePass(t *testing.T) {
 	p := Policy{Name: "test", Rules: []Rule{

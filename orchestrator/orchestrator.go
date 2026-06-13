@@ -17,6 +17,7 @@ import (
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
 	"github.com/SoundMatt/FuSaOps/report"
+	"github.com/SoundMatt/FuSaOps/suppression"
 )
 
 // ComponentPin targets one sub-directory at a specific adapter for a Run.
@@ -54,6 +55,12 @@ type Options struct {
 	//
 	//fusa:req REQ-FO-ORC010
 	Components []ComponentPin
+	// SuppressFile is the path to a .fusaops-suppress.json file. Empty disables
+	// suppression. Suppressed findings are excluded from the report summary and
+	// recorded in AggregateReport.Suppressed.
+	//
+	//fusa:req REQ-FO-SUP004
+	SuppressFile string
 }
 
 // Runner executes adapters against a project root. It wraps a registry so the
@@ -197,5 +204,34 @@ func (rn *Runner) Run(ctx context.Context, root string, opts Options) (*report.A
 		return nil, fmt.Errorf("%w: applicable tools detected but none installed", fusaops.ErrNoAdapters)
 	}
 
-	return report.New(root, opts.Project, results), nil
+	rep := report.New(root, opts.Project, results)
+	if opts.SuppressFile != "" {
+		supCfg, err := suppression.LoadConfig(opts.SuppressFile)
+		if err != nil {
+			return nil, fmt.Errorf("orchestrator: suppression config: %w", err)
+		}
+		now := time.Now()
+		for i := range rep.Components {
+			kept, suppressed := suppression.Filter(rep.Components[i].Findings, supCfg, now)
+			if len(suppressed) > 0 {
+				rep.Components[i].Findings = kept
+				// Recompute component summary.
+				rep.Components[i].Summary = report.Summary{}
+				for _, f := range kept {
+					rep.Components[i].Summary.AddFinding(f.Severity)
+				}
+				rep.Suppressed += len(suppressed)
+			}
+		}
+		if rep.Suppressed > 0 {
+			// Recompute global summary from updated components.
+			rep.Summary = report.Summary{}
+			for _, c := range rep.Components {
+				for _, f := range c.Findings {
+					rep.Summary.AddFinding(f.Severity)
+				}
+			}
+		}
+	}
+	return rep, nil
 }

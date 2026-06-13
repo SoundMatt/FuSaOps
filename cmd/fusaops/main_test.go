@@ -218,6 +218,19 @@ func TestServeMissingProjectsConfig(t *testing.T) {
 	}
 }
 
+// TestCheckSuppressFileMissing verifies --suppress-file with missing file returns exit 1.
+//
+//fusa:test REQ-FO-CLI033
+func TestCheckSuppressFileMissing(t *testing.T) {
+	dir := t.TempDir()
+	// Write a Go file so a language is detected.
+	_ = os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main"), 0o644)
+	code, _, errb := runArgs(t, "check", "--dir", dir, "--suppress-file", "/nonexistent/suppress.json")
+	if code != 1 || !strings.Contains(errb, "suppress") {
+		t.Errorf("missing suppress file: code=%d err=%q", code, errb)
+	}
+}
+
 // TestServeBadRefreshInterval verifies --refresh-interval with invalid duration returns exit 1.
 //
 //fusa:test REQ-FO-CLI032

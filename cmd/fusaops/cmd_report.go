@@ -14,6 +14,7 @@ import (
 // Unlike check it never fails on findings; it is for evidence generation.
 //
 //fusa:req REQ-FO-CLI009
+//fusa:req REQ-FO-CLI033
 func runReport(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops report", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -21,6 +22,7 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 	only := fs.String("only", "", "comma-separated tool names to run (default: all applicable)")
 	format := fs.String("format", "json", "output format: text|json|html|sarif")
 	output := fs.String("output", "", "output file (default: stdout)")
+	suppressFile := fs.String("suppress-file", "", "path to .fusaops-suppress.json")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -30,6 +32,7 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "fusaops report: %v\n", err)
 		return 1
 	}
+	opts.SuppressFile = *suppressFile
 
 	rn := orchestrator.New(nil)
 	rep, err := rn.Run(context.Background(), root, opts)

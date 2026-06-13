@@ -1413,6 +1413,41 @@
       "description": "MultiServer shall expose GET /metrics returning per-project metrics with a project label on all time series (e.g. fusaops_findings_total{project=\"firmware\",severity=\"error\"}). Each project's metrics are aggregated independently.",
       "priority": "MUST",
       "rationale": "Monorepo operators can track per-component safety metrics in a single Prometheus scrape target."
+    },
+    {
+      "id": "REQ-FO-SUP001",
+      "title": "Suppression config format",
+      "description": "A .fusaops-suppress.json file shall contain a JSON object with a 'suppressions' array. Each entry shall have 'fingerprint' (spec §4.2 fingerprint string), 'reason' (mandatory rationale string), and optional 'expires' (ISO-8601 date YYYY-MM-DD). Entries with empty fingerprints are ignored.",
+      "priority": "MUST",
+      "rationale": "Teams require a documented, auditable way to acknowledge known findings without inflating the error count."
+    },
+    {
+      "id": "REQ-FO-SUP002",
+      "title": "LoadConfig reads suppression config",
+      "description": "suppression.LoadConfig(path) shall read and unmarshal the suppression config from path. An empty path shall return an empty config (zero-config path). A missing or malformed file shall return an error.",
+      "priority": "MUST",
+      "rationale": "Zero-config path enables suppression to be optional with no CLI friction."
+    },
+    {
+      "id": "REQ-FO-SUP003",
+      "title": "Filter partitions findings by active suppressions",
+      "description": "suppression.Filter(findings, cfg, now) shall return (kept, suppressed) slices. A finding is suppressed when its Fingerprint matches an active suppression (not expired, date parseable). An expired suppression (or one with a malformed date) shall NOT suppress the finding. Findings without fingerprints are never suppressed.",
+      "priority": "MUST",
+      "rationale": "Expiry ensures suppressions do not silently outlive their intended scope."
+    },
+    {
+      "id": "REQ-FO-SUP004",
+      "title": "Orchestrator applies suppression before building the report",
+      "description": "When Options.SuppressFile is set, Runner.Run() shall load the suppression config, apply Filter() to each component's findings, recompute component and global summaries from the kept findings, and set AggregateReport.Suppressed to the total count of suppressed findings. A missing or malformed suppress file shall return an error.",
+      "priority": "MUST",
+      "rationale": "Suppression must be applied before report generation so all renderers and the check exit code reflect the true active finding count."
+    },
+    {
+      "id": "REQ-FO-CLI033",
+      "title": "fusaops check/report --suppress-file flag",
+      "description": "The check and report subcommands shall accept --suppress-file path to apply a suppression config. The path is forwarded to Options.SuppressFile. A missing or malformed file exits 1 with a descriptive error.",
+      "priority": "MUST",
+      "rationale": "CLI entry point for finding suppression."
     }
   ]
 }

@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-06-13
+
+### Finding suppression
+
+- **`suppression` package** — `Config` / `Suppression` types; `LoadConfig(path)` (empty path = no-op); `Filter(findings, cfg, now)` returns (kept, suppressed) slices. Suppressions match on spec §4.2 fingerprint. An optional `expires` date (YYYY-MM-DD) stops the suppression after that day. (REQ-FO-SUP001–003)
+- **Orchestrator integration** — `Options.SuppressFile` wires suppression into `Runner.Run()`. Suppressed findings are removed from component and global summaries; `AggregateReport.Suppressed` holds the count. A missing or malformed file exits with an error. (REQ-FO-SUP004)
+- **CLI** — `fusaops check --suppress-file .fusaops-suppress.json` and `fusaops report --suppress-file ...` forward the file path to the orchestrator. Text renderer appends `(N suppressed)` to the TOTAL line when suppressions are active. (REQ-FO-CLI033)
+
+### Safety
+- Requirements registry at 208 requirements (added REQ-FO-SUP001–004, REQ-FO-CLI033)
+- 10 new tests (7 suppression, 2 orchestrator, 1 CLI); combined coverage 80.8%
+
 ## [1.5.0] — 2026-06-13
 
 ### OpenMetrics / Prometheus endpoint
@@ -291,7 +303,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.2.0...v1.3.0

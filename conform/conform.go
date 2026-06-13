@@ -264,37 +264,25 @@ func (r *runner) writeSourceFiles() error {
 	if lang == "" {
 		lang = langFromBinary(filepath.Base(r.binary))
 	}
+	// Build annotation markers at runtime so the scanner does not treat this
+	// source file itself as carrying REQ-TEST-* FuSaOps requirements.
+	slashReq := "//" + "fusa:req"
+	slashTest := "//" + "fusa:test"
+	hashReq := "#" + "fusa:req"
+	hashTest := "#" + "fusa:test"
 	switch lang {
 	case "go":
-		return os.WriteFile(filepath.Join(r.dir, "main.go"), []byte(`package main
-
-//fusa:req REQ-TEST-001
-//fusa:test REQ-TEST-001
-
-//fusa:req REQ-TEST-002
-
-func main() {}
-`), 0o644)
+		src := fmt.Sprintf("package main\n\n%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n\nfunc main() {}\n",
+			slashReq, slashTest, slashReq)
+		return os.WriteFile(filepath.Join(r.dir, "main.go"), []byte(src), 0o644)
 	case "c":
-		return os.WriteFile(filepath.Join(r.dir, "main.c"), []byte(`#include <stdio.h>
-
-//fusa:req REQ-TEST-001
-//fusa:test REQ-TEST-001
-
-//fusa:req REQ-TEST-002
-
-int main(void) { return 0; }
-`), 0o644)
+		src := fmt.Sprintf("#include <stdio.h>\n\n%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n\nint main(void) { return 0; }\n",
+			slashReq, slashTest, slashReq)
+		return os.WriteFile(filepath.Join(r.dir, "main.c"), []byte(src), 0o644)
 	case "cpp":
-		return os.WriteFile(filepath.Join(r.dir, "main.cpp"), []byte(`#include <iostream>
-
-//fusa:req REQ-TEST-001
-//fusa:test REQ-TEST-001
-
-//fusa:req REQ-TEST-002
-
-int main() { return 0; }
-`), 0o644)
+		src := fmt.Sprintf("#include <iostream>\n\n%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n\nint main() { return 0; }\n",
+			slashReq, slashTest, slashReq)
+		return os.WriteFile(filepath.Join(r.dir, "main.cpp"), []byte(src), 0o644)
 	case "rust":
 		if err := os.MkdirAll(filepath.Join(r.dir, "src"), 0o755); err != nil {
 			return err
@@ -306,29 +294,17 @@ edition = "2021"
 `), 0o644); err != nil {
 			return err
 		}
-		return os.WriteFile(filepath.Join(r.dir, "src", "main.rs"), []byte(`//fusa:req REQ-TEST-001
-//fusa:test REQ-TEST-001
-
-//fusa:req REQ-TEST-002
-
-fn main() {}
-`), 0o644)
+		src := fmt.Sprintf("%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n\nfn main() {}\n",
+			slashReq, slashTest, slashReq)
+		return os.WriteFile(filepath.Join(r.dir, "src", "main.rs"), []byte(src), 0o644)
 	case "python":
-		return os.WriteFile(filepath.Join(r.dir, "main.py"), []byte(`#fusa:req REQ-TEST-001
-#fusa:test REQ-TEST-001
-
-#fusa:req REQ-TEST-002
-`), 0o644)
+		src := fmt.Sprintf("%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n",
+			hashReq, hashTest, hashReq)
+		return os.WriteFile(filepath.Join(r.dir, "main.py"), []byte(src), 0o644)
 	case "java":
-		return os.WriteFile(filepath.Join(r.dir, "Main.java"), []byte(`//fusa:req REQ-TEST-001
-//fusa:test REQ-TEST-001
-
-//fusa:req REQ-TEST-002
-
-public class Main {
-    public static void main(String[] args) {}
-}
-`), 0o644)
+		src := fmt.Sprintf("%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n\npublic class Main {\n    public static void main(String[] args) {}\n}\n",
+			slashReq, slashTest, slashReq)
+		return os.WriteFile(filepath.Join(r.dir, "Main.java"), []byte(src), 0o644)
 	default:
 		return nil
 	}

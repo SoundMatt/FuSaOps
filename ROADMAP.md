@@ -244,6 +244,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.6 — Finding suppression ✅
+
+**Goal:** Let teams acknowledge known findings with documented rationale and optional expiry.
+
+- ✅ `suppression` package — `LoadConfig`, `Filter` (fingerprint-based, expiry-aware)
+- ✅ `orchestrator.Options.SuppressFile` — suppression applied in `Runner.Run()` before report assembly; `AggregateReport.Suppressed` counter
+- ✅ `fusaops check/report --suppress-file .fusaops-suppress.json`
+- ✅ Text renderer appends `(N suppressed)` to TOTAL line when suppressions are active
+
+---
+
 ## Adding a language adapter
 
 1. Implement `adapter.Adapter` (Name, Language, Tool, Detect, Available, Check).
