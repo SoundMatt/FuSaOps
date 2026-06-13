@@ -12,32 +12,32 @@ import (
 // attributable to the language toolchain that produced them.
 
 type junitTestsuites struct {
-	XMLName  xml.Name        `xml:"testsuites"`
-	Name     string          `xml:"name,attr"`
-	Tests    int             `xml:"tests,attr"`
-	Failures int             `xml:"failures,attr"`
-	Errors   int             `xml:"errors,attr"`
-	Time     string          `xml:"time,attr"`
-	Suites   []junitSuite    `xml:"testsuite"`
+	XMLName  xml.Name     `xml:"testsuites"`
+	Name     string       `xml:"name,attr"`
+	Tests    int          `xml:"tests,attr"`
+	Failures int          `xml:"failures,attr"`
+	Errors   int          `xml:"errors,attr"`
+	Time     string       `xml:"time,attr"`
+	Suites   []junitSuite `xml:"testsuite"`
 }
 
 type junitSuite struct {
-	XMLName  xml.Name      `xml:"testsuite"`
-	Name     string        `xml:"name,attr"`
-	Tests    int           `xml:"tests,attr"`
-	Failures int           `xml:"failures,attr"`
-	Errors   int           `xml:"errors,attr"`
-	Time     string        `xml:"time,attr"`
-	Cases    []junitCase   `xml:"testcase"`
+	XMLName  xml.Name    `xml:"testsuite"`
+	Name     string      `xml:"name,attr"`
+	Tests    int         `xml:"tests,attr"`
+	Failures int         `xml:"failures,attr"`
+	Errors   int         `xml:"errors,attr"`
+	Time     string      `xml:"time,attr"`
+	Cases    []junitCase `xml:"testcase"`
 }
 
 type junitCase struct {
-	XMLName   xml.Name       `xml:"testcase"`
-	Name      string         `xml:"name,attr"`
-	Classname string         `xml:"classname,attr"`
-	Time      string         `xml:"time,attr"`
-	Failure   *junitFailure  `xml:"failure,omitempty"`
-	Skipped   *junitSkipped  `xml:"skipped,omitempty"`
+	XMLName   xml.Name      `xml:"testcase"`
+	Name      string        `xml:"name,attr"`
+	Classname string        `xml:"classname,attr"`
+	Time      string        `xml:"time,attr"`
+	Failure   *junitFailure `xml:"failure,omitempty"`
+	Skipped   *junitSkipped `xml:"skipped,omitempty"`
 }
 
 type junitFailure struct {
@@ -74,8 +74,8 @@ func junitCaseName(f fusaops.Finding) string {
 //fusa:req REQ-FO-RPT013
 func renderJUnit(w io.Writer, r *AggregateReport) error {
 	root := junitTestsuites{
-		Name:  "FuSaOps",
-		Time:  "0.000",
+		Name:   "FuSaOps",
+		Time:   "0.000",
 		Errors: 0,
 	}
 
