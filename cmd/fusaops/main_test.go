@@ -404,6 +404,134 @@ func TestCoverageOutputFlag(t *testing.T) {
 	}
 }
 
+// TestReqShow verifies fusaops req shows requirements from .fusa-reqs.json.
+//
+//fusa:test REQ-FO-CLI052
+func TestReqShow(t *testing.T) {
+	dir := t.TempDir()
+	data := `{"requirements":[{"id":"REQ-A","title":"Requirement Alpha","priority":"MUST"}]}`
+	if err := os.WriteFile(filepath.Join(dir, ".fusa-reqs.json"), []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "req", "--dir", dir)
+	if code != 0 {
+		t.Fatalf("req show: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "REQ-A") || !strings.Contains(out, "Requirement Alpha") {
+		t.Errorf("req show missing content: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI052
+func TestReqShowFilterID(t *testing.T) {
+	dir := t.TempDir()
+	data := `{"requirements":[{"id":"REQ-A","title":"Alpha"},{"id":"REQ-B","title":"Beta"}]}`
+	if err := os.WriteFile(filepath.Join(dir, ".fusa-reqs.json"), []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, _ := runArgs(t, "req", "--dir", dir, "REQ-A")
+	if code != 0 {
+		t.Fatalf("req show filter: code=%d", code)
+	}
+	if !strings.Contains(out, "REQ-A") {
+		t.Errorf("missing REQ-A in output")
+	}
+	if strings.Contains(out, "REQ-B") {
+		t.Errorf("REQ-B should not appear when filtering for REQ-A")
+	}
+}
+
+//fusa:test REQ-FO-CLI052
+func TestReqShowMissingID(t *testing.T) {
+	dir := t.TempDir()
+	data := `{"requirements":[{"id":"REQ-A","title":"Alpha"}]}`
+	if err := os.WriteFile(filepath.Join(dir, ".fusa-reqs.json"), []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, _, errb := runArgs(t, "req", "--dir", dir, "REQ-NONEXISTENT")
+	if code != 1 || !strings.Contains(errb, "not found") {
+		t.Errorf("missing id: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI052
+func TestReqImportCSV(t *testing.T) {
+	dir := t.TempDir()
+	csvData := "id,title,standard\nREQ-1,First req,ISO 26262\nREQ-2,Second req,DO-178C\n"
+	csvPath := filepath.Join(dir, "reqs.csv")
+	if err := os.WriteFile(csvPath, []byte(csvData), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "req", "--dir", dir, "import", "--file", csvPath)
+	if code != 0 {
+		t.Fatalf("req import: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Imported 2") {
+		t.Errorf("import output: %q", out)
+	}
+	// Verify registry was updated
+	code2, out2, _ := runArgs(t, "req", "--dir", dir)
+	if code2 != 0 || !strings.Contains(out2, "REQ-1") {
+		t.Errorf("after import, show failed: code=%d out=%q", code2, out2)
+	}
+}
+
+//fusa:test REQ-FO-CLI052
+func TestReqImportMissingFile(t *testing.T) {
+	code, _, errb := runArgs(t, "req", "import", "--file", "/nonexistent/reqs.csv")
+	if code != 1 || !strings.Contains(errb, "open") {
+		t.Errorf("missing file: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI052
+func TestReqImportMissingFileFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "req", "import")
+	if code != 2 || !strings.Contains(errb, "--file") {
+		t.Errorf("missing --file: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI052
+func TestReqExportCSV(t *testing.T) {
+	dir := t.TempDir()
+	data := `{"requirements":[{"id":"REQ-A","title":"Alpha","standard":"ISO 26262"}]}`
+	if err := os.WriteFile(filepath.Join(dir, ".fusa-reqs.json"), []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "req", "--dir", dir, "export", "--format", "csv")
+	if code != 0 {
+		t.Fatalf("req export csv: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "REQ-A") || !strings.Contains(out, "id") {
+		t.Errorf("csv export missing content: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI052
+func TestReqExportDOORS(t *testing.T) {
+	dir := t.TempDir()
+	data := `{"requirements":[{"id":"REQ-A","title":"Alpha","text":"Some text"}]}`
+	if err := os.WriteFile(filepath.Join(dir, ".fusa-reqs.json"), []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "req", "--dir", dir, "export", "--format", "doors")
+	if code != 0 {
+		t.Fatalf("req export doors: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "REQ-IF") || !strings.Contains(out, "REQ-A") {
+		t.Errorf("doors export missing content: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI052
+func TestReqExportMissingRegistry(t *testing.T) {
+	code, _, errb := runArgs(t, "req", "--dir", t.TempDir(), "export")
+	if code != 1 || !strings.Contains(errb, "req") {
+		t.Errorf("missing registry: code=%d err=%q", code, errb)
+	}
+}
+
 func TestSplitCSV(t *testing.T) {
 	got := splitCSV("a,b,,c")
 	if len(got) != 3 || got[0] != "a" || got[2] != "c" {

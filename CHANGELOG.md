@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.36.0] — 2026-06-13
+
+### `fusaops req` — requirement show/import/export
+
+- **`req` package** — `Entry` struct, `LoadRegistry`, `SaveRegistry`; CSV import/export (`ParseCSV`, `RenderCSV`); XML import/export for DOORS ReqIF, Polarion, Codebeamer, and Jama Connect. (REQ-FO-REQ001, REQ-FO-REQ002, REQ-FO-REQ003)
+- **`fusaops req [REQ-ID ...]`** — show requirements from `.fusa-reqs.json`; optional ID filter; displays title, text/description, standard, level, priority. (REQ-FO-CLI052)
+- **`fusaops req import --format csv|doors|polarion|codebeamer|jama --file FILE`** — import requirements, skipping duplicates; prints `Imported N requirements (M skipped as duplicates)`.
+- **`fusaops req export --format csv|doors|polarion|codebeamer|jama [--output FILE]`** — export requirements to the requested format, defaulting to stdout.
+- Mirrors `gofusa req show/import/export`; enables bidirectional sync with safety tool databases.
+
+### Safety
+- Requirements registry at 266 requirements (added REQ-FO-REQ001, REQ-FO-REQ002, REQ-FO-REQ003, REQ-FO-CLI052)
+- 23 new tests; combined coverage 81.6%
+
 ## [1.35.0] — 2026-06-13
 
 ### `fusaops coverage` — DO-178C structural coverage report

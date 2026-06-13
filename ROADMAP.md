@@ -341,6 +341,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.36 — `fusaops req` — requirement show/import/export ✅
+
+**Goal:** Mirror `gofusa req` for requirement management at the FuSaOps orchestration level.
+
+- `req` package: `Entry` struct, `LoadRegistry`/`SaveRegistry`, CSV import/export, DOORS ReqIF/Polarion/Codebeamer/Jama XML import/export (REQ-FO-REQ001/002/003)
+- `fusaops req [REQ-ID...]` — show requirements from `.fusa-reqs.json` with optional ID filter (REQ-FO-CLI052)
+- `fusaops req import --format csv|doors|polarion|codebeamer|jama --file FILE` — add new entries, skip duplicates
+- `fusaops req export --format csv|doors|polarion|codebeamer|jama [--output FILE]` — export to file or stdout
+
+---
+
 ## v1.35 — `fusaops coverage` — DO-178C structural coverage ✅
 
 **Goal:** Give FuSaOps the same DO-178C structural coverage reporting that `gofusa coverage` provides, applied to FuSaOps's own Go source.

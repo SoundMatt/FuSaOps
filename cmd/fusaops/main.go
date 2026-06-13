@@ -29,6 +29,7 @@
 //	policy      Evaluate org-wide safety rules over the aggregated report
 //	fleet       Run check across all repos in a fleet config file
 //	coverage    DO-178C structural coverage report from a Go coverage profile
+//	req         Show, import, or export requirements from .fusa-reqs.json
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -87,6 +88,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runFleet(args[1:], stdout, stderr)
 	case "coverage":
 		return runCoverage(args[1:], stdout, stderr)
+	case "req":
+		return runReq(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -137,6 +140,7 @@ Commands:
   policy     Evaluate org-wide safety rules over the aggregated report
   fleet      Run check across all repos in a fleet config file
   coverage   DO-178C structural coverage report from a Go coverage profile
+  req        Show, import, or export requirements from .fusa-reqs.json
   serve      Launch the web reporting dashboard
   version    Print the FuSaOps version
 

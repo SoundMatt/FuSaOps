@@ -1,6 +1,34 @@
 {
   "requirements": [
     {
+      "id": "REQ-FO-REQ001",
+      "title": "Requirement registry types and load/save",
+      "description": "FuSaOps shall define an Entry struct with id, title, text, description, standard, level, priority, and rationale fields, and LoadRegistry/SaveRegistry functions that read and write .fusa-reqs.json.",
+      "priority": "MUST",
+      "rationale": "Provides the typed model and persistence layer for the FuSaOps requirement registry."
+    },
+    {
+      "id": "REQ-FO-REQ002",
+      "title": "Requirement import from external tools",
+      "description": "FuSaOps shall provide parsers for CSV, DOORS ReqIF XML, Polarion workitems XML, Codebeamer tracker XML, and Jama Connect XML import formats.",
+      "priority": "MUST",
+      "rationale": "Enables teams to bootstrap the requirements registry from existing safety tool exports without manual entry."
+    },
+    {
+      "id": "REQ-FO-REQ003",
+      "title": "Requirement export to external tools",
+      "description": "FuSaOps shall provide renderers for CSV, DOORS ReqIF XML, Polarion workitems XML, Codebeamer tracker XML, and Jama Connect XML export formats.",
+      "priority": "MUST",
+      "rationale": "Enables bidirectional synchronisation of the FuSaOps requirement registry with external safety tools."
+    },
+    {
+      "id": "REQ-FO-CLI052",
+      "title": "fusaops req subcommand",
+      "description": "The fusaops CLI shall provide a 'req' subcommand with show (default), import, and export sub-actions; show lists requirements with optional ID filtering; import reads CSV or XML and adds new entries to .fusa-reqs.json; export writes .fusa-reqs.json entries to the requested format.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa req for requirement management at the FuSaOps orchestration level."
+    },
+    {
       "id": "REQ-FO-COV001",
       "title": "DO-178C coverage report and analysis",
       "description": "FuSaOps shall define a Report struct capturing DAL, statement coverage percentage, decision coverage, MC/DC requirement flag, per-file statistics, and coverage gaps; and an Analyse function that computes these fields from parsed profile blocks.",
