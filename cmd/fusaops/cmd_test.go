@@ -334,3 +334,121 @@ func TestCheckSaveBaselineFlag(t *testing.T) {
 		t.Errorf("baseline file not created: %v", err)
 	}
 }
+
+//fusa:test REQ-FO-CLI043
+func TestConfigValidateOK(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.Default("test-project")
+	if err := config.Save(filepath.Join(dir, ".fusaops.json"), cfg); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, stderr := runArgs(t, "config", "validate", "--dir", dir)
+	if code != 0 {
+		t.Fatalf("config validate: code=%d stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, "OK") {
+		t.Errorf("expected OK in output: %q", stdout)
+	}
+	if !strings.Contains(stdout, "test-project") {
+		t.Errorf("expected project name in output: %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI043
+func TestConfigValidateMissing(t *testing.T) {
+	dir := t.TempDir()
+	code, _, stderr := runArgs(t, "config", "validate", "--dir", dir)
+	if code != 1 {
+		t.Fatalf("config validate missing file: got code=%d, want 1", code)
+	}
+	if !strings.Contains(stderr, "no config file") {
+		t.Errorf("expected 'no config file' error: %q", stderr)
+	}
+}
+
+//fusa:test REQ-FO-CLI043
+func TestConfigValidateInvalid(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops.json"), []byte(`{"version":"1"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runArgs(t, "config", "validate", "--dir", dir)
+	if code != 1 {
+		t.Fatalf("config validate invalid: got code=%d, want 1", code)
+	}
+	if !strings.Contains(stderr, "invalid") {
+		t.Errorf("expected 'invalid' in error: %q", stderr)
+	}
+}
+
+//fusa:test REQ-FO-CLI043
+func TestConfigValidateFileFlag(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.Default("file-flag-project")
+	cfgPath := filepath.Join(dir, "custom.json")
+	if err := config.Save(cfgPath, cfg); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, _ := runArgs(t, "config", "validate", "--file", cfgPath)
+	if code != 0 {
+		t.Fatalf("config validate --file: code=%d", code)
+	}
+	if !strings.Contains(stdout, "file-flag-project") {
+		t.Errorf("expected project name: %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI044
+func TestConfigShowOK(t *testing.T) {
+	dir := t.TempDir()
+	cfg := config.Default("show-project")
+	if err := config.Save(filepath.Join(dir, ".fusaops.json"), cfg); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, stderr := runArgs(t, "config", "show", "--dir", dir)
+	if code != 0 {
+		t.Fatalf("config show: code=%d stderr=%q", code, stderr)
+	}
+	if !strings.Contains(stdout, `"show-project"`) {
+		t.Errorf("expected project name in JSON: %q", stdout)
+	}
+	if !strings.Contains(stdout, `"version"`) {
+		t.Errorf("expected version field in JSON: %q", stdout)
+	}
+}
+
+//fusa:test REQ-FO-CLI044
+func TestConfigShowMissing(t *testing.T) {
+	dir := t.TempDir()
+	code, _, stderr := runArgs(t, "config", "show", "--dir", dir)
+	if code != 1 {
+		t.Fatalf("config show missing: got code=%d, want 1", code)
+	}
+	if !strings.Contains(stderr, "no config file") {
+		t.Errorf("expected 'no config file' error: %q", stderr)
+	}
+}
+
+//fusa:test REQ-FO-CLI043
+//fusa:test REQ-FO-CLI044
+func TestConfigUnknownSubcommand(t *testing.T) {
+	code, _, stderr := runArgs(t, "config", "bogus")
+	if code != 2 {
+		t.Fatalf("config bogus: got code=%d, want 2", code)
+	}
+	if !strings.Contains(stderr, "unknown subcommand") {
+		t.Errorf("expected 'unknown subcommand': %q", stderr)
+	}
+}
+
+//fusa:test REQ-FO-CLI043
+//fusa:test REQ-FO-CLI044
+func TestConfigNoSubcommand(t *testing.T) {
+	code, _, stderr := runArgs(t, "config")
+	if code != 2 {
+		t.Fatalf("config (no sub): got code=%d, want 2", code)
+	}
+	if !strings.Contains(stderr, "subcommand required") {
+		t.Errorf("expected 'subcommand required': %q", stderr)
+	}
+}

@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.18 — Config validation CLI ✅
+
+**Goal:** Surface config errors early and make the effective config inspectable from the command line.
+
+- `fusaops config validate [--dir|--file]` — loads and validates `.fusaops.json`; CI-friendly pre-flight check (REQ-FO-CLI043)
+- `fusaops config show [--dir|--file]` — prints effective config as formatted JSON (REQ-FO-CLI044)
+- Both commands support `--file PATH` to override the default `.fusaops.json` search location
+
+---
+
 ## v1.17 — Diff HTML/Markdown & `check --save-baseline` ✅
 
 **Goal:** Complete the diff workflow loop and add richer diff report output formats.

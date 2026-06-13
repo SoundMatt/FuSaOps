@@ -1611,6 +1611,20 @@
       "rationale": "Allows CI to roll the baseline forward from a single check command without a separate save step."
     },
     {
+      "id": "REQ-FO-CLI043",
+      "title": "fusaops config validate subcommand",
+      "description": "The config validate subcommand shall load and validate the .fusaops.json file at --file or --dir/.fusaops.json. On success it shall print 'OK <path>' with a summary of key fields to stdout and exit 0. On validation error or missing file it shall print a descriptive error to stderr and exit 1.",
+      "priority": "MUST",
+      "rationale": "CI and developer tooling need a machine-friendly way to verify a config file is well-formed before running a scan."
+    },
+    {
+      "id": "REQ-FO-CLI044",
+      "title": "fusaops config show subcommand",
+      "description": "The config show subcommand shall load and validate the .fusaops.json file at --file or --dir/.fusaops.json and print the effective configuration as indented JSON to stdout, exiting 0. On error it shall print to stderr and exit 1.",
+      "priority": "MUST",
+      "rationale": "Enables debugging and scripting by showing the exact config FuSaOps will use."
+    },
+    {
       "id": "REQ-FO-CLI033",
       "title": "fusaops check/report --suppress-file flag",
       "description": "The check and report subcommands shall accept --suppress-file path to apply a suppression config. The path is forwarded to Options.SuppressFile. A missing or malformed file exits 1 with a descriptive error.",

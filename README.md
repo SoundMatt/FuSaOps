@@ -87,6 +87,8 @@ fusaops serve --auth user:pass           # enable HTTP Basic Auth
 fusaops serve --tls-cert c.pem --tls-key k.pem  # HTTPS
 fusaops serve --fleet fleet.json         # add /fleet multi-repo dashboard
 fusaops init                 # write a starter .fusaops.json
+fusaops config validate      # validate .fusaops.json; exit 1 on error
+fusaops config show          # print effective config as formatted JSON
 ```
 
 ### Evidence aggregation (v0.2)
@@ -516,6 +518,22 @@ and sets report defaults:
 
 Per-language configuration stays in each component's own x-FuSa config (e.g. a
 Go module's `.fusa.json`); FuSaOps does not manage it.
+
+### Config validation
+
+```bash
+# Validate the config file — exits 0 on success, 1 on error (CI-friendly)
+fusaops config validate
+
+# Validate a specific file
+fusaops config validate --file /path/to/.fusaops.json
+
+# Print the effective config as formatted JSON
+fusaops config show
+```
+
+Both commands accept `--dir DIR` (default `.`) or `--file PATH` to locate the config file.
+`fusaops config validate` is useful as a CI pre-flight step before running `fusaops check`.
 
 ## CI integration
 

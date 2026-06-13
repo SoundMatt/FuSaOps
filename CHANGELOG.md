@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.18.0] — 2026-06-13
+
+### `fusaops config validate|show` subcommands
+
+- **`fusaops config validate [--dir DIR] [--file PATH]`** — loads and validates `.fusaops.json`; on success prints `OK <path>` with a human-readable summary of `version`, `project`, `standard`, `adapters`, and `format`; exits 0. On a missing file exits 1 with `no config file`; on a malformed/invalid file exits 1 with the validation error. (REQ-FO-CLI043)
+- **`fusaops config show [--dir DIR] [--file PATH]`** — loads and validates the config file then prints the effective configuration as indented JSON to stdout; exits 0. Errors to stderr and exits 1. (REQ-FO-CLI044)
+- Both sub-subcommands accept `--dir` (default `.`) and `--file` (overrides `--dir`) to locate the config file.
+- `fusaops config` with no subcommand or an unknown subcommand exits 2 with a descriptive error.
+- `fusaops config validate` is designed for CI pre-flight — a `step: run: fusaops config validate` catches misconfigured `.fusaops.json` before the scan runs.
+
+### Safety
+- Requirements registry at 238 requirements (added REQ-FO-CLI043, REQ-FO-CLI044)
+- 8 new tests; 238/238 requirements traced+tested; combined coverage 81.1%
+
 ## [1.17.0] — 2026-06-13
 
 ### Diff HTML/Markdown renderers & `fusaops check --save-baseline`

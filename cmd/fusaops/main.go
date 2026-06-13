@@ -8,6 +8,7 @@
 // Commands:
 //
 //	init        Initialise a .fusaops.json project configuration
+//	config      Validate or display the effective .fusaops.json configuration
 //	scan        Detect languages and applicable x-FuSa adapters in a repo
 //	adapters    List registered adapters and their availability on PATH
 //	check       Run every applicable x-FuSa tool and print the aggregate report
@@ -84,6 +85,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runFleet(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
+	case "config":
+		return runConfig(args[1:], stdout, stderr)
 	case "version":
 		return runVersion(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -107,6 +110,7 @@ Usage:
 
 Commands:
   init      Initialise a .fusaops.json project configuration
+  config    Validate or display the effective .fusaops.json configuration
   scan      Detect languages and applicable x-FuSa adapters in a repo
   adapters  List registered adapters and their availability on PATH
   check      Run every applicable x-FuSa tool and print the aggregate report
