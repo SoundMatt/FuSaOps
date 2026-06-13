@@ -77,6 +77,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/", s.handleIndex)
 	mux.HandleFunc("/api/report", s.handleAPIReport)
 	mux.HandleFunc("/api/history", s.handleAPIHistory)
+	mux.HandleFunc("/api/v1/report", s.handleAPIReport)
+	mux.HandleFunc("/api/v1/status", s.handleAPIStatus)
+	mux.HandleFunc("/api/v1/findings", s.handleAPIFindings)
+	mux.HandleFunc("/api/v1/history", s.handleAPIHistory)
 	mux.HandleFunc("/history", s.handleHistory)
 	mux.HandleFunc("/refresh", s.handleRefresh)
 	mux.HandleFunc("/healthz", s.handleHealth)
@@ -136,6 +140,93 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 // handleHealth reports liveness.
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintln(w, "ok")
+}
+
+// handleAPIStatus returns a lightweight status JSON object for polling.
+//
+//fusa:req REQ-FO-API001
+func (s *Server) handleAPIStatus(w http.ResponseWriter, _ *http.Request) {
+	s.mu.RLock()
+	rep, cErr := s.cached, s.err
+	s.mu.RUnlock()
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	if cErr != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, `{"status":"ERROR","error":%q}`+"\n", cErr.Error())
+		return
+	}
+	if rep == nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		fmt.Fprint(w, `{"status":"PENDING"}`+"\n")
+		return
+	}
+	fmt.Fprintf(w, `{"status":%q,"errors":%d,"warnings":%d,"total":%d}`+"\n",
+		rep.Summary.Status(), rep.Summary.Errors, rep.Summary.Warnings, rep.Summary.Total)
+}
+
+// handleAPIFindings returns findings filtered by severity and/or language query params.
+//
+//fusa:req REQ-FO-API002
+func (s *Server) handleAPIFindings(w http.ResponseWriter, r *http.Request) {
+	s.mu.RLock()
+	rep, cErr := s.cached, s.err
+	s.mu.RUnlock()
+	if cErr != nil {
+		http.Error(w, cErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	if rep == nil {
+		http.Error(w, "no report available yet", http.StatusServiceUnavailable)
+		return
+	}
+	q := r.URL.Query()
+	sev := q.Get("severity")
+	lang := q.Get("language")
+	tool := q.Get("tool")
+
+	type apiFinding struct {
+		Language    string `json:"language"`
+		Tool        string `json:"tool"`
+		RuleID      string `json:"ruleId"`
+		Severity    string `json:"severity"`
+		Message     string `json:"message"`
+		File        string `json:"file"`
+		Line        int    `json:"line,omitempty"`
+		Category    string `json:"category,omitempty"`
+		Fingerprint string `json:"fingerprint,omitempty"`
+	}
+	var out []apiFinding
+	for _, c := range rep.Components {
+		if lang != "" && string(c.Language) != lang {
+			continue
+		}
+		if tool != "" && c.Tool != tool {
+			continue
+		}
+		for _, f := range c.Findings {
+			if sev != "" && string(f.Severity) != sev {
+				continue
+			}
+			out = append(out, apiFinding{
+				Language:    string(f.Language),
+				Tool:        f.Tool,
+				RuleID:      f.RuleID,
+				Severity:    string(f.Severity),
+				Message:     f.Message,
+				File:        f.Location.File,
+				Line:        f.Location.Line,
+				Category:    f.Category,
+				Fingerprint: f.Fingerprint,
+			})
+		}
+	}
+	if out == nil {
+		out = []apiFinding{} // ensure JSON array, not null
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(out)
 }
 
 // handleAPIHistory serves the run-history snapshots as JSON.

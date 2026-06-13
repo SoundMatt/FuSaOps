@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-06-13
+
+### REST API v1 + dashboard nav
+
+- **`GET /api/v1/status`** — lightweight JSON poll endpoint: `{"status":"PASS","errors":0,"warnings":2,"total":2}`; returns `PENDING` (503) when no report available yet
+- **`GET /api/v1/findings`** — filtered findings array; supports `?severity=ERROR`, `?language=go`, `?tool=gofusa` (combinable); always returns a JSON array (never null)
+- **`GET /api/v1/report`** — versioned alias for `/api/report` (full aggregate JSON)
+- **`GET /api/v1/history`** — versioned alias for `/api/history`
+- **Dashboard nav** — main HTML dashboard now has _History_, _JSON_, and _Refresh_ links in the header for quick navigation in `fusaops serve`
+- x-FuSa spec v1.10.7: cpp-FuSa v0.12.5 `location.file` project-relative fix; c-FuSa v0.5.14 `hara show` (non-spec feature); version snapshot updated
+
+### Safety
+- Requirements registry at 165 requirements (added REQ-FO-API001, REQ-FO-API002)
+- 6 new tests in `server` package
+
 ## [0.6.0] — 2026-06-13
 
 ### Run-history trend

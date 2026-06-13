@@ -62,6 +62,9 @@ const dashboardTemplate = `<!DOCTYPE html>
   header { padding:24px 32px; border-bottom:1px solid var(--line);
            display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
   h1 { font-size:20px; margin:0; font-weight:600; }
+  .nav-links { margin-left:auto; display:flex; gap:12px; font-size:12px; }
+  .nav-links a { color:var(--muted); text-decoration:none; }
+  .nav-links a:hover { color:var(--txt); }
   .sub { color:var(--muted); font-size:13px; }
   .badge { padding:4px 12px; border-radius:999px; font-weight:700; font-size:13px; letter-spacing:.5px; }
   .status-pass { background:rgba(46,204,113,.15); color:var(--pass); }
@@ -100,6 +103,11 @@ const dashboardTemplate = `<!DOCTYPE html>
     {{.Summary.Errors}} errors · {{.Summary.Warnings}} warnings · {{.Summary.Infos}} infos
     <br>{{.Root}} · {{.GeneratedAt.Format "2006-01-02 15:04:05 MST"}}
   </div>
+  <nav class="nav-links">
+    <a href="/history">History</a>
+    <a href="/api/report">JSON</a>
+    <a href="/refresh">Refresh</a>
+  </nav>
 </header>
 <main>
   <section class="cards">

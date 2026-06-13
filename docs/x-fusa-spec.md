@@ -969,7 +969,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.4 · c-FuSa v0.5.10 · rust-FuSa v0.2.6 · py-FuSa v0.1.4 · java-FuSa v0.2.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.14 · rust-FuSa v0.2.6 · py-FuSa v0.1.4 · java-FuSa v0.2.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -991,7 +991,7 @@ Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.4 · c-FuSa v0.5.10 · ru
 | exit `3` for runtime errors | ✅ | ✅ | ✅ | ✅ | ✅ (v0.1.3) | ✅ (v0.2.0) |
 | `--no-color`/`NO_COLOR` | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ `--no-color` flag missing (issue #6) |
 | `--output` ⇒ no stdout copy (§2.2) | ✅ (v0.29.0) | ✅ (v0.5.7) | ✅ (v0.12.1+) | ✅ JSON; ▫️ text+--output also prints to stdout | ✅ (v0.1.3) | ✅ (v0.2.0) |
-| `location.file`/`tags[].file` project-relative | ✅ (v0.30.0) | ✅ | ✅ | ✅ | ✅ | ✅ (v0.2.0) |
+| `location.file`/`tags[].file` project-relative | ✅ (v0.30.0) | ✅ | ✅ (v0.12.5) | ✅ | ✅ | ✅ (v0.2.0) |
 | envelope `tool/toolVersion/language` on check + gap | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `kind` + common header on check + gap docs (§3.1) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `kind` + common header on trace/qualify/sbom/pack (§3.1) | ✅ | ✅ | ✅ (v0.12.4) | ✅ | ✅ | ✅ |
@@ -1077,6 +1077,13 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.10.7 — 2026-06-13 (cpp-FuSa v0.12.5 location.file fix; c-FuSa v0.5.14 hara show)
+
+- **Version snapshot updated (§11):** cpp-FuSa v0.12.5 · c-FuSa v0.5.14.
+- **cpp-FuSa v0.12.5:** all `analyze` own-pass findings (ANAL003–012) now emit project-relative `location.file` instead of absolute OS paths (§4 MUST). `location.file` project-relative: ▫️ partial → ✅ (v0.12.5). No FuSaOps adapter changes needed.
+- **c-FuSa v0.5.14:** adds `hara show --format json|markdown` — a c-FuSa-specific hazard analysis command, not a spec requirement. No §11 changes; no FuSaOps adapter changes.
+- No new MUST gaps; no issues closed or opened.
 
 ### 1.10.6 — 2026-06-13 (c-FuSa v0.5.10 closes both MUST bugs; §11 table accuracy)
 

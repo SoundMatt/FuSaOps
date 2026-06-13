@@ -1107,6 +1107,20 @@
       "rationale": "Extends FuSaOps multi-language orchestration to Java projects using java-FuSa v0.1.0."
     },
     {
+      "id": "REQ-FO-API001",
+      "title": "Status endpoint",
+      "description": "The Server shall expose GET /api/v1/status returning a JSON object with status (PASS/WARN/FAIL/ERROR/PENDING), errors, warnings, and total counts for lightweight polling by CI gates and external monitors.",
+      "priority": "MUST",
+      "rationale": "CI tools need a lightweight JSON endpoint to poll build status without parsing the full report."
+    },
+    {
+      "id": "REQ-FO-API002",
+      "title": "Findings filter endpoint",
+      "description": "The Server shall expose GET /api/v1/findings with optional query params severity, language, and tool that return a filtered JSON array of findings from the current cached report.",
+      "priority": "MUST",
+      "rationale": "Enables CI tools and IDE plugins to query specific findings (e.g. only ERROR severity, only Go language) without parsing the full aggregate report."
+    },
+    {
       "id": "REQ-FO-HST001",
       "title": "Run snapshot model",
       "description": "FuSaOps shall define a Snapshot type recording a single check run outcome (runAt, status PASS/FAIL, total/error/warning/info counts, per-language summaries) and a FromReport function that builds a Snapshot from an AggregateReport.",

@@ -147,12 +147,23 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v0.7 — REST API ✅
+
+**Goal:** Machine-readable API endpoints for CI polling and IDE integration.
+
+- ✅ `GET /api/v1/status` — lightweight PASS/WARN/FAIL/PENDING JSON for CI polling
+- ✅ `GET /api/v1/findings?severity=ERROR&language=go&tool=gofusa` — filtered findings
+- ✅ `GET /api/v1/report`, `/api/v1/history` — versioned aliases
+- ✅ Dashboard nav links (History · JSON · Refresh) in main header
+
+---
+
 ## Future / Advanced
 
 | Version | Capability |
 |---|---|
-| v0.7 | REST API + multi-repo aggregation (fleet view) |
-| v0.8 | Policy engine — org-wide rules over aggregated findings |
+| v0.8 | Fleet view — multi-repo aggregation dashboard |
+| v0.9 | Policy engine — org-wide rules over aggregated findings |
 | v1.0 | Enterprise: auth, persistence, multi-tenant dashboards |
 
 ---

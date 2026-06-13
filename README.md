@@ -179,7 +179,7 @@ weekly scheduled rebuild is the safety net. See
 
 **Bundled tools.** The image currently bundles `gofusa` (Go, v0.30.0). All six
 adapters are registered; the other tools' Docker images will be added to the
-bundle as they publish to GHCR (cpp-FuSa v0.12.4, c-FuSa v0.5.10, rust-FuSa v0.2.6,
+bundle as they publish to GHCR (cpp-FuSa v0.12.5, c-FuSa v0.5.14, rust-FuSa v0.2.6,
 py-FuSa v0.1.4, java-FuSa v0.2.0 are each spec v1.10 aligned). The java-FuSa
 image requires a JVM in the runtime stage; the Dockerfile will add `openjdk-21-jre`
 when the image is wired in.
@@ -215,11 +215,11 @@ setup needed in your CI:
 ```yaml
 steps:
   - uses: actions/checkout@v4
-  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.5.1
+  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.6.0
     # Runs "fusaops check" by default; exit 1 on any ERROR finding, any language.
 
   # With options:
-  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.5.1
+  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.6.0
     with:
       args: '--strict'        # also gate on WARNING findings
       upload-report: 'true'  # attach fusaops-report.html as a workflow artifact
@@ -256,8 +256,8 @@ orchestrates also gates FuSaOps itself.
 | Language | Adapter    | Tool     | Bundled in image |
 |----------|------------|----------|------------------|
 | Go       | go-FuSa    | `gofusa` | ✅ (v0.30.0, spec v1.10) |
-| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.12.4, spec v1.10) |
-| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.10, spec v1.10) |
+| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.12.5, spec v1.10) |
+| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.14, spec v1.10) |
 | Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.2.6, spec v1.10) |
 | Python   | py-FuSa    | `pyfusa` | ✅ (v0.1.4, spec v1.10, alpha) |
 | Java     | java-FuSa  | `jfusa`  | ✅ (v0.2.0, spec v1.10, alpha) |

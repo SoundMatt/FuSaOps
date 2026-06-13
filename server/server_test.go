@@ -151,6 +151,106 @@ func TestListenAndServeBindError(t *testing.T) {
 	}
 }
 
+// TestAPIStatusPass verifies /api/v1/status returns PASS for a warning-only report.
+//
+//fusa:test REQ-FO-API001
+func TestAPIStatusPass(t *testing.T) {
+	s := newTestServer(t) // fakeAdapter produces one WARNING
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/status", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if out["status"] != "WARN" {
+		t.Errorf("status: got %v, want WARN", out["status"])
+	}
+	if w, _ := out["warnings"].(float64); w != 1 {
+		t.Errorf("warnings: got %v", out["warnings"])
+	}
+}
+
+// TestAPIStatusPending verifies /api/v1/status returns PENDING when no report yet.
+//
+//fusa:test REQ-FO-API001
+func TestAPIStatusPending(t *testing.T) {
+	reg := adapter.NewRegistry()
+	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{})
+	// do NOT call compute — no report available
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/status", nil))
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status %d, want 503", rec.Code)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if out["status"] != "PENDING" {
+		t.Errorf("status: got %v, want PENDING", out["status"])
+	}
+}
+
+// TestAPIFindingsNoFilter verifies /api/v1/findings returns all findings unfiltered.
+//
+//fusa:test REQ-FO-API002
+func TestAPIFindingsNoFilter(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/findings", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var out []map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if len(out) != 1 {
+		t.Errorf("want 1 finding, got %d", len(out))
+	}
+}
+
+// TestAPIFindingsSeverityFilter verifies ?severity= filters correctly.
+//
+//fusa:test REQ-FO-API002
+func TestAPIFindingsSeverityFilter(t *testing.T) {
+	s := newTestServer(t) // one WARNING finding
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/findings?severity=ERROR", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var out []map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if len(out) != 0 {
+		t.Errorf("expected 0 ERROR findings (only WARNING exists), got %d", len(out))
+	}
+}
+
+// TestAPIFindingsLanguageFilter verifies ?language= filters correctly.
+//
+//fusa:test REQ-FO-API002
+func TestAPIFindingsLanguageFilter(t *testing.T) {
+	s := newTestServer(t) // only Go findings
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/findings?language=java", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	var out []map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("not JSON: %v", err)
+	}
+	if len(out) != 0 {
+		t.Errorf("expected 0 Java findings, got %d", len(out))
+	}
+}
+
 // TestWithHistoryDir verifies WithHistoryDir sets the history directory.
 //
 //fusa:test REQ-FO-HST003
