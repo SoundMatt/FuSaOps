@@ -141,10 +141,11 @@ func Run(ctx context.Context, cfg Config, runner *orchestrator.Runner) *FleetRep
 	return fr
 }
 
-// Render writes the FleetReport to w in the requested format (text, json, or html).
+// Render writes the FleetReport to w in the requested format (text, json, html, or markdown).
 //
 //fusa:req REQ-FO-FLT004
 //fusa:req REQ-FO-FLT005
+//fusa:req REQ-FO-FLT007
 func Render(w io.Writer, fr *FleetReport, format string) error {
 	switch format {
 	case "json", "":
@@ -153,8 +154,10 @@ func Render(w io.Writer, fr *FleetReport, format string) error {
 		return renderText(w, fr)
 	case "html":
 		return renderHTML(w, fr)
+	case "markdown", "md":
+		return renderMarkdown(w, fr)
 	default:
-		return fmt.Errorf("fleet: unsupported format %q (want text, json, or html)", format)
+		return fmt.Errorf("fleet: unsupported format %q (want text, json, html, or markdown)", format)
 	}
 }
 
@@ -263,6 +266,34 @@ tfoot td{font-weight:600;border-top:2px solid #e2e8f0;background:#f8fafc}
 //fusa:req REQ-FO-FLT005
 func renderHTML(w io.Writer, fr *FleetReport) error {
 	return fleetHTMLTmpl.Execute(w, fr)
+}
+
+// renderMarkdown writes a GFM markdown fleet report to w.
+//
+//fusa:req REQ-FO-FLT007
+func renderMarkdown(w io.Writer, fr *FleetReport) error {
+	status := fr.Status()
+	badge := "🟢"
+	if status == "WARN" {
+		badge = "🟡"
+	} else if status == "FAIL" || status == "ERROR" {
+		badge = "🔴"
+	}
+	fmt.Fprintf(w, "# FuSaOps Fleet — %s\n\n", fr.Project)
+	fmt.Fprintf(w, "%s **%s** · Generated %s\n\n", badge, status, fr.GeneratedAt.UTC().Format("2006-01-02 15:04 UTC"))
+	fmt.Fprintln(w, "| Repository | Status | Errors | Warnings | Infos | Total |")
+	fmt.Fprintln(w, "|---|---|---:|---:|---:|---:|")
+	for _, r := range fr.Repos {
+		if r.ScanErr != "" {
+			fmt.Fprintf(w, "| %s | **%s** | ⚠ %s | | | |\n", r.Name, r.Status, r.ScanErr)
+		} else {
+			fmt.Fprintf(w, "| %s | **%s** | %d | %d | %d | %d |\n",
+				r.Name, r.Status, r.Errors, r.Warnings, r.Infos, r.Total)
+		}
+	}
+	fmt.Fprintf(w, "| **TOTAL** | **%s** | **%d** | **%d** | **%d** | **%d** |\n",
+		status, fr.Errors, fr.Warnings, fr.Infos, fr.Total)
+	return nil
 }
 
 // RenderToFile writes the fleet report to path, or to w if path is empty.

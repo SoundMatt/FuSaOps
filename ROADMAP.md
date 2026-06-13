@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.29 — `fusaops fleet --format markdown` ✅
+
+**Goal:** Let CI pipelines post multi-repo safety summaries directly into pull request comments and GitHub Actions job summaries.
+
+- `fleet.Render` gains `"markdown"` / `"md"` format support (REQ-FO-FLT007)
+- GFM output: project header, 🟢/🟡/🔴 badge, per-repo table (Repository/Status/Errors/Warnings/Infos/Total), TOTAL summary row, inline scan errors
+- `fusaops fleet --format markdown [--output FILE]`
+
+---
+
 ## v1.28 — `--workers` and `--timeout` CLI flags ✅
 
 **Goal:** Let CI pipelines cap adapter concurrency and set per-adapter timeouts without editing `.fusaops.json`.

@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.29.0] — 2026-06-13
+
+### `fusaops fleet --format markdown` — Fleet markdown report
+
+- **`fleet.Render(w, fr, "markdown")`** (alias `"md"`) — new format support; produces a GFM markdown page with a status badge (🟢 PASS / 🟡 WARN / 🔴 FAIL), a per-repo table (Repository / Status / Errors / Warnings / Infos / Total), and a TOTAL summary row. Scan errors appear inline in the table. (REQ-FO-FLT007)
+- **`fusaops fleet --format markdown [--output FILE]`** — expose the new format from the CLI.
+- Useful for posting multi-repo safety status summaries directly into pull request comments and GitHub Actions job summaries.
+
+### Safety
+- Requirements registry at 253 requirements (added REQ-FO-FLT007)
+- 4 new tests; combined coverage 81.2%
+
 ## [1.28.0] — 2026-06-13
 
 ### `--workers` and `--timeout` CLI flags on check/report/trace/sbom/audit-pack

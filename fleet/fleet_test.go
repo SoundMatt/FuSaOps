@@ -269,6 +269,80 @@ func TestRenderHTMLPass(t *testing.T) {
 	}
 }
 
+// TestRenderMarkdown verifies markdown rendering produces a GFM table with fleet data.
+//
+//fusa:test REQ-FO-FLT007
+func TestRenderMarkdown(t *testing.T) {
+	fr := &FleetReport{
+		Project: "my-fleet",
+		Repos: []RepoResult{
+			{Name: "repo-a", Status: "PASS", Total: 0, Errors: 0, Warnings: 0, Infos: 0},
+			{Name: "repo-b", Status: "FAIL", Total: 5, Errors: 3, Warnings: 2, Infos: 0},
+		},
+		Total:    5,
+		Errors:   3,
+		Warnings: 2,
+	}
+	var buf strings.Builder
+	if err := Render(&buf, fr, "markdown"); err != nil {
+		t.Fatalf("Render markdown: %v", err)
+	}
+	out := buf.String()
+	for _, want := range []string{"# FuSaOps Fleet", "my-fleet", "**FAIL**", "| Repository |", "repo-a", "repo-b", "TOTAL"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in markdown output:\n%s", want, out)
+		}
+	}
+}
+
+// TestRenderMarkdownAlias verifies "md" is an alias for "markdown".
+//
+//fusa:test REQ-FO-FLT007
+func TestRenderMarkdownAlias(t *testing.T) {
+	fr := &FleetReport{Project: "p", Repos: []RepoResult{{Name: "r", Status: "PASS"}}}
+	var buf strings.Builder
+	if err := Render(&buf, fr, "md"); err != nil {
+		t.Fatalf("Render md alias: %v", err)
+	}
+	if !strings.Contains(buf.String(), "# FuSaOps Fleet") {
+		t.Error("expected markdown header from md alias")
+	}
+}
+
+// TestRenderMarkdownScanError verifies scan errors appear in the markdown table.
+//
+//fusa:test REQ-FO-FLT007
+func TestRenderMarkdownScanError(t *testing.T) {
+	fr := &FleetReport{
+		Project: "broken-fleet",
+		Repos:   []RepoResult{{Name: "broken", Status: "ERROR", ScanErr: "adapter crashed"}},
+	}
+	var buf strings.Builder
+	if err := Render(&buf, fr, "markdown"); err != nil {
+		t.Fatalf("Render markdown scan error: %v", err)
+	}
+	if !strings.Contains(buf.String(), "adapter crashed") {
+		t.Errorf("expected scan error in markdown output:\n%s", buf.String())
+	}
+}
+
+// TestRenderMarkdownPass verifies green badge for all-PASS fleet.
+//
+//fusa:test REQ-FO-FLT007
+func TestRenderMarkdownPass(t *testing.T) {
+	fr := &FleetReport{
+		Project: "clean",
+		Repos:   []RepoResult{{Name: "ok", Status: "PASS"}},
+	}
+	var buf strings.Builder
+	if err := Render(&buf, fr, "markdown"); err != nil {
+		t.Fatalf("Render markdown pass: %v", err)
+	}
+	if !strings.Contains(buf.String(), "🟢") {
+		t.Error("expected green badge for PASS fleet")
+	}
+}
+
 // TestRenderToFile verifies RenderToFile writes to a file.
 //
 //fusa:test REQ-FO-FLT004

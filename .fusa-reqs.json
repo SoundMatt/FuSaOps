@@ -1366,6 +1366,13 @@
       "rationale": "Provides both human-readable and machine-readable fleet status for team dashboards and CI polling."
     },
     {
+      "id": "REQ-FO-FLT007",
+      "title": "Fleet markdown rendering",
+      "description": "fleet.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header line with the project name, a status badge (🟢/🟡/🔴), a per-repo GFM table (Repository/Status/Errors/Warnings/Infos/Total), a TOTAL summary row, and a scan-error inline when ScanErr is non-empty. The fusaops fleet CLI shall accept --format markdown.",
+      "priority": "MUST",
+      "rationale": "Markdown output lets CI pipelines post fleet status summaries directly into pull request comments and GitHub Actions job summaries."
+    },
+    {
       "id": "REQ-FO-TLS001",
       "title": "HTTPS/TLS support",
       "description": "The Server shall expose a ListenAndServeTLS(addr, certFile, keyFile string) method that loads the X.509 certificate pair and serves the dashboard over TLS 1.2+ using tls.Listen. The fusaops serve CLI shall accept --tls-cert and --tls-key flags that enable HTTPS; --tls-key is required when --tls-cert is set.",
