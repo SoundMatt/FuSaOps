@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-06-13
+
+### GitHub Action
+
+- **`.github/actions/fusaops/action.yml`** — reusable composite action wrapping the `ghcr.io/soundmatt/fusaops` Docker image; zero-install CI integration for any GitHub-hosted repository
+  - `command` input (default: `check`): any fusaops subcommand
+  - `args` input: extra flags appended after the command (e.g. `--strict`)
+  - `image` input: pin to a digest or tag for reproducibility
+  - `upload-report` input: when `"true"`, also runs `fusaops report --format html` and uploads the output as a `fusaops-report` workflow artifact
+- **`.github/fusaops-example.yml`** updated to use `uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.5.1` with four patterns: minimal check, strict+report, trace gate, audit-pack archive
+- **README.md** CI integration section updated to lead with the action; direct-install path retained as fallback
+
 ## [0.5.0] — 2026-06-13
 
 ### All-language support
@@ -121,7 +133,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/SoundMatt/FuSaOps/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.2.0...v0.3.0

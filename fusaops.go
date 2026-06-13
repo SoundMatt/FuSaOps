@@ -19,7 +19,7 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "0.5.0"
+const Version = "0.5.1"
 
 // Sentinel errors. Callers should use errors.Is for comparison.
 //

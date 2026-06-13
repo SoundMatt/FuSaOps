@@ -207,6 +207,37 @@ Go module's `.fusa.json`); FuSaOps does not manage it.
 
 ## CI integration
 
+### GitHub Action (zero-install)
+
+The reusable action wraps the all-in-one Docker image — no Go installation or tool
+setup needed in your CI:
+
+```yaml
+steps:
+  - uses: actions/checkout@v4
+  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.5.1
+    # Runs "fusaops check" by default; exit 1 on any ERROR finding, any language.
+
+  # With options:
+  - uses: SoundMatt/FuSaOps/.github/actions/fusaops@v0.5.1
+    with:
+      args: '--strict'        # also gate on WARNING findings
+      upload-report: 'true'  # attach fusaops-report.html as a workflow artifact
+```
+
+**Action inputs:**
+
+| Input | Default | Description |
+|---|---|---|
+| `command` | `check` | Any fusaops subcommand (`check`, `trace`, `report`, `sbom`, `audit-pack`, ...) |
+| `args` | _(empty)_ | Extra flags appended after the command |
+| `image` | `ghcr.io/soundmatt/fusaops:latest` | Docker image to pull |
+| `upload-report` | `false` | When `"true"`, generates an HTML report and uploads it as `fusaops-report` artifact |
+
+See [`.github/fusaops-example.yml`](.github/fusaops-example.yml) for more usage patterns.
+
+### Direct install
+
 ```yaml
 - run: go install github.com/SoundMatt/FuSaOps/cmd/fusaops@latest
 - run: fusaops check        # fails the build on any ERROR finding, any language

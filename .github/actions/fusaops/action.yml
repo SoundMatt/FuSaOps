@@ -1,0 +1,59 @@
+name: 'FuSaOps'
+description: 'Multi-language functional safety analysis via the x-FuSa toolchain'
+author: 'SoundMatt'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  command:
+    description: >
+      fusaops command to run. Any fusaops subcommand is accepted:
+      check, scan, trace, report, sbom, audit-pack, diff, conform, ...
+    required: false
+    default: 'check'
+  args:
+    description: 'Additional arguments appended after the command (e.g. "--strict" or "--format sarif")'
+    required: false
+    default: ''
+  image:
+    description: 'fusaops Docker image to pull. Pin to a digest or tag for reproducibility.'
+    required: false
+    default: 'ghcr.io/soundmatt/fusaops:latest'
+  upload-report:
+    description: >
+      When "true", also runs "fusaops report --format html" and uploads the result
+      as a workflow artifact named "fusaops-report".
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run fusaops ${{ inputs.command }}
+      shell: bash
+      run: |
+        docker run --rm \
+          --workdir /project \
+          -v "$GITHUB_WORKSPACE":/project \
+          "${{ inputs.image }}" \
+          ${{ inputs.command }} ${{ inputs.args }}
+
+    - name: Generate HTML report
+      if: ${{ inputs.upload-report == 'true' }}
+      shell: bash
+      run: |
+        docker run --rm \
+          --workdir /project \
+          -v "$GITHUB_WORKSPACE":/project \
+          "${{ inputs.image }}" \
+          report --format html --output fusaops-report.html
+
+    - name: Upload HTML report
+      if: ${{ inputs.upload-report == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: fusaops-report
+        path: ${{ github.workspace }}/fusaops-report.html
+        if-no-files-found: warn
