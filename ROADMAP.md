@@ -255,6 +255,17 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.7 — JUnit XML report format ✅
+
+**Goal:** Surface FuSaOps findings natively in CI test result dashboards.
+
+- ✅ `--format junit` on `fusaops check` and `fusaops report` — produces JUnit XML
+- ✅ Each component (language × tool) maps to a `<testsuite>`; each finding maps to a `<testcase>` with `<failure>` for ERROR/WARNING
+- ✅ Components with zero findings emit a synthetic passing testcase; skipped components emit `<skipped/>`
+- ✅ Zero external dependencies — `encoding/xml` stdlib only
+
+---
+
 ## Adding a language adapter
 
 1. Implement `adapter.Adapter` (Name, Language, Tool, Detect, Available, Check).

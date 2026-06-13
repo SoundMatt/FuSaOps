@@ -251,6 +251,20 @@ func TestServeZeroRefreshInterval(t *testing.T) {
 	}
 }
 
+// TestCheckJUnitFormat verifies fusaops check --format junit produces XML output.
+//
+//fusa:test REQ-FO-CLI034
+func TestCheckJUnitFormat(t *testing.T) {
+	dir := goProject(t)
+	code, out, errb := runArgs(t, "check", "--dir", dir, "--format", "junit")
+	if code != 0 {
+		t.Fatalf("check --format junit: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "<?xml") || !strings.Contains(out, "<testsuites") {
+		t.Errorf("junit output missing XML elements: %.200s", out)
+	}
+}
+
 func TestSplitCSV(t *testing.T) {
 	got := splitCSV("a,b,,c")
 	if len(got) != 3 || got[0] != "a" || got[2] != "c" {

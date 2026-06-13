@@ -323,6 +323,13 @@
       "level": "ASIL-C"
     },
     {
+      "id": "REQ-FO-RPT013",
+      "title": "JUnit XML renderer",
+      "description": "FuSaOps shall render reports in JUnit XML format (--format junit). Each component maps to a <testsuite>; each finding maps to a <testcase> with a <failure> element for ERROR and WARNING severity. Components with zero findings emit a synthetic passing testcase. Skipped components emit a <skipped/> testcase.",
+      "priority": "MUST",
+      "rationale": "JUnit XML is the de facto standard for CI test results, enabling FuSaOps findings to appear natively in Jenkins, Azure DevOps, CircleCI, and GitLab pipelines."
+    },
+    {
       "id": "REQ-FO-SRV001",
       "title": "Dashboard server",
       "text": "FuSaOps shall provide a web server exposing the aggregated multi-language report.",
@@ -1448,6 +1455,13 @@
       "description": "The check and report subcommands shall accept --suppress-file path to apply a suppression config. The path is forwarded to Options.SuppressFile. A missing or malformed file exits 1 with a descriptive error.",
       "priority": "MUST",
       "rationale": "CLI entry point for finding suppression."
+    },
+    {
+      "id": "REQ-FO-CLI034",
+      "title": "fusaops check/report --format junit",
+      "description": "The check and report subcommands shall accept 'junit' as a valid --format value, producing JUnit XML output via the report.Render dispatcher.",
+      "priority": "MUST",
+      "rationale": "Enables CI systems that natively consume JUnit XML to display FuSaOps safety findings as test results."
     }
   ]
 }

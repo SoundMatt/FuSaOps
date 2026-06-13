@@ -15,12 +15,13 @@ import (
 //
 //fusa:req REQ-FO-CLI009
 //fusa:req REQ-FO-CLI033
+//fusa:req REQ-FO-CLI034
 func runReport(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops report", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	dir := fs.String("dir", ".", "project root directory")
 	only := fs.String("only", "", "comma-separated tool names to run (default: all applicable)")
-	format := fs.String("format", "json", "output format: text|json|html|sarif")
+	format := fs.String("format", "json", "output format: text|json|html|sarif|junit")
 	output := fs.String("output", "", "output file (default: stdout)")
 	suppressFile := fs.String("suppress-file", "", "path to .fusaops-suppress.json")
 	if err := fs.Parse(args); err != nil {

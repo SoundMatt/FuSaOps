@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-06-13
+
+### JUnit XML report format
+
+- **`--format junit`** on `fusaops check` and `fusaops report` — produces JUnit XML
+  (`<?xml ...?><testsuites ...>`) for CI systems that natively consume JUnit test results
+  (Jenkins, Azure DevOps, CircleCI, GitLab, GitHub Actions test summary). (REQ-FO-RPT013, REQ-FO-CLI034)
+- Each component (language × tool) maps to a `<testsuite name="lang/tool">`.
+- Each finding maps to a `<testcase>`; ERROR and WARNING findings carry a `<failure type="ERROR|WARNING">` element with file:line in the body.
+- Components with zero findings emit a synthetic `<testcase name="(no findings)"/>` (passed).
+- Skipped/unavailable components emit `<testcase name="(skipped)"><skipped/></testcase>`.
+- Zero external dependencies — `encoding/xml` from stdlib.
+
+### Safety
+- Requirements registry at 209 requirements (added REQ-FO-RPT013, REQ-FO-CLI034)
+- 8 new tests (7 renderer, 1 CLI); 207/207 requirements traced+tested; combined coverage ≥80%
+
 ## [1.6.0] — 2026-06-13
 
 ### Finding suppression
@@ -303,7 +320,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.3.0...v1.4.0

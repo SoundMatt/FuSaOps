@@ -369,6 +369,22 @@ fusaops report --suppress-file .fusaops-suppress.json --format json
 - The aggregate text report appends `(N suppressed)` to the TOTAL line.
 - `AggregateReport.Suppressed` in the JSON output holds the count.
 
+## JUnit XML output
+
+`--format junit` on `fusaops check` or `fusaops report` produces JUnit XML for CI
+systems that natively display test results (Jenkins, Azure DevOps, CircleCI, GitLab,
+GitHub Actions test summary action):
+
+```bash
+fusaops check --format junit > fusaops-results.xml
+fusaops report --format junit --output fusaops-results.xml
+```
+
+- Each language/tool component maps to a `<testsuite name="go/gofusa">`.
+- Each finding maps to a `<testcase>`; ERROR and WARNING findings carry a `<failure>`.
+- Components with zero findings emit a synthetic `<testcase name="(no findings)"/>` (passed).
+- Skipped / unavailable tools emit `<testcase name="(skipped)"><skipped/></testcase>`.
+
 ## Docker quickstart
 
 The published image is **all-in-one**: it bundles the x-FuSa tools, so there is
@@ -488,7 +504,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (208 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (209 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)
