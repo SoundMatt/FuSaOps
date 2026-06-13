@@ -366,7 +366,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (183 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (188 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

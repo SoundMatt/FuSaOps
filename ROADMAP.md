@@ -190,11 +190,19 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.1 — Role-based access & audit log ✅
+
+**Goal:** Give operators fine-grained access control and a compliance-ready audit trail.
+
+- ✅ **Read-only credentials** — `fusaops serve --auth-ro viewer:pass` adds a second credential that can read dashboards but is blocked from /refresh (403 Forbidden). Implemented via `Server.WithAuthRO(user, pass)` (REQ-FO-RBAC001/002).
+- ✅ **Request audit log** — `fusaops serve --audit-log /var/log` appends one JSON record per authenticated request to `.fusaops-audit.jsonl`: timestamp, method, path, user, HTTP status. Implemented via `Server.WithAuditLog(dir)` (REQ-FO-AUDIT001/002).
+
+---
+
 ## Future / Advanced
 
 | Version | Capability |
 |---|---|
-| v1.1 | Role-based access (read-only vs. refresh), audit log of dashboard actions |
 | v1.2 | Multi-project config: serve multiple repos from one dashboard process |
 
 ---

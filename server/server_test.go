@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -507,5 +508,91 @@ func TestListenAndServeTLSBadCert(t *testing.T) {
 	err := s.ListenAndServeTLS(":0", "/nonexistent/cert.pem", "/nonexistent/key.pem")
 	if err == nil {
 		t.Fatal("expected error for missing cert/key")
+	}
+}
+
+// TestWithAuthRO verifies WithAuthRO sets read-only credentials.
+//
+//fusa:test REQ-FO-RBAC001
+func TestWithAuthRO(t *testing.T) {
+	s := newTestServer(t).WithAuthRO("viewer", "secret")
+	if s.authROUser != "viewer" || s.authROPass != "secret" {
+		t.Errorf("authRO fields: user=%q pass=%q", s.authROUser, s.authROPass)
+	}
+}
+
+// TestAuthROCanReadDashboard verifies ro credentials can access read-only routes.
+//
+//fusa:test REQ-FO-RBAC001
+func TestAuthROCanReadDashboard(t *testing.T) {
+	s := newTestServer(t).WithAuth("admin", "secret").WithAuthRO("viewer", "ro-pass")
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req.SetBasicAuth("viewer", "ro-pass")
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("ro user blocked from read route: %d", rec.Code)
+	}
+}
+
+// TestAuthROBlockedFromRefresh verifies ro credentials cannot trigger /refresh.
+//
+//fusa:test REQ-FO-RBAC002
+func TestAuthROBlockedFromRefresh(t *testing.T) {
+	s := newTestServer(t).WithAuth("admin", "secret").WithAuthRO("viewer", "ro-pass")
+	req := httptest.NewRequest(http.MethodGet, "/refresh", nil)
+	req.SetBasicAuth("viewer", "ro-pass")
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("want 403 for ro on /refresh, got %d", rec.Code)
+	}
+}
+
+// TestAuthROOnlyNoRW verifies ro-only mode (no rw set) blocks unauthenticated.
+//
+//fusa:test REQ-FO-RBAC001
+func TestAuthROOnlyBlocksUnauthenticated(t *testing.T) {
+	s := newTestServer(t).WithAuthRO("viewer", "ro-pass")
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("want 401, got %d", rec.Code)
+	}
+}
+
+// TestWithAuditLog verifies WithAuditLog sets the audit directory.
+//
+//fusa:test REQ-FO-AUDIT001
+func TestWithAuditLog(t *testing.T) {
+	s := newTestServer(t).WithAuditLog("/tmp/audit")
+	if s.auditDir != "/tmp/audit" {
+		t.Errorf("auditDir: got %q", s.auditDir)
+	}
+}
+
+// TestAuditLogWritten verifies authenticated requests are written to the audit log.
+//
+//fusa:test REQ-FO-AUDIT001
+//fusa:test REQ-FO-AUDIT002
+func TestAuditLogWritten(t *testing.T) {
+	dir := t.TempDir()
+	s := newTestServer(t).WithAuth("admin", "pw").WithAuditLog(dir)
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req.SetBasicAuth("admin", "pw")
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "fusaops-audit.jsonl"))
+	if err != nil {
+		t.Fatalf("audit log not written: %v", err)
+	}
+	if !strings.Contains(string(data), "/healthz") {
+		t.Errorf("audit log missing /healthz: %s", data)
+	}
+	if !strings.Contains(string(data), `"user":"admin"`) {
+		t.Errorf("audit log missing user: %s", data)
 	}
 }

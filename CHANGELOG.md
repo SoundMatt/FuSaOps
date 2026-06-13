@@ -7,6 +7,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-06-13
+
+### Role-based access & audit log
+
+- **Read-only credentials** — `fusaops serve --auth-ro viewer:pass` sets a second credential pair with read-only access via `Server.WithAuthRO(user, pass)`. Users authenticating with ro credentials can view all dashboards and API endpoints but receive `403 Forbidden` on mutating routes (`/refresh`). Full rw credentials set via `--auth` retain unrestricted access (REQ-FO-RBAC001/002).
+- **Request audit log** — `fusaops serve --audit-log dir` enables access logging via `Server.WithAuditLog(dir)`. Every authenticated request is appended to `.fusaops-audit.jsonl` as a JSON record: `{timestamp, method, path, user, status}`. File is created with mode `0600`; never truncated (REQ-FO-AUDIT001/002).
+
+### Safety
+- Requirements registry at 188 requirements (added REQ-FO-RBAC001–002, REQ-FO-AUDIT001–002, REQ-FO-CLI028–029)
+- 7 new tests in `server` package; 1 new CLI test; combined coverage 81.2%
+
 ## [1.0.0] — 2026-06-13
 
 ### Enterprise readiness
@@ -228,7 +239,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.7.0...v0.8.0

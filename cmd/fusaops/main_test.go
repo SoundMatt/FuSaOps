@@ -198,6 +198,16 @@ func TestServeTLSMissingKey(t *testing.T) {
 	}
 }
 
+// TestServeAuthROBadFormat verifies --auth-ro without colon returns exit 1.
+//
+//fusa:test REQ-FO-CLI028
+func TestServeAuthROBadFormat(t *testing.T) {
+	code, _, errb := runArgs(t, "serve", "--auth-ro", "nocolon")
+	if code != 1 || !strings.Contains(errb, "user:pass") {
+		t.Errorf("bad auth-ro format: code=%d err=%q", code, errb)
+	}
+}
+
 func TestSplitCSV(t *testing.T) {
 	got := splitCSV("a,b,,c")
 	if len(got) != 3 || got[0] != "a" || got[2] != "c" {

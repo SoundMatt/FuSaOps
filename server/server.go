@@ -16,6 +16,8 @@ import (
 	"html"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -29,14 +31,17 @@ import (
 //
 //fusa:req REQ-FO-SRV001
 type Server struct {
-	root     string
-	project  string
-	runner   *orchestrator.Runner
-	opts     orchestrator.Options
-	histDir  string // empty = history persistence disabled
-	authUser string // empty = no authentication required
-	authPass string
-	fleetCfg string // empty = fleet dashboard disabled
+	root       string
+	project    string
+	runner     *orchestrator.Runner
+	opts       orchestrator.Options
+	histDir    string // empty = history persistence disabled
+	authUser   string // empty = no authentication required (rw)
+	authPass   string
+	authROUser string // read-only credentials (optional)
+	authROPass string
+	auditDir   string // empty = no audit log
+	fleetCfg   string // empty = fleet dashboard disabled
 
 	mu     sync.RWMutex
 	cached *report.AggregateReport
@@ -45,6 +50,28 @@ type Server struct {
 	fleetMu  sync.RWMutex
 	fleetRep *fleet.FleetReport
 	fleetErr error
+}
+
+// auditEntry is a single dashboard access record written to .fusaops-audit.jsonl.
+//
+//fusa:req REQ-FO-AUDIT001
+type auditEntry struct {
+	Timestamp time.Time `json:"timestamp"`
+	Method    string    `json:"method"`
+	Path      string    `json:"path"`
+	User      string    `json:"user"`
+	Status    int       `json:"status"`
+}
+
+// statusRecorder captures the HTTP status code written by a handler.
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
 }
 
 // New returns a Server that scans root using the given runner and options.
@@ -67,10 +94,30 @@ func (s *Server) WithHistoryDir(dir string) *Server {
 // WithAuth enables HTTP Basic Auth on all routes. Requests without valid
 // credentials receive 401 Unauthorized with a WWW-Authenticate challenge.
 // Calling with empty user and pass disables authentication.
+// Credentials set via WithAuth have read-write access (including /refresh).
 //
 //fusa:req REQ-FO-AUTH001
 func (s *Server) WithAuth(user, pass string) *Server {
 	s.authUser, s.authPass = user, pass
+	return s
+}
+
+// WithAuthRO adds a second set of credentials with read-only access. Users
+// authenticating with these credentials may view dashboards and query the API
+// but cannot trigger mutating actions such as /refresh.
+//
+//fusa:req REQ-FO-RBAC001
+func (s *Server) WithAuthRO(user, pass string) *Server {
+	s.authROUser, s.authROPass = user, pass
+	return s
+}
+
+// WithAuditLog enables request audit logging. Each authenticated request is
+// appended as a JSON record to .fusaops-audit.jsonl in dir.
+//
+//fusa:req REQ-FO-AUDIT001
+func (s *Server) WithAuditLog(dir string) *Server {
+	s.auditDir = dir
 	return s
 }
 
@@ -137,27 +184,67 @@ func (s *Server) Handler() http.Handler {
 		mux.HandleFunc("/fleet", s.handleFleet)
 		mux.HandleFunc("/api/fleet", s.handleAPIFleet)
 	}
-	if s.authUser != "" {
+	if s.authUser != "" || s.authROUser != "" {
 		return s.authMiddleware(mux)
 	}
 	return mux
 }
 
-// authMiddleware wraps h with HTTP Basic Auth. Unauthenticated requests
-// receive 401 Unauthorized with a WWW-Authenticate challenge.
+// mutatingPaths are routes that modify server state. Read-only credentials
+// are rejected with 403 Forbidden on these paths.
+var mutatingPaths = map[string]bool{"/refresh": true}
+
+// authMiddleware wraps h with HTTP Basic Auth and optional role gating.
+// Unauthenticated requests receive 401; ro credentials on mutating paths get 403.
 //
 //fusa:req REQ-FO-AUTH001
 //fusa:req REQ-FO-AUTH002
+//fusa:req REQ-FO-RBAC001
+//fusa:req REQ-FO-RBAC002
 func (s *Server) authMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		u, p, ok := r.BasicAuth()
-		if !ok || u != s.authUser || p != s.authPass {
+		role := ""
+		if ok {
+			if s.authUser != "" && u == s.authUser && p == s.authPass {
+				role = "rw"
+			} else if s.authROUser != "" && u == s.authROUser && p == s.authROPass {
+				role = "ro"
+			}
+		}
+		if role == "" {
 			w.Header().Set("WWW-Authenticate", `Basic realm="fusaops"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		h.ServeHTTP(w, r)
+		if role == "ro" && mutatingPaths[r.URL.Path] {
+			http.Error(w, "Forbidden: read-only credentials", http.StatusForbidden)
+			return
+		}
+		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		h.ServeHTTP(rec, r)
+		if s.auditDir != "" {
+			_ = appendAudit(s.auditDir, auditEntry{
+				Timestamp: time.Now().UTC(),
+				Method:    r.Method,
+				Path:      r.URL.Path,
+				User:      u,
+				Status:    rec.status,
+			})
+		}
 	})
+}
+
+// appendAudit appends an audit entry to .fusaops-audit.jsonl in dir.
+//
+//fusa:req REQ-FO-AUDIT002
+func appendAudit(dir string, e auditEntry) error {
+	f, err := openAppend(dir, "fusaops-audit.jsonl")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewEncoder(f).Encode(e)
 }
 
 // handleIndex renders the HTML dashboard from the cached report.
@@ -555,4 +642,9 @@ func (s *Server) Serve(ln net.Listener) error {
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	return srv.Serve(ln)
+}
+
+// openAppend opens a JSONL file in dir for appending, creating it if needed.
+func openAppend(dir, name string) (*os.File, error) {
+	return os.OpenFile(filepath.Join(dir, name), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
 }

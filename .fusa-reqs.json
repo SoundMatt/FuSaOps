@@ -1273,6 +1273,48 @@
       "description": "The serve subcommand shall accept --tls-cert and --tls-key flags. When --tls-cert is set, --tls-key is required; the server switches to HTTPS via ListenAndServeTLS. Missing --tls-key exits 1 with a descriptive error.",
       "priority": "MUST",
       "rationale": "Enables HTTPS without an external reverse proxy for enterprise deployments."
+    },
+    {
+      "id": "REQ-FO-RBAC001",
+      "title": "Read-only auth role",
+      "description": "The Server shall support a read-only credential pair via WithAuthRO(user, pass string). When authentication is enabled, both rw (WithAuth) and ro (WithAuthRO) credentials are accepted. An ro user can access any route that does not mutate server state.",
+      "priority": "MUST",
+      "rationale": "Enables operators to grant dashboard read access to stakeholders who should not be able to trigger re-scans."
+    },
+    {
+      "id": "REQ-FO-RBAC002",
+      "title": "Mutating route restriction",
+      "description": "The authMiddleware shall reject ro credentials on mutating paths (/refresh) with 403 Forbidden. Read-write credentials retain full access to all routes.",
+      "priority": "MUST",
+      "rationale": "Prevents read-only users from triggering expensive re-scans or state changes."
+    },
+    {
+      "id": "REQ-FO-AUDIT001",
+      "title": "Request audit log",
+      "description": "The Server shall expose a WithAuditLog(dir string) method. When set, the authMiddleware appends one auditEntry JSON record per authenticated request to .fusaops-audit.jsonl in dir. Each record includes timestamp, HTTP method, path, authenticated user, and response status code.",
+      "priority": "MUST",
+      "rationale": "Audit trails are required for enterprise deployments to satisfy change-management and accountability requirements."
+    },
+    {
+      "id": "REQ-FO-AUDIT002",
+      "title": "Audit entry schema",
+      "description": "Each audit entry appended to .fusaops-audit.jsonl shall be a JSON object with fields: timestamp (RFC3339 UTC), method, path, user, status (HTTP status code). The file shall be created if it does not exist and appended to (never truncated) with mode 0600.",
+      "priority": "MUST",
+      "rationale": "A stable schema and safe file mode allow external audit tools to parse and protect the log."
+    },
+    {
+      "id": "REQ-FO-CLI028",
+      "title": "fusaops serve --auth-ro flag",
+      "description": "The serve subcommand shall accept --auth-ro user:pass that sets read-only credentials on the server via WithAuthRO. A missing colon in the value shall exit 1 with a descriptive error.",
+      "priority": "MUST",
+      "rationale": "Single-flag way to set a read-only viewer account without granting refresh access."
+    },
+    {
+      "id": "REQ-FO-CLI029",
+      "title": "fusaops serve --audit-log flag",
+      "description": "The serve subcommand shall accept --audit-log dir that enables request audit logging to .fusaops-audit.jsonl in the given directory.",
+      "priority": "MUST",
+      "rationale": "Gives operators a single flag to enable access logging for compliance and debugging."
     }
   ]
 }
