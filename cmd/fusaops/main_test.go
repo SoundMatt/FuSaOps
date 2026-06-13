@@ -99,6 +99,19 @@ func TestAdaptersLists(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI050
+func TestAdaptersJSON(t *testing.T) {
+	code, out, _ := runArgs(t, "adapters", "--format", "json")
+	if code != 0 {
+		t.Fatalf("adapters --format json: code=%d", code)
+	}
+	for _, want := range []string{`"name"`, `"tool"`, `"language"`, `"available"`, "gofusa"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("adapters json missing %q:\n%s", want, out)
+		}
+	}
+}
+
 //fusa:test REQ-FO-CLI008
 func TestCheckNoLanguages(t *testing.T) {
 	// Empty dir → no adapters → exit 1 with message.

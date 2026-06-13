@@ -7,6 +7,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.34.0] — 2026-06-13
+
+### `fusaops adapters --format json` — Machine-readable adapter list
+
+- **`fusaops adapters --format json`** — new format flag; emits a JSON array of objects with `name`, `tool`, `language`, and `available` fields. Default format remains `text`. (REQ-FO-CLI050)
+- Lets CI scripts and tooling introspect installed adapters programmatically without parsing human-readable text.
+
+### Safety
+- Requirements registry at 258 requirements (added REQ-FO-CLI050)
+- 1 new test; combined coverage 81.6%
+
 ## [1.33.0] — 2026-06-13
 
 ### `fusaops sbom --format markdown` — SBOM markdown report

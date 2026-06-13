@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.34 — `fusaops adapters --format json` ✅
+
+**Goal:** Let CI scripts and tooling introspect installed adapters without parsing human-readable text.
+
+- `fusaops adapters` gains `--format json` flag (REQ-FO-CLI050)
+- Emits a JSON array: `[{"name": "gofusa", "tool": "gofusa", "language": "go", "available": true}, ...]`
+- Default format remains `text`
+
+---
+
 ## v1.33 — `fusaops sbom --format markdown` ✅
 
 **Goal:** Let CI pipelines embed SBOM summaries in PR comments and GitHub Actions job summaries.

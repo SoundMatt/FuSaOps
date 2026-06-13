@@ -470,6 +470,13 @@
       "level": "ASIL-C"
     },
     {
+      "id": "REQ-FO-CLI050",
+      "title": "fusaops adapters --format json",
+      "description": "fusaops adapters shall accept --format json and emit a JSON array of objects, each with name, tool, language, and available fields. Default format remains text.",
+      "priority": "MUST",
+      "rationale": "Lets CI scripts and tooling introspect the set of installed adapters programmatically without parsing human-readable text."
+    },
+    {
       "id": "REQ-FO-CLI007",
       "title": "Option resolution",
       "text": "The CLI shall resolve the absolute root and merge any .fusaops.json, treating a missing configuration as non-fatal.",
