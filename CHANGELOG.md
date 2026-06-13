@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.28.0] — 2026-06-13
+
+### `--workers` and `--timeout` CLI flags on check/report/trace/sbom/audit-pack
+
+- **`fusaops check|report|trace|sbom|audit-pack --workers N`** — cap the number of concurrent adapters. `0` means unlimited (the default). Overrides `run.workers` in `.fusaops.json`. (REQ-FO-CLI049)
+- **`fusaops check|report|trace|sbom|audit-pack --timeout DURATION`** — set a per-adapter deadline (e.g. `30s`, `5m`). Overrides `run.timeout` in `.fusaops.json`. An invalid duration exits 2 with a descriptive error. (REQ-FO-CLI049)
+- Useful in CI where adapter time limits differ per environment without needing a committed config change.
+
+### Safety
+- Requirements registry at 252 requirements (added REQ-FO-CLI049)
+- 9 new tests covering workers/timeout acceptance and invalid-timeout rejection on all five commands; combined coverage 81.2%
+
 ## [1.27.0] — 2026-06-13
 
 ### `fusaops iso26262|iec61508|do178|iso21434|unece|iec62443 --format html` — Standards HTML report

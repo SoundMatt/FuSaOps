@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
@@ -22,6 +23,7 @@ import (
 //fusa:req REQ-FO-CLI040
 //fusa:req REQ-FO-CLI041
 //fusa:req REQ-FO-CLI047
+//fusa:req REQ-FO-CLI049
 func runReport(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops report", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -33,6 +35,8 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 	showSuppressed := fs.Bool("show-suppressed", false, "include suppressed findings in output")
 	showFingerprints := fs.Bool("show-fingerprints", false, "show fingerprint and suppress scaffold per finding")
 	minSeverity := fs.String("min-severity", "", "hide findings below this severity: INFO, WARNING, or ERROR")
+	workers := fs.Int("workers", 0, "max parallel adapters (0 = unlimited; overrides config)")
+	timeout := fs.String("timeout", "", "per-adapter deadline e.g. 30s, 5m (overrides config)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -43,6 +47,17 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	opts.SuppressFile = *suppressFile
+	if *workers > 0 {
+		opts.Workers = *workers
+	}
+	if *timeout != "" {
+		d, perr := time.ParseDuration(*timeout)
+		if perr != nil {
+			fmt.Fprintf(stderr, "fusaops report: --timeout %q: %v\n", *timeout, perr)
+			return 2
+		}
+		opts.Timeout = d
+	}
 	if *minSeverity != "" {
 		sev := fusaops.Severity(*minSeverity)
 		if sev.Rank() == 0 {

@@ -590,6 +590,79 @@ func TestReportMinSeverityFlag(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI049
+func TestCheckWorkersFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "check", "--workers", "2", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--workers not recognised: %s", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI049
+func TestCheckTimeoutFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "check", "--timeout", "60s", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--timeout not recognised: %s", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI049
+func TestCheckTimeoutInvalid(t *testing.T) {
+	code, _, errb := runArgs(t, "check", "--timeout", "notaduration", "--dir", goProject(t))
+	if code != 2 {
+		t.Errorf("invalid --timeout: want code=2, got %d (err=%s)", code, errb)
+	}
+	if !strings.Contains(errb, "--timeout") {
+		t.Errorf("expected --timeout in error: %q", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI049
+func TestReportWorkersFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "report", "--workers", "1", "--format", "text", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--workers not recognised: %s", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI049
+func TestReportTimeoutInvalid(t *testing.T) {
+	code, _, errb := runArgs(t, "report", "--timeout", "bad", "--dir", goProject(t))
+	if code != 2 {
+		t.Errorf("invalid --timeout: want code=2, got %d (err=%s)", code, errb)
+	}
+	if !strings.Contains(errb, "--timeout") {
+		t.Errorf("expected --timeout in error: %q", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI049
+func TestTraceWorkersFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "trace", "--workers", "2", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--workers not recognised: %s", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI049
+func TestSBOMWorkersFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "sbom", "--workers", "2", "--dir", goProject(t))
+	if code == 2 {
+		t.Errorf("--workers not recognised: %s", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI049
+func TestSBOMTimeoutInvalid(t *testing.T) {
+	code, _, errb := runArgs(t, "sbom", "--timeout", "bad", "--dir", goProject(t))
+	if code != 2 {
+		t.Errorf("invalid --timeout: want code=2, got %d", code)
+	}
+	if !strings.Contains(errb, "--timeout") {
+		t.Errorf("expected --timeout in error: %q", errb)
+	}
+}
+
 //fusa:test REQ-FO-SUP009
 //fusa:test REQ-FO-CLI048
 func TestSuppressImportBasic(t *testing.T) {

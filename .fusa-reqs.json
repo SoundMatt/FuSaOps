@@ -1660,6 +1660,13 @@
       "rationale": "CLI entry point for REQ-FO-SUP009."
     },
     {
+      "id": "REQ-FO-CLI049",
+      "title": "--workers and --timeout CLI flags",
+      "description": "fusaops check, report, trace, sbom, and audit-pack shall accept --workers N (cap concurrent adapters, 0 = unlimited) and --timeout DURATION (per-adapter deadline, e.g. 30s, 5m). When provided and non-zero/non-empty, these values shall override the equivalent fields in .fusaops.json. An invalid --timeout value shall exit 2 with a descriptive error.",
+      "priority": "MUST",
+      "rationale": "Lets CI pipelines override adapter concurrency and timeouts without committing a config file change."
+    },
+    {
       "id": "REQ-FO-ORC012",
       "title": "Options.MinSeverity severity filter",
       "description": "When Options.MinSeverity is set to a valid severity (INFO/WARNING/ERROR), the orchestrator shall filter out findings whose Severity.Rank() is less than MinSeverity.Rank() before storing them in the report. Empty string (zero value) disables filtering. The filter is applied after fingerprint enrichment and before suppression.",

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
@@ -18,6 +19,7 @@ import (
 //
 //fusa:req REQ-FO-CLI011
 //fusa:req REQ-FO-CLI021
+//fusa:req REQ-FO-CLI049
 func runTrace(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops trace", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -29,6 +31,8 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	gaps := fs.Bool("gaps", false, "show only untraced/untested requirements")
 	reqCoverage := fs.Int("req-coverage", -1, "fail when traced% < N (0–100)")
 	secTested := fs.Int("sec-tested", -1, "fail when sec-tested% < N (0–100)")
+	workers := fs.Int("workers", 0, "max parallel adapters (0 = unlimited; overrides config)")
+	timeout := fs.String("timeout", "", "per-adapter deadline e.g. 30s, 5m (overrides config)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -37,6 +41,17 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops trace: %v\n", err)
 		return 1
+	}
+	if *workers > 0 {
+		opts.Workers = *workers
+	}
+	if *timeout != "" {
+		d, perr := time.ParseDuration(*timeout)
+		if perr != nil {
+			fmt.Fprintf(stderr, "fusaops trace: --timeout %q: %v\n", *timeout, perr)
+			return 2
+		}
+		opts.Timeout = d
 	}
 
 	agg, err := orchestrator.New(nil).RunTrace(context.Background(), root, opts)

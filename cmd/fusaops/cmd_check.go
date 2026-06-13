@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/diff"
@@ -27,6 +28,7 @@ import (
 //fusa:req REQ-FO-CLI041
 //fusa:req REQ-FO-CLI042
 //fusa:req REQ-FO-CLI047
+//fusa:req REQ-FO-CLI049
 func runCheck(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops check", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -40,6 +42,8 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	showFingerprints := fs.Bool("show-fingerprints", false, "show fingerprint and suppress scaffold per finding")
 	saveBaseline := fs.String("save-baseline", "", "save current findings as a diff baseline to this file after check")
 	minSeverity := fs.String("min-severity", "", "hide findings below this severity: INFO, WARNING, or ERROR")
+	workers := fs.Int("workers", 0, "max parallel adapters (0 = unlimited; overrides config)")
+	timeout := fs.String("timeout", "", "per-adapter deadline e.g. 30s, 5m (overrides config)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -50,6 +54,17 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	opts.SuppressFile = *suppressFile
+	if *workers > 0 {
+		opts.Workers = *workers
+	}
+	if *timeout != "" {
+		d, perr := time.ParseDuration(*timeout)
+		if perr != nil {
+			fmt.Fprintf(stderr, "fusaops check: --timeout %q: %v\n", *timeout, perr)
+			return 2
+		}
+		opts.Timeout = d
+	}
 	if *minSeverity != "" {
 		sev := fusaops.Severity(*minSeverity)
 		if sev.Rank() == 0 {

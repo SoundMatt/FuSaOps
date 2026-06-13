@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.28 — `--workers` and `--timeout` CLI flags ✅
+
+**Goal:** Let CI pipelines cap adapter concurrency and set per-adapter timeouts without editing `.fusaops.json`.
+
+- `fusaops check`, `report`, `trace`, `sbom`, and `audit-pack` now accept `--workers N` and `--timeout DURATION` (REQ-FO-CLI049)
+- Flags override the equivalent `run.workers` / `run.timeout` values from config when non-zero/non-empty
+- Invalid `--timeout` values exit 2 with a descriptive error
+
+---
+
 ## v1.27 — `fusaops <standard> --format html` ✅
 
 **Goal:** Complete the standards command format set so gap reports are as shareable as other report types.

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
@@ -17,6 +18,7 @@ import (
 //
 //fusa:req REQ-FO-CLI012
 //fusa:req REQ-FO-SBM010
+//fusa:req REQ-FO-CLI049
 func runSBOM(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops sbom", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -24,6 +26,8 @@ func runSBOM(args []string, stdout, stderr io.Writer) int {
 	only := fs.String("only", "", "comma-separated tool names to run (default: all applicable)")
 	format := fs.String("format", "json", "output format: json|text|spdx|html")
 	output := fs.String("output", "", "output file (default: stdout)")
+	workers := fs.Int("workers", 0, "max parallel adapters (0 = unlimited; overrides config)")
+	timeout := fs.String("timeout", "", "per-adapter deadline e.g. 30s, 5m (overrides config)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -32,6 +36,17 @@ func runSBOM(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops sbom: %v\n", err)
 		return 1
+	}
+	if *workers > 0 {
+		opts.Workers = *workers
+	}
+	if *timeout != "" {
+		d, perr := time.ParseDuration(*timeout)
+		if perr != nil {
+			fmt.Fprintf(stderr, "fusaops sbom: --timeout %q: %v\n", *timeout, perr)
+			return 2
+		}
+		opts.Timeout = d
 	}
 
 	agg, err := orchestrator.New(nil).RunSBOM(context.Background(), root, opts)
