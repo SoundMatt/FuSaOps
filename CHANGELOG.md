@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-06-13
+
+### Fleet view — multi-repo scanning
+
+- **`fleet` package** — multi-repository check orchestration
+  - `Config` + `Repo` — JSON fleet config (`{"project":"p","repos":[{"name":"svc","dir":"/path","adapter":"gofusa"}]}`)
+  - `FleetReport` + `RepoResult` — per-repo status (PASS/WARN/FAIL/ERROR), counts, optional scan error
+  - `FleetReport.Status()` — FAIL if any repo fails; WARN if any warns; PASS if all clean
+  - `Run(ctx, cfg, runner)` — parallel check across all repos (one goroutine per repo)
+  - `Render(w, fr, "text"|"json")` + `RenderToFile` — columnar text table or JSON output
+- **`fusaops fleet --config fleet.json [--format text|json] [--output file] [--strict]`** — first-class CLI command; exit 1 on FAIL (or on WARN under `--strict`)
+- x-FuSa spec v1.10.8: c-FuSa v0.5.16 exit-code fixes noted; version snapshot updated
+
+### Safety
+- Requirements registry at 170 requirements (added REQ-FO-FLT001–004, REQ-FO-CLI023)
+- 10 new tests in `fleet` package; 2 new CLI tests; combined coverage 81.3%
+
 ## [0.7.0] — 2026-06-13
 
 ### REST API v1 + dashboard nav

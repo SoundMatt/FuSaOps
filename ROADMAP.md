@@ -158,11 +158,20 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v0.8 — Fleet View ✅
+
+**Goal:** One command to scan multiple repositories and get a combined status.
+
+- ✅ `fleet` package: `Config`, `Repo`, `FleetReport`, `RepoResult`; parallel `Run()`
+- ✅ `fusaops fleet --config fleet.json [--format text|json] [--strict]`
+- ✅ Columnar text table and JSON output; per-repo PASS/WARN/FAIL/ERROR with error detail
+
+---
+
 ## Future / Advanced
 
 | Version | Capability |
 |---|---|
-| v0.8 | Fleet view — multi-repo aggregation dashboard |
 | v0.9 | Policy engine — org-wide rules over aggregated findings |
 | v1.0 | Enterprise: auth, persistence, multi-tenant dashboards |
 

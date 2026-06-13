@@ -969,7 +969,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.14 · rust-FuSa v0.2.6 · py-FuSa v0.1.4 · java-FuSa v0.2.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.16 · rust-FuSa v0.2.6 · py-FuSa v0.1.4 · java-FuSa v0.2.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -1077,6 +1077,11 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.10.8 — 2026-06-13 (c-FuSa v0.5.16 exit-code fixes)
+
+- **Version snapshot updated (§11):** c-FuSa v0.5.16.
+- **c-FuSa v0.5.16:** `slsa`/`iec62443` now return exit 3 on runtime errors; `comp` now returns exit 2 for invalid `--format`. Fixes edge cases in exit-code conformance (§2.1). No §11 table changes (cells already ✅). No FuSaOps adapter changes.
 
 ### 1.10.7 — 2026-06-13 (cpp-FuSa v0.12.5 location.file fix; c-FuSa v0.5.14 hara show)
 

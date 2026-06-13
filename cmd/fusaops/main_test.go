@@ -107,6 +107,38 @@ func TestCheckNoLanguages(t *testing.T) {
 	}
 }
 
+// TestFleetCheck verifies fusaops fleet runs and produces a report.
+//
+//fusa:test REQ-FO-CLI023
+func TestFleetCheck(t *testing.T) {
+	dir := goProject(t)
+	cfgPath := filepath.Join(dir, "fleet.json")
+	cfgContent := `{"project":"testfleet","repos":[{"name":"svc","dir":"` + dir + `"}]}`
+	if err := os.WriteFile(cfgPath, []byte(cfgContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "fleet", "--config", cfgPath, "--format", "text")
+	if code != 0 {
+		t.Fatalf("fleet: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Fleet:") {
+		t.Errorf("fleet output missing Fleet header: %q", out)
+	}
+	if !strings.Contains(out, "svc") {
+		t.Errorf("fleet output missing repo name: %q", out)
+	}
+}
+
+// TestFleetMissingConfig verifies a missing config produces exit 1.
+//
+//fusa:test REQ-FO-CLI023
+func TestFleetMissingConfig(t *testing.T) {
+	code, _, errb := runArgs(t, "fleet", "--config", "/nonexistent/fleet.json")
+	if code != 1 || !strings.Contains(errb, "fleet") {
+		t.Errorf("missing config: code=%d err=%q", code, errb)
+	}
+}
+
 func TestSplitCSV(t *testing.T) {
 	got := splitCSV("a,b,,c")
 	if len(got) != 3 || got[0] != "a" || got[2] != "c" {

@@ -1107,6 +1107,41 @@
       "rationale": "Extends FuSaOps multi-language orchestration to Java projects using java-FuSa v0.1.0."
     },
     {
+      "id": "REQ-FO-FLT001",
+      "title": "Fleet config model",
+      "description": "FuSaOps shall define a Fleet Config with a project name and a list of Repo entries (name, dir, optional adapter); LoadConfig shall read and parse a JSON fleet config file.",
+      "priority": "MUST",
+      "rationale": "Enables multi-repo orchestration from a single declarative config file."
+    },
+    {
+      "id": "REQ-FO-FLT002",
+      "title": "Fleet report model",
+      "description": "FuSaOps shall define a FleetReport with per-repo RepoResult entries (name, dir, status, counts, optional scan error) and aggregate totals; Status() shall return FAIL if any repo has FAIL/ERROR, WARN if any has WARN, PASS otherwise.",
+      "priority": "MUST",
+      "rationale": "Aggregates per-repo scan outcomes into one fleet-level verdict for CI gating."
+    },
+    {
+      "id": "REQ-FO-FLT003",
+      "title": "Fleet run",
+      "description": "fleet.Run shall execute fusaops check against each repo in the config in parallel, aggregate results into a FleetReport, and record scan errors per repo without aborting the fleet run.",
+      "priority": "MUST",
+      "rationale": "Parallel execution reduces fleet scan time to max-of-repos rather than sum-of-repos."
+    },
+    {
+      "id": "REQ-FO-FLT004",
+      "title": "Fleet rendering",
+      "description": "fleet.Render shall write a FleetReport in text (columnar table with per-repo status) or json format, rejecting unknown formats; RenderToFile shall write to a file or stdout.",
+      "priority": "MUST",
+      "rationale": "Provides human-readable and machine-readable output for CI logs and programmatic consumers."
+    },
+    {
+      "id": "REQ-FO-CLI023",
+      "title": "Fleet command",
+      "description": "fusaops fleet --config fleet.json [--format text|json] [--output file] [--strict] shall load the fleet config, run check across all repos, render the fleet report, and exit 1 on FAIL (or on WARN under --strict).",
+      "priority": "MUST",
+      "rationale": "Exposes multi-repo fleet scanning as a first-class CLI command suitable for org-level CI gates."
+    },
+    {
       "id": "REQ-FO-API001",
       "title": "Status endpoint",
       "description": "The Server shall expose GET /api/v1/status returning a JSON object with status (PASS/WARN/FAIL/ERROR/PENDING), errors, warnings, and total counts for lightweight polling by CI gates and external monitors.",
