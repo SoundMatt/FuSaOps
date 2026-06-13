@@ -22,6 +22,7 @@ import (
 //fusa:req REQ-FO-CLI019
 //fusa:req REQ-FO-CLI020
 //fusa:req REQ-FO-CLI022
+//fusa:req REQ-FO-STD012
 func runStandards(cmd string, args []string, stdout, stderr io.Writer) int {
 	standard := standards.CommandStandard(cmd)
 
@@ -29,7 +30,7 @@ func runStandards(cmd string, args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	dir := fs.String("dir", ".", "Project root")
 	only := fs.String("only", "", "Comma-separated tool names to run (default: all applicable)")
-	format := fs.String("format", "text", "Output format: text|json|html")
+	format := fs.String("format", "text", "Output format: text|json|html|markdown")
 	output := fs.String("output", "", "Write report to file (default: stdout)")
 	strict := fs.Bool("strict", false, "Exit 1 if any objective has gap status")
 	fs.Usage = func() {
@@ -41,7 +42,7 @@ print the cross-language compliance matrix.
 Flags:
   --dir <path>              Project root (default: .)
   --only <tools>            Comma-separated tool names to run
-  --format text|json|html   Output format (default: text)
+  --format text|json|html|markdown   Output format (default: text)
   --output <file>           Write report to file (default: stdout)
   --strict                  Exit 1 if any objective has gap status
 
@@ -55,7 +56,7 @@ Exit codes:
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
-	if *format != "text" && *format != "json" && *format != "html" {
+	if *format != "text" && *format != "json" && *format != "html" && *format != "markdown" && *format != "md" {
 		fmt.Fprintf(stderr, "fusaops %s: unsupported format %q\n", cmd, *format)
 		return 2
 	}

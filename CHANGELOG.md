@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.32.0] — 2026-06-13
+
+### `fusaops <standard> --format markdown` — Standards markdown report
+
+- **`standards.Render(w, agg, "markdown")`** (alias `"md"`) — new format support; produces a GFM markdown page with a status badge (🟢 PASS / 🔴 GAP), per-component sections (tool/language heading, satisfied/partial/gap counts, objective table with ID / Status emoji / Title+Clause / Evidence), skipped/nil-report fallbacks, and pipe-escaped titles. (REQ-FO-STD012)
+- **All six standards commands now accept `--format markdown [--output FILE]`**: `fusaops iso26262`, `fusaops iec61508`, `fusaops do178`, `fusaops iso21434`, `fusaops unece`, `fusaops iec62443`.
+- Useful for embedding standards gap-report summaries in pull request comments and GitHub Actions job summaries.
+
+### Safety
+- Requirements registry at 256 requirements (added REQ-FO-STD012)
+- 4 new tests; combined coverage 81.5%
+
 ## [1.31.0] — 2026-06-13
 
 ### `fusaops conform --format markdown` — Conformance markdown report

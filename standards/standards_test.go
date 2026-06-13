@@ -446,3 +446,102 @@ func TestRenderHTMLNilReport(t *testing.T) {
 		t.Error("html should show fallback for nil report")
 	}
 }
+
+// TestRenderMarkdown verifies GFM markdown rendering contains expected content.
+//
+//fusa:test REQ-FO-STD012
+func TestRenderMarkdown(t *testing.T) {
+	agg := &Aggregate{
+		Standard:  "iso26262",
+		Project:   "my-proj",
+		Generated: time.Now(),
+		Components: []ComponentGap{
+			{
+				Language: "go",
+				Tool:     "gofusa",
+				Report: &GapReport{
+					Standard:    "ISO 26262",
+					ToolVersion: "0.30.0",
+					Objectives: []Objective{
+						{ID: "A1", Status: "satisfied", Title: "Design"},
+						{ID: "A2", Status: "gap", Title: "Verification"},
+					},
+					Summary: Summary{Total: 2, Satisfied: 1, Gaps: 1},
+				},
+			},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "markdown"); err != nil {
+		t.Fatalf("Render markdown: %v", err)
+	}
+	out := buf.String()
+	for _, want := range []string{"# FuSaOps", "ISO 26262", "my-proj", "**GAP**", "| ID |", "gofusa", "A1", "A2", "❌"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("expected %q in markdown:\n%s", want, out)
+		}
+	}
+}
+
+// TestRenderMarkdownAlias verifies "md" is accepted as an alias.
+//
+//fusa:test REQ-FO-STD012
+func TestRenderMarkdownAlias(t *testing.T) {
+	agg := &Aggregate{Standard: "iso26262", Generated: time.Now()}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "md"); err != nil {
+		t.Fatalf("Render md alias: %v", err)
+	}
+	if !strings.Contains(buf.String(), "# FuSaOps") {
+		t.Error("expected markdown header from md alias")
+	}
+}
+
+// TestRenderMarkdownSkipped verifies skipped components show the skip reason.
+//
+//fusa:test REQ-FO-STD012
+func TestRenderMarkdownSkipped(t *testing.T) {
+	agg := &Aggregate{
+		Standard:  "iec61508",
+		Generated: time.Now(),
+		Components: []ComponentGap{
+			{Language: "go", Tool: "gofusa", Skipped: "not installed"},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "markdown"); err != nil {
+		t.Fatalf("Render markdown skipped: %v", err)
+	}
+	if !strings.Contains(buf.String(), "not installed") {
+		t.Error("expected skip reason in markdown output")
+	}
+}
+
+// TestRenderMarkdownPass verifies green badge when there are no gaps.
+//
+//fusa:test REQ-FO-STD012
+func TestRenderMarkdownPass(t *testing.T) {
+	agg := &Aggregate{
+		Standard:  "iso26262",
+		Generated: time.Now(),
+		Components: []ComponentGap{
+			{
+				Language: "go",
+				Tool:     "gofusa",
+				Report: &GapReport{
+					Standard:    "ISO 26262",
+					ToolVersion: "0.30.0",
+					Objectives:  []Objective{{ID: "A1", Status: "satisfied"}},
+					Summary:     Summary{Total: 1, Satisfied: 1},
+				},
+			},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "markdown"); err != nil {
+		t.Fatalf("Render markdown pass: %v", err)
+	}
+	if !strings.Contains(buf.String(), "🟢") {
+		t.Error("expected green badge for gap-free standards report")
+	}
+}

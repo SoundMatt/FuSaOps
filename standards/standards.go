@@ -149,11 +149,12 @@ func (a *Aggregate) TotalSkipped() int {
 	return n
 }
 
-// Render writes agg to w in the requested format (text, json, or html).
+// Render writes agg to w in the requested format (text, json, html, or markdown).
 //
 //fusa:req REQ-FO-STD006
 //fusa:req REQ-FO-STD007
 //fusa:req REQ-FO-STD011
+//fusa:req REQ-FO-STD012
 func Render(w io.Writer, agg *Aggregate, format string) error {
 	switch format {
 	case "json", "":
@@ -167,9 +168,64 @@ func Render(w io.Writer, agg *Aggregate, format string) error {
 			return fmt.Errorf("standards: html render: %w", err)
 		}
 		return nil
+	case "markdown", "md":
+		return renderMarkdown(w, agg)
 	default:
 		return fmt.Errorf("standards: unsupported format %q", format)
 	}
+}
+
+// renderMarkdown writes a GFM markdown standards gap report to w.
+//
+//fusa:req REQ-FO-STD012
+func renderMarkdown(w io.Writer, agg *Aggregate) error {
+	name := displayName(agg.Standard)
+	badge := "🟢"
+	if agg.HasGaps() {
+		badge = "🔴"
+	}
+	status := "PASS"
+	if agg.HasGaps() {
+		status = "GAP"
+	}
+	fmt.Fprintf(w, "# FuSaOps — %s Gap Report\n\n", name)
+	if agg.Project != "" {
+		fmt.Fprintf(w, "**Project:** %s\n\n", agg.Project)
+	}
+	fmt.Fprintf(w, "%s **%s** · Generated %s\n\n", badge, status, agg.Generated.Format("2006-01-02 15:04 MST"))
+	for _, c := range agg.Components {
+		fmt.Fprintf(w, "## %s (%s)\n\n", c.Tool, c.Language)
+		if c.Skipped != "" {
+			fmt.Fprintf(w, "_Skipped — %s_\n\n", c.Skipped)
+			continue
+		}
+		if c.Report == nil {
+			fmt.Fprintf(w, "_No report available._\n\n")
+			continue
+		}
+		r := c.Report
+		fmt.Fprintf(w, "%s %s · %d satisfied · %d partial · %d gap(s)\n\n",
+			r.Standard, r.ToolVersion, r.Summary.Satisfied, r.Summary.Partial, r.Summary.Gaps)
+		fmt.Fprintln(w, "| ID | Status | Title / Clause | Evidence |")
+		fmt.Fprintln(w, "|---|---|---|---|")
+		for _, o := range r.Objectives {
+			sym := "✅"
+			switch o.Status {
+			case "partial":
+				sym = "🟡"
+			case "gap":
+				sym = "❌"
+			}
+			title := strings.ReplaceAll(o.Title, "|", "\\|")
+			if o.Clause != "" {
+				title += " (" + o.Clause + ")"
+			}
+			ev := strings.Join(o.Evidence, ", ")
+			fmt.Fprintf(w, "| %s | %s | %s | %s |\n", o.ID, sym, title, ev)
+		}
+		fmt.Fprintln(w)
+	}
+	return nil
 }
 
 // standardsTemplate is a self-contained HTML standards gap-report dashboard.

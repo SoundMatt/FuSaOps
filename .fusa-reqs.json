@@ -1002,6 +1002,13 @@
       "rationale": "Completes the standards command format set to match other command HTML renderers; lets teams share a visual gap report as a standalone HTML file."
     },
     {
+      "id": "REQ-FO-STD012",
+      "title": "Standards markdown rendering",
+      "description": "standards.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a project/standard header, a status badge (🟢 PASS / 🔴 GAP), per-component sections (tool/language heading, satisfied/partial/gap counts, objective GFM table with ID/Status/Title+Clause/Evidence columns), skipped-component fallback, and nil-report fallback. Pipe characters in titles are escaped. The fusaops iso26262/iec61508/do178/iso21434/unece/iec62443 CLIs shall accept --format markdown.",
+      "priority": "MUST",
+      "rationale": "Markdown output lets CI pipelines post standards gap-report summaries directly into pull request comments and GitHub Actions job summaries."
+    },
+    {
       "id": "REQ-FO-ADP018",
       "title": "StandardsProvider capability",
       "text": "The adapter package shall define a StandardsProvider capability interface whose Standards method runs the tool's gap-report command for a given standard id and returns a decoded GapReport.",

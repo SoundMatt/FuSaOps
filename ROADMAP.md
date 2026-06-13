@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.32 — `fusaops <standard> --format markdown` ✅
+
+**Goal:** Complete the standards command format set so gap reports can be posted directly into PR comments and job summaries.
+
+- `standards.Render` gains `"markdown"` / `"md"` format support (REQ-FO-STD012)
+- GFM output: standard header with 🟢/🔴 badge, per-component sections (tool/language heading, counts, objective table ID/Status/Title+Clause/Evidence), skipped/nil fallbacks
+- Applies to all six commands: `iso26262`, `iec61508`, `do178`, `iso21434`, `unece`, `iec62443`
+
+---
+
 ## v1.31 — `fusaops conform --format markdown` ✅
 
 **Goal:** Let CI pipelines post x-FuSa tool conformance summaries directly into PR comments and job summaries.
