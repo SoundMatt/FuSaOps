@@ -55,10 +55,6 @@ func renderText(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 	return nil
 }
 
-func printTextFinding(w io.Writer, f fusaops.Finding, prefix string) {
-	printTextFindingOpts(w, f, prefix, false)
-}
-
 func printTextFindingOpts(w io.Writer, f fusaops.Finding, prefix string, showFP bool) {
 	fmt.Fprintf(w, "  %s[%s] %-10s", prefix, f.Severity, f.RuleID)
 	if f.Category != "" {
