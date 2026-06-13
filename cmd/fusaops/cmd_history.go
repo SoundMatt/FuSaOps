@@ -110,9 +110,8 @@ func runHistoryPrune(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	remaining := -removed // will be filled from Load
 	all, _ := history.Load(hdir, 0)
-	remaining = len(all)
+	remaining := len(all)
 
 	fmt.Fprintf(stdout, "Pruned %d entries, %d remaining.\n", removed, remaining)
 	return 0
