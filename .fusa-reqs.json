@@ -1107,6 +1107,41 @@
       "rationale": "Extends FuSaOps multi-language orchestration to Java projects using java-FuSa v0.1.0."
     },
     {
+      "id": "REQ-FO-POL001",
+      "title": "Policy model",
+      "description": "FuSaOps shall define a Policy with a name and a list of Rules; each Rule optionally scopes to a language and/or tool and defines constraints: maxFindings, maxErrors, maxWarnings, requireStatus (PASS/WARN). LoadPolicy shall read and parse a JSON policy config file.",
+      "priority": "MUST",
+      "rationale": "Enables orgs to codify safety gates (e.g. zero errors in Go, max 5 warnings across all languages) in a machine-checkable config file."
+    },
+    {
+      "id": "REQ-FO-POL002",
+      "title": "Policy report model",
+      "description": "FuSaOps shall define a PolicyReport with per-rule RuleResult entries (rule, passed, message) and aggregate pass/fail counts; Status() shall return PASS or FAIL; HasFailures() shall return true when any rule failed.",
+      "priority": "MUST",
+      "rationale": "Provides a structured, machine-readable policy evaluation outcome for CI gating."
+    },
+    {
+      "id": "REQ-FO-POL003",
+      "title": "Policy evaluation",
+      "description": "policy.Evaluate shall run every rule against the AggregateReport, counting findings scoped to the rule's language/tool filters, and record PASS or FAIL with an explanatory message per rule.",
+      "priority": "MUST",
+      "rationale": "The evaluation must be deterministic and produce actionable failure messages so engineers know exactly which rule failed and why."
+    },
+    {
+      "id": "REQ-FO-POL004",
+      "title": "Policy rendering",
+      "description": "policy.Render shall write a PolicyReport in text (per-rule PASS/FAIL lines and RESULT line) or json format, rejecting unknown formats; RenderToFile shall write to a file or stdout.",
+      "priority": "MUST",
+      "rationale": "Provides human-readable and machine-readable output for CI logs and audit records."
+    },
+    {
+      "id": "REQ-FO-CLI024",
+      "title": "Policy command",
+      "description": "fusaops policy --policy policy.json [--dir dir] [--format text|json] [--output file] shall load the policy, run the orchestrator, evaluate the policy against the report, render the result, and exit 1 when any rule fails.",
+      "priority": "MUST",
+      "rationale": "Exposes org-wide policy enforcement as a first-class CLI command suitable for CI gates."
+    },
+    {
       "id": "REQ-FO-FLT001",
       "title": "Fleet config model",
       "description": "FuSaOps shall define a Fleet Config with a project name and a list of Repo entries (name, dir, optional adapter); LoadConfig shall read and parse a JSON fleet config file.",

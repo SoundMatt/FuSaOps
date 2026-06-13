@@ -108,6 +108,37 @@ func TestCheckNoLanguages(t *testing.T) {
 	}
 }
 
+// TestPolicyCheck verifies fusaops policy evaluates rules and produces a report.
+//
+//fusa:test REQ-FO-CLI024
+func TestPolicyCheck(t *testing.T) {
+	dir := goProject(t)
+	polPath := filepath.Join(dir, "policy.json")
+	polData, _ := json.Marshal(map[string]any{
+		"name":  "test",
+		"rules": []map[string]any{{"id": "R1", "maxErrors": 10}},
+	})
+	_ = os.WriteFile(polPath, polData, 0o644)
+	code, out, errb := runArgs(t, "policy", "--dir", dir, "--policy", polPath, "--format", "text")
+	if code != 0 {
+		t.Fatalf("policy: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Policy:") {
+		t.Errorf("policy output missing header: %q", out)
+	}
+}
+
+// TestPolicyMissingFile verifies a missing policy file returns exit 1.
+//
+//fusa:test REQ-FO-CLI024
+func TestPolicyMissingFile(t *testing.T) {
+	dir := goProject(t)
+	code, _, errb := runArgs(t, "policy", "--dir", dir, "--policy", "/nonexistent/policy.json")
+	if code != 1 || !strings.Contains(errb, "policy") {
+		t.Errorf("missing policy: code=%d err=%q", code, errb)
+	}
+}
+
 // TestFleetCheck verifies fusaops fleet runs and produces a report.
 //
 //fusa:test REQ-FO-CLI023

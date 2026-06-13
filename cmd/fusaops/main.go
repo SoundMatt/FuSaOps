@@ -23,6 +23,7 @@
 //	iso21434    Roll up ISO 21434 gap reports across all languages
 //	unece       Roll up UNECE R155/R156 gap reports across all languages
 //	iec62443    Roll up IEC 62443 gap reports across all languages
+//	policy      Evaluate org-wide safety rules over the aggregated report
 //	fleet       Run check across all repos in a fleet config file
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
@@ -74,6 +75,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runConform(args[1:], stdout, stderr)
 	case "iso26262", "iec61508", "do178", "iso21434", "unece", "iec62443":
 		return runStandards(args[0], args[1:], stdout, stderr)
+	case "policy":
+		return runPolicy(args[1:], stdout, stderr)
 	case "fleet":
 		return runFleet(args[1:], stdout, stderr)
 	case "serve":
@@ -116,6 +119,7 @@ Commands:
   iso21434   Roll up ISO 21434 gap reports across all languages
   unece      Roll up UNECE R155/R156 gap reports across all languages
   iec62443   Roll up IEC 62443 gap reports across all languages
+  policy     Evaluate org-wide safety rules over the aggregated report
   fleet      Run check across all repos in a fleet config file
   serve      Launch the web reporting dashboard
   version    Print the FuSaOps version

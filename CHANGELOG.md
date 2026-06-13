@@ -7,6 +7,34 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-06-13
+
+### Policy engine — org-wide safety rules
+
+- **`policy` package** — evaluates rules over an `AggregateReport`
+  - `Policy` + `Rule` JSON config: `maxFindings`, `maxErrors`, `maxWarnings`, `requireStatus` (PASS/WARN), optional `language` and `tool` scope filters
+  - `Evaluate(policy, report)` → `PolicyReport` with per-rule `RuleResult` (passed, message)
+  - `PolicyReport.Status()` → PASS/FAIL; `HasFailures()`
+  - `Render(text|json)` + `RenderToFile`
+- **`fusaops policy --policy policy.json [--dir dir] [--format text|json] [--output file]`** — evaluates the policy after running the orchestrator; exits 1 on any rule failure
+
+### Example policy config
+
+```json
+{
+  "name": "ci-gate",
+  "rules": [
+    { "id": "no-errors",         "requireStatus": "WARN" },
+    { "id": "go-strict",         "language": "go", "requireStatus": "PASS" },
+    { "id": "cpp-error-budget",  "language": "cpp", "maxErrors": 5 }
+  ]
+}
+```
+
+### Safety
+- Requirements registry at 175 requirements (added REQ-FO-POL001–004, REQ-FO-CLI024)
+- 12 new tests in `policy` package; 2 new CLI tests; combined coverage 81.4%
+
 ## [0.8.0] — 2026-06-13
 
 ### Fleet view — multi-repo scanning

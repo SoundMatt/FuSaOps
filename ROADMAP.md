@@ -168,11 +168,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v0.9 — Policy Engine ✅
+
+**Goal:** Let orgs codify safety gates in a machine-checkable policy file.
+
+- ✅ `policy` package: `Policy`, `Rule`, `PolicyReport`, `RuleResult`; `Evaluate()`
+- ✅ Rule constraints: `maxFindings`, `maxErrors`, `maxWarnings`, `requireStatus` (PASS/WARN)
+- ✅ Scope filters: `language`, `tool`
+- ✅ `fusaops policy --policy policy.json [--dir] [--format text|json]`
+
+---
+
 ## Future / Advanced
 
 | Version | Capability |
 |---|---|
-| v0.9 | Policy engine — org-wide rules over aggregated findings |
 | v1.0 | Enterprise: auth, persistence, multi-tenant dashboards |
 
 ---
