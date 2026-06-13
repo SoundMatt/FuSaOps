@@ -586,7 +586,6 @@ func TestWriteSourceFilesLanguages(t *testing.T) {
 		"unknown": "",
 	}
 	for lang, relPath := range cases {
-		lang, relPath := lang, relPath
 		t.Run(lang, func(t *testing.T) {
 			dir := t.TempDir()
 			r := &runner{dir: dir, lang: lang}
@@ -861,7 +860,6 @@ func TestScaffoldWritesFiles(t *testing.T) {
 		{"python", "pyfusa", "main.py"},
 		{"java", "jfusa", "Main.java"},
 	} {
-		tc := tc
 		t.Run(tc.lang, func(t *testing.T) {
 			dir := t.TempDir()
 			r := &runner{
