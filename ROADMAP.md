@@ -199,11 +199,27 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.2 — Multi-project dashboard ✅
+
+**Goal:** Serve multiple repositories from a single `fusaops serve` process.
+
+- ✅ **`MultiServer`** — holds multiple project entries, runs all scans in parallel on compute
+- ✅ **`fusaops serve --projects projects.json`** — switches to multi-project mode
+- ✅ **Overview page `/`** — HTML grid of project status cards (name, PASS/WARN/FAIL badge, error/warning counts, link to detail)
+- ✅ **`/api/projects`** — JSON array of all project statuses for CI polling
+- ✅ **Per-project page `/p/{name}`** — HTML findings table for a single project
+- ✅ All v1.0/v1.1 features (auth, ro-auth, audit log) compose with MultiServer
+
+**projects.json format:**
+```json
+{"projects": [{"name": "firmware", "dir": "/firmware"}, {"name": "app", "dir": "/app"}]}
+```
+
+---
+
 ## Future / Advanced
 
-| Version | Capability |
-|---|---|
-| v1.2 | Multi-project config: serve multiple repos from one dashboard process |
+_(All planned roadmap items are now shipped in v0.1–v1.2)_
 
 ---
 

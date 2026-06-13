@@ -208,6 +208,16 @@ func TestServeAuthROBadFormat(t *testing.T) {
 	}
 }
 
+// TestServeMissingProjectsConfig verifies a missing projects.json returns exit 1.
+//
+//fusa:test REQ-FO-CLI030
+func TestServeMissingProjectsConfig(t *testing.T) {
+	code, _, errb := runArgs(t, "serve", "--projects", "/nonexistent/projects.json")
+	if code != 1 || !strings.Contains(errb, "projects") {
+		t.Errorf("missing projects config: code=%d err=%q", code, errb)
+	}
+}
+
 func TestSplitCSV(t *testing.T) {
 	got := splitCSV("a,b,,c")
 	if len(got) != 3 || got[0] != "a" || got[2] != "c" {

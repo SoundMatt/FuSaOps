@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-06-13
+
+### Multi-project dashboard
+
+- **`MultiServer`** — new type in `server` package; holds one `projectEntry` per project; `compute(ctx)` scans all in parallel (one goroutine per project).
+- **`fusaops serve --projects projects.json`** — switches to multi-project mode. Projects config format: `{"projects":[{"name":"…","dir":"…","adapter":"…"}]}`. Unknown/missing file exits 1.
+- **Overview page `/`** — HTML status grid: one card per project with PASS/WARN/FAIL badge, error/warning counts, and a link to the detail page.
+- **`/api/projects`** — JSON array of all project statuses (`name`, `dir`, `status`, `total`, `errors`, `warnings`, optional `error`).
+- **Per-project detail `/p/{name}`** — HTML findings table (rule, severity, language, file, message). Unknown names return 404.
+- **Auth + audit compose** — `--auth`, `--auth-ro`, and `--audit-log` flags apply equally to MultiServer; role-gating and audit logging work identically.
+
+### Safety
+- Requirements registry at 193 requirements (added REQ-FO-MPJ001–004, REQ-FO-CLI030)
+- 9 new tests in `server` package; 1 new CLI test; combined coverage 80.1%
+
 ## [1.1.0] — 2026-06-13
 
 ### Role-based access & audit log
@@ -239,7 +254,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/SoundMatt/FuSaOps/compare/v0.8.0...v0.9.0

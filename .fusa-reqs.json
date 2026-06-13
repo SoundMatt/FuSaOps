@@ -1315,6 +1315,41 @@
       "description": "The serve subcommand shall accept --audit-log dir that enables request audit logging to .fusaops-audit.jsonl in the given directory.",
       "priority": "MUST",
       "rationale": "Gives operators a single flag to enable access logging for compliance and debugging."
+    },
+    {
+      "id": "REQ-FO-MPJ001",
+      "title": "Multi-project config",
+      "description": "FuSaOps shall define ProjectsConfig{Projects []ProjectConfig} and ProjectConfig{Name, Dir, Adapter string} as the JSON format for fusaops serve --projects. NewMulti(cfg, runner) creates a MultiServer with one projectEntry per project.",
+      "priority": "MUST",
+      "rationale": "Teams managing multiple repositories benefit from a single serve command that watches all of them simultaneously."
+    },
+    {
+      "id": "REQ-FO-MPJ002",
+      "title": "Parallel multi-project scan",
+      "description": "MultiServer.compute(ctx) shall run all project scans concurrently using one goroutine per project. ListenAndServe and Serve shall call compute before accepting requests.",
+      "priority": "MUST",
+      "rationale": "Parallel execution prevents slow repos from delaying fast ones and matches the behaviour of fusaops fleet."
+    },
+    {
+      "id": "REQ-FO-MPJ003",
+      "title": "Multi-project overview routes",
+      "description": "MultiServer.Handler() shall serve GET / as an HTML project overview grid (name, status badge, error/warning counts, link to detail page) and GET /api/projects as a JSON array of all project statuses. /healthz and /refresh are also registered.",
+      "priority": "MUST",
+      "rationale": "Provides at-a-glance visibility across all projects from one URL."
+    },
+    {
+      "id": "REQ-FO-MPJ004",
+      "title": "Per-project detail pages",
+      "description": "MultiServer.Handler() shall register GET /p/{name} for each configured project. The handler renders an HTML findings page (rule, severity, language, file, message) for that project. Unknown project names return 404.",
+      "priority": "MUST",
+      "rationale": "Allows drilling into a specific project's findings from the overview without a separate serve process."
+    },
+    {
+      "id": "REQ-FO-CLI030",
+      "title": "fusaops serve --projects flag",
+      "description": "The serve subcommand shall accept --projects path that switches to multi-project mode using MultiServer. A missing or malformed file exits 1 with a descriptive error. All auth, ro, and audit-log flags apply equally to the MultiServer.",
+      "priority": "MUST",
+      "rationale": "Single entry point for multi-project dashboard mode."
     }
   ]
 }

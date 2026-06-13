@@ -247,6 +247,31 @@ When `--fleet` is set, the server adds two routes to the existing dashboard:
 - `/fleet` — HTML page: per-repo PASS/WARN/FAIL badge, error/warning counts
 - `/api/fleet` — JSON: full `FleetReport` for CI polling
 
+### Multi-project dashboard (v1.2)
+
+Serve multiple repositories from a single process:
+
+```bash
+fusaops serve --projects projects.json
+```
+
+**projects.json format:**
+```json
+{
+  "projects": [
+    { "name": "firmware", "dir": "/path/to/firmware" },
+    { "name": "app",      "dir": "/path/to/app", "adapter": "gofusa" }
+  ]
+}
+```
+
+All projects are scanned in parallel on startup and on `/refresh`. Routes:
+- `/` — HTML grid of project status cards (badge, counts, detail link)
+- `/api/projects` — JSON array of all project statuses
+- `/p/{name}` — HTML findings table for a single project
+
+All enterprise flags (`--auth`, `--auth-ro`, `--audit-log`, `--tls-cert`) compose with `--projects`.
+
 ## Docker quickstart
 
 The published image is **all-in-one**: it bundles the x-FuSa tools, so there is
@@ -366,7 +391,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (188 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (193 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)
