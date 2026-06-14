@@ -994,3 +994,120 @@ func TestSLSAL1(t *testing.T) {
 		t.Errorf("L1 with .git+go.mod should have at least one PASS: %q", out)
 	}
 }
+
+//fusa:test REQ-FO-CLI061
+func TestPRNoSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "pr")
+	if code != 2 || !strings.Contains(errb, "Usage") {
+		t.Errorf("no subcommand: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI061
+func TestPRUnknownSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "pr", "bogus")
+	if code != 2 || !strings.Contains(errb, "unknown subcommand") {
+		t.Errorf("unknown subcommand: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI061
+func TestPRInitAddListClose(t *testing.T) {
+	dir := t.TempDir()
+
+	// init
+	code, out, errb := runArgs(t, "pr", "--dir", dir, "init")
+	if code != 0 {
+		t.Fatalf("pr init: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "created") {
+		t.Errorf("pr init: expected 'created' in %q", out)
+	}
+
+	// add
+	code, out, errb = runArgs(t, "pr", "--dir", dir, "add",
+		"--id", "PR-001", "--title", "Stack overflow in ISR",
+		"--severity", "critical", "--phase", "integration")
+	if code != 0 {
+		t.Fatalf("pr add: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "PR-001") {
+		t.Errorf("pr add: expected PR-001 in %q", out)
+	}
+
+	// list text
+	code, out, errb = runArgs(t, "pr", "--dir", dir, "list")
+	if code != 0 {
+		t.Fatalf("pr list: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Stack overflow") {
+		t.Errorf("pr list: missing title in %q", out)
+	}
+
+	// close
+	code, out, errb = runArgs(t, "pr", "--dir", dir, "close",
+		"--id", "PR-001", "--resolution", "fixed in commit abc")
+	if code != 0 {
+		t.Fatalf("pr close: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "PR-001") {
+		t.Errorf("pr close: missing ID in %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI061
+func TestPRInitAlreadyExists(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops-problems.json"),
+		[]byte(`{"project":"p","reports":[]}`), 0o640); err != nil {
+		t.Fatal(err)
+	}
+	code, _, errb := runArgs(t, "pr", "--dir", dir, "init")
+	if code != 2 || !strings.Contains(errb, "already exists") {
+		t.Errorf("double init: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI061
+func TestPRAddMissingFlags(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "pr", "--dir", dir, "add", "--title", "T")
+	if code != 2 || !strings.Contains(errb, "--id") {
+		t.Errorf("missing --id: code=%d err=%q", code, errb)
+	}
+	code, _, errb = runArgs(t, "pr", "--dir", dir, "add", "--id", "PR-001")
+	if code != 2 || !strings.Contains(errb, "--title") {
+		t.Errorf("missing --title: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI061
+func TestPRCloseNotFound(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "pr", "--dir", dir, "close", "--id", "PR-999")
+	if code != 1 || !strings.Contains(errb, "not found") {
+		t.Errorf("close not found: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI061
+func TestPRCloseMissingID(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "pr", "--dir", dir, "close")
+	if code != 2 || !strings.Contains(errb, "--id") {
+		t.Errorf("close missing --id: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI061
+func TestPRListJSON(t *testing.T) {
+	dir := t.TempDir()
+	runArgs(t, "pr", "--dir", dir, "add", "--id", "PR-001", "--title", "Test")
+	code, out, errb := runArgs(t, "pr", "--dir", dir, "list", "--format", "json")
+	if code != 0 {
+		t.Fatalf("pr list json: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, `"reports"`) {
+		t.Errorf("json output missing reports key: %q", out)
+	}
+}

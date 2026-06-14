@@ -341,6 +341,15 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.46 — `fusaops pr` — DO-178C §11.17 problem reports ✅
+
+**Goal:** Mirror `gofusa pr` for software problem report management at the FuSaOps multi-language orchestration level.
+
+- `pr` package — `ProblemReport`, `Log`, `Phase`, `Status`, `PRSeverity` types; `Load`, `Save`, `Add`, `Close`, `Find`, `Render` (text/json) (REQ-FO-PR001, REQ-FO-PR002, REQ-FO-PR003, REQ-FO-PR004)
+- `fusaops pr init/add/list/close` — manage `.fusaops-problems.json` (REQ-FO-CLI061)
+
+---
+
 ## v1.45 — `fusaops disposition` — finding disposition management ✅
 
 **Goal:** Mirror `gofusa disposition` for auditable accept/fix decisions on findings at the FuSaOps level.

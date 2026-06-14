@@ -37,6 +37,7 @@
 //	hooks         Manage git pre-commit hooks for FuSaOps
 //	impact        Analyse the effect of source changes on requirements
 //	disposition   Manage finding disposition entries
+//	pr            Manage software problem reports (DO-178C §11.17)
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -111,6 +112,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runImpact(args[1:], stdout, stderr)
 	case "disposition":
 		return runDisposition(args[1:], stdout, stderr)
+	case "pr":
+		return runPR(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -169,6 +172,7 @@ Commands:
   hooks         Manage git pre-commit hooks for FuSaOps
   impact        Analyse the effect of source changes on requirements
   disposition   Manage finding disposition entries
+  pr            Manage software problem reports (DO-178C §11.17)
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

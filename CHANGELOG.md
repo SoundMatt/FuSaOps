@@ -7,6 +7,22 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.46.0] — 2026-06-13
+
+### `fusaops pr` — DO-178C §11.17 software problem reports
+
+- **`pr` package** — `ProblemReport`, `Log`, `Phase`, `Status`, `PRSeverity` types; `Load`, `Save`, `Add`, `Close`, `Find`, `Render` (text/json). Manages `.fusaops-problems.json` for multi-language projects. (REQ-FO-PR001, REQ-FO-PR002, REQ-FO-PR003, REQ-FO-PR004)
+- **`fusaops pr init [--dir DIR]`** — create an empty `.fusaops-problems.json`. (REQ-FO-CLI061)
+- **`fusaops pr add --id ID --title TEXT [--desc TEXT] [--phase development] [--severity minor]`** — add a problem report. (REQ-FO-CLI061)
+- **`fusaops pr list [--format text|json]`** — list all problem reports with open/closed counts. (REQ-FO-CLI061)
+- **`fusaops pr close --id ID [--resolution TEXT]`** — close a problem report with optional resolution. (REQ-FO-CLI061)
+- `fusaops capabilities` updated with `pr` command and `text`/`json` formats.
+- Mirrors `gofusa pr` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 297 requirements (added REQ-FO-PR001, REQ-FO-PR002, REQ-FO-PR003, REQ-FO-PR004, REQ-FO-CLI061)
+- 14 package tests + 8 CLI tests; combined coverage 81.9%
+
 ## [1.45.0] — 2026-06-13
 
 ### `fusaops disposition` — finding disposition management

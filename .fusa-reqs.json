@@ -2029,6 +2029,41 @@
       "description": "The fusaops CLI shall provide a 'disposition' subcommand with 'add' (--rule, --lang, --action, --reviewer, --rationale, --ref), 'list', and 'show' (--rule, --lang) sub-subcommands.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa disposition for managing finding disposition at the FuSaOps multi-language level."
+    },
+    {
+      "id": "REQ-FO-PR001",
+      "title": "Problem report types",
+      "description": "FuSaOps shall define ProblemReport, Log, Phase, Status, and PRSeverity types for DO-178C §11.17 software problem reports stored in .fusaops-problems.json.",
+      "priority": "MUST",
+      "rationale": "DO-178C §11.17 requires a problem reporting process for software lifecycle data."
+    },
+    {
+      "id": "REQ-FO-PR002",
+      "title": "Problem report load and save",
+      "description": "FuSaOps shall provide Load(projectRoot) and Save(projectRoot, log) that read and write .fusaops-problems.json as indented JSON. Load shall return an empty Log when the file does not exist.",
+      "priority": "MUST",
+      "rationale": "Enables persistent, auditable problem report logs accessible across CI runs and review workflows."
+    },
+    {
+      "id": "REQ-FO-PR003",
+      "title": "Problem report mutation",
+      "description": "FuSaOps shall provide Add(log, report) to append a report with defaults (status=open, severity=minor) and Close(log, id, resolution) to close a report by ID. Find(log, id) shall return the first matching report or nil.",
+      "priority": "MUST",
+      "rationale": "Enables lifecycle management of problem reports from open through resolution."
+    },
+    {
+      "id": "REQ-FO-PR004",
+      "title": "Problem report rendering",
+      "description": "FuSaOps shall provide Render(w, log, format) supporting 'text' and 'json' formats. Text format shall include totals, ID, title, severity, status, phase, description, and resolution for each report.",
+      "priority": "MUST",
+      "rationale": "Enables auditors and engineers to review problem reports in both human-readable and machine-readable form."
+    },
+    {
+      "id": "REQ-FO-CLI061",
+      "title": "fusaops pr subcommand",
+      "description": "The fusaops CLI shall provide a 'pr' subcommand with 'init', 'add' (--id, --title, --desc, --phase, --severity), 'list' (--format text|json), and 'close' (--id, --resolution) sub-subcommands managing .fusaops-problems.json.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa pr for DO-178C §11.17 problem report management at the FuSaOps multi-language level."
     }
   ]
 }
