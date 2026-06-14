@@ -40,6 +40,27 @@ func TestVersion(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI053
+func TestVersionJSON(t *testing.T) {
+	code, out, errb := runArgs(t, "version", "--format", "json")
+	if code != 0 {
+		t.Fatalf("version --format json: code=%d err=%q", code, errb)
+	}
+	for _, want := range []string{`"tool"`, `"version"`, `"specVersion"`, "fusaops"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("version json missing %q: %s", want, out)
+		}
+	}
+}
+
+//fusa:test REQ-FO-CLI053
+func TestVersionInvalidFormat(t *testing.T) {
+	code, _, errb := runArgs(t, "version", "--format", "xml")
+	if code != 2 || !strings.Contains(errb, "format") {
+		t.Errorf("invalid format: code=%d err=%q", code, errb)
+	}
+}
+
 func TestHelp(t *testing.T) {
 	code, out, _ := runArgs(t, "help")
 	if code != 0 || !strings.Contains(out, "Commands:") {

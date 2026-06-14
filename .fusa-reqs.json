@@ -1,6 +1,20 @@
 {
   "requirements": [
     {
+      "id": "REQ-FO-CORE007",
+      "title": "x-FuSa spec version constant",
+      "description": "FuSaOps shall export a SpecVersion constant identifying the x-FuSa specification version it targets.",
+      "priority": "MUST",
+      "rationale": "Enables tooling and CI to verify which spec version FuSaOps implements without parsing docs."
+    },
+    {
+      "id": "REQ-FO-CLI053",
+      "title": "fusaops version --format json",
+      "description": "The fusaops version subcommand shall accept --format json and emit a JSON object with tool, version, and specVersion fields; default format remains text.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa version --format json for machine-readable version introspection in CI and scripts."
+    },
+    {
       "id": "REQ-FO-REQ001",
       "title": "Requirement registry types and load/save",
       "description": "FuSaOps shall define an Entry struct with id, title, text, description, standard, level, priority, and rationale fields, and LoadRegistry/SaveRegistry functions that read and write .fusa-reqs.json.",

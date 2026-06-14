@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.37 — `fusaops version --format json` and `SpecVersion` ✅
+
+**Goal:** Mirror `gofusa version --format json` for machine-readable version introspection.
+
+- `fusaops.SpecVersion = "1.10.4"` — exported constant for the x-FuSa spec version FuSaOps targets (REQ-FO-CORE007)
+- `fusaops version --format json` — emits `{"tool":"fusaops","version":"...","specVersion":"..."}` (REQ-FO-CLI053)
+- Default `text` format unchanged
+
+---
+
 ## v1.36 — `fusaops req` — requirement show/import/export ✅
 
 **Goal:** Mirror `gofusa req` for requirement management at the FuSaOps orchestration level.

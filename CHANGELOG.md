@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.37.0] — 2026-06-13
+
+### `fusaops version --format json` and `SpecVersion` constant
+
+- **`fusaops.SpecVersion`** — new exported constant `"1.10.4"` identifying the x-FuSa spec version FuSaOps targets. (REQ-FO-CORE007)
+- **`fusaops version --format json`** — emits `{"tool":"fusaops","version":"1.37.0","specVersion":"1.10.4"}`; default format remains `text`. (REQ-FO-CLI053)
+- Mirrors `gofusa version --format json` for machine-readable version introspection in CI and scripts.
+
+### Safety
+- Requirements registry at 268 requirements (added REQ-FO-CORE007, REQ-FO-CLI053)
+- 2 new tests; combined coverage 81.6%
+
 ## [1.36.0] — 2026-06-13
 
 ### `fusaops req` — requirement show/import/export
