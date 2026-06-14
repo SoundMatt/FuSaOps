@@ -195,6 +195,54 @@ func TestRenderUnknownFormat(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-COV003
+func TestRenderMarkdown(t *testing.T) {
+	blocks, _ := Parse(strings.NewReader(sampleProfile))
+	rep := Analyse(blocks, DALB)
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "markdown"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "DO-178C") {
+		t.Error("markdown missing DO-178C header")
+	}
+	if !strings.Contains(out, "DAL-B") {
+		t.Error("markdown missing DAL-B")
+	}
+	if !strings.Contains(out, "Statement coverage") {
+		t.Error("markdown missing statement coverage row")
+	}
+}
+
+//fusa:test REQ-FO-COV003
+func TestRenderMarkdownAlias(t *testing.T) {
+	blocks, _ := Parse(strings.NewReader(sampleProfile))
+	rep := Analyse(blocks, DALB)
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "md"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "DO-178C") {
+		t.Error("md alias missing content")
+	}
+}
+
+//fusa:test REQ-FO-COV003
+func TestRenderMarkdownFullCoverage(t *testing.T) {
+	profile := "mode: set\npkg/x.go:1.10,3.2 2 1\n"
+	blocks, _ := Parse(strings.NewReader(profile))
+	rep := Analyse(blocks, DALC)
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "markdown"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "Coverage gaps") {
+		t.Error("full coverage should not show gaps section")
+	}
+}
+
 //fusa:test REQ-FO-COV001
 func TestAnalyseDecisionCoverage(t *testing.T) {
 	// 3 blocks: 2 covered, 1 not → decision pct ~66.7%

@@ -66,7 +66,7 @@
     {
       "id": "REQ-FO-COV003",
       "title": "Coverage report rendering",
-      "description": "FuSaOps shall provide a Render function that writes the DO-178C coverage report in 'text' or 'json' format; unknown formats return an error.",
+      "description": "FuSaOps shall provide a Render function that writes the DO-178C coverage report in 'text', 'json', or 'markdown'/'md' format; unknown formats return an error.",
       "priority": "MUST",
       "rationale": "Supports human-readable CI output and machine-readable JSON for downstream tooling."
     },

@@ -27,7 +27,7 @@ func runCoverage(args []string, stdout, stderr io.Writer) int {
 
 	var (
 		dalFlag = fs.String("dal", "DAL-B", "design assurance level: DAL-A, DAL-B, DAL-C, DAL-D")
-		format  = fs.String("format", "text", "output format: text or json")
+		format  = fs.String("format", "text", "output format: text, json, or markdown")
 		output  = fs.String("output", "", "write report to file (default: stdout)")
 		dir     = fs.String("dir", "", "search for coverage.out in this directory")
 	)

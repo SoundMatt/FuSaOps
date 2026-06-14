@@ -67,7 +67,7 @@ func runCapabilities(args []string, stdout, stderr io.Writer) int {
 			"fleet":    {"text", "json", "html", "markdown"},
 			"policy":   {"text", "json", "html", "markdown"},
 			"conform":  {"text", "json", "html", "markdown"},
-			"coverage": {"text", "json"},
+			"coverage": {"text", "json", "markdown"},
 			"iso26262": {"text", "json", "html", "markdown"},
 			"iec61508": {"text", "json", "html", "markdown"},
 			"do178":    {"text", "json", "html", "markdown"},

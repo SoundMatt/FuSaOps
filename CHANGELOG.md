@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.39.0] — 2026-06-13
+
+### `fusaops coverage --format markdown`
+
+- **`coverage.Render(w, rep, "markdown")`** (alias `"md"`) — new GFM format: header with 🟢/🟡/🔴 badge and statement %, summary table (Statement / Decision / MC/DC with required/YES indicators), coverage gaps table for files below 100%, decision note in italic. (REQ-FO-COV003)
+- **`fusaops coverage --format markdown [--output FILE]`** — expose from CLI; `fusaops capabilities` format map updated to include `"markdown"`.
+- Enables embedding DO-178C coverage reports directly in PR comments and GitHub Actions job summaries.
+
+### Safety
+- Requirements registry at 269 requirements (REQ-FO-COV003 description updated)
+- 3 new tests; combined coverage 82.0%
+
 ## [1.38.0] — 2026-06-13
 
 ### `fusaops capabilities` — §9.1 discovery document

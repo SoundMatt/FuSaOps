@@ -189,7 +189,7 @@ func BuildFromFile(path string, dal DAL) (*Report, error) {
 }
 
 // Render writes the coverage report in the requested format to w.
-// Supported formats: "text", "json".
+// Supported formats: "text", "json", "markdown" (alias "md").
 //
 //fusa:req REQ-FO-COV003
 func Render(w io.Writer, rep *Report, format string) error {
@@ -200,6 +200,8 @@ func Render(w io.Writer, rep *Report, format string) error {
 		return enc.Encode(rep)
 	case "text":
 		return renderText(w, rep)
+	case "markdown", "md":
+		return renderMarkdown(w, rep)
 	default:
 		return fmt.Errorf("coverage: unsupported format %q", format)
 	}
@@ -226,6 +228,41 @@ func renderText(w io.Writer, rep *Report) error {
 	fmt.Fprintf(w, "\nPer-file statement coverage:\n")
 	for _, fs := range rep.Files {
 		fmt.Fprintf(w, "  %5.1f%%  %s\n", fs.StmtPct, fs.File)
+	}
+	return nil
+}
+
+func renderMarkdown(w io.Writer, rep *Report) error {
+	badge := "🟢"
+	if rep.StmtPct < 80 {
+		badge = "🔴"
+	} else if rep.StmtPct < 100 {
+		badge = "🟡"
+	}
+	fmt.Fprintf(w, "# FuSaOps — DO-178C Structural Coverage\n\n")
+	fmt.Fprintf(w, "%s **%.1f%%** statement coverage · DAL: %s · Generated %s\n\n",
+		badge, rep.StmtPct, rep.DAL, rep.Generated.Format("2006-01-02 15:04 UTC"))
+	fmt.Fprintln(w, "| Metric | Value | Required |")
+	fmt.Fprintln(w, "|---|---:|---|")
+	fmt.Fprintf(w, "| Statement coverage | %.1f%% | %s |\n", rep.StmtPct, yesNo(rep.StmtRequired))
+	fmt.Fprintf(w, "| Decision coverage | %.1f%% | %s |\n", rep.DecisionPct, yesNo(rep.DecisionRequired))
+	mcdcVal := "n/a"
+	if rep.MCDCRequired {
+		mcdcVal = "MANUAL CHECK REQUIRED"
+	}
+	fmt.Fprintf(w, "| MC/DC coverage | %s | %s |\n", mcdcVal, yesNo(rep.MCDCRequired))
+	if rep.DecisionNote != "" {
+		fmt.Fprintf(w, "\n_Note: %s_\n", rep.DecisionNote)
+	}
+	if len(rep.Gaps) > 0 {
+		fmt.Fprintf(w, "\n## Coverage gaps (%d file(s))\n\n", len(rep.Gaps))
+		fmt.Fprintln(w, "| File | Statement % |")
+		fmt.Fprintln(w, "|---|---:|")
+		for _, fs := range rep.Files {
+			if fs.StmtPct < 100 {
+				fmt.Fprintf(w, "| %s | %.1f%% |\n", fs.File, fs.StmtPct)
+			}
+		}
 	}
 	return nil
 }

@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.39 — `fusaops coverage --format markdown` ✅
+
+**Goal:** Complete the coverage command format matrix for PR-comment embedding.
+
+- `coverage.Render` gains `"markdown"` / `"md"` format: 🟢/🟡/🔴 badge, statement/decision/MC/DC table with required flags, coverage gaps file table (REQ-FO-COV003)
+- `fusaops coverage --format markdown [--output FILE]`
+- `fusaops capabilities` format map updated
+
+---
+
 ## v1.38 — `fusaops capabilities` — §9.1 discovery document ✅
 
 **Goal:** Mirror `gofusa capabilities` for machine-readable discovery.
