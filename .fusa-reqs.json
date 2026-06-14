@@ -1973,6 +1973,34 @@
       "description": "The fusaops CLI shall provide a 'hooks' subcommand with 'install', 'remove', and 'show' sub-subcommands accepting an optional --dir flag.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa hooks for managing git pre-commit hooks at the FuSaOps multi-language level."
+    },
+    {
+      "id": "REQ-FO-IMP001",
+      "title": "Impact analysis types",
+      "description": "FuSaOps shall define FileChange, RequirementImpact, ArtifactStatus, and Report types representing the change-impact analysis of a multi-language project.",
+      "priority": "MUST",
+      "rationale": "Provides the canonical data model for cross-language change impact reporting."
+    },
+    {
+      "id": "REQ-FO-IMP002",
+      "title": "Change impact analysis",
+      "description": "FuSaOps shall provide Analyse(projectRoot, fromRef, toRef) that runs git diff to identify changed files, scans source annotations (//fusa:req, //fusa:test, #fusa:req, #fusa:test) across all supported languages, identifies impacted requirements, and checks evidence artefact staleness.",
+      "priority": "MUST",
+      "rationale": "Enables developers to understand the safety implications of any code change across the full multi-language codebase."
+    },
+    {
+      "id": "REQ-FO-IMP003",
+      "title": "Impact report rendering (text and json)",
+      "description": "FuSaOps shall provide Render(w, report, format) producing text (with changed files, impacted requirements, stale artefacts, and tests to re-run sections) or JSON output. An unknown format shall return an error.",
+      "priority": "MUST",
+      "rationale": "Enables human-readable impact summaries and machine-readable export for CI gating and review workflows."
+    },
+    {
+      "id": "REQ-FO-CLI059",
+      "title": "fusaops impact subcommand",
+      "description": "The fusaops CLI shall provide an 'impact' subcommand accepting --dir, --from, --to (git refs), --format (text/json), and --output FILE.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa impact for multi-language change-impact analysis at the FuSaOps orchestration level."
     }
   ]
 }

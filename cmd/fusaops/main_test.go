@@ -854,6 +854,53 @@ func TestHooksNoSubcommand(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI059
+func TestImpactText(t *testing.T) {
+	// No .git in TempDir — git diff fails, but report still renders.
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "impact", "--dir", dir, "--format", "text")
+	if code != 0 {
+		t.Fatalf("impact text: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "FuSaOps Impact") {
+		t.Errorf("impact text missing header: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI059
+func TestImpactJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "impact", "--dir", dir, "--format", "json")
+	if code != 0 {
+		t.Fatalf("impact json: code=%d err=%q", code, errb)
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal([]byte(out), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\nout=%q", err, out)
+	}
+}
+
+//fusa:test REQ-FO-CLI059
+func TestImpactOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	outFile := filepath.Join(dir, "impact.txt")
+	code, _, errb := runArgs(t, "impact", "--dir", dir, "--output", outFile)
+	if code != 0 {
+		t.Fatalf("impact --output: code=%d err=%q", code, errb)
+	}
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI059
+func TestImpactInvalidFormat(t *testing.T) {
+	code, _, errb := runArgs(t, "impact", "--format", "xml")
+	if code != 1 || !strings.Contains(errb, "unsupported") {
+		t.Errorf("invalid format: code=%d err=%q", code, errb)
+	}
+}
+
 //fusa:test REQ-FO-CLI057
 func TestSLSAL1(t *testing.T) {
 	dir := t.TempDir()

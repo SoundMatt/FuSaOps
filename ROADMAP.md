@@ -341,6 +341,15 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.44 — `fusaops impact` — cross-language change impact analysis ✅
+
+**Goal:** Mirror `gofusa impact` for multi-language annotation scanning and evidence artefact staleness checking.
+
+- `impact` package — `FileChange`, `RequirementImpact`, `ArtifactStatus`, `Report`; `Analyse` (git diff + annotation scan + artefact staleness); `Render` (text/json) (REQ-FO-IMP001, REQ-FO-IMP002, REQ-FO-IMP003)
+- `fusaops impact [--dir] [--from] [--to] [--format text|json] [--output FILE]` (REQ-FO-CLI059)
+
+---
+
 ## v1.43 — `fusaops hooks` — git pre-commit hook management ✅
 
 **Goal:** Mirror `gofusa hooks` for gating commits on the multi-language safety check.

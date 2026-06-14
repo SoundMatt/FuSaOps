@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.44.0] — 2026-06-13
+
+### `fusaops impact` — cross-language change impact analysis
+
+- **`impact` package** — `FileChange`, `RequirementImpact`, `ArtifactStatus`, `Report` types; `Analyse(projectRoot, fromRef, toRef)` runs git diff, scans `//fusa:req`/`//fusa:test`/`#fusa:req`/`#fusa:test` annotations across Go, C, C++, Rust, Python, Java sources, identifies impacted requirements and stale evidence artefacts; `Render` (text/json). (REQ-FO-IMP001, REQ-FO-IMP002, REQ-FO-IMP003)
+- **`fusaops impact [--dir DIR] [--from REF] [--to REF] [--format text|json] [--output FILE]`** — cross-language change impact report. (REQ-FO-CLI059)
+- `fusaops capabilities` updated with impact command and text/json formats.
+- Mirrors `gofusa impact` adapted for multi-language annotation scanning and FuSaOps evidence artefact staleness checking.
+
+### Safety
+- Requirements registry at 288 requirements (added REQ-FO-IMP001, REQ-FO-IMP002, REQ-FO-IMP003, REQ-FO-CLI059)
+- 13 package tests + 4 CLI tests; combined coverage 81.8%
+
 ## [1.43.0] — 2026-06-13
 
 ### `fusaops hooks` — git pre-commit hook management
