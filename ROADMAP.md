@@ -341,6 +341,15 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.45 — `fusaops disposition` — finding disposition management ✅
+
+**Goal:** Mirror `gofusa disposition` for auditable accept/fix decisions on findings at the FuSaOps level.
+
+- `disposition` package — `Action`/`Entry`/`Log` types; `Load`, `Save`, `Add`, `Find`, `RenderEntries` (REQ-FO-DISP001/002/003)
+- `fusaops disposition add/list/show` — manage `.fusaops-dispositions.json` (REQ-FO-CLI060)
+
+---
+
 ## v1.44 — `fusaops impact` — cross-language change impact analysis ✅
 
 **Goal:** Mirror `gofusa impact` for multi-language annotation scanning and evidence artefact staleness checking.

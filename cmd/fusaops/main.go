@@ -36,6 +36,7 @@
 //	slsa          Generate a SLSA supply-chain integrity gap report
 //	hooks         Manage git pre-commit hooks for FuSaOps
 //	impact        Analyse the effect of source changes on requirements
+//	disposition   Manage finding disposition entries
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -108,6 +109,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runHooks(args[1:], stdout, stderr)
 	case "impact":
 		return runImpact(args[1:], stdout, stderr)
+	case "disposition":
+		return runDisposition(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -165,6 +168,7 @@ Commands:
   slsa          Generate a SLSA supply-chain integrity gap report
   hooks         Manage git pre-commit hooks for FuSaOps
   impact        Analyse the effect of source changes on requirements
+  disposition   Manage finding disposition entries
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

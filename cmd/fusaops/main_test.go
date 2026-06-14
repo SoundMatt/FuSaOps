@@ -893,6 +893,81 @@ func TestImpactOutputFile(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI060
+func TestDispositionListEmpty(t *testing.T) {
+	code, out, errb := runArgs(t, "disposition", "--dir", t.TempDir(), "list")
+	if code != 0 {
+		t.Fatalf("disposition list empty: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "No disposition") {
+		t.Errorf("empty list missing message: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI060
+func TestDispositionAddAndShow(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "disposition", "--dir", dir, "add",
+		"--rule", "RULE001", "--reviewer", "alice",
+		"--rationale", "accepted by design", "--action", "accept")
+	if code != 0 {
+		t.Fatalf("disposition add: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "RULE001") {
+		t.Errorf("add confirmation missing rule: %q", out)
+	}
+	// Show the entry.
+	code2, out2, errb2 := runArgs(t, "disposition", "--dir", dir, "show", "--rule", "RULE001")
+	if code2 != 0 {
+		t.Fatalf("disposition show: code=%d err=%q", code2, errb2)
+	}
+	if !strings.Contains(out2, "alice") || !strings.Contains(out2, "accept") {
+		t.Errorf("show output missing expected content: %q", out2)
+	}
+}
+
+//fusa:test REQ-FO-CLI060
+func TestDispositionShowMissing(t *testing.T) {
+	code, _, errb := runArgs(t, "disposition", "--dir", t.TempDir(), "show", "--rule", "NOSUCHRULE")
+	if code != 1 || !strings.Contains(errb, "no disposition") {
+		t.Errorf("show missing: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI060
+func TestDispositionAddMissingFlags(t *testing.T) {
+	code, _, errb := runArgs(t, "disposition", "add", "--rule", "R1")
+	if code != 2 || !strings.Contains(errb, "reviewer") {
+		t.Errorf("missing reviewer: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI060
+func TestDispositionAddInvalidAction(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "disposition", "--dir", dir, "add",
+		"--rule", "R1", "--reviewer", "alice", "--rationale", "x", "--action", "ignore")
+	if code != 2 || !strings.Contains(errb, "action") {
+		t.Errorf("invalid action: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI060
+func TestDispositionUnknownSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "disposition", "bogus")
+	if code != 2 || !strings.Contains(errb, "unknown subcommand") {
+		t.Errorf("unknown subcommand: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI060
+func TestDispositionNoSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "disposition")
+	if code != 2 || !strings.Contains(errb, "Usage") {
+		t.Errorf("no subcommand: code=%d err=%q", code, errb)
+	}
+}
+
 //fusa:test REQ-FO-CLI059
 func TestImpactInvalidFormat(t *testing.T) {
 	code, _, errb := runArgs(t, "impact", "--format", "xml")

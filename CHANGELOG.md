@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.45.0] — 2026-06-13
+
+### `fusaops disposition` — finding disposition management
+
+- **`disposition` package** — `Action`, `Entry`, `Log` types; `Load`, `Save`, `Add`, `Find`, `RenderEntries`. Records accept/fix decisions for findings by rule ID and language in `.fusaops-dispositions.json`. (REQ-FO-DISP001, REQ-FO-DISP002, REQ-FO-DISP003)
+- **`fusaops disposition add --rule RULE --reviewer NAME --rationale TEXT [--lang LANG] [--action accept|fix] [--ref REF]`** — record a disposition. (REQ-FO-CLI060)
+- **`fusaops disposition list [--dir DIR]`** — list all disposition entries. (REQ-FO-CLI060)
+- **`fusaops disposition show --rule RULE [--lang LANG]`** — show a specific disposition. (REQ-FO-CLI060)
+- Distinct from `fusaops suppress` which hides findings — dispositions acknowledge and track conscious decisions.
+- Mirrors `gofusa disposition` adapted for the multi-language FuSaOps context.
+
+### Safety
+- Requirements registry at 292 requirements (added REQ-FO-DISP001, REQ-FO-DISP002, REQ-FO-DISP003, REQ-FO-CLI060)
+- 10 package tests + 7 CLI tests; combined coverage 81.7%
+
 ## [1.44.0] — 2026-06-13
 
 ### `fusaops impact` — cross-language change impact analysis

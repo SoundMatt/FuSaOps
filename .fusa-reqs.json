@@ -2001,6 +2001,34 @@
       "description": "The fusaops CLI shall provide an 'impact' subcommand accepting --dir, --from, --to (git refs), --format (text/json), and --output FILE.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa impact for multi-language change-impact analysis at the FuSaOps orchestration level."
+    },
+    {
+      "id": "REQ-FO-DISP001",
+      "title": "Disposition types (Action, Entry, Log)",
+      "description": "FuSaOps shall define Action ('accept'/'fix'), Entry (ruleID, language, rationale, reviewer, date, action, reference), and Log (project, entries) types for recording finding disposition decisions.",
+      "priority": "MUST",
+      "rationale": "Provides an audit trail of conscious decisions about findings, distinct from suppression which hides findings."
+    },
+    {
+      "id": "REQ-FO-DISP002",
+      "title": "Disposition load, save, add, find",
+      "description": "FuSaOps shall provide Load, Save, Add, and Find functions to manage .fusaops-dispositions.json. Load returns empty Log when file absent. Find matches by ruleID and optionally language.",
+      "priority": "MUST",
+      "rationale": "Enables persistent, auditable disposition records accessible across CI runs and review workflows."
+    },
+    {
+      "id": "REQ-FO-DISP003",
+      "title": "Disposition rendering",
+      "description": "FuSaOps shall provide RenderEntries(w, log) that writes all disposition entries in human-readable text format, or reports no entries if the log is empty.",
+      "priority": "MUST",
+      "rationale": "Enables auditors to review all disposition decisions in a single readable output."
+    },
+    {
+      "id": "REQ-FO-CLI060",
+      "title": "fusaops disposition subcommand",
+      "description": "The fusaops CLI shall provide a 'disposition' subcommand with 'add' (--rule, --lang, --action, --reviewer, --rationale, --ref), 'list', and 'show' (--rule, --lang) sub-subcommands.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa disposition for managing finding disposition at the FuSaOps multi-language level."
     }
   ]
 }
