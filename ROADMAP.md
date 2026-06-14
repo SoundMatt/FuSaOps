@@ -341,6 +341,15 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.38 — `fusaops capabilities` — §9.1 discovery document ✅
+
+**Goal:** Mirror `gofusa capabilities` for machine-readable discovery.
+
+- `fusaops capabilities` — emits §9.1 `kind: "capabilities"` JSON document with tool, version, spec version, commands, per-command formats, and standards (REQ-FO-CLI054)
+- JSON-only (per spec §9.1); `--format text` returns exit 2
+
+---
+
 ## v1.37 — `fusaops version --format json` and `SpecVersion` ✅
 
 **Goal:** Mirror `gofusa version --format json` for machine-readable version introspection.

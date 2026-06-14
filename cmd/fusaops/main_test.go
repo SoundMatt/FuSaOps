@@ -349,6 +349,29 @@ func TestCheckJUnitFormat(t *testing.T) {
 	}
 }
 
+// TestCapabilities verifies fusaops capabilities emits a JSON discovery document.
+//
+//fusa:test REQ-FO-CLI054
+func TestCapabilities(t *testing.T) {
+	code, out, errb := runArgs(t, "capabilities")
+	if code != 0 {
+		t.Fatalf("capabilities: code=%d err=%q", code, errb)
+	}
+	for _, want := range []string{`"tool"`, `"version"`, `"specVersion"`, `"commands"`, `"formats"`, "fusaops"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("capabilities missing %q: %.200s", want, out)
+		}
+	}
+}
+
+//fusa:test REQ-FO-CLI054
+func TestCapabilitiesInvalidFormat(t *testing.T) {
+	code, _, errb := runArgs(t, "capabilities", "--format", "text")
+	if code != 2 || !strings.Contains(errb, "only json") {
+		t.Errorf("invalid format: code=%d err=%q", code, errb)
+	}
+}
+
 // TestCoverageText verifies fusaops coverage produces a DO-178C text report.
 //
 //fusa:test REQ-FO-CLI051

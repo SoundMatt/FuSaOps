@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.38.0] — 2026-06-13
+
+### `fusaops capabilities` — §9.1 discovery document
+
+- **`fusaops capabilities`** — new subcommand emitting a §9.1 x-FuSa discovery document: `kind: "capabilities"` with `tool`, `toolVersion`, `specVersion`, `commands` list, per-command `formats` map, and `standards` list. (REQ-FO-CLI054)
+- Only JSON format supported (per spec §9.1); `--format text` returns exit 2.
+- Mirrors `gofusa capabilities` for machine-readable discovery by CI tooling, IDEs, and the FuSaOps conform checker.
+
+### Safety
+- Requirements registry at 269 requirements (added REQ-FO-CLI054)
+- 2 new tests; combined coverage 81.6%
+
 ## [1.37.0] — 2026-06-13
 
 ### `fusaops version --format json` and `SpecVersion` constant

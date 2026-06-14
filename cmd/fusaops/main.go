@@ -28,8 +28,9 @@
 //	iec62443    Roll up IEC 62443 gap reports across all languages
 //	policy      Evaluate org-wide safety rules over the aggregated report
 //	fleet       Run check across all repos in a fleet config file
-//	coverage    DO-178C structural coverage report from a Go coverage profile
-//	req         Show, import, or export requirements from .fusa-reqs.json
+//	coverage      DO-178C structural coverage report from a Go coverage profile
+//	req           Show, import, or export requirements from .fusa-reqs.json
+//	capabilities  Report FuSaOps's supported commands, formats, and standards
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -90,6 +91,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runCoverage(args[1:], stdout, stderr)
 	case "req":
 		return runReq(args[1:], stdout, stderr)
+	case "capabilities":
+		return runCapabilities(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -140,8 +143,9 @@ Commands:
   policy     Evaluate org-wide safety rules over the aggregated report
   fleet      Run check across all repos in a fleet config file
   coverage   DO-178C structural coverage report from a Go coverage profile
-  req        Show, import, or export requirements from .fusa-reqs.json
-  serve      Launch the web reporting dashboard
+  req           Show, import, or export requirements from .fusa-reqs.json
+  capabilities  Report FuSaOps's supported commands, formats, and standards
+  serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 
 Run 'fusaops <command> --help' for per-command flags.

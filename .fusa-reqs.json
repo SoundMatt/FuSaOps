@@ -1,6 +1,13 @@
 {
   "requirements": [
     {
+      "id": "REQ-FO-CLI054",
+      "title": "fusaops capabilities subcommand",
+      "description": "The fusaops CLI shall provide a 'capabilities' subcommand that emits a §9.1 x-FuSa discovery document listing supported commands, formats per command, and safety standards in JSON format.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa capabilities for machine-readable discovery by CI tooling and IDEs."
+    },
+    {
       "id": "REQ-FO-CORE007",
       "title": "x-FuSa spec version constant",
       "description": "FuSaOps shall export a SpecVersion constant identifying the x-FuSa specification version it targets.",
