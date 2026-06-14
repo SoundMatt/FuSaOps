@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.40.0] — 2026-06-13
+
+### `fusaops metrics` — safety metrics time series
+
+- **`metrics` package** — `Snapshot` and `TimeSeries` types; `Load`, `Save`, `Append`, `Collect`, and `Render` (text/json) functions. `Collect` reads `check-report.json`, `.fusa-reqs.json`, and `coverage-report.json` to populate error/warning/info counts, requirement count, and coverage percent. (REQ-FO-MET001, REQ-FO-MET002, REQ-FO-MET003)
+- **`fusaops metrics record`** — collect a snapshot from project artefacts and append to `.fusaops-metrics.json`. (REQ-FO-CLI055)
+- **`fusaops metrics show [--format text|json] [--output FILE]`** — display the full metrics time series. (REQ-FO-CLI055)
+- Mirrors `gofusa metrics` for CI-level safety KPI tracking across releases.
+
+### Safety
+- Requirements registry at 273 requirements (added REQ-FO-MET001, REQ-FO-MET002, REQ-FO-MET003, REQ-FO-CLI055)
+- 12 package tests + 6 CLI tests; combined coverage 81.7%
+
 ## [1.39.0] — 2026-06-13
 
 ### `fusaops coverage --format markdown`

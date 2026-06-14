@@ -585,3 +585,75 @@ func TestSplitCSV(t *testing.T) {
 		t.Error("splitCSV empty should be empty")
 	}
 }
+
+//fusa:test REQ-FO-CLI055
+func TestMetricsRecord(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "metrics", "--dir", dir, "record")
+	if code != 0 {
+		t.Fatalf("metrics record: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Metrics recorded") {
+		t.Errorf("record output missing confirmation: %q", out)
+	}
+	if !strings.Contains(out, ".fusaops-metrics.json") {
+		t.Errorf("record output missing file path: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI055
+func TestMetricsShowEmpty(t *testing.T) {
+	code, out, errb := runArgs(t, "metrics", "--dir", t.TempDir(), "show")
+	if code != 0 {
+		t.Fatalf("metrics show empty: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "No snapshots") {
+		t.Errorf("expected no-snapshots message: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI055
+func TestMetricsShowJSON(t *testing.T) {
+	dir := t.TempDir()
+	// Record first so there is data.
+	if code, _, errb := runArgs(t, "metrics", "--dir", dir, "record"); code != 0 {
+		t.Fatalf("metrics record: code=%d err=%q", code, errb)
+	}
+	code, out, errb := runArgs(t, "metrics", "--dir", dir, "show", "--format", "json")
+	if code != 0 {
+		t.Fatalf("metrics show json: code=%d err=%q", code, errb)
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal([]byte(out), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\nout=%q", err, out)
+	}
+}
+
+//fusa:test REQ-FO-CLI055
+func TestMetricsShowOutput(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "metrics.txt")
+	code, _, errb := runArgs(t, "metrics", "--dir", dir, "show", "--output", out)
+	if code != 0 {
+		t.Fatalf("metrics show --output: code=%d err=%q", code, errb)
+	}
+	if _, err := os.Stat(out); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI055
+func TestMetricsUnknownSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "metrics", "bogus")
+	if code != 2 || !strings.Contains(errb, "unknown subcommand") {
+		t.Errorf("unknown subcommand: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI055
+func TestMetricsNoSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "metrics")
+	if code != 2 || !strings.Contains(errb, "Usage") {
+		t.Errorf("no subcommand: code=%d err=%q", code, errb)
+	}
+}

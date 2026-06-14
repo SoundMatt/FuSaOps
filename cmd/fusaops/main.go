@@ -31,6 +31,7 @@
 //	coverage      DO-178C structural coverage report from a Go coverage profile
 //	req           Show, import, or export requirements from .fusa-reqs.json
 //	capabilities  Report FuSaOps's supported commands, formats, and standards
+//	metrics       Track project safety metrics over time
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -93,6 +94,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runReq(args[1:], stdout, stderr)
 	case "capabilities":
 		return runCapabilities(args[1:], stdout, stderr)
+	case "metrics":
+		return runMetrics(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -145,6 +148,7 @@ Commands:
   coverage   DO-178C structural coverage report from a Go coverage profile
   req           Show, import, or export requirements from .fusa-reqs.json
   capabilities  Report FuSaOps's supported commands, formats, and standards
+  metrics       Track project safety metrics over time
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.40 — `fusaops metrics` — safety metrics time series ✅
+
+**Goal:** Mirror `gofusa metrics` for CI-level safety KPI tracking across releases.
+
+- `metrics` package — `Snapshot` and `TimeSeries` types; `Load`, `Save`, `Append`, `Collect`, `Render` (text/json) (REQ-FO-MET001, REQ-FO-MET002, REQ-FO-MET003)
+- `fusaops metrics record` — collect snapshot from project artefacts, append to `.fusaops-metrics.json` (REQ-FO-CLI055)
+- `fusaops metrics show [--format text|json] [--output FILE]` — display full time series (REQ-FO-CLI055)
+
+---
+
 ## v1.39 — `fusaops coverage --format markdown` ✅
 
 **Goal:** Complete the coverage command format matrix for PR-comment embedding.

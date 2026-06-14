@@ -1882,6 +1882,34 @@
       "description": "The serve subcommand shall accept --baseline path to set the default baseline file used by GET /api/v1/diff and POST /api/v1/baseline on both single-project and multi-project servers.",
       "priority": "MUST",
       "rationale": "Allows persistent baseline configuration without per-request path parameters; enables CI gating via the dashboard's diff endpoint."
+    },
+    {
+      "id": "REQ-FO-MET001",
+      "title": "Safety metrics snapshot and time-series types",
+      "description": "FuSaOps shall define a Snapshot type capturing error/warning/info counts, requirement count, and coverage percentage at a point in time, and a TimeSeries type holding a project name and ordered list of snapshots.",
+      "priority": "MUST",
+      "rationale": "Enables trend analysis of project safety health over CI runs and release cycles."
+    },
+    {
+      "id": "REQ-FO-MET002",
+      "title": "Metrics load, save, append, and collect",
+      "description": "FuSaOps shall provide Load, Save, Append, and Collect functions to read and write the .fusaops-metrics.json time series and to collect a snapshot from project artefacts (check-report.json, .fusa-reqs.json, coverage-report.json).",
+      "priority": "MUST",
+      "rationale": "Automates metric capture from existing FuSaOps artefacts without manual entry."
+    },
+    {
+      "id": "REQ-FO-MET003",
+      "title": "Metrics render (text and json)",
+      "description": "FuSaOps shall provide a Render function that formats a TimeSeries as text (tabular) or JSON. An unknown format shall return an error.",
+      "priority": "MUST",
+      "rationale": "Enables human-readable dashboards and machine-readable export of safety metrics history."
+    },
+    {
+      "id": "REQ-FO-CLI055",
+      "title": "fusaops metrics subcommand",
+      "description": "The fusaops CLI shall provide a 'metrics' subcommand with 'record' (collect and persist a snapshot) and 'show' (display the time series, --format text|json, --output file) sub-subcommands.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa metrics for tracking project safety health KPIs over CI pipeline runs."
     }
   ]
 }
