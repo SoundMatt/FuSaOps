@@ -34,6 +34,7 @@
 //	metrics       Track project safety metrics over time
 //	badge         Generate an SVG status badge from an aggregate check report
 //	slsa          Generate a SLSA supply-chain integrity gap report
+//	hooks         Manage git pre-commit hooks for FuSaOps
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -102,6 +103,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runBadge(args[1:], stdout, stderr)
 	case "slsa":
 		return runSLSA(args[1:], stdout, stderr)
+	case "hooks":
+		return runHooks(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -157,6 +160,7 @@ Commands:
   metrics       Track project safety metrics over time
   badge         Generate an SVG status badge from an aggregate check report
   slsa          Generate a SLSA supply-chain integrity gap report
+  hooks         Manage git pre-commit hooks for FuSaOps
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

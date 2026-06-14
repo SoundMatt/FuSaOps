@@ -784,6 +784,76 @@ func TestSLSAInvalidFormat(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CLI058
+func TestHooksShow(t *testing.T) {
+	code, out, errb := runArgs(t, "hooks", "show")
+	if code != 0 {
+		t.Fatalf("hooks show: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "fusaops check") {
+		t.Errorf("hooks show missing fusaops check: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI058
+func TestHooksInstallRemove(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, ".git", "hooks"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "hooks", "--dir", dir, "install")
+	if code != 0 {
+		t.Fatalf("hooks install: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "installed") {
+		t.Errorf("install output missing confirmation: %q", out)
+	}
+	hookPath := filepath.Join(dir, ".git", "hooks", "pre-commit")
+	if _, err := os.Stat(hookPath); err != nil {
+		t.Fatalf("pre-commit hook not created: %v", err)
+	}
+	// Second install should fail (already exists).
+	code2, _, errb2 := runArgs(t, "hooks", "--dir", dir, "install")
+	if code2 != 1 || !strings.Contains(errb2, "already exists") {
+		t.Errorf("double install: code=%d err=%q", code2, errb2)
+	}
+	// Remove.
+	code3, out3, errb3 := runArgs(t, "hooks", "--dir", dir, "remove")
+	if code3 != 0 {
+		t.Fatalf("hooks remove: code=%d err=%q", code3, errb3)
+	}
+	if !strings.Contains(out3, "removed") {
+		t.Errorf("remove output missing confirmation: %q", out3)
+	}
+	if _, err := os.Stat(hookPath); err == nil {
+		t.Error("pre-commit hook still exists after remove")
+	}
+}
+
+//fusa:test REQ-FO-CLI058
+func TestHooksRemoveMissing(t *testing.T) {
+	code, _, errb := runArgs(t, "hooks", "--dir", t.TempDir(), "remove")
+	if code != 1 || !strings.Contains(errb, "not found") {
+		t.Errorf("remove missing: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI058
+func TestHooksUnknownSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "hooks", "bogus")
+	if code != 2 || !strings.Contains(errb, "unknown subcommand") {
+		t.Errorf("unknown subcommand: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI058
+func TestHooksNoSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "hooks")
+	if code != 2 || !strings.Contains(errb, "Usage") {
+		t.Errorf("no subcommand: code=%d err=%q", code, errb)
+	}
+}
+
 //fusa:test REQ-FO-CLI057
 func TestSLSAL1(t *testing.T) {
 	dir := t.TempDir()

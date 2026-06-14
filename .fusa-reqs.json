@@ -1959,6 +1959,20 @@
       "description": "The fusaops CLI shall provide a 'slsa' subcommand accepting --dir, --level (L1/L2/L3/L4), --format (text/json), and --output FILE, returning exit 1 if any gaps remain.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa slsa for SLSA supply-chain gap assessment at the multi-language project level."
+    },
+    {
+      "id": "REQ-FO-HOOKS001",
+      "title": "Git pre-commit hook management",
+      "description": "FuSaOps shall provide hook install, remove, and show operations that write/delete a pre-commit script running 'fusaops check --strict' into .git/hooks/pre-commit.",
+      "priority": "MUST",
+      "rationale": "Enables developers to gate commits on the FuSaOps safety check without manual hook maintenance."
+    },
+    {
+      "id": "REQ-FO-CLI058",
+      "title": "fusaops hooks subcommand",
+      "description": "The fusaops CLI shall provide a 'hooks' subcommand with 'install', 'remove', and 'show' sub-subcommands accepting an optional --dir flag.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa hooks for managing git pre-commit hooks at the FuSaOps multi-language level."
     }
   ]
 }

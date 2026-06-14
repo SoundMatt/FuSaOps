@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.43.0] — 2026-06-13
+
+### `fusaops hooks` — git pre-commit hook management
+
+- **`fusaops hooks install [--dir DIR]`** — writes a pre-commit script running `fusaops check --strict` to `.git/hooks/pre-commit`. Fails if a hook already exists. (REQ-FO-HOOKS001, REQ-FO-CLI058)
+- **`fusaops hooks remove [--dir DIR]`** — removes the FuSaOps pre-commit hook. (REQ-FO-HOOKS001)
+- **`fusaops hooks show`** — prints the hook script to stdout. (REQ-FO-HOOKS001)
+- `fusaops capabilities` updated with hooks command.
+- Mirrors `gofusa hooks` for gating commits on the multi-language safety check.
+
+### Safety
+- Requirements registry at 283 requirements (added REQ-FO-HOOKS001, REQ-FO-CLI058)
+- 5 CLI tests; combined coverage 81.7%
+
 ## [1.42.0] — 2026-06-13
 
 ### `fusaops slsa` — SLSA supply-chain gap report

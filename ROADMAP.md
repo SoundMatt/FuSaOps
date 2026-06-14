@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.43 — `fusaops hooks` — git pre-commit hook management ✅
+
+**Goal:** Mirror `gofusa hooks` for gating commits on the multi-language safety check.
+
+- `fusaops hooks install [--dir]` — installs pre-commit hook running `fusaops check --strict` (REQ-FO-HOOKS001, REQ-FO-CLI058)
+- `fusaops hooks remove [--dir]` — removes the hook
+- `fusaops hooks show` — prints the hook script
+
+---
+
 ## v1.42 — `fusaops slsa` — SLSA supply-chain gap report ✅
 
 **Goal:** Mirror `gofusa slsa` for SLSA v1.0 supply-chain integrity assessment at the multi-language project level.

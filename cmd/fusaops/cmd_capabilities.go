@@ -54,7 +54,7 @@ func runCapabilities(args []string, stdout, stderr io.Writer) int {
 		Commands: []string{
 			"version", "capabilities", "init", "config", "scan", "adapters",
 			"check", "report", "trace", "sbom", "audit-pack", "diff",
-			"suppress", "conform", "coverage", "req", "metrics", "badge", "slsa",
+			"suppress", "conform", "coverage", "req", "metrics", "badge", "slsa", "hooks",
 			"iso26262", "iec61508", "do178", "iso21434", "unece", "iec62443",
 			"policy", "fleet", "history", "serve",
 		},
