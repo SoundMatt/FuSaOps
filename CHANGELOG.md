@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.41.0] — 2026-06-13
+
+### `fusaops badge` — SVG status badge from aggregate report
+
+- **`badge` package** — `Badge` and `Status` types (Pass/Warn/Fail); `New(errors, warnings, version)` derives status; `Render(w, badge)` writes a Shields.io-style SVG with label `fusaops`. (REQ-FO-BADGE001, REQ-FO-BADGE002)
+- **`fusaops badge [--output FILE] [report.json]`** — reads an aggregate check report JSON from a file or stdin and writes the SVG badge to stdout or a file. (REQ-FO-CLI056)
+- `fusaops capabilities` commands and formats maps updated to include `badge`.
+- Mirrors `gofusa badge` for embedding a colour-coded health indicator in README files and CI artefacts.
+
+### Safety
+- Requirements registry at 276 requirements (added REQ-FO-BADGE001, REQ-FO-BADGE002, REQ-FO-CLI056)
+- 5 package tests + 5 CLI tests; combined coverage 81.7%
+
 ## [1.40.0] — 2026-06-13
 
 ### `fusaops metrics` — safety metrics time series

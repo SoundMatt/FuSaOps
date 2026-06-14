@@ -32,6 +32,7 @@
 //	req           Show, import, or export requirements from .fusa-reqs.json
 //	capabilities  Report FuSaOps's supported commands, formats, and standards
 //	metrics       Track project safety metrics over time
+//	badge         Generate an SVG status badge from an aggregate check report
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -96,6 +97,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runCapabilities(args[1:], stdout, stderr)
 	case "metrics":
 		return runMetrics(args[1:], stdout, stderr)
+	case "badge":
+		return runBadge(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -149,6 +152,7 @@ Commands:
   req           Show, import, or export requirements from .fusa-reqs.json
   capabilities  Report FuSaOps's supported commands, formats, and standards
   metrics       Track project safety metrics over time
+  badge         Generate an SVG status badge from an aggregate check report
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

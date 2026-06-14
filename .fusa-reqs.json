@@ -1910,6 +1910,27 @@
       "description": "The fusaops CLI shall provide a 'metrics' subcommand with 'record' (collect and persist a snapshot) and 'show' (display the time series, --format text|json, --output file) sub-subcommands.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa metrics for tracking project safety health KPIs over CI pipeline runs."
+    },
+    {
+      "id": "REQ-FO-BADGE001",
+      "title": "SVG badge types and status derivation",
+      "description": "FuSaOps shall define Badge and Status types; New(errors, warnings, version) shall return StatusFail when errors > 0, StatusWarn when warnings > 0 and no errors, and StatusPass otherwise.",
+      "priority": "MUST",
+      "rationale": "Enables CI pipelines and README files to display a single colour-coded health indicator for the aggregated multi-language safety report."
+    },
+    {
+      "id": "REQ-FO-BADGE002",
+      "title": "SVG badge rendering",
+      "description": "FuSaOps shall provide Render(w, badge) that writes a self-contained Shields.io-style SVG badge with label 'fusaops' and a message reflecting the pass/warn/fail status.",
+      "priority": "MUST",
+      "rationale": "Produces a standard embeddable badge compatible with GitHub README shields and CI artifact storage."
+    },
+    {
+      "id": "REQ-FO-CLI056",
+      "title": "fusaops badge subcommand",
+      "description": "The fusaops CLI shall provide a 'badge' subcommand that reads an aggregate report JSON from a file argument or stdin and writes an SVG status badge to stdout or --output FILE.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa badge for generating a project health badge from the multi-language aggregate check report."
     }
   ]
 }

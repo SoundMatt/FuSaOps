@@ -657,3 +657,74 @@ func TestMetricsNoSubcommand(t *testing.T) {
 		t.Errorf("no subcommand: code=%d err=%q", code, errb)
 	}
 }
+
+//fusa:test REQ-FO-CLI056
+func TestBadgeFromFile(t *testing.T) {
+	dir := t.TempDir()
+	reportJSON := `{"generatedAt":"2026-06-13T00:00:00Z","root":".","components":[],"summary":{"total":0,"errors":0,"warnings":0,"infos":0}}`
+	reportFile := filepath.Join(dir, "report.json")
+	if err := os.WriteFile(reportFile, []byte(reportJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "badge", reportFile)
+	if code != 0 {
+		t.Fatalf("badge: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "<svg") || !strings.Contains(out, "fusaops") {
+		t.Errorf("badge output missing SVG content: %q", out[:min(len(out), 200)])
+	}
+	if !strings.Contains(out, "passing") {
+		t.Errorf("pass badge missing 'passing': %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI056
+func TestBadgeFailReport(t *testing.T) {
+	dir := t.TempDir()
+	reportJSON := `{"generatedAt":"2026-06-13T00:00:00Z","root":".","components":[],"summary":{"total":2,"errors":2,"warnings":0,"infos":0}}`
+	reportFile := filepath.Join(dir, "report.json")
+	if err := os.WriteFile(reportFile, []byte(reportJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "badge", reportFile)
+	if code != 0 {
+		t.Fatalf("badge fail: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "failing") {
+		t.Errorf("fail badge missing 'failing': %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI056
+func TestBadgeOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	reportJSON := `{"generatedAt":"2026-06-13T00:00:00Z","root":".","components":[],"summary":{"total":0,"errors":0,"warnings":0,"infos":0}}`
+	reportFile := filepath.Join(dir, "report.json")
+	if err := os.WriteFile(reportFile, []byte(reportJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	outFile := filepath.Join(dir, "badge.svg")
+	code, _, errb := runArgs(t, "badge", "--output", outFile, reportFile)
+	if code != 0 {
+		t.Fatalf("badge --output: code=%d err=%q", code, errb)
+	}
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI056
+func TestBadgeMissingFile(t *testing.T) {
+	code, _, errb := runArgs(t, "badge", "/nonexistent/report.json")
+	if code != 1 || !strings.Contains(errb, "badge") {
+		t.Errorf("missing file: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI056
+func TestBadgeTooManyArgs(t *testing.T) {
+	code, _, _ := runArgs(t, "badge", "a.json", "b.json")
+	if code != 2 {
+		t.Errorf("too many args: code=%d", code)
+	}
+}

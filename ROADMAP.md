@@ -341,6 +341,16 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.41 — `fusaops badge` — SVG status badge ✅
+
+**Goal:** Mirror `gofusa badge` for colour-coded health indicators in README files and CI artefacts.
+
+- `badge` package — `Badge`/`Status` types; `New(errors, warnings, version)` (REQ-FO-BADGE001); `Render(w, badge)` Shields.io-style SVG (REQ-FO-BADGE002)
+- `fusaops badge [--output FILE] [report.json]` — reads aggregate report JSON, emits SVG (REQ-FO-CLI056)
+- `fusaops capabilities` updated with badge command and svg format
+
+---
+
 ## v1.40 — `fusaops metrics` — safety metrics time series ✅
 
 **Goal:** Mirror `gofusa metrics` for CI-level safety KPI tracking across releases.
