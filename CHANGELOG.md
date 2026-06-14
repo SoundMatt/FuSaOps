@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.42.0] — 2026-06-13
+
+### `fusaops slsa` — SLSA supply-chain gap report
+
+- **`slsa` package** — `Level`, `Objective`, `Report` types; `Assess(projectRoot, project, level)` evaluates 10 SLSA v1.0 objectives across L1–L4 (version control, module file, provenance, SBOM, CODEOWNERS, artifact integrity, evidence bundle); `Render` (text/json). (REQ-FO-SLSA001, REQ-FO-SLSA002, REQ-FO-SLSA003)
+- **`fusaops slsa [--dir DIR] [--level L1|L2|L3|L4] [--format text|json] [--output FILE]`** — multi-language SLSA gap report; exits 1 when gaps remain. (REQ-FO-CLI057)
+- `fusaops capabilities` updated with slsa command and text/json formats.
+- Mirrors `gofusa slsa` adapted for the FuSaOps multi-language project context.
+
+### Safety
+- Requirements registry at 281 requirements (added REQ-FO-SLSA001, REQ-FO-SLSA002, REQ-FO-SLSA003, REQ-FO-CLI057)
+- 11 package tests + 6 CLI tests; combined coverage 81.7%
+
 ## [1.41.0] — 2026-06-13
 
 ### `fusaops badge` — SVG status badge from aggregate report

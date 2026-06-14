@@ -1931,6 +1931,34 @@
       "description": "The fusaops CLI shall provide a 'badge' subcommand that reads an aggregate report JSON from a file argument or stdin and writes an SVG status badge to stdout or --output FILE.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa badge for generating a project health badge from the multi-language aggregate check report."
+    },
+    {
+      "id": "REQ-FO-SLSA001",
+      "title": "SLSA level, objective, and report types",
+      "description": "FuSaOps shall define Level (L1/L2/L3/L4), Objective (id, clause, title, minLevel, status, note), and Report (project, level, generated, pass, gap, na, objectives) types for SLSA v1.0 gap assessment.",
+      "priority": "MUST",
+      "rationale": "Provides the canonical data model for SLSA supply-chain gap reports across multi-language FuSaOps projects."
+    },
+    {
+      "id": "REQ-FO-SLSA002",
+      "title": "SLSA gap assessment",
+      "description": "FuSaOps shall provide Assess(projectRoot, project, level) that evaluates the project directory against SLSA L1–L4 objectives (version control, module file, provenance, SBOM, CODEOWNERS, artifact integrity, evidence bundle) and returns a Report.",
+      "priority": "MUST",
+      "rationale": "Enables automated SLSA posture evaluation for multi-language projects without requiring per-language tool runs."
+    },
+    {
+      "id": "REQ-FO-SLSA003",
+      "title": "SLSA report rendering (text and json)",
+      "description": "FuSaOps shall provide Render(w, report, format) producing text (tabular with icons) or JSON output. An unknown format shall return an error.",
+      "priority": "MUST",
+      "rationale": "Enables human-readable SLSA posture reviews and machine-readable export for CI gating and audit records."
+    },
+    {
+      "id": "REQ-FO-CLI057",
+      "title": "fusaops slsa subcommand",
+      "description": "The fusaops CLI shall provide a 'slsa' subcommand accepting --dir, --level (L1/L2/L3/L4), --format (text/json), and --output FILE, returning exit 1 if any gaps remain.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa slsa for SLSA supply-chain gap assessment at the multi-language project level."
     }
   ]
 }

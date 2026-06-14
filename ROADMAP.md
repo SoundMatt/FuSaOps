@@ -341,6 +341,15 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.42 — `fusaops slsa` — SLSA supply-chain gap report ✅
+
+**Goal:** Mirror `gofusa slsa` for SLSA v1.0 supply-chain integrity assessment at the multi-language project level.
+
+- `slsa` package — `Level`, `Objective`, `Report` types; `Assess` (10 objectives, L1–L4); `Render` (text/json) (REQ-FO-SLSA001, REQ-FO-SLSA002, REQ-FO-SLSA003)
+- `fusaops slsa [--dir] [--level L1|L2|L3|L4] [--format text|json] [--output FILE]` (REQ-FO-CLI057)
+
+---
+
 ## v1.41 — `fusaops badge` — SVG status badge ✅
 
 **Goal:** Mirror `gofusa badge` for colour-coded health indicators in README files and CI artefacts.

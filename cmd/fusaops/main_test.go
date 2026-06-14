@@ -728,3 +728,77 @@ func TestBadgeTooManyArgs(t *testing.T) {
 		t.Errorf("too many args: code=%d", code)
 	}
 }
+
+//fusa:test REQ-FO-CLI057
+func TestSLSAText(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "slsa", "--dir", dir, "--format", "text")
+	// Non-zero exit is expected when there are gaps (empty dir has many gaps).
+	if code > 1 {
+		t.Fatalf("slsa text: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "SLSA") {
+		t.Errorf("slsa text output missing SLSA header: %q", out[:min(len(out), 300)])
+	}
+}
+
+//fusa:test REQ-FO-CLI057
+func TestSLSAJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "slsa", "--dir", dir, "--format", "json")
+	if code > 1 {
+		t.Fatalf("slsa json: code=%d err=%q", code, errb)
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal([]byte(out), &m); err != nil {
+		t.Fatalf("invalid JSON: %v\nout=%q", err, out)
+	}
+	if _, ok := m["objectives"]; !ok {
+		t.Errorf("JSON missing objectives field: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI057
+func TestSLSAOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	outFile := filepath.Join(dir, "slsa-report.txt")
+	runArgs(t, "slsa", "--dir", dir, "--output", outFile)
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI057
+func TestSLSAInvalidLevel(t *testing.T) {
+	code, _, errb := runArgs(t, "slsa", "--level", "L9")
+	if code != 2 || !strings.Contains(errb, "level") {
+		t.Errorf("invalid level: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI057
+func TestSLSAInvalidFormat(t *testing.T) {
+	code, _, errb := runArgs(t, "slsa", "--format", "xml")
+	if code != 1 || !strings.Contains(errb, "unsupported") {
+		t.Errorf("invalid format: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI057
+func TestSLSAL1(t *testing.T) {
+	dir := t.TempDir()
+	// Write go.mod and .git so L1 has more passes.
+	if err := os.MkdirAll(filepath.Join(dir, ".git"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module test"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "slsa", "--dir", dir, "--level", "L1", "--format", "text")
+	if code > 1 {
+		t.Fatalf("slsa L1: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "PASS") {
+		t.Errorf("L1 with .git+go.mod should have at least one PASS: %q", out)
+	}
+}

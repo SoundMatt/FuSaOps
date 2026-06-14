@@ -33,6 +33,7 @@
 //	capabilities  Report FuSaOps's supported commands, formats, and standards
 //	metrics       Track project safety metrics over time
 //	badge         Generate an SVG status badge from an aggregate check report
+//	slsa          Generate a SLSA supply-chain integrity gap report
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -99,6 +100,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runMetrics(args[1:], stdout, stderr)
 	case "badge":
 		return runBadge(args[1:], stdout, stderr)
+	case "slsa":
+		return runSLSA(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -153,6 +156,7 @@ Commands:
   capabilities  Report FuSaOps's supported commands, formats, and standards
   metrics       Track project safety metrics over time
   badge         Generate an SVG status badge from an aggregate check report
+  slsa          Generate a SLSA supply-chain integrity gap report
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 
