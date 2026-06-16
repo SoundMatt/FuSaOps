@@ -828,7 +828,43 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.46.0...HEAD
+[1.46.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.45.0...v1.46.0
+[1.45.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.44.0...v1.45.0
+[1.44.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.43.0...v1.44.0
+[1.43.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.42.0...v1.43.0
+[1.42.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.41.0...v1.42.0
+[1.41.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.40.0...v1.41.0
+[1.40.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.39.0...v1.40.0
+[1.39.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.38.0...v1.39.0
+[1.38.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.37.0...v1.38.0
+[1.37.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.36.0...v1.37.0
+[1.36.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.35.0...v1.36.0
+[1.35.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.34.0...v1.35.0
+[1.34.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.33.0...v1.34.0
+[1.33.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.32.0...v1.33.0
+[1.32.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.31.0...v1.32.0
+[1.31.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.30.0...v1.31.0
+[1.30.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.29.0...v1.30.0
+[1.29.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.28.0...v1.29.0
+[1.28.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.27.0...v1.28.0
+[1.27.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.26.0...v1.27.0
+[1.26.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.25.0...v1.26.0
+[1.25.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.24.0...v1.25.0
+[1.24.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.23.0...v1.24.0
+[1.23.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.22.0...v1.23.0
+[1.22.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.21.0...v1.22.0
+[1.21.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.20.0...v1.21.0
+[1.20.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.19.0...v1.20.0
+[1.19.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.18.0...v1.19.0
+[1.18.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.17.0...v1.18.0
+[1.17.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.16.0...v1.17.0
+[1.16.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.15.0...v1.16.0
+[1.15.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.14.0...v1.15.0
+[1.14.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.13.0...v1.14.0
+[1.13.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.12.0...v1.13.0
+[1.12.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.11.0...v1.12.0
+[1.11.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.7.0...v1.8.0

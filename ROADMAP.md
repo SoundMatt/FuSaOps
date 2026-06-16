@@ -341,306 +341,14 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
-## v1.46 — `fusaops pr` — DO-178C §11.17 problem reports ✅
+## v1.15 — Report annotation & inline suppression hints ✅
 
-**Goal:** Mirror `gofusa pr` for software problem report management at the FuSaOps multi-language orchestration level.
+**Goal:** Surface suppression opportunities and explain suppressed findings in rendered reports.
 
-- `pr` package — `ProblemReport`, `Log`, `Phase`, `Status`, `PRSeverity` types; `Load`, `Save`, `Add`, `Close`, `Find`, `Render` (text/json) (REQ-FO-PR001, REQ-FO-PR002, REQ-FO-PR003, REQ-FO-PR004)
-- `fusaops pr init/add/list/close` — manage `.fusaops-problems.json` (REQ-FO-CLI061)
-
----
-
-## v1.45 — `fusaops disposition` — finding disposition management ✅
-
-**Goal:** Mirror `gofusa disposition` for auditable accept/fix decisions on findings at the FuSaOps level.
-
-- `disposition` package — `Action`/`Entry`/`Log` types; `Load`, `Save`, `Add`, `Find`, `RenderEntries` (REQ-FO-DISP001/002/003)
-- `fusaops disposition add/list/show` — manage `.fusaops-dispositions.json` (REQ-FO-CLI060)
-
----
-
-## v1.44 — `fusaops impact` — cross-language change impact analysis ✅
-
-**Goal:** Mirror `gofusa impact` for multi-language annotation scanning and evidence artefact staleness checking.
-
-- `impact` package — `FileChange`, `RequirementImpact`, `ArtifactStatus`, `Report`; `Analyse` (git diff + annotation scan + artefact staleness); `Render` (text/json) (REQ-FO-IMP001, REQ-FO-IMP002, REQ-FO-IMP003)
-- `fusaops impact [--dir] [--from] [--to] [--format text|json] [--output FILE]` (REQ-FO-CLI059)
-
----
-
-## v1.43 — `fusaops hooks` — git pre-commit hook management ✅
-
-**Goal:** Mirror `gofusa hooks` for gating commits on the multi-language safety check.
-
-- `fusaops hooks install [--dir]` — installs pre-commit hook running `fusaops check --strict` (REQ-FO-HOOKS001, REQ-FO-CLI058)
-- `fusaops hooks remove [--dir]` — removes the hook
-- `fusaops hooks show` — prints the hook script
-
----
-
-## v1.42 — `fusaops slsa` — SLSA supply-chain gap report ✅
-
-**Goal:** Mirror `gofusa slsa` for SLSA v1.0 supply-chain integrity assessment at the multi-language project level.
-
-- `slsa` package — `Level`, `Objective`, `Report` types; `Assess` (10 objectives, L1–L4); `Render` (text/json) (REQ-FO-SLSA001, REQ-FO-SLSA002, REQ-FO-SLSA003)
-- `fusaops slsa [--dir] [--level L1|L2|L3|L4] [--format text|json] [--output FILE]` (REQ-FO-CLI057)
-
----
-
-## v1.41 — `fusaops badge` — SVG status badge ✅
-
-**Goal:** Mirror `gofusa badge` for colour-coded health indicators in README files and CI artefacts.
-
-- `badge` package — `Badge`/`Status` types; `New(errors, warnings, version)` (REQ-FO-BADGE001); `Render(w, badge)` Shields.io-style SVG (REQ-FO-BADGE002)
-- `fusaops badge [--output FILE] [report.json]` — reads aggregate report JSON, emits SVG (REQ-FO-CLI056)
-- `fusaops capabilities` updated with badge command and svg format
-
----
-
-## v1.40 — `fusaops metrics` — safety metrics time series ✅
-
-**Goal:** Mirror `gofusa metrics` for CI-level safety KPI tracking across releases.
-
-- `metrics` package — `Snapshot` and `TimeSeries` types; `Load`, `Save`, `Append`, `Collect`, `Render` (text/json) (REQ-FO-MET001, REQ-FO-MET002, REQ-FO-MET003)
-- `fusaops metrics record` — collect snapshot from project artefacts, append to `.fusaops-metrics.json` (REQ-FO-CLI055)
-- `fusaops metrics show [--format text|json] [--output FILE]` — display full time series (REQ-FO-CLI055)
-
----
-
-## v1.39 — `fusaops coverage --format markdown` ✅
-
-**Goal:** Complete the coverage command format matrix for PR-comment embedding.
-
-- `coverage.Render` gains `"markdown"` / `"md"` format: 🟢/🟡/🔴 badge, statement/decision/MC/DC table with required flags, coverage gaps file table (REQ-FO-COV003)
-- `fusaops coverage --format markdown [--output FILE]`
-- `fusaops capabilities` format map updated
-
----
-
-## v1.38 — `fusaops capabilities` — §9.1 discovery document ✅
-
-**Goal:** Mirror `gofusa capabilities` for machine-readable discovery.
-
-- `fusaops capabilities` — emits §9.1 `kind: "capabilities"` JSON document with tool, version, spec version, commands, per-command formats, and standards (REQ-FO-CLI054)
-- JSON-only (per spec §9.1); `--format text` returns exit 2
-
----
-
-## v1.37 — `fusaops version --format json` and `SpecVersion` ✅
-
-**Goal:** Mirror `gofusa version --format json` for machine-readable version introspection.
-
-- `fusaops.SpecVersion = "1.10.4"` — exported constant for the x-FuSa spec version FuSaOps targets (REQ-FO-CORE007)
-- `fusaops version --format json` — emits `{"tool":"fusaops","version":"...","specVersion":"..."}` (REQ-FO-CLI053)
-- Default `text` format unchanged
-
----
-
-## v1.36 — `fusaops req` — requirement show/import/export ✅
-
-**Goal:** Mirror `gofusa req` for requirement management at the FuSaOps orchestration level.
-
-- `req` package: `Entry` struct, `LoadRegistry`/`SaveRegistry`, CSV import/export, DOORS ReqIF/Polarion/Codebeamer/Jama XML import/export (REQ-FO-REQ001/002/003)
-- `fusaops req [REQ-ID...]` — show requirements from `.fusa-reqs.json` with optional ID filter (REQ-FO-CLI052)
-- `fusaops req import --format csv|doors|polarion|codebeamer|jama --file FILE` — add new entries, skip duplicates
-- `fusaops req export --format csv|doors|polarion|codebeamer|jama [--output FILE]` — export to file or stdout
-
----
-
-## v1.35 — `fusaops coverage` — DO-178C structural coverage ✅
-
-**Goal:** Give FuSaOps the same DO-178C structural coverage reporting that `gofusa coverage` provides, applied to FuSaOps's own Go source.
-
-- `coverage` package: `Parse` (Go profile reader), `Analyse` (DO-178C report: statement%, decision%, MC/DC flag, gaps), `BuildFromFile`, `Render` (text/json) (REQ-FO-COV001/002/003)
-- `fusaops coverage [flags] [coverage.out]` — `--dal DAL-A|B|C|D`, `--format text|json`, `--output`, `--dir` (REQ-FO-CLI051)
-- Mirrors `gofusa coverage`; enables ASIL-C DO-178C evidence from `go test -coverprofile=coverage.out ./...`
-
----
-
-## v1.34 — `fusaops adapters --format json` ✅
-
-**Goal:** Let CI scripts and tooling introspect installed adapters without parsing human-readable text.
-
-- `fusaops adapters` gains `--format json` flag (REQ-FO-CLI050)
-- Emits a JSON array: `[{"name": "gofusa", "tool": "gofusa", "language": "go", "available": true}, ...]`
-- Default format remains `text`
-
----
-
-## v1.33 — `fusaops sbom --format markdown` ✅
-
-**Goal:** Let CI pipelines embed SBOM summaries in PR comments and GitHub Actions job summaries.
-
-- `sbom.Render` gains `"markdown"` / `"md"` format support (REQ-FO-SBM011)
-- GFM output: project/SBOM header, metadata, Components table (Tool/Language/Module/Packages with skipped-inline), Packages table (Name/Version/Language) with pipe-escaped names
-- `fusaops sbom --format markdown [--output FILE]`
-
----
-
-## v1.32 — `fusaops <standard> --format markdown` ✅
-
-**Goal:** Complete the standards command format set so gap reports can be posted directly into PR comments and job summaries.
-
-- `standards.Render` gains `"markdown"` / `"md"` format support (REQ-FO-STD012)
-- GFM output: standard header with 🟢/🔴 badge, per-component sections (tool/language heading, counts, objective table ID/Status/Title+Clause/Evidence), skipped/nil fallbacks
-- Applies to all six commands: `iso26262`, `iec61508`, `do178`, `iso21434`, `unece`, `iec62443`
-
----
-
-## v1.31 — `fusaops conform --format markdown` ✅
-
-**Goal:** Let CI pipelines post x-FuSa tool conformance summaries directly into PR comments and job summaries.
-
-- `conform.Render` gains `"markdown"` / `"md"` format support (REQ-FO-CNF019)
-- GFM output: tool header, 🟢/🔴 badge, pass/fail/skip counts, per-check table (Result/Level/Section/Check+detail) with pipe-escaping
-- `fusaops conform <binary> --format markdown [--output FILE]`
-
----
-
-## v1.30 — `fusaops policy --format markdown` ✅
-
-**Goal:** Let CI pipelines post policy gate results directly into pull request comments and GitHub Actions job summaries.
-
-- `policy.Render` gains `"markdown"` / `"md"` format support (REQ-FO-POL006)
-- GFM output: policy-name header, 🟢/🔴 badge, passed/failed counts, per-rule table (Result/Rule/Message) with pipe-escaping in messages
-- `fusaops policy --format markdown [--output FILE]`
-
----
-
-## v1.29 — `fusaops fleet --format markdown` ✅
-
-**Goal:** Let CI pipelines post multi-repo safety summaries directly into pull request comments and GitHub Actions job summaries.
-
-- `fleet.Render` gains `"markdown"` / `"md"` format support (REQ-FO-FLT007)
-- GFM output: project header, 🟢/🟡/🔴 badge, per-repo table (Repository/Status/Errors/Warnings/Infos/Total), TOTAL summary row, inline scan errors
-- `fusaops fleet --format markdown [--output FILE]`
-
----
-
-## v1.28 — `--workers` and `--timeout` CLI flags ✅
-
-**Goal:** Let CI pipelines cap adapter concurrency and set per-adapter timeouts without editing `.fusaops.json`.
-
-- `fusaops check`, `report`, `trace`, `sbom`, and `audit-pack` now accept `--workers N` and `--timeout DURATION` (REQ-FO-CLI049)
-- Flags override the equivalent `run.workers` / `run.timeout` values from config when non-zero/non-empty
-- Invalid `--timeout` values exit 2 with a descriptive error
-
----
-
-## v1.27 — `fusaops <standard> --format html` ✅
-
-**Goal:** Complete the standards command format set so gap reports are as shareable as other report types.
-
-- `standards.Render` gains `"html"` format support (REQ-FO-STD011)
-- Self-contained HTML: per-component section with tool/language header, satisfied/partial/gap counts, and colour-coded objective table; fallback for skipped/nil components; no external CSS/JS
-- Applies to all six commands: `iso26262`, `iec61508`, `do178`, `iso21434`, `unece`, `iec62443`
-
----
-
-## v1.26 — `fusaops conform --format html` ✅
-
-**Goal:** Complete the conform format set so conformance reports are as shareable as other report types.
-
-- `conform.Render` gains `"html"` format support (REQ-FO-CNF018)
-- Self-contained HTML: PASS/FAIL badge, pass/fail/skip counts, per-check results table (result/level/section/name+detail), no external CSS/JS
-- `fusaops conform <binary> --format html [--output conform.html]`
-
----
-
-## v1.25 — `fusaops policy --format html` ✅
-
-**Goal:** Complete the policy report format set so policy gates are as shareable as other report formats.
-
-- `policy.Render` gains `"html"` format support (REQ-FO-POL005)
-- Self-contained HTML: PASS/FAIL badge, passed/failed count summary, per-rule results table (result/ID/message), no external CSS/JS
-- `fusaops policy --format html [--output policy.html]`
-
----
-
-## v1.24 — `fusaops sbom --format html` ✅
-
-**Goal:** Complete the SBOM format set so the merged bill of materials is as shareable as the findings report.
-
-- `sbom.Render` gains `"html"` format support (REQ-FO-SBM010)
-- Self-contained HTML: component summary table + full de-duplicated package table, no external CSS/JS
-- `fusaops sbom --format html [--output sbom.html]`
-- Matches the design language of the single-project HTML report and trace HTML renderer
-
----
-
-## v1.23 — `fusaops trace --format markdown` ✅
-
-**Goal:** Let teams embed the cross-language traceability matrix in GitHub wikis, PR descriptions, and documentation sites without converting from HTML.
-
-- `trace.Render` gains `"markdown"` (and `"md"` alias) format support (REQ-FO-TRC018)
-- GFM output: status badge header, per-component summary table (requirements/traced/tested/sec-tested/qualification), TOTAL row, and collapsible `<details>` gap lists
-- `fusaops trace --format markdown [--output REPORT.md]`
-- Mirrors rust-FuSa's `--format md` gap-report output style
-
----
-
-## v1.22 — Suppress import ✅
-
-**Goal:** Let teams acknowledge all existing findings in one command when onboarding FuSaOps.
-
-- `fusaops suppress import --from check.json [--file suppress.json] [--reason TEXT] [--expires DATE]` (REQ-FO-CLI048)
-- Reads fingerprints from a `fusaops check --format json` report; de-duplicates against existing entries
-- Prints `Imported N findings (M new, K already present).` (REQ-FO-SUP009)
-- `--from` required; exits 2 if missing
-
----
-
-## v1.21 — Fleet HTML report ✅
-
-**Goal:** Complete the fleet report format set to match single-project report parity.
-
-- `fleet.Render` gains `"html"` format support (REQ-FO-FLT005)
-- Self-contained HTML: overall badge, per-repo status table, summary footer, colour-coded severity cells
-- `fusaops fleet --format html [--output fleet.html]`
-- No external CSS/JS — compatible with single-project HTML report design language
-
----
-
-## v1.20 — Severity filter ✅
-
-**Goal:** Let CI gates and report consumers focus on only the severity levels they care about.
-
-- `Options.MinSeverity` — orchestrator filters findings below the threshold before storing them (REQ-FO-ORC012)
-- `fusaops check --min-severity ERROR|WARNING|INFO` (REQ-FO-CLI047)
-- `fusaops report --min-severity ERROR|WARNING|INFO` (REQ-FO-CLI047)
-- Invalid value exits 2; empty value (default) disables filtering
-
----
-
-## v1.19 — History CLI ✅
-
-**Goal:** Make check-run history accessible from the CLI without a running dashboard server.
-
-- `fusaops history list [--dir|--file] [--format text|json] [--limit N]` — lists snapshots from `.fusaops-history.jsonl` newest-first (REQ-FO-CLI045)
-- `fusaops history prune [--dir|--file] [--keep N]` — trims old entries to `--keep` most-recent (REQ-FO-CLI046)
-- `history.Prune(dir, keep)` — exported function for programmatic access (REQ-FO-HST003)
-- Spec snapshot: rust-FuSa v0.2.8 (gap-report `--format md` support)
-
----
-
-## v1.18 — Config validation CLI ✅
-
-**Goal:** Surface config errors early and make the effective config inspectable from the command line.
-
-- `fusaops config validate [--dir|--file]` — loads and validates `.fusaops.json`; CI-friendly pre-flight check (REQ-FO-CLI043)
-- `fusaops config show [--dir|--file]` — prints effective config as formatted JSON (REQ-FO-CLI044)
-- Both commands support `--file PATH` to override the default `.fusaops.json` search location
-
----
-
-## v1.17 — Diff HTML/Markdown & `check --save-baseline` ✅
-
-**Goal:** Complete the diff workflow loop and add richer diff report output formats.
-
-- `diff.Render` gains `"html"` and `"markdown"`/`"md"` format support (REQ-FO-DIF006)
-- HTML: self-contained dashboard with added/removed tables and gate badge
-- Markdown: GFM shield badge, summary table, per-section finding tables
-- `fusaops check --save-baseline PATH` — save findings as diff baseline in one command (REQ-FO-CLI042)
+- `Component.SuppressedFindings` stores suppressed findings per component for audit traceability
+- `AggregateReport.SuppressedComponents` tracks which components had suppressions applied
+- `RenderWithOptions(ShowSuppressed bool)` — text renderer shows `[SUPPRESSED]` prefix or count hint; HTML shows collapsible `<details>` per component; Markdown uses `<details open>` toggle; JSON always serialises suppressed findings
+- `fusaops check --show-suppressed` / `fusaops report --show-suppressed` expands suppressed findings in output
 
 ---
 
@@ -656,16 +364,330 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
-## v1.15 — Report annotation & inline suppression hints ✅
+## v1.17 — Diff HTML/Markdown & `check --save-baseline` ✅
 
-**Goal:** Surface suppression opportunities and explain suppressed findings in rendered reports.
+**Goal:** Complete the diff workflow loop and add richer diff report output formats.
 
-- `Component.SuppressedFindings` stores suppressed findings per component for audit traceability
-- `AggregateReport.SuppressedComponents` tracks which components had suppressions applied
-- `RenderWithOptions(ShowSuppressed bool)` — text renderer shows `[SUPPRESSED]` prefix or count hint; HTML shows collapsible `<details>` per component; Markdown uses `<details open>` toggle; JSON always serialises suppressed findings
-- `fusaops check --show-suppressed` / `fusaops report --show-suppressed` expands suppressed findings in output
+- `diff.Render` gains `"html"` and `"markdown"`/`"md"` format support (REQ-FO-DIF006)
+- HTML: self-contained dashboard with added/removed tables and gate badge
+- Markdown: GFM shield badge, summary table, per-section finding tables
+- `fusaops check --save-baseline PATH` — save findings as diff baseline in one command (REQ-FO-CLI042)
 
 ---
+
+## v1.18 — Config validation CLI ✅
+
+**Goal:** Surface config errors early and make the effective config inspectable from the command line.
+
+- `fusaops config validate [--dir|--file]` — loads and validates `.fusaops.json`; CI-friendly pre-flight check (REQ-FO-CLI043)
+- `fusaops config show [--dir|--file]` — prints effective config as formatted JSON (REQ-FO-CLI044)
+- Both commands support `--file PATH` to override the default `.fusaops.json` search location
+
+---
+
+## v1.19 — History CLI ✅
+
+**Goal:** Make check-run history accessible from the CLI without a running dashboard server.
+
+- `fusaops history list [--dir|--file] [--format text|json] [--limit N]` — lists snapshots from `.fusaops-history.jsonl` newest-first (REQ-FO-CLI045)
+- `fusaops history prune [--dir|--file] [--keep N]` — trims old entries to `--keep` most-recent (REQ-FO-CLI046)
+- `history.Prune(dir, keep)` — exported function for programmatic access (REQ-FO-HST003)
+- Spec snapshot: rust-FuSa v0.2.8 (gap-report `--format md` support)
+
+---
+
+## v1.20 — Severity filter ✅
+
+**Goal:** Let CI gates and report consumers focus on only the severity levels they care about.
+
+- `Options.MinSeverity` — orchestrator filters findings below the threshold before storing them (REQ-FO-ORC012)
+- `fusaops check --min-severity ERROR|WARNING|INFO` (REQ-FO-CLI047)
+- `fusaops report --min-severity ERROR|WARNING|INFO` (REQ-FO-CLI047)
+- Invalid value exits 2; empty value (default) disables filtering
+
+---
+
+## v1.21 — Fleet HTML report ✅
+
+**Goal:** Complete the fleet report format set to match single-project report parity.
+
+- `fleet.Render` gains `"html"` format support (REQ-FO-FLT005)
+- Self-contained HTML: overall badge, per-repo status table, summary footer, colour-coded severity cells
+- `fusaops fleet --format html [--output fleet.html]`
+- No external CSS/JS — compatible with single-project HTML report design language
+
+---
+
+## v1.22 — Suppress import ✅
+
+**Goal:** Let teams acknowledge all existing findings in one command when onboarding FuSaOps.
+
+- `fusaops suppress import --from check.json [--file suppress.json] [--reason TEXT] [--expires DATE]` (REQ-FO-CLI048)
+- Reads fingerprints from a `fusaops check --format json` report; de-duplicates against existing entries
+- Prints `Imported N findings (M new, K already present).` (REQ-FO-SUP009)
+- `--from` required; exits 2 if missing
+
+---
+
+## v1.23 — `fusaops trace --format markdown` ✅
+
+**Goal:** Let teams embed the cross-language traceability matrix in GitHub wikis, PR descriptions, and documentation sites without converting from HTML.
+
+- `trace.Render` gains `"markdown"` (and `"md"` alias) format support (REQ-FO-TRC018)
+- GFM output: status badge header, per-component summary table (requirements/traced/tested/sec-tested/qualification), TOTAL row, and collapsible `<details>` gap lists
+- `fusaops trace --format markdown [--output REPORT.md]`
+- Mirrors rust-FuSa's `--format md` gap-report output style
+
+---
+
+## v1.24 — `fusaops sbom --format html` ✅
+
+**Goal:** Complete the SBOM format set so the merged bill of materials is as shareable as the findings report.
+
+- `sbom.Render` gains `"html"` format support (REQ-FO-SBM010)
+- Self-contained HTML: component summary table + full de-duplicated package table, no external CSS/JS
+- `fusaops sbom --format html [--output sbom.html]`
+- Matches the design language of the single-project HTML report and trace HTML renderer
+
+---
+
+## v1.25 — `fusaops policy --format html` ✅
+
+**Goal:** Complete the policy report format set so policy gates are as shareable as other report formats.
+
+- `policy.Render` gains `"html"` format support (REQ-FO-POL005)
+- Self-contained HTML: PASS/FAIL badge, passed/failed count summary, per-rule results table (result/ID/message), no external CSS/JS
+- `fusaops policy --format html [--output policy.html]`
+
+---
+
+## v1.26 — `fusaops conform --format html` ✅
+
+**Goal:** Complete the conform format set so conformance reports are as shareable as other report types.
+
+- `conform.Render` gains `"html"` format support (REQ-FO-CNF018)
+- Self-contained HTML: PASS/FAIL badge, pass/fail/skip counts, per-check results table (result/level/section/name+detail), no external CSS/JS
+- `fusaops conform <binary> --format html [--output conform.html]`
+
+---
+
+## v1.27 — `fusaops <standard> --format html` ✅
+
+**Goal:** Complete the standards command format set so gap reports are as shareable as other report types.
+
+- `standards.Render` gains `"html"` format support (REQ-FO-STD011)
+- Self-contained HTML: per-component section with tool/language header, satisfied/partial/gap counts, and colour-coded objective table; fallback for skipped/nil components; no external CSS/JS
+- Applies to all six commands: `iso26262`, `iec61508`, `do178`, `iso21434`, `unece`, `iec62443`
+
+---
+
+## v1.28 — `--workers` and `--timeout` CLI flags ✅
+
+**Goal:** Let CI pipelines cap adapter concurrency and set per-adapter timeouts without editing `.fusaops.json`.
+
+- `fusaops check`, `report`, `trace`, `sbom`, and `audit-pack` now accept `--workers N` and `--timeout DURATION` (REQ-FO-CLI049)
+- Flags override the equivalent `run.workers` / `run.timeout` values from config when non-zero/non-empty
+- Invalid `--timeout` values exit 2 with a descriptive error
+
+---
+
+## v1.29 — `fusaops fleet --format markdown` ✅
+
+**Goal:** Let CI pipelines post multi-repo safety summaries directly into pull request comments and GitHub Actions job summaries.
+
+- `fleet.Render` gains `"markdown"` / `"md"` format support (REQ-FO-FLT007)
+- GFM output: project header, 🟢/🟡/🔴 badge, per-repo table (Repository/Status/Errors/Warnings/Infos/Total), TOTAL summary row, inline scan errors
+- `fusaops fleet --format markdown [--output FILE]`
+
+---
+
+## v1.30 — `fusaops policy --format markdown` ✅
+
+**Goal:** Let CI pipelines post policy gate results directly into pull request comments and GitHub Actions job summaries.
+
+- `policy.Render` gains `"markdown"` / `"md"` format support (REQ-FO-POL006)
+- GFM output: policy-name header, 🟢/🔴 badge, passed/failed counts, per-rule table (Result/Rule/Message) with pipe-escaping in messages
+- `fusaops policy --format markdown [--output FILE]`
+
+---
+
+## v1.31 — `fusaops conform --format markdown` ✅
+
+**Goal:** Let CI pipelines post x-FuSa tool conformance summaries directly into PR comments and job summaries.
+
+- `conform.Render` gains `"markdown"` / `"md"` format support (REQ-FO-CNF019)
+- GFM output: tool header, 🟢/🔴 badge, pass/fail/skip counts, per-check table (Result/Level/Section/Check+detail) with pipe-escaping
+- `fusaops conform <binary> --format markdown [--output FILE]`
+
+---
+
+## v1.32 — `fusaops <standard> --format markdown` ✅
+
+**Goal:** Complete the standards command format set so gap reports can be posted directly into PR comments and job summaries.
+
+- `standards.Render` gains `"markdown"` / `"md"` format support (REQ-FO-STD012)
+- GFM output: standard header with 🟢/🔴 badge, per-component sections (tool/language heading, counts, objective table ID/Status/Title+Clause/Evidence), skipped/nil fallbacks
+- Applies to all six commands: `iso26262`, `iec61508`, `do178`, `iso21434`, `unece`, `iec62443`
+
+---
+
+## v1.33 — `fusaops sbom --format markdown` ✅
+
+**Goal:** Let CI pipelines embed SBOM summaries in PR comments and GitHub Actions job summaries.
+
+- `sbom.Render` gains `"markdown"` / `"md"` format support (REQ-FO-SBM011)
+- GFM output: project/SBOM header, metadata, Components table (Tool/Language/Module/Packages with skipped-inline), Packages table (Name/Version/Language) with pipe-escaped names
+- `fusaops sbom --format markdown [--output FILE]`
+
+---
+
+## v1.34 — `fusaops adapters --format json` ✅
+
+**Goal:** Let CI scripts and tooling introspect installed adapters without parsing human-readable text.
+
+- `fusaops adapters --format json` — emits JSON array: `[{"name":"gofusa","tool":"gofusa","language":"go","available":true}, ...]` (REQ-FO-CLI050)
+- Default format remains `text`
+
+---
+
+## v1.35 — `fusaops coverage` — DO-178C structural coverage ✅
+
+**Goal:** Give FuSaOps the same DO-178C structural coverage reporting that `gofusa coverage` provides, applied to FuSaOps's own Go source.
+
+- `coverage` package: `Parse` (Go profile reader), `Analyse` (DO-178C report: statement%, decision%, MC/DC flag, gaps), `BuildFromFile`, `Render` (text/json) (REQ-FO-COV001/002/003)
+- `fusaops coverage [flags] [coverage.out]` — `--dal DAL-A|B|C|D`, `--format text|json`, `--output`, `--dir` (REQ-FO-CLI051)
+- Mirrors `gofusa coverage`; enables ASIL-C DO-178C evidence from `go test -coverprofile=coverage.out ./...`
+
+---
+
+## v1.36 — `fusaops req` — requirement show/import/export ✅
+
+**Goal:** Mirror `gofusa req` for requirement management at the FuSaOps orchestration level.
+
+- `req` package: `Entry` struct, `LoadRegistry`/`SaveRegistry`, CSV import/export, DOORS ReqIF/Polarion/Codebeamer/Jama XML import/export (REQ-FO-REQ001/002/003)
+- `fusaops req [REQ-ID...]` — show requirements from `.fusa-reqs.json` with optional ID filter (REQ-FO-CLI052)
+- `fusaops req import --format csv|doors|polarion|codebeamer|jama --file FILE` — add new entries, skip duplicates
+- `fusaops req export --format csv|doors|polarion|codebeamer|jama [--output FILE]` — export to file or stdout
+
+---
+
+## v1.37 — `fusaops version --format json` and `SpecVersion` ✅
+
+**Goal:** Mirror `gofusa version --format json` for machine-readable version introspection.
+
+- `fusaops.SpecVersion = "1.10.4"` — exported constant for the x-FuSa spec version FuSaOps targets (REQ-FO-CORE007)
+- `fusaops version --format json` — emits `{"tool":"fusaops","version":"...","specVersion":"..."}` (REQ-FO-CLI053)
+- Default `text` format unchanged
+
+---
+
+## v1.38 — `fusaops capabilities` — §9.1 discovery document ✅
+
+**Goal:** Mirror `gofusa capabilities` for machine-readable discovery.
+
+- `fusaops capabilities` — emits §9.1 `kind: "capabilities"` JSON document with tool, version, spec version, commands, per-command formats, and standards (REQ-FO-CLI054)
+- JSON-only (per spec §9.1); `--format text` returns exit 2
+
+---
+
+## v1.39 — `fusaops coverage --format markdown` ✅
+
+**Goal:** Complete the coverage command format matrix for PR-comment embedding.
+
+- `coverage.Render` gains `"markdown"` / `"md"` format: 🟢/🟡/🔴 badge, statement/decision/MC/DC table with required flags, coverage gaps file table (REQ-FO-COV003)
+- `fusaops coverage --format markdown [--output FILE]`
+- `fusaops capabilities` format map updated
+
+---
+
+## v1.40 — `fusaops metrics` — safety metrics time series ✅
+
+**Goal:** Mirror `gofusa metrics` for CI-level safety KPI tracking across releases.
+
+- `metrics` package — `Snapshot` and `TimeSeries` types; `Load`, `Save`, `Append`, `Collect`, `Render` (text/json) (REQ-FO-MET001, REQ-FO-MET002, REQ-FO-MET003)
+- `fusaops metrics record` — collect snapshot from project artefacts, append to `.fusaops-metrics.json` (REQ-FO-CLI055)
+- `fusaops metrics show [--format text|json] [--output FILE]` — display full time series (REQ-FO-CLI055)
+
+---
+
+## v1.41 — `fusaops badge` — SVG status badge ✅
+
+**Goal:** Mirror `gofusa badge` for colour-coded health indicators in README files and CI artefacts.
+
+- `badge` package — `Badge`/`Status` types; `New(errors, warnings, version)` (REQ-FO-BADGE001); `Render(w, badge)` Shields.io-style SVG (REQ-FO-BADGE002)
+- `fusaops badge [--output FILE] [report.json]` — reads aggregate report JSON, emits SVG (REQ-FO-CLI056)
+- `fusaops capabilities` updated with badge command and svg format
+
+---
+
+## v1.42 — `fusaops slsa` — SLSA supply-chain gap report ✅
+
+**Goal:** Mirror `gofusa slsa` for SLSA v1.0 supply-chain integrity assessment at the multi-language project level.
+
+- `slsa` package — `Level`, `Objective`, `Report` types; `Assess` (10 objectives, L1–L4); `Render` (text/json) (REQ-FO-SLSA001, REQ-FO-SLSA002, REQ-FO-SLSA003)
+- `fusaops slsa [--dir] [--level L1|L2|L3|L4] [--format text|json] [--output FILE]` (REQ-FO-CLI057)
+
+---
+
+## v1.43 — `fusaops hooks` — git pre-commit hook management ✅
+
+**Goal:** Mirror `gofusa hooks` for gating commits on the multi-language safety check.
+
+- `fusaops hooks install [--dir]` — installs pre-commit hook running `fusaops check --strict` (REQ-FO-HOOKS001, REQ-FO-CLI058)
+- `fusaops hooks remove [--dir]` — removes the hook
+- `fusaops hooks show` — prints the hook script
+
+---
+
+## v1.44 — `fusaops impact` — cross-language change impact analysis ✅
+
+**Goal:** Mirror `gofusa impact` for multi-language annotation scanning and evidence artefact staleness checking.
+
+- `impact` package — `FileChange`, `RequirementImpact`, `ArtifactStatus`, `Report`; `Analyse` (git diff + annotation scan + artefact staleness); `Render` (text/json) (REQ-FO-IMP001, REQ-FO-IMP002, REQ-FO-IMP003)
+- `fusaops impact [--dir] [--from] [--to] [--format text|json] [--output FILE]` (REQ-FO-CLI059)
+
+---
+
+## v1.45 — `fusaops disposition` — finding disposition management ✅
+
+**Goal:** Mirror `gofusa disposition` for auditable accept/fix decisions on findings at the FuSaOps level.
+
+- `disposition` package — `Action`/`Entry`/`Log` types; `Load`, `Save`, `Add`, `Find`, `RenderEntries` (REQ-FO-DISP001/002/003)
+- `fusaops disposition add/list/show` — manage `.fusaops-dispositions.json` (REQ-FO-CLI060)
+
+---
+
+## v1.46 — `fusaops pr` — DO-178C §11.17 problem reports ✅
+
+**Goal:** Mirror `gofusa pr` for software problem report management at the FuSaOps multi-language orchestration level.
+
+- `pr` package — `ProblemReport`, `Log`, `Phase`, `Status`, `PRSeverity` types; `Load`, `Save`, `Add`, `Close`, `Find`, `Render` (text/json) (REQ-FO-PR001, REQ-FO-PR002, REQ-FO-PR003, REQ-FO-PR004)
+- `fusaops pr init/add/list/close` — manage `.fusaops-problems.json` (REQ-FO-CLI061)
+
+---
+
+## Planned
+
+The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
+
+| Version | Command | What it does |
+|---|---|---|
+| v1.47 | `fusaops verify` | Run multi-language test suites and save a cross-language test evidence bundle (mirrors `gofusa verify`) |
+| v1.48 | `fusaops sign` | Sign or verify a file using HMAC-SHA256 — stdlib only, no external tools required (mirrors `gofusa sign`) |
+| v1.49 | `fusaops qualify` | Run the built-in tool qualification suite and save a qualification report across all adapters (mirrors `gofusa qualify`) |
+| v1.50 | `fusaops release` | Generate a multi-language SBOM, build provenance, and artifact manifest in one command (mirrors `gofusa release`) |
+| v1.51 | `fusaops safety-case` | Assemble a structured safety case from existing evidence files across all languages (mirrors `gofusa safety-case`) |
+| v1.52 | `fusaops sci` | Generate the Software Configuration Index (DO-178C §11.16) aggregated across all language components (mirrors `gofusa sci`) |
+| v1.53 | `fusaops sas` | Generate a Software Accomplishment Summary (DO-178C §11.20) from multi-language evidence (mirrors `gofusa sas`) |
+| v1.54 | `fusaops tara` | Generate a Threat Analysis and Risk Assessment per ISO 21434 Chapter 9 (mirrors `gofusa tara`) |
+| v1.55 | `fusaops fmea` | Generate a dFMEA report aggregated from all language tools (mirrors `gofusa fmea`) |
+| v1.56 | `fusaops vuln` | Scan all dependency manifests (go.mod, Cargo.toml, requirements.txt, pom.xml, package.json) against the OSV vulnerability database (mirrors `gofusa vuln`) |
+| v1.57 | `fusaops template` | Generate safety documentation templates for multi-language projects (mirrors `gofusa template`) |
+
+**Language-specific commands** in gofusa (`analyze`, `boundary`, `comp`, `coupling`, `fix`, `lint`, `misra`) operate on Go source or package structure and are intentionally out of scope for FuSaOps — that analysis belongs in each per-language x-FuSa tool.
+
+---
+
 
 ## Adding a language adapter
 
