@@ -29,6 +29,7 @@ import (
 //fusa:req REQ-FO-CLI042
 //fusa:req REQ-FO-CLI047
 //fusa:req REQ-FO-CLI049
+//fusa:req REQ-FO-SPEC001
 func runCheck(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops check", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -92,7 +93,7 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "fusaops check: %v\n", err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "Wrote %s report to %s\n", *format, *output)
+		fmt.Fprintf(stderr, "Wrote %s report to %s\n", *format, *output)
 	} else {
 		if err := report.RenderWithOptions(stdout, rep, *format, renderOpts); err != nil {
 			fmt.Fprintf(stderr, "fusaops check: %v\n", err)

@@ -79,7 +79,7 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "fusaops trace: %v\n", err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "Wrote %s traceability matrix to %s\n", *format, *output)
+		fmt.Fprintf(stderr, "Wrote %s traceability matrix to %s\n", *format, *output)
 	}
 
 	if *strict && agg.HasGaps() {

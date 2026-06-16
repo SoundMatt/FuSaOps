@@ -7,6 +7,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.60.0] — 2026-06-16
+
+### §2.2 `--output` no-stdout invariant fix
+
+- **`fusaops check`**, **`fusaops report`**, **`fusaops trace`**, **`fusaops sbom`**, **`fusaops iso26262`** (and all `standards` sub-commands), and **`fusaops conform`** now write the `Wrote ... to <file>` confirmation line to **stderr** rather than stdout when `--output <file>` is given. stdout is empty when output goes to a file, making all six commands safe for pipeline use (`fusaops check --output report.json | jq ...`). (REQ-FO-SPEC001)
+- Mirrors `gofusa` v0.29.0 §2.2 stdout clean invariant.
+- 4 existing tests updated to assert the confirmation on stderr and stdout emptiness.
+
+### Safety
+- Requirements registry at 358 requirements (added REQ-FO-SPEC001)
+
 ## [1.59.0] — 2026-06-16
 
 ### Aggregate report — standard and integrity level fields

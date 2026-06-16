@@ -70,7 +70,7 @@ func runSBOM(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "fusaops sbom: %v\n", err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "Wrote %s SBOM (%d packages) to %s\n", *format, agg.TotalPackages, *output)
+		fmt.Fprintf(stderr, "Wrote %s SBOM (%d packages) to %s\n", *format, agg.TotalPackages, *output)
 	}
 	return 0
 }

@@ -31,8 +31,11 @@ func TestReportWritesFile(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("report: code=%d err=%q", code, errb)
 	}
-	if !strings.Contains(stdout, "Wrote") {
-		t.Errorf("report stdout: %q", stdout)
+	if !strings.Contains(errb, "Wrote") {
+		t.Errorf("report stderr: %q", errb)
+	}
+	if stdout != "" {
+		t.Errorf("report stdout must be empty when --output given: %q", stdout)
 	}
 	if _, err := os.Stat(out); err != nil {
 		t.Errorf("report file not written: %v", err)

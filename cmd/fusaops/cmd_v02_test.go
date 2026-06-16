@@ -32,8 +32,11 @@ func TestTraceWritesFile(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("trace: code=%d err=%q", code, errb)
 	}
-	if !strings.Contains(stdout, "Wrote") {
-		t.Errorf("trace stdout: %q", stdout)
+	if !strings.Contains(errb, "Wrote") {
+		t.Errorf("trace stderr: %q", errb)
+	}
+	if stdout != "" {
+		t.Errorf("trace stdout must be empty when --output given: %q", stdout)
 	}
 	if _, err := os.Stat(out); err != nil {
 		t.Errorf("trace file not written: %v", err)
@@ -113,8 +116,11 @@ func TestSBOMWritesFile(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("sbom: code=%d err=%q", code, errb)
 	}
-	if !strings.Contains(stdout, "Wrote") {
-		t.Errorf("sbom stdout: %q", stdout)
+	if !strings.Contains(errb, "Wrote") {
+		t.Errorf("sbom stderr: %q", errb)
+	}
+	if stdout != "" {
+		t.Errorf("sbom stdout must be empty when --output given: %q", stdout)
 	}
 	if _, err := os.Stat(out); err != nil {
 		t.Errorf("sbom file not written: %v", err)

@@ -2457,6 +2457,12 @@
       "title": "Standard/ASIL/SIL/DAL integrity level fields in AggregateReport",
       "priority": "MUST",
       "standard": "ISO 26262"
+    },
+    {
+      "id": "REQ-FO-SPEC001",
+      "title": "stdout clean when --output given (§2.2 no-stdout invariant)",
+      "priority": "MUST",
+      "standard": "x-FuSa spec §2.2"
     }
   ]
 }

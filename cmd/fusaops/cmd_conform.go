@@ -71,7 +71,7 @@ Exit codes:
 	}
 
 	if *output != "" {
-		fmt.Fprintf(stdout, "Wrote %s\n", *output)
+		fmt.Fprintf(stderr, "Wrote %s\n", *output)
 	}
 
 	if rep.HasFailures() {

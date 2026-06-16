@@ -295,8 +295,11 @@ func TestCheckOutputFlag(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("check --output: code=%d err=%q", code, errb)
 	}
-	if !strings.Contains(stdout, "report.txt") {
-		t.Errorf("expected confirmation in stdout: %q", stdout)
+	if !strings.Contains(errb, "report.txt") {
+		t.Errorf("expected confirmation in stderr: %q", errb)
+	}
+	if stdout != "" {
+		t.Errorf("check stdout must be empty when --output given: %q", stdout)
 	}
 	data, err := os.ReadFile(out)
 	if err != nil {

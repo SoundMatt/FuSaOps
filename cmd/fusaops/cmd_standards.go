@@ -87,7 +87,7 @@ Exit codes:
 			fmt.Fprintf(stderr, "fusaops %s: %v\n", cmd, err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "Wrote %s %s report to %s\n", *format, standards.DisplayName(standard), *output)
+		fmt.Fprintf(stderr, "Wrote %s %s report to %s\n", *format, standards.DisplayName(standard), *output)
 	}
 
 	if *strict && agg.HasGaps() {
