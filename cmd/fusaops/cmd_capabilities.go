@@ -54,7 +54,7 @@ func runCapabilities(args []string, stdout, stderr io.Writer) int {
 		Commands: []string{
 			"version", "capabilities", "init", "config", "scan", "adapters",
 			"check", "report", "trace", "sbom", "audit-pack", "diff",
-			"suppress", "conform", "coverage", "req", "metrics", "badge", "slsa", "hooks", "impact", "disposition", "pr", "verify", "sign", "qualify", "release", "safety-case", "sci", "sas", "tara", "fmea",
+			"suppress", "conform", "coverage", "req", "metrics", "badge", "slsa", "hooks", "impact", "disposition", "pr", "verify", "sign", "qualify", "release", "safety-case", "sci", "sas", "tara", "fmea", "vuln",
 			"iso26262", "iec61508", "do178", "iso21434", "unece", "iec62443",
 			"policy", "fleet", "history", "serve",
 		},
@@ -93,6 +93,7 @@ func runCapabilities(args []string, stdout, stderr io.Writer) int {
 			"sas":         {"text", "json"},
 			"tara":        {"text", "json"},
 			"fmea":        {"text", "json"},
+			"vuln":        {"text", "json"},
 		},
 		Standards: []string{
 			"iso26262", "iec61508", "do178c", "iso21434", "unece-r155", "iec62443",

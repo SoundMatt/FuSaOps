@@ -612,3 +612,60 @@ func TestFMEAInvalidFormat(t *testing.T) {
 		t.Errorf("fmea invalid format: code=%d err=%q", code, errb)
 	}
 }
+
+// ── fusaops vuln ─────────────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-CLI071
+func TestVulnBadFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "vuln", "--bogus")
+	if code != 2 {
+		t.Errorf("vuln --bogus: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI071
+func TestVulnEmptyDir(t *testing.T) {
+	// Empty dir, osv-scanner likely not on PATH in CI → exit 0.
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "vuln", "--dir", dir)
+	if code > 1 {
+		t.Fatalf("vuln empty dir: unexpected exit code %d, err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Vulnerability Scan") {
+		t.Errorf("vuln output missing header: %q", out[:min(len(out), 200)])
+	}
+	if !strings.Contains(out, "Vulnerability report written to") {
+		t.Errorf("vuln output missing confirmation: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI071
+func TestVulnJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, _ := runArgs(t, "vuln", "--dir", dir, "--format", "json")
+	if code > 1 {
+		t.Fatalf("vuln json: unexpected exit code %d", code)
+	}
+	if !strings.Contains(out, `"manifests"`) || !strings.Contains(out, `"scannerTool"`) {
+		t.Errorf("vuln json missing expected fields: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI071
+func TestVulnOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	outFile := filepath.Join(dir, "vuln.json")
+	runArgs(t, "vuln", "--dir", dir, "--output", outFile)
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI071
+func TestVulnInvalidFormat(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "vuln", "--dir", dir, "--format", "xml")
+	if code != 2 || !strings.Contains(errb, "format") {
+		t.Errorf("vuln invalid format: code=%d err=%q", code, errb)
+	}
+}

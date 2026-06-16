@@ -747,12 +747,20 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.56 — `fusaops vuln` — Cross-language dependency vulnerability scan (OSV) ✅
+
+**Goal:** Mirror `gofusa vuln` extended to all supported manifest types (go.mod, Cargo.toml, requirements.txt, package.json, pom.xml) across languages.
+
+- `vuln` package — `ManifestKind`, `Manifest`, `VulnFinding`, `VulnReport` types; `Scan`, `Save`, `Load`, `Render` (text/json). Discovers manifests via tree walk; integrates with `osv-scanner` when available. (REQ-FO-VULN001–004)
+- `fusaops vuln [--dir DIR] [--format text|json] [--output PATH]`; exits 1 on any finding. (REQ-FO-CLI071)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
-| v1.56 | `fusaops vuln` | Scan all dependency manifests (go.mod, Cargo.toml, requirements.txt, pom.xml, package.json) against the OSV vulnerability database (mirrors `gofusa vuln`) |
 | v1.57 | `fusaops template` | Generate safety documentation templates for multi-language projects (mirrors `gofusa template`) |
 
 **Language-specific commands** in gofusa (`analyze`, `boundary`, `comp`, `coupling`, `fix`, `lint`, `misra`) operate on Go source or package structure and are intentionally out of scope for FuSaOps — that analysis belongs in each per-language x-FuSa tool.
