@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// Tests for the v1.47–v1.50 commands: verify, sign, qualify, release.
+// Tests for the v1.47–v1.51 commands: verify, sign, qualify, release, safety-case.
 // Exercises CLI flag parsing, error paths, and the happy path where possible
 // without requiring the x-FuSa tools to be installed.
 
@@ -277,5 +277,82 @@ func TestReleaseGoProject(t *testing.T) {
 	code, _, _ := runArgs(t, "release", "--dir", dir)
 	if code == 2 {
 		t.Errorf("release goProject: unexpected parse error, code=2")
+	}
+}
+
+// ── fusaops safety-case ──────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-CLI066
+func TestSafetyCaseBadFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "safety-case", "--bogus")
+	if code != 2 {
+		t.Errorf("safety-case --bogus: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI066
+func TestSafetyCaseBadStandard(t *testing.T) {
+	code, _, errb := runArgs(t, "safety-case", "--standard", "BOGUS-9999")
+	if code != 2 || !strings.Contains(errb, "standard") {
+		t.Errorf("safety-case bad standard: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI066
+func TestSafetyCaseEmptyDir(t *testing.T) {
+	// Empty dir → gaps in all claims → exit 1 with report.
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "safety-case", "--dir", dir)
+	if code != 1 {
+		t.Fatalf("safety-case empty dir: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "FuSaOps Safety Case") {
+		t.Errorf("safety-case output missing header: %q", out[:min(len(out), 200)])
+	}
+	if !strings.Contains(out, "GAPS DETECTED") {
+		t.Errorf("safety-case output missing gap warning: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI066
+func TestSafetyCaseJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, _ := runArgs(t, "safety-case", "--dir", dir, "--format", "json")
+	if code > 1 {
+		t.Fatalf("safety-case json: unexpected exit code %d", code)
+	}
+	if !strings.Contains(out, `"standard"`) || !strings.Contains(out, `"claims"`) {
+		t.Errorf("safety-case json missing expected fields: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI066
+func TestSafetyCaseOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	outFile := filepath.Join(dir, "safety-case.json")
+	runArgs(t, "safety-case", "--dir", dir, "--output", outFile)
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI066
+func TestSafetyCaseISO21434(t *testing.T) {
+	dir := t.TempDir()
+	code, out, _ := runArgs(t, "safety-case", "--dir", dir, "--standard", "ISO 21434")
+	if code > 1 {
+		t.Fatalf("safety-case ISO 21434: unexpected exit code %d", code)
+	}
+	if !strings.Contains(out, "ISO 21434") {
+		t.Errorf("safety-case output missing standard name: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI066
+func TestSafetyCaseInvalidFormat(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "safety-case", "--dir", dir, "--format", "xml")
+	if code != 2 || !strings.Contains(errb, "format") {
+		t.Errorf("safety-case invalid format: code=%d err=%q", code, errb)
 	}
 }
