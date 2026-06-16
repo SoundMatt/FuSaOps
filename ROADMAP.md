@@ -786,9 +786,18 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.60 — §2.2 `--output` no-stdout invariant fix ✅
+
+**Goal:** Mirror `gofusa` v0.29.0 §2.2 compliance — stdout must be empty when `--output <file>` is given so the command is safe for pipeline use.
+
+- `fusaops check`, `fusaops report`, `fusaops trace`, `fusaops sbom`, all `fusaops standards` sub-commands, and `fusaops conform` now write the `Wrote ... to <file>` confirmation to **stderr** only. (REQ-FO-SPEC001)
+- 4 CLI tests updated to assert confirmation on stderr and that stdout is empty.
+
+---
+
 ## Planned
 
-All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.59). Future additions will be driven by new x-FuSa tool features and user requests.
+All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.60). Future additions will be driven by new x-FuSa tool features and user requests.
 
 **Language-specific commands** in gofusa (`analyze`, `boundary`, `comp`, `coupling`, `fix`, `lint`, `misra`) operate on Go source or package structure and are intentionally out of scope for FuSaOps — that analysis belongs in each per-language x-FuSa tool.
 

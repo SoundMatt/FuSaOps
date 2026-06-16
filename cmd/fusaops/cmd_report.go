@@ -81,7 +81,7 @@ func runReport(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	if *output != "" {
-		fmt.Fprintf(stdout, "Wrote %s report to %s\n", *format, *output)
+		fmt.Fprintf(stderr, "Wrote %s report to %s\n", *format, *output)
 	}
 	return 0
 }
