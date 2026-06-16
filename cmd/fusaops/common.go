@@ -10,6 +10,7 @@ import (
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/config"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
+	"github.com/SoundMatt/FuSaOps/report"
 )
 
 // loadOptions resolves the absolute root and builds orchestrator options,
@@ -74,4 +75,23 @@ func splitCSV(s string) []string {
 		}
 	}
 	return out
+}
+
+// applyIntegrityLevel populates Standard/ASIL/SIL/DAL on rep from cfg.
+// When cfg is nil (zero-config mode) the report fields remain empty.
+//
+//fusa:req REQ-FO-RPT020
+func applyIntegrityLevel(rep *report.AggregateReport, cfg *config.Config) {
+	if cfg == nil {
+		return
+	}
+	rep.Standard = cfg.Project.Standard
+	switch cfg.Project.Standard {
+	case "IEC61508":
+		rep.SIL = cfg.Project.SIL
+	case "DO178C":
+		rep.DAL = cfg.Project.DAL
+	default:
+		rep.ASIL = cfg.Project.ASIL
+	}
 }

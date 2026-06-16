@@ -411,3 +411,113 @@ func TestRenderToFileWithOptions(t *testing.T) {
 		t.Error("expected suppressed output via RenderToFileWithOptions")
 	}
 }
+
+// ── Standard / integrity level fields (v1.59.0) ──────────────────────────────
+
+//fusa:test REQ-FO-RPT020
+func TestAggregateReportStandardField(t *testing.T) {
+	r := New("/root", "proj", nil)
+	r.Standard = "ISO26262"
+	r.ASIL = "ASIL-C"
+	if r.Standard != "ISO26262" {
+		t.Errorf("Standard=%q, want ISO26262", r.Standard)
+	}
+	if r.ASIL != "ASIL-C" {
+		t.Errorf("ASIL=%q, want ASIL-C", r.ASIL)
+	}
+}
+
+//fusa:test REQ-FO-RPT020
+func TestTextRendererShowsStandard(t *testing.T) {
+	r := New("/root", "proj", nil)
+	r.Standard = "ISO26262"
+	r.ASIL = "ASIL-B"
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "text"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "ISO26262") {
+		t.Error("text output should contain Standard value")
+	}
+	if !strings.Contains(out, "ASIL-B") {
+		t.Error("text output should contain ASIL value")
+	}
+}
+
+//fusa:test REQ-FO-RPT020
+func TestTextRendererSIL(t *testing.T) {
+	r := New("/root", "proj", nil)
+	r.Standard = "IEC61508"
+	r.SIL = "SIL-3"
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "text"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "SIL-3") {
+		t.Error("text output should contain SIL value")
+	}
+}
+
+//fusa:test REQ-FO-RPT020
+func TestTextRendererDAL(t *testing.T) {
+	r := New("/root", "proj", nil)
+	r.Standard = "DO178C"
+	r.DAL = "DAL-B"
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "text"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "DAL-B") {
+		t.Error("text output should contain DAL value")
+	}
+}
+
+//fusa:test REQ-FO-RPT020
+func TestTextRendererStandardNoLevel(t *testing.T) {
+	r := New("/root", "proj", nil)
+	r.Standard = "ISO26262"
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "text"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "ISO26262") {
+		t.Error("text output should show Standard even without integrity level")
+	}
+}
+
+//fusa:test REQ-FO-RPT020
+func TestMarkdownRendererShowsStandard(t *testing.T) {
+	r := New("/root", "proj", nil)
+	r.Standard = "ISO26262"
+	r.ASIL = "ASIL-C"
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "markdown"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "ISO26262") {
+		t.Error("markdown output should contain Standard value")
+	}
+	if !strings.Contains(out, "ASIL-C") {
+		t.Error("markdown output should contain ASIL value")
+	}
+}
+
+//fusa:test REQ-FO-RPT020
+func TestJSONReportHasIntegrityFields(t *testing.T) {
+	r := New("/root", "proj", nil)
+	r.Standard = "IEC61508"
+	r.SIL = "SIL-2"
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "json"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, `"standard"`) {
+		t.Error("JSON output should contain standard field")
+	}
+	if !strings.Contains(out, `"sil"`) {
+		t.Error("JSON output should contain sil field")
+	}
+}

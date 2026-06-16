@@ -2451,6 +2451,12 @@
       "title": "fusaops hara subcommand (show|init|asil)",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-RPT020",
+      "title": "Standard/ASIL/SIL/DAL integrity level fields in AggregateReport",
+      "priority": "MUST",
+      "standard": "ISO 26262"
     }
   ]
 }

@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.59.0] — 2026-06-16
+
+### Aggregate report — standard and integrity level fields
+
+- **`report.AggregateReport`** gains `Standard`, `ASIL`, `SIL`, `DAL` fields (`omitempty`). These propagate the project's safety standard and integrity level into the report JSON and every renderer. (REQ-FO-RPT020)
+- **`config.ProjectConfig`** gains `ASIL`, `SIL`, `DAL` optional string fields in `.fusaops.json`, mirroring the `.fusa.json` pattern. `Standard` was already present.
+- **`fusaops check` and `fusaops report`** now populate `Standard`/`ASIL`/`SIL`/`DAL` on the report from the project config (via `applyIntegrityLevel`). Switch: `IEC61508` → `SIL`, `DO178C` → `DAL`, default → `ASIL`.
+- **Text renderer** shows `Standard: <std> (<level>)` when standard and level are both set; shows `Standard: <std>` when only standard is present.
+- **Markdown renderer** shows `**Standard:** <std> (<level>)` in the report header.
+- Mirrors `gofusa` v0.27.0 `sil`/`dal` JSON fields feature.
+
+### Safety
+- Requirements registry at 357 requirements (added REQ-FO-RPT020)
+- 7 new report package tests; combined coverage ≥ 80%
+
 ## [1.58.0] — 2026-06-16
 
 ### `fusaops hara` — Hazard Analysis and Risk Assessment (ISO 26262-3:2018)
@@ -988,7 +1003,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.58.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.59.0...HEAD
+[1.59.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.58.0...v1.59.0
 [1.58.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.57.0...v1.58.0
 [1.57.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.56.0...v1.57.0
 [1.56.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.55.0...v1.56.0

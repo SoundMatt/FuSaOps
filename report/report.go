@@ -81,10 +81,15 @@ type Component struct {
 //
 //fusa:req REQ-FO-RPT004
 //fusa:req REQ-FO-RPT018
+//fusa:req REQ-FO-RPT020
 type AggregateReport struct {
 	GeneratedAt time.Time   `json:"generatedAt"`
 	Root        string      `json:"root"`
 	Project     string      `json:"project,omitempty"`
+	Standard    string      `json:"standard,omitempty"` // e.g. "ISO26262", "IEC61508", "DO178C"
+	ASIL        string      `json:"asil,omitempty"`     // ISO 26262 integrity level
+	SIL         string      `json:"sil,omitempty"`      // IEC 61508 integrity level
+	DAL         string      `json:"dal,omitempty"`      // DO-178C integrity level
 	Components  []Component `json:"components"`
 	Summary     Summary     `json:"summary"`
 	// Suppressed is the count of findings filtered by a suppression config.

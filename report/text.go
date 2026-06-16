@@ -19,6 +19,19 @@ func renderText(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 		fmt.Fprintf(w, "Project:   %s\n", r.Project)
 	}
 	fmt.Fprintf(w, "Root:      %s\n", r.Root)
+	if r.Standard != "" {
+		level := r.ASIL
+		if r.SIL != "" {
+			level = r.SIL
+		} else if r.DAL != "" {
+			level = r.DAL
+		}
+		if level != "" {
+			fmt.Fprintf(w, "Standard:  %s (%s)\n", r.Standard, level)
+		} else {
+			fmt.Fprintf(w, "Standard:  %s\n", r.Standard)
+		}
+	}
 	fmt.Fprintf(w, "Status:    %s\n\n", r.Summary.Status())
 
 	for _, c := range r.Components {
