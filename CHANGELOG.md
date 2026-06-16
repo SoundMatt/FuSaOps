@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.49.0] — 2026-06-16
+
+### `fusaops qualify` — cross-language tool qualification roll-up
+
+- **`qualify` package** — `ComponentResult`, `Report` types; `Run`, `Save`, `Load`, `Render` (text/json). Calls each adapter's `Qualify()` method, aggregates per-component pass/fail counts, and computes a SHA-256 integrity hash. Adapters that are unavailable or do not implement `Qualifier` are recorded as skipped. (REQ-FO-QUAL001, REQ-FO-QUAL002, REQ-FO-QUAL003, REQ-FO-QUAL004)
+- **`fusaops qualify [--dir DIR] [--output PATH] [--format text|json]`** — run tool qualification across all applicable adapters, save `.fusaops-qualify-report.json`, print per-component results; exits 1 if any adapter fails. (REQ-FO-CLI064)
+- `fusaops capabilities` updated with `qualify` command and `text`/`json` formats.
+- Mirrors `gofusa qualify` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 315 requirements (added REQ-FO-QUAL001–004, REQ-FO-CLI064)
+- 15 package tests; combined coverage 81.4%
+
 ## [1.48.0] — 2026-06-16
 
 ### `fusaops sign` — HMAC-SHA256 artifact signing
@@ -856,7 +869,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.48.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.49.0...HEAD
+[1.49.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.48.0...v1.49.0
 [1.48.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.46.0...v1.47.0
 [1.46.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.45.0...v1.46.0

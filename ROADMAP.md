@@ -684,13 +684,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.49 — `fusaops qualify` — cross-language tool qualification roll-up ✅
+
+**Goal:** Mirror `gofusa qualify` for tool confidence evidence collection at the FuSaOps multi-language level.
+
+- `qualify` package — `ComponentResult`, `Report` types; `Run`, `Save`, `Load`, `Render` (text/json) (REQ-FO-QUAL001–004)
+- `fusaops qualify [--dir DIR] [--output PATH] [--format text|json]` — aggregate tool qualification across all adapters (REQ-FO-CLI064)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
 |---|---|---|
-| v1.49 | `fusaops qualify` | Run the built-in tool qualification suite and save a qualification report across all adapters (mirrors `gofusa qualify`) |
 | v1.50 | `fusaops release` | Generate a multi-language SBOM, build provenance, and artifact manifest in one command (mirrors `gofusa release`) |
 | v1.51 | `fusaops safety-case` | Assemble a structured safety case from existing evidence files across all languages (mirrors `gofusa safety-case`) |
 | v1.52 | `fusaops sci` | Generate the Software Configuration Index (DO-178C §11.16) aggregated across all language components (mirrors `gofusa sci`) |
