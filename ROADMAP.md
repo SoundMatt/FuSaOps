@@ -702,13 +702,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.51 — `fusaops safety-case` — structured safety argument assembly ✅
+
+**Goal:** Mirror `gofusa safety-case` for multi-language evidence aggregation into a structured safety argument.
+
+- `safetycase` package — `Standard`, `EvidenceStatus`, `EvidenceRef`, `Claim`, `SafetyCase` types; `Build`, `Save`, `Load`, `Render` (text/json). Discovers 7 claim classes (tool qualification, traceability, test evidence, SBOM, build integrity, problem reports, audit pack). SHA-256 integrity hash over the assembled document. (REQ-FO-SC001–004)
+- `fusaops safety-case [--dir DIR] [--standard ISO 26262|DO-178C|IEC 61508|ISO 21434] [--format text|json] [--output PATH]` (REQ-FO-CLI066)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
 |---|---|---|
-| v1.51 | `fusaops safety-case` | Assemble a structured safety case from existing evidence files across all languages (mirrors `gofusa safety-case`) |
 | v1.52 | `fusaops sci` | Generate the Software Configuration Index (DO-178C §11.16) aggregated across all language components (mirrors `gofusa sci`) |
 | v1.53 | `fusaops sas` | Generate a Software Accomplishment Summary (DO-178C §11.20) from multi-language evidence (mirrors `gofusa sas`) |
 | v1.54 | `fusaops tara` | Generate a Threat Analysis and Risk Assessment per ISO 21434 Chapter 9 (mirrors `gofusa tara`) |

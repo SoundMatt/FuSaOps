@@ -42,6 +42,7 @@
 //	sign          Sign or verify a file using HMAC-SHA256
 //	qualify       Run tool qualification across all x-FuSa adapters
 //	release       Generate cross-language SBOM, provenance, and artifact manifest
+//	safety-case   Assemble a structured safety case from evidence artefacts
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -126,6 +127,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runQualify(args[1:], stdout, stderr)
 	case "release":
 		return runRelease(args[1:], stdout, stderr)
+	case "safety-case":
+		return runSafetyCase(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -189,6 +192,7 @@ Commands:
   sign          Sign or verify a file using HMAC-SHA256
   qualify       Run tool qualification across all x-FuSa adapters
   release       Generate cross-language SBOM, provenance, and artifact manifest
+  safety-case   Assemble a structured safety case from evidence artefacts
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

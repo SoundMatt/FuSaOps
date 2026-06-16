@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.51.0] — 2026-06-16
+
+### `fusaops safety-case` — structured safety argument assembly
+
+- **`safetycase` package** — `Standard`, `EvidenceStatus`, `EvidenceRef`, `Claim`, `SafetyCase` types; `Build`, `Save`, `Load`, `Render` (text/json). Assembles a hierarchical safety argument by discovering known evidence artefacts (test bundle, qualify report, SBOM, provenance, manifest, problem log, audit pack) in the project root. Each claim passes when all required evidence is present; a SHA-256 integrity hash is computed over the assembled document. (REQ-FO-SC001, REQ-FO-SC002, REQ-FO-SC003, REQ-FO-SC004)
+- **`fusaops safety-case [--dir DIR] [--standard ISO 26262|DO-178C|IEC 61508|ISO 21434] [--format text|json] [--output PATH]`** — build and render the safety case; exits 1 when evidence gaps remain. (REQ-FO-CLI066)
+- `fusaops capabilities` updated with `safety-case` command and `text`/`json` formats.
+- Mirrors `gofusa safety-case` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 321 requirements (added REQ-FO-SC001–004, REQ-FO-CLI066)
+- 15 package tests; combined coverage 81.9%
+
 ## [1.50.0] — 2026-06-16
 
 ### `fusaops release` — cross-language SBOM, provenance, and artifact manifest
@@ -882,7 +895,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.50.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.51.0...HEAD
+[1.51.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.50.0...v1.51.0
 [1.50.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.48.0...v1.49.0
 [1.48.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.47.0...v1.48.0

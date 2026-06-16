@@ -3,7 +3,7 @@
     {
       "id": "REQ-FO-CLI054",
       "title": "fusaops capabilities subcommand",
-      "description": "The fusaops CLI shall provide a 'capabilities' subcommand that emits a §9.1 x-FuSa discovery document listing supported commands, formats per command, and safety standards in JSON format.",
+      "description": "The fusaops CLI shall provide a 'capabilities' subcommand that emits a \u00a79.1 x-FuSa discovery document listing supported commands, formats per command, and safety standards in JSON format.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa capabilities for machine-readable discovery by CI tooling and IDEs."
     },
@@ -54,7 +54,7 @@
       "title": "DO-178C coverage report and analysis",
       "description": "FuSaOps shall define a Report struct capturing DAL, statement coverage percentage, decision coverage, MC/DC requirement flag, per-file statistics, and coverage gaps; and an Analyse function that computes these fields from parsed profile blocks.",
       "priority": "MUST",
-      "rationale": "Enables DO-178C §6.4.4 structural coverage evidence generation from Go test profiles."
+      "rationale": "Enables DO-178C \u00a76.4.4 structural coverage evidence generation from Go test profiles."
     },
     {
       "id": "REQ-FO-COV002",
@@ -1004,7 +1004,7 @@
     {
       "id": "REQ-FO-CNF019",
       "title": "Conformance markdown rendering",
-      "description": "conform.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header with the tool name, a status badge (🟢 PASS / 🔴 FAIL), pass/fail/skip counts, and a per-check GFM table (Result/Level/Section/Check) with detail appended to name and pipe characters escaped as \\|. The fusaops conform CLI shall accept --format markdown.",
+      "description": "conform.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header with the tool name, a status badge (\ud83d\udfe2 PASS / \ud83d\udd34 FAIL), pass/fail/skip counts, and a per-check GFM table (Result/Level/Section/Check) with detail appended to name and pipe characters escaped as \\|. The fusaops conform CLI shall accept --format markdown.",
       "priority": "MUST",
       "rationale": "Markdown output lets CI pipelines post conformance check summaries directly into pull request comments and GitHub Actions job summaries."
     },
@@ -1095,7 +1095,7 @@
     {
       "id": "REQ-FO-STD012",
       "title": "Standards markdown rendering",
-      "description": "standards.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a project/standard header, a status badge (🟢 PASS / 🔴 GAP), per-component sections (tool/language heading, satisfied/partial/gap counts, objective GFM table with ID/Status/Title+Clause/Evidence columns), skipped-component fallback, and nil-report fallback. Pipe characters in titles are escaped. The fusaops iso26262/iec61508/do178/iso21434/unece/iec62443 CLIs shall accept --format markdown.",
+      "description": "standards.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a project/standard header, a status badge (\ud83d\udfe2 PASS / \ud83d\udd34 GAP), per-component sections (tool/language heading, satisfied/partial/gap counts, objective GFM table with ID/Status/Title+Clause/Evidence columns), skipped-component fallback, and nil-report fallback. Pipe characters in titles are escaped. The fusaops iso26262/iec61508/do178/iso21434/unece/iec62443 CLIs shall accept --format markdown.",
       "priority": "MUST",
       "rationale": "Markdown output lets CI pipelines post standards gap-report summaries directly into pull request comments and GitHub Actions job summaries."
     },
@@ -1249,16 +1249,16 @@
     {
       "id": "REQ-FO-ADP025",
       "title": "cpp-FuSa standards normalization",
-      "description": "The cpp-FuSa adapter Standards must run <tool> <cmd> --output <tmp> (not --format json), map do178c→do178 subcommand name, and call RecomputeSummary on the decoded GapReport.",
+      "description": "The cpp-FuSa adapter Standards must run <tool> <cmd> --output <tmp> (not --format json), map do178c\u2192do178 subcommand name, and call RecomputeSummary on the decoded GapReport.",
       "priority": "MUST",
       "rationale": "cpp-FuSa writes gap reports to a file rather than stdout and does not accept --format json; the adapter normalizes the invocation."
     },
     {
       "id": "REQ-FO-TRC016",
       "title": "SecTestedRequirements coverage",
-      "description": "trace.Coverage and AggregateCoverage must include a secTestedRequirements field (§5); ComponentTrace must expose SecTestedPct(); New() must sum and compute SecTestedPct across components.",
+      "description": "trace.Coverage and AggregateCoverage must include a secTestedRequirements field (\u00a75); ComponentTrace must expose SecTestedPct(); New() must sum and compute SecTestedPct across components.",
       "priority": "MUST",
-      "rationale": "Spec §5 requires four coverage counters including secTestedRequirements; FuSaOps must propagate the field from tool output through the aggregate so consumers can gate on security test coverage."
+      "rationale": "Spec \u00a75 requires four coverage counters including secTestedRequirements; FuSaOps must propagate the field from tool output through the aggregate so consumers can gate on security test coverage."
     },
     {
       "id": "REQ-FO-TRC017",
@@ -1279,7 +1279,7 @@
       "title": "fusaops trace coverage gates",
       "description": "fusaops trace must accept --gaps (show only untraced/untested requirements), --req-coverage N (fail when tracedPct < N), and --sec-tested N (fail when secTestedPct < N).",
       "priority": "MUST",
-      "rationale": "Spec §5 (line 594) defines these flags as part of the trace command surface; they provide threshold-based CI gates beyond the binary --strict flag."
+      "rationale": "Spec \u00a75 (line 594) defines these flags as part of the trace command surface; they provide threshold-based CI gates beyond the binary --strict flag."
     },
     {
       "id": "REQ-FO-CLI019",
@@ -1361,7 +1361,7 @@
     {
       "id": "REQ-FO-POL006",
       "title": "Policy markdown rendering",
-      "description": "policy.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header line with the policy name, a status badge (🟢 PASS / 🔴 FAIL), passed/failed counts, a per-rule GFM table (Result/Rule/Message), with pipe characters in message text escaped as \\|. The fusaops policy CLI shall accept --format markdown.",
+      "description": "policy.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header line with the policy name, a status badge (\ud83d\udfe2 PASS / \ud83d\udd34 FAIL), passed/failed counts, a per-rule GFM table (Result/Rule/Message), with pipe characters in message text escaped as \\|. The fusaops policy CLI shall accept --format markdown.",
       "priority": "MUST",
       "rationale": "Markdown output lets CI pipelines post policy gate results directly into pull request comments and GitHub Actions job summaries."
     },
@@ -1480,7 +1480,7 @@
     {
       "id": "REQ-FO-FLT007",
       "title": "Fleet markdown rendering",
-      "description": "fleet.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header line with the project name, a status badge (🟢/🟡/🔴), a per-repo GFM table (Repository/Status/Errors/Warnings/Infos/Total), a TOTAL summary row, and a scan-error inline when ScanErr is non-empty. The fusaops fleet CLI shall accept --format markdown.",
+      "description": "fleet.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a header line with the project name, a status badge (\ud83d\udfe2/\ud83d\udfe1/\ud83d\udd34), a per-repo GFM table (Repository/Status/Errors/Warnings/Infos/Total), a TOTAL summary row, and a scan-error inline when ScanErr is non-empty. The fusaops fleet CLI shall accept --format markdown.",
       "priority": "MUST",
       "rationale": "Markdown output lets CI pipelines post fleet status summaries directly into pull request comments and GitHub Actions job summaries."
     },
@@ -1683,7 +1683,7 @@
     {
       "id": "REQ-FO-SUP001",
       "title": "Suppression config format",
-      "description": "A .fusaops-suppress.json file shall contain a JSON object with a 'suppressions' array. Each entry shall have 'fingerprint' (spec §4.2 fingerprint string), 'reason' (mandatory rationale string), and optional 'expires' (ISO-8601 date YYYY-MM-DD). Entries with empty fingerprints are ignored.",
+      "description": "A .fusaops-suppress.json file shall contain a JSON object with a 'suppressions' array. Each entry shall have 'fingerprint' (spec \u00a74.2 fingerprint string), 'reason' (mandatory rationale string), and optional 'expires' (ISO-8601 date YYYY-MM-DD). Entries with empty fingerprints are ignored.",
       "priority": "MUST",
       "rationale": "Teams require a documented, auditable way to acknowledge known findings without inflating the error count."
     },
@@ -1766,7 +1766,7 @@
     },
     {
       "id": "REQ-FO-SUP009",
-      "title": "fusaops suppress import — bulk suppression from check report",
+      "title": "fusaops suppress import \u2014 bulk suppression from check report",
       "description": "The suppress import subcommand shall read a fusaops check --format json report from --from PATH, extract all finding fingerprints, and add them as new entries to the .fusaops-suppress.json file at --file (default .fusaops-suppress.json). Fingerprints already present in the suppress file shall be skipped (no duplicates). Optional --reason and --expires flags apply to all imported entries. On success prints 'Imported N findings (M new, K already present).' and exits 0. Errors exit 1.",
       "priority": "MUST",
       "rationale": "Teams onboarding FuSaOps to a project with many pre-existing findings need a one-command way to acknowledge them all rather than adding entries one-by-one."
@@ -1942,7 +1942,7 @@
     {
       "id": "REQ-FO-SLSA002",
       "title": "SLSA gap assessment",
-      "description": "FuSaOps shall provide Assess(projectRoot, project, level) that evaluates the project directory against SLSA L1–L4 objectives (version control, module file, provenance, SBOM, CODEOWNERS, artifact integrity, evidence bundle) and returns a Report.",
+      "description": "FuSaOps shall provide Assess(projectRoot, project, level) that evaluates the project directory against SLSA L1\u2013L4 objectives (version control, module file, provenance, SBOM, CODEOWNERS, artifact integrity, evidence bundle) and returns a Report.",
       "priority": "MUST",
       "rationale": "Enables automated SLSA posture evaluation for multi-language projects without requiring per-language tool runs."
     },
@@ -2033,9 +2033,9 @@
     {
       "id": "REQ-FO-PR001",
       "title": "Problem report types",
-      "description": "FuSaOps shall define ProblemReport, Log, Phase, Status, and PRSeverity types for DO-178C §11.17 software problem reports stored in .fusaops-problems.json.",
+      "description": "FuSaOps shall define ProblemReport, Log, Phase, Status, and PRSeverity types for DO-178C \u00a711.17 software problem reports stored in .fusaops-problems.json.",
       "priority": "MUST",
-      "rationale": "DO-178C §11.17 requires a problem reporting process for software lifecycle data."
+      "rationale": "DO-178C \u00a711.17 requires a problem reporting process for software lifecycle data."
     },
     {
       "id": "REQ-FO-PR002",
@@ -2063,7 +2063,7 @@
       "title": "fusaops pr subcommand",
       "description": "The fusaops CLI shall provide a 'pr' subcommand with 'init', 'add' (--id, --title, --desc, --phase, --severity), 'list' (--format text|json), and 'close' (--id, --resolution) sub-subcommands managing .fusaops-problems.json.",
       "priority": "MUST",
-      "rationale": "Mirrors gofusa pr for DO-178C §11.17 problem report management at the FuSaOps multi-language level."
+      "rationale": "Mirrors gofusa pr for DO-178C \u00a711.17 problem report management at the FuSaOps multi-language level."
     },
     {
       "id": "REQ-FO-VER001",
@@ -2211,6 +2211,36 @@
       "description": "The fusaops CLI shall provide a 'release' subcommand with --dir and --output-dir flags that generates the cross-language SBOM, build provenance, and artifact manifest, saving them to the output directory.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa release adapted for the FuSaOps multi-language orchestration context."
+    },
+    {
+      "id": "REQ-FO-SC001",
+      "title": "Safety case types and constants",
+      "priority": "MUST",
+      "standard": "ISO 26262, DO-178C, IEC 61508, ISO 21434"
+    },
+    {
+      "id": "REQ-FO-SC002",
+      "title": "Assemble safety case from evidence artefacts",
+      "priority": "MUST",
+      "standard": "ISO 26262, DO-178C, IEC 61508, ISO 21434"
+    },
+    {
+      "id": "REQ-FO-SC003",
+      "title": "Safety case persistence",
+      "priority": "MUST",
+      "standard": "ISO 26262, DO-178C, IEC 61508, ISO 21434"
+    },
+    {
+      "id": "REQ-FO-SC004",
+      "title": "Safety case rendering",
+      "priority": "MUST",
+      "standard": "ISO 26262, DO-178C, IEC 61508, ISO 21434"
+    },
+    {
+      "id": "REQ-FO-CLI066",
+      "title": "fusaops safety-case subcommand",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
     }
   ]
 }
