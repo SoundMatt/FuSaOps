@@ -2331,6 +2331,36 @@
       "title": "fusaops tara subcommand",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-FMEA001",
+      "title": "FMEA types and constants",
+      "priority": "MUST",
+      "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
+    },
+    {
+      "id": "REQ-FO-FMEA002",
+      "title": "FMEA Build function",
+      "priority": "MUST",
+      "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
+    },
+    {
+      "id": "REQ-FO-FMEA003",
+      "title": "FMEA Save and Load",
+      "priority": "MUST",
+      "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
+    },
+    {
+      "id": "REQ-FO-FMEA004",
+      "title": "FMEA rendering",
+      "priority": "MUST",
+      "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
+    },
+    {
+      "id": "REQ-FO-CLI070",
+      "title": "fusaops fmea subcommand",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
     }
   ]
 }
