@@ -7,6 +7,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.61.0] — 2026-06-16
+
+### §2.4.1 capabilities `Standards` — add canonical `"slsa"` identifier
+
+- `fusaops capabilities` now includes `"slsa"` in the `Standards` JSON array, matching the §2.4.1 canonical identifier. (REQ-FO-SPEC002)
+- Mirrors `gofusa` v0.30.0 §2.4.1 fix.
+- New test `TestCapabilitiesStandardsSLSA` verifies the canonical entry is present.
+
+### Safety
+- Requirements registry at 359 requirements (added REQ-FO-SPEC002)
+
 ## [1.60.0] — 2026-06-16
 
 ### §2.2 `--output` no-stdout invariant fix

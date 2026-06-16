@@ -367,6 +367,27 @@ func TestCapabilities(t *testing.T) {
 	}
 }
 
+// TestCapabilitiesStandardsSLSA verifies "slsa" is present as a canonical §2.4.1 standard.
+//
+//fusa:test REQ-FO-SPEC002
+func TestCapabilitiesStandardsSLSA(t *testing.T) {
+	_, out, _ := runArgs(t, "capabilities")
+	var m map[string]interface{}
+	if err := json.Unmarshal([]byte(out), &m); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+	stds, ok := m["standards"].([]interface{})
+	if !ok {
+		t.Fatal("capabilities missing standards array")
+	}
+	for _, s := range stds {
+		if s == "slsa" {
+			return
+		}
+	}
+	t.Errorf("capabilities standards missing 'slsa': %v", stds)
+}
+
 //fusa:test REQ-FO-CLI054
 func TestCapabilitiesInvalidFormat(t *testing.T) {
 	code, _, errb := runArgs(t, "capabilities", "--format", "text")

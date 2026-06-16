@@ -795,9 +795,18 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.61 — §2.4.1 capabilities `Standards` canonical `"slsa"` identifier ✅
+
+**Goal:** Mirror `gofusa` v0.30.0 §2.4.1 fix — add `"slsa"` to the `Standards` array in `fusaops capabilities`.
+
+- `fusaops capabilities` now lists `"slsa"` as a canonical standard identifier. (REQ-FO-SPEC002)
+- New test `TestCapabilitiesStandardsSLSA` asserts the entry is present.
+
+---
+
 ## Planned
 
-All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.60). Future additions will be driven by new x-FuSa tool features and user requests.
+All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.61). Future additions will be driven by new x-FuSa tool features and user requests.
 
 **Language-specific commands** in gofusa (`analyze`, `boundary`, `comp`, `coupling`, `fix`, `lint`, `misra`) operate on Go source or package structure and are intentionally out of scope for FuSaOps — that analysis belongs in each per-language x-FuSa tool.
 
