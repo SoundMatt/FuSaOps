@@ -44,6 +44,7 @@
 //	release       Generate cross-language SBOM, provenance, and artifact manifest
 //	safety-case   Assemble a structured safety case from evidence artefacts
 //	sci           Generate the Software Configuration Index (DO-178C §11.16)
+//	sas           Generate the Software Accomplishment Summary (DO-178C §11.20)
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -132,6 +133,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runSafetyCase(args[1:], stdout, stderr)
 	case "sci":
 		return runSCI(args[1:], stdout, stderr)
+	case "sas":
+		return runSAS(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -197,6 +200,7 @@ Commands:
   release       Generate cross-language SBOM, provenance, and artifact manifest
   safety-case   Assemble a structured safety case from evidence artefacts
   sci           Generate the Software Configuration Index (DO-178C §11.16)
+  sas           Generate the Software Accomplishment Summary (DO-178C §11.20)
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

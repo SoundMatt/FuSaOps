@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.53.0] — 2026-06-16
+
+### `fusaops sas` — Software Accomplishment Summary (DO-178C §11.20)
+
+- **`sas` package** — `ActivityStatus`, `Activity`, `SAS` types; `Build`, `Save`, `Load`, `Render` (text/json). Maps 12 DO-178C lifecycle activities to FuSaOps evidence artefacts. An activity is complete when its evidence file exists; N/A for activities with no associated artefact. SHA-256 integrity hash over the assembled document. (REQ-FO-SAS001, REQ-FO-SAS002, REQ-FO-SAS003, REQ-FO-SAS004)
+- **`fusaops sas [--dir DIR] [--level DAL-A|...|DAL-E] [--format text|json] [--output PATH]`** — build and render the SAS; exits 1 when incomplete activities remain. (REQ-FO-CLI068)
+- `fusaops capabilities` updated with `sas` command and `text`/`json` formats.
+- Mirrors `gofusa sas` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 331 requirements (added REQ-FO-SAS001–004, REQ-FO-CLI068)
+- 15 package tests + 6 CLI tests; combined coverage 82.2%
+
 ## [1.52.0] — 2026-06-16
 
 ### `fusaops sci` — Software Configuration Index (DO-178C §11.16)
@@ -908,7 +921,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.52.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.53.0...HEAD
+[1.53.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.52.0...v1.53.0
 [1.52.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.51.0...v1.52.0
 [1.51.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.50.0...v1.51.0
 [1.50.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.49.0...v1.50.0

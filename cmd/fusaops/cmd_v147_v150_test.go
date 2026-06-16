@@ -429,3 +429,72 @@ func TestSCIInvalidFormat(t *testing.T) {
 		t.Errorf("sci invalid format: code=%d err=%q", code, errb)
 	}
 }
+
+// ── fusaops sas ──────────────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-CLI068
+func TestSASBadFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "sas", "--bogus")
+	if code != 2 {
+		t.Errorf("sas --bogus: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI068
+func TestSASEmptyDir(t *testing.T) {
+	// Empty dir → some activities incomplete → exit 1 with report.
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "sas", "--dir", dir)
+	if code != 1 {
+		t.Fatalf("sas empty dir: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Software Accomplishment Summary") {
+		t.Errorf("sas output missing header: %q", out[:min(len(out), 200)])
+	}
+	if !strings.Contains(out, "INCOMPLETE") {
+		t.Errorf("sas output missing incomplete warning: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI068
+func TestSASJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, _ := runArgs(t, "sas", "--dir", dir, "--format", "json")
+	if code > 1 {
+		t.Fatalf("sas json: unexpected exit code %d", code)
+	}
+	if !strings.Contains(out, `"activities"`) || !strings.Contains(out, `"softwareLevel"`) {
+		t.Errorf("sas json missing expected fields: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI068
+func TestSASOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	outFile := filepath.Join(dir, "sas.json")
+	runArgs(t, "sas", "--dir", dir, "--output", outFile)
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI068
+func TestSASLevel(t *testing.T) {
+	dir := t.TempDir()
+	code, out, _ := runArgs(t, "sas", "--dir", dir, "--level", "DAL-A")
+	if code > 1 {
+		t.Fatalf("sas --level DAL-A: unexpected exit code %d", code)
+	}
+	if !strings.Contains(out, "DAL-A") {
+		t.Errorf("sas --level output missing level: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI068
+func TestSASInvalidFormat(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "sas", "--dir", dir, "--format", "xml")
+	if code != 2 || !strings.Contains(errb, "format") {
+		t.Errorf("sas invalid format: code=%d err=%q", code, errb)
+	}
+}
