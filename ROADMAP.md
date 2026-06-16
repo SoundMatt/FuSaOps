@@ -765,9 +765,20 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.58 — `fusaops hara` — Hazard Analysis and Risk Assessment (ISO 26262-3:2018) ✅
+
+**Goal:** Mirror `gofusa hara` for cross-language HARA management.
+
+- `hara` package — `Severity`, `Exposure`, `Controllability`, `ASIL`, `RiskRating`, `OperationalSituation`, `Hazard`, `SafetyGoal`, `HARA`, `ValidationFinding` types; `DetermineASIL` (ISO 26262-3:2018 Table 4); `MaxASIL`; `Load`, `Save`, `Validate`, `Render` (text/json/markdown). (REQ-FO-HARA001–004)
+- `fusaops hara show [--format text|json|markdown] [--output PATH]` — display HARA.
+- `fusaops hara init [--project NAME] [--standard STD]` — create starter `.fusa-hara.json`.
+- `fusaops hara asil -s S# -e E# -c C#` — derive ASIL from S×E×C. (REQ-FO-CLI073)
+
+---
+
 ## Planned
 
-All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.57). Future additions will be driven by new x-FuSa tool features and user requests.
+All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.58). Future additions will be driven by new x-FuSa tool features and user requests.
 
 **Language-specific commands** in gofusa (`analyze`, `boundary`, `comp`, `coupling`, `fix`, `lint`, `misra`) operate on Go source or package structure and are intentionally out of scope for FuSaOps — that analysis belongs in each per-language x-FuSa tool.
 

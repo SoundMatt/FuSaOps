@@ -740,3 +740,81 @@ func TestTemplateInvalidFormat(t *testing.T) {
 		t.Errorf("template invalid format: code=%d err=%q", code, errb)
 	}
 }
+
+// ── fusaops hara ──────────────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-CLI073
+func TestHaraBadFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "hara", "--bogus")
+	if code != 2 {
+		t.Errorf("hara --bogus: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI073
+func TestHaraShowEmpty(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "hara", "--dir", dir, "show")
+	if code != 0 {
+		t.Fatalf("hara show empty: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Hazard Analysis") {
+		t.Errorf("hara show output missing header: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI073
+func TestHaraInit(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "hara", "--dir", dir, "init", "--project", "TestProj")
+	if code != 0 {
+		t.Fatalf("hara init: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, ".fusa-hara.json") {
+		t.Errorf("hara init output missing filename: %q", out)
+	}
+	// reinit should fail (file exists)
+	code2, _, _ := runArgs(t, "hara", "--dir", dir, "init")
+	if code2 != 2 {
+		t.Errorf("hara init on existing file: code=%d, want 2", code2)
+	}
+}
+
+//fusa:test REQ-FO-CLI073
+func TestHaraASIL(t *testing.T) {
+	code, out, errb := runArgs(t, "hara", "asil", "-s", "S2", "-e", "E3", "-c", "C2")
+	if code != 0 {
+		t.Fatalf("hara asil: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "ASIL-B") {
+		t.Errorf("hara asil output: %q, want ASIL-B", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI073
+func TestHaraASILMissingFlags(t *testing.T) {
+	code, _, errb := runArgs(t, "hara", "asil", "-s", "S2")
+	if code != 2 || !strings.Contains(errb, "required") {
+		t.Errorf("hara asil missing flags: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI073
+func TestHaraUnknownSubcommand(t *testing.T) {
+	code, _, errb := runArgs(t, "hara", "bogus")
+	if code != 2 || !strings.Contains(errb, "unknown subcommand") {
+		t.Errorf("hara unknown subcommand: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI073
+func TestHaraShowJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "hara", "--dir", dir, "show", "--format", "json")
+	if code != 0 {
+		t.Fatalf("hara show json: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, `"hazards"`) {
+		t.Errorf("hara show json missing fields: %q", out[:min(len(out), 200)])
+	}
+}
