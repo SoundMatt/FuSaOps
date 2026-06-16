@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.55.0] — 2026-06-16
+
+### `fusaops fmea` — Design Failure Mode and Effects Analysis (IEC 61508 / ISO 26262 Part 8)
+
+- **`fmea` package** — `FailureMode`, `FMEA` types; `Build`, `Save`, `Load`, `Render` (text/json). Produces 8 failure modes covering the FuSaOps orchestration pipeline (adapter not installed, adapter crash, schema mismatch, trace annotation loss, SBOM omission, evidence tampering, adapter timeout, suppression abuse). RPN = Severity × Occurrence × Detection (1–10). Items with RPN > 100 are classified as high-priority. SHA-256 integrity hash over the document. (REQ-FO-FMEA001, REQ-FO-FMEA002, REQ-FO-FMEA003, REQ-FO-FMEA004)
+- **`fusaops fmea [--dir DIR] [--format text|json] [--output PATH]`** — build and render the FMEA; persists to `.fusaops-fmea.json`; exits 1 when any failure mode has high RPN. (REQ-FO-CLI070)
+- `fusaops capabilities` updated with `fmea` command and `text`/`json` formats.
+- Mirrors `gofusa fmea` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 341 requirements (added REQ-FO-FMEA001–004, REQ-FO-CLI070)
+- 15 package tests + 5 CLI tests; combined coverage ≥ 80%
+
 ## [1.54.0] — 2026-06-16
 
 ### `fusaops tara` — Threat Analysis and Risk Assessment (ISO 21434:2021 Ch. 9)
@@ -934,7 +947,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.54.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.55.0...HEAD
+[1.55.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.52.0...v1.53.0
 [1.52.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.51.0...v1.52.0

@@ -555,3 +555,60 @@ func TestTARAInvalidFormat(t *testing.T) {
 		t.Errorf("tara invalid format: code=%d err=%q", code, errb)
 	}
 }
+
+// ── fusaops fmea ─────────────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-CLI070
+func TestFMEABadFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "fmea", "--bogus")
+	if code != 2 {
+		t.Errorf("fmea --bogus: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI070
+func TestFMEASuccess(t *testing.T) {
+	dir := t.TempDir()
+	// fmea always produces output; exits 1 when high-RPN items exist.
+	code, out, errb := runArgs(t, "fmea", "--dir", dir)
+	if code > 1 {
+		t.Fatalf("fmea: unexpected exit code %d, err=%q", code, errb)
+	}
+	if !strings.Contains(out, "dFMEA") {
+		t.Errorf("fmea output missing header: %q", out[:min(len(out), 200)])
+	}
+	if !strings.Contains(out, "FMEA written to") {
+		t.Errorf("fmea output missing confirmation: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI070
+func TestFMEAJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, _ := runArgs(t, "fmea", "--dir", dir, "--format", "json")
+	if code > 1 {
+		t.Fatalf("fmea json: unexpected exit code %d", code)
+	}
+	if !strings.Contains(out, `"failureModes"`) || !strings.Contains(out, `"rpn"`) {
+		t.Errorf("fmea json missing expected fields: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI070
+func TestFMEAOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	outFile := filepath.Join(dir, "fmea.json")
+	runArgs(t, "fmea", "--dir", dir, "--output", outFile)
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI070
+func TestFMEAInvalidFormat(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "fmea", "--dir", dir, "--format", "xml")
+	if code != 2 || !strings.Contains(errb, "format") {
+		t.Errorf("fmea invalid format: code=%d err=%q", code, errb)
+	}
+}

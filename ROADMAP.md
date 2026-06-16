@@ -738,13 +738,20 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.55 — `fusaops fmea` — Design Failure Mode and Effects Analysis (IEC 61508 / ISO 26262 Part 8) ✅
+
+**Goal:** Mirror `gofusa fmea` for multi-language toolchain failure mode analysis per IEC 61508 / ISO 26262 Part 8-7.
+
+- `fmea` package — `FailureMode`, `FMEA` types; `Build`, `Save`, `Load`, `Render` (text/json). 8 failure modes, RPN = S × O × D, high-priority when RPN > 100. (REQ-FO-FMEA001–004)
+- `fusaops fmea [--dir DIR] [--format text|json] [--output PATH]`; exits 1 on high-RPN items. (REQ-FO-CLI070)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
-|---|---|---|
-| v1.55 | `fusaops fmea` | Generate a dFMEA report aggregated from all language tools (mirrors `gofusa fmea`) |
 | v1.56 | `fusaops vuln` | Scan all dependency manifests (go.mod, Cargo.toml, requirements.txt, pom.xml, package.json) against the OSV vulnerability database (mirrors `gofusa vuln`) |
 | v1.57 | `fusaops template` | Generate safety documentation templates for multi-language projects (mirrors `gofusa template`) |
 
