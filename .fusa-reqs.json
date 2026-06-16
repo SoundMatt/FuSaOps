@@ -2301,6 +2301,36 @@
       "title": "fusaops sas subcommand",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-TARA001",
+      "title": "TARA types and constants",
+      "priority": "MUST",
+      "standard": "ISO 21434:2021 Ch. 9"
+    },
+    {
+      "id": "REQ-FO-TARA002",
+      "title": "TARA Build function",
+      "priority": "MUST",
+      "standard": "ISO 21434:2021 Ch. 9"
+    },
+    {
+      "id": "REQ-FO-TARA003",
+      "title": "TARA Save and Load",
+      "priority": "MUST",
+      "standard": "ISO 21434:2021 Ch. 9"
+    },
+    {
+      "id": "REQ-FO-TARA004",
+      "title": "TARA rendering",
+      "priority": "MUST",
+      "standard": "ISO 21434:2021 Ch. 9"
+    },
+    {
+      "id": "REQ-FO-CLI069",
+      "title": "fusaops tara subcommand",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
     }
   ]
 }

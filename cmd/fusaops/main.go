@@ -45,6 +45,7 @@
 //	safety-case   Assemble a structured safety case from evidence artefacts
 //	sci           Generate the Software Configuration Index (DO-178C §11.16)
 //	sas           Generate the Software Accomplishment Summary (DO-178C §11.20)
+//	tara          Generate a Threat Analysis and Risk Assessment (ISO 21434 Ch. 9)
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -135,6 +136,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runSCI(args[1:], stdout, stderr)
 	case "sas":
 		return runSAS(args[1:], stdout, stderr)
+	case "tara":
+		return runTARA(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -201,6 +204,7 @@ Commands:
   safety-case   Assemble a structured safety case from evidence artefacts
   sci           Generate the Software Configuration Index (DO-178C §11.16)
   sas           Generate the Software Accomplishment Summary (DO-178C §11.20)
+  tara          Generate a Threat Analysis and Risk Assessment (ISO 21434 Ch. 9)
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

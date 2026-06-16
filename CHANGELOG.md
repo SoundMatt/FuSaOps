@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.54.0] — 2026-06-16
+
+### `fusaops tara` — Threat Analysis and Risk Assessment (ISO 21434:2021 Ch. 9)
+
+- **`tara` package** — `Impact`, `Feasibility`, `RiskLevel`, `TreatmentDecision`, `ThreatScenario`, `TARA` types; `Build`, `Save`, `Load`, `Render` (text/json). Produces 8 threat scenarios covering the cybersecurity threats to a multi-language safety-analysis toolchain (SBOM tampering, evidence spoofing, adapter supply-chain compromise, report manipulation, signing key theft, traceability integrity, pipeline availability disruption, configuration tampering). Each scenario's risk level is computed from an Impact × Feasibility matrix per ISO 21434 Table 1. SHA-256 integrity hash over the assembled document. (REQ-FO-TARA001, REQ-FO-TARA002, REQ-FO-TARA003, REQ-FO-TARA004)
+- **`fusaops tara [--dir DIR] [--format text|json] [--output PATH]`** — build and render the TARA; persists to `.fusaops-tara.json`; exits 1 when any scenario carries a critical risk level. (REQ-FO-CLI069)
+- `fusaops capabilities` updated with `tara` command and `text`/`json` formats.
+- Mirrors `gofusa tara` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 336 requirements (added REQ-FO-TARA001–004, REQ-FO-CLI069)
+- 15 package tests + 5 CLI tests; combined coverage ≥ 80%
+
 ## [1.53.0] — 2026-06-16
 
 ### `fusaops sas` — Software Accomplishment Summary (DO-178C §11.20)
@@ -921,7 +934,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.53.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.54.0...HEAD
+[1.54.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.52.0...v1.53.0
 [1.52.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.51.0...v1.52.0
 [1.51.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.50.0...v1.51.0

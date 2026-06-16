@@ -729,13 +729,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.54 — `fusaops tara` — Threat Analysis and Risk Assessment (ISO 21434:2021 Ch. 9) ✅
+
+**Goal:** Mirror `gofusa tara` for cybersecurity threat analysis at the multi-language toolchain level per ISO 21434:2021 Chapter 9.
+
+- `tara` package — `Impact`, `Feasibility`, `RiskLevel`, `TreatmentDecision`, `ThreatScenario`, `TARA` types; `Build`, `Save`, `Load`, `Render` (text/json). 8 standard threat scenarios; risk computed from Impact × Feasibility matrix. (REQ-FO-TARA001–004)
+- `fusaops tara [--dir DIR] [--format text|json] [--output PATH]`; exits 1 on critical risk. (REQ-FO-CLI069)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
 |---|---|---|
-| v1.54 | `fusaops tara` | Generate a Threat Analysis and Risk Assessment per ISO 21434 Chapter 9 (mirrors `gofusa tara`) |
 | v1.55 | `fusaops fmea` | Generate a dFMEA report aggregated from all language tools (mirrors `gofusa fmea`) |
 | v1.56 | `fusaops vuln` | Scan all dependency manifests (go.mod, Cargo.toml, requirements.txt, pom.xml, package.json) against the OSV vulnerability database (mirrors `gofusa vuln`) |
 | v1.57 | `fusaops template` | Generate safety documentation templates for multi-language projects (mirrors `gofusa template`) |

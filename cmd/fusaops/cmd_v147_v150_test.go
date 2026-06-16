@@ -498,3 +498,60 @@ func TestSASInvalidFormat(t *testing.T) {
 		t.Errorf("sas invalid format: code=%d err=%q", code, errb)
 	}
 }
+
+// ── fusaops tara ─────────────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-CLI069
+func TestTARABadFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "tara", "--bogus")
+	if code != 2 {
+		t.Errorf("tara --bogus: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI069
+func TestTARASuccess(t *testing.T) {
+	dir := t.TempDir()
+	// tara always produces output; exits 1 when any critical scenario exists.
+	code, out, errb := runArgs(t, "tara", "--dir", dir)
+	if code > 1 {
+		t.Fatalf("tara: unexpected exit code %d, err=%q", code, errb)
+	}
+	if !strings.Contains(out, "TARA") {
+		t.Errorf("tara output missing header: %q", out[:min(len(out), 200)])
+	}
+	if !strings.Contains(out, "TARA written to") {
+		t.Errorf("tara output missing confirmation: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI069
+func TestTARAJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, _ := runArgs(t, "tara", "--dir", dir, "--format", "json")
+	if code > 1 {
+		t.Fatalf("tara json: unexpected exit code %d", code)
+	}
+	if !strings.Contains(out, `"scenarios"`) || !strings.Contains(out, `"riskLevel"`) {
+		t.Errorf("tara json missing expected fields: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI069
+func TestTARAOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	outFile := filepath.Join(dir, "tara.json")
+	runArgs(t, "tara", "--dir", dir, "--output", outFile)
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI069
+func TestTARAInvalidFormat(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "tara", "--dir", dir, "--format", "xml")
+	if code != 2 || !strings.Contains(errb, "format") {
+		t.Errorf("tara invalid format: code=%d err=%q", code, errb)
+	}
+}
