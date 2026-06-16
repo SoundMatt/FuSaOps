@@ -38,6 +38,7 @@
 //	impact        Analyse the effect of source changes on requirements
 //	disposition   Manage finding disposition entries
 //	pr            Manage software problem reports (DO-178C §11.17)
+//	verify        Run go test and save a test evidence bundle
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -114,6 +115,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runDisposition(args[1:], stdout, stderr)
 	case "pr":
 		return runPR(args[1:], stdout, stderr)
+	case "verify":
+		return runVerify(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -173,6 +176,7 @@ Commands:
   impact        Analyse the effect of source changes on requirements
   disposition   Manage finding disposition entries
   pr            Manage software problem reports (DO-178C §11.17)
+  verify        Run go test and save a test evidence bundle
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

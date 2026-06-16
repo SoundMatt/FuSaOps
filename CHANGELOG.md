@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.47.0] — 2026-06-16
+
+### `fusaops verify` — Go test evidence bundle
+
+- **`verify` package** — `TestStatus`, `TestResult`, `Summary`, `Bundle` types; `Parse`, `Summarise`, `Run`, `New`, `Save`, `Load`, `Render` (text/json). Shells out to `go test -json -count=1 ./...`, parses the event stream, and persists an auditable evidence bundle to `.fusaops-evidence.json`. (REQ-FO-VER001, REQ-FO-VER002, REQ-FO-VER003, REQ-FO-VER004, REQ-FO-VER005)
+- **`fusaops verify [--dir DIR] [--output PATH] [--format text|json]`** — run the Go test suite and save the evidence bundle; exits 1 if any tests fail. (REQ-FO-CLI062)
+- `fusaops capabilities` updated with `verify` command and `text`/`json` formats.
+- Mirrors `gofusa verify` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 303 requirements (added REQ-FO-VER001–005, REQ-FO-CLI062)
+- 15 package tests; combined coverage 81.3%
+
 ## [1.46.0] — 2026-06-13
 
 ### `fusaops pr` — DO-178C §11.17 software problem reports
@@ -828,7 +841,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.46.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.47.0...HEAD
+[1.47.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.46.0...v1.47.0
 [1.46.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.44.0...v1.45.0
 [1.44.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.43.0...v1.44.0

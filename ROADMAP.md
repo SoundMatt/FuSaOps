@@ -666,13 +666,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.47 — `fusaops verify` — Go test evidence bundle ✅
+
+**Goal:** Mirror `gofusa verify` for auditable test evidence collection at the FuSaOps level.
+
+- `verify` package — `TestStatus`, `TestResult`, `Summary`, `Bundle` types; `Parse`, `Summarise`, `Run`, `New`, `Save`, `Load`, `Render` (text/json) (REQ-FO-VER001–005)
+- `fusaops verify [--dir DIR] [--output PATH] [--format text|json]` — run `go test -json`, save `.fusaops-evidence.json` (REQ-FO-CLI062)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
 |---|---|---|
-| v1.47 | `fusaops verify` | Run multi-language test suites and save a cross-language test evidence bundle (mirrors `gofusa verify`) |
 | v1.48 | `fusaops sign` | Sign or verify a file using HMAC-SHA256 — stdlib only, no external tools required (mirrors `gofusa sign`) |
 | v1.49 | `fusaops qualify` | Run the built-in tool qualification suite and save a qualification report across all adapters (mirrors `gofusa qualify`) |
 | v1.50 | `fusaops release` | Generate a multi-language SBOM, build provenance, and artifact manifest in one command (mirrors `gofusa release`) |

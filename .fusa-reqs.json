@@ -2064,6 +2064,48 @@
       "description": "The fusaops CLI shall provide a 'pr' subcommand with 'init', 'add' (--id, --title, --desc, --phase, --severity), 'list' (--format text|json), and 'close' (--id, --resolution) sub-subcommands managing .fusaops-problems.json.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa pr for DO-178C §11.17 problem report management at the FuSaOps multi-language level."
+    },
+    {
+      "id": "REQ-FO-VER001",
+      "title": "Verify evidence types",
+      "description": "The verify package shall define BundleFile constant (\".fusaops-evidence.json\"), TestStatus type (pass/fail/skip), TestResult, Summary, and Bundle types with JSON serialisation.",
+      "priority": "MUST",
+      "rationale": "Provides the structured evidence bundle schema for test result persistence."
+    },
+    {
+      "id": "REQ-FO-VER002",
+      "title": "Parse and Summarise test output",
+      "description": "The verify package shall provide Parse(io.Reader) to decode go test -json output into []TestResult (ignoring package-level events) and Summarise([]TestResult) to compute aggregate counts.",
+      "priority": "MUST",
+      "rationale": "Decodes the machine-readable test stream from go test into auditable result records."
+    },
+    {
+      "id": "REQ-FO-VER003",
+      "title": "Run test suite",
+      "description": "verify.Run(ctx, dir) shall execute 'go test -json -count=1 ./...' in dir, treat non-zero exit from test failures as a parseable result (not an error), and return an error only for infrastructure failures (go not found, no module).",
+      "priority": "MUST",
+      "rationale": "Allows the evidence bundle to capture both passing and failing test outcomes."
+    },
+    {
+      "id": "REQ-FO-VER004",
+      "title": "Bundle persistence",
+      "description": "verify.New builds a Bundle with generatedAt, projectRoot, goVersion, results, and summary; Save writes it as indented JSON to the given path; Load reads and deserialises it, returning ErrNoConfig when the file is absent.",
+      "priority": "MUST",
+      "rationale": "Provides a durable, auditable evidence artefact for safety certification."
+    },
+    {
+      "id": "REQ-FO-VER005",
+      "title": "Render evidence bundle",
+      "description": "verify.Render(w, bundle, format) shall support format values 'text' (human-readable summary with failed test list) and 'json' (indented JSON), returning an error for unsupported formats.",
+      "priority": "MUST",
+      "rationale": "Allows the CLI to display evidence bundle contents in both human and machine-readable forms."
+    },
+    {
+      "id": "REQ-FO-CLI062",
+      "title": "fusaops verify subcommand",
+      "description": "The fusaops CLI shall provide a 'verify' subcommand with --dir, --output, and --format flags that runs go test -json, saves the evidence bundle, prints results, and exits 1 if any tests fail.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa verify, enabling test evidence collection at the FuSaOps multi-language level."
     }
   ]
 }
