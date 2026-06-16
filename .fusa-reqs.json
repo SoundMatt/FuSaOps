@@ -2141,6 +2141,41 @@
       "description": "The fusaops CLI shall provide a 'sign' subcommand with --keygen (generate key), --key (key path), and --verify (verify mode) flags for HMAC-SHA256 artifact signing and verification.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa sign, enabling artifact integrity signing at the FuSaOps multi-language level."
+    },
+    {
+      "id": "REQ-FO-QUAL001",
+      "title": "Qualify evidence types",
+      "description": "The qualify package shall define ReportFile, ComponentResult (language, tool, available, skipped, total, passed, failed) and Report (generatedAt, goVersion, projectRoot, total, passed, failed, components, hash) types with JSON serialisation.",
+      "priority": "MUST",
+      "rationale": "Provides the structured schema for cross-language tool qualification evidence."
+    },
+    {
+      "id": "REQ-FO-QUAL002",
+      "title": "Run qualification across adapters",
+      "description": "qualify.Run(ctx, adapters, root) shall call Qualify() on each adapter.Qualifier; record adapters that are unavailable or do not implement Qualifier as skipped; aggregate total/passed/failed counts; and compute a SHA-256 integrity hash.",
+      "priority": "MUST",
+      "rationale": "Enables multi-language tool confidence evidence collection in one pass."
+    },
+    {
+      "id": "REQ-FO-QUAL003",
+      "title": "Qualify report persistence",
+      "description": "qualify.Save(path, report) writes the report as indented JSON; qualify.Load(path) reads and deserialises it, returning ErrNoConfig when the file is absent.",
+      "priority": "MUST",
+      "rationale": "Provides a durable, auditable qualification evidence artefact."
+    },
+    {
+      "id": "REQ-FO-QUAL004",
+      "title": "Qualify report rendering",
+      "description": "qualify.Render(w, report, format) shall support 'text' (per-component PASS/FAIL/skipped table with aggregate counts) and 'json' (indented JSON), returning an error for unsupported formats.",
+      "priority": "MUST",
+      "rationale": "Allows inspecting qualification results in both human and machine-readable form."
+    },
+    {
+      "id": "REQ-FO-CLI064",
+      "title": "fusaops qualify subcommand",
+      "description": "The fusaops CLI shall provide a 'qualify' subcommand with --dir, --output, and --format flags that runs tool qualification for all applicable adapters, saves the report, prints a summary, and exits 1 if any component fails.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa qualify, enabling cross-language tool confidence evidence collection at the FuSaOps level."
     }
   ]
 }

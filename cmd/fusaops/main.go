@@ -40,6 +40,7 @@
 //	pr            Manage software problem reports (DO-178C §11.17)
 //	verify        Run go test and save a test evidence bundle
 //	sign          Sign or verify a file using HMAC-SHA256
+//	qualify       Run tool qualification across all x-FuSa adapters
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -120,6 +121,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runVerify(args[1:], stdout, stderr)
 	case "sign":
 		return runSign(args[1:], stdout, stderr)
+	case "qualify":
+		return runQualify(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -181,6 +184,7 @@ Commands:
   pr            Manage software problem reports (DO-178C §11.17)
   verify        Run go test and save a test evidence bundle
   sign          Sign or verify a file using HMAC-SHA256
+  qualify       Run tool qualification across all x-FuSa adapters
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 
