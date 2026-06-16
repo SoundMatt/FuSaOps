@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.56.0] — 2026-06-16
+
+### `fusaops vuln` — Cross-language dependency vulnerability scan (OSV)
+
+- **`vuln` package** — `ManifestKind`, `ScanStatus`, `Manifest`, `VulnFinding`, `VulnReport` types; `Scan`, `Save`, `Load`, `Render` (text/json). Discovers dependency manifests (go.mod, Cargo.toml, requirements.txt, package.json, pom.xml) by walking the project tree. When `osv-scanner` is available on PATH it is invoked via an injectable `RunnerFunc`; when absent each manifest is recorded with status `skipped`. Findings are classified by CRITICAL/HIGH severity. SHA-256 integrity hash over the assembled report. (REQ-FO-VULN001, REQ-FO-VULN002, REQ-FO-VULN003, REQ-FO-VULN004)
+- **`fusaops vuln [--dir DIR] [--format text|json] [--output PATH]`** — discover manifests and run vulnerability scan; persists to `.fusaops-vuln.json`; exits 1 when any vulnerability is found. (REQ-FO-CLI071)
+- `fusaops capabilities` updated with `vuln` command and `text`/`json` formats.
+- Mirrors `gofusa vuln` extended to all supported manifest types across languages.
+
+### Safety
+- Requirements registry at 346 requirements (added REQ-FO-VULN001–004, REQ-FO-CLI071)
+- 16 package tests + 5 CLI tests; combined coverage ≥ 80%
+
 ## [1.55.0] — 2026-06-16
 
 ### `fusaops fmea` — Design Failure Mode and Effects Analysis (IEC 61508 / ISO 26262 Part 8)
@@ -947,7 +960,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.55.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.56.0...HEAD
+[1.56.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.55.0...v1.56.0
 [1.55.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.52.0...v1.53.0

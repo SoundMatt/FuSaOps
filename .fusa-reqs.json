@@ -2361,6 +2361,36 @@
       "title": "fusaops fmea subcommand",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-VULN001",
+      "title": "Vuln types and constants",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-VULN002",
+      "title": "Vuln Scan function",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-VULN003",
+      "title": "Vuln Save and Load",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-VULN004",
+      "title": "Vuln rendering",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-CLI071",
+      "title": "fusaops vuln subcommand",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
     }
   ]
 }
