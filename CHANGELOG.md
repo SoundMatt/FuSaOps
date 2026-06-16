@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.48.0] — 2026-06-16
+
+### `fusaops sign` — HMAC-SHA256 artifact signing
+
+- **`sign` package** — `Keygen`, `LoadKey`, `Sign`, `Verify` functions; `SigExt = ".sig"`. Generates random 32-byte keys, computes HMAC-SHA256 over artifact files, writes `.sig` files, and verifies signatures. Stdlib-only, no external tools. (REQ-FO-SIGN001, REQ-FO-SIGN002, REQ-FO-SIGN003, REQ-FO-SIGN004)
+- **`fusaops sign --keygen <path>`** — generate a new HMAC key. (REQ-FO-CLI063)
+- **`fusaops sign --key <keyfile> <file>`** — sign artifact, write `<file>.sig`. (REQ-FO-CLI063)
+- **`fusaops sign --verify --key <keyfile> <file>`** — verify `<file>.sig`. (REQ-FO-CLI063)
+- `fusaops capabilities` updated with `sign` command and `text` format.
+- Mirrors `gofusa sign` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 309 requirements (added REQ-FO-SIGN001–004, REQ-FO-CLI063)
+- 11 package tests; combined coverage 81.3%
+
 ## [1.47.0] — 2026-06-16
 
 ### `fusaops verify` — Go test evidence bundle
@@ -841,7 +856,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.47.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.48.0...HEAD
+[1.48.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.46.0...v1.47.0
 [1.46.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.45.0...v1.46.0
 [1.45.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.44.0...v1.45.0
