@@ -43,6 +43,7 @@
 //	qualify       Run tool qualification across all x-FuSa adapters
 //	release       Generate cross-language SBOM, provenance, and artifact manifest
 //	safety-case   Assemble a structured safety case from evidence artefacts
+//	sci           Generate the Software Configuration Index (DO-178C §11.16)
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -129,6 +130,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runRelease(args[1:], stdout, stderr)
 	case "safety-case":
 		return runSafetyCase(args[1:], stdout, stderr)
+	case "sci":
+		return runSCI(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -193,6 +196,7 @@ Commands:
   qualify       Run tool qualification across all x-FuSa adapters
   release       Generate cross-language SBOM, provenance, and artifact manifest
   safety-case   Assemble a structured safety case from evidence artefacts
+  sci           Generate the Software Configuration Index (DO-178C §11.16)
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

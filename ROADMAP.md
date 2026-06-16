@@ -711,13 +711,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.52 — `fusaops sci` — Software Configuration Index (DO-178C §11.16) ✅
+
+**Goal:** Mirror `gofusa sci` for multi-language tool and artefact inventory per DO-178C §11.16.
+
+- `sci` package — `ItemKind`, `ConfigItem`, `SCI` types; `Build`, `Save`, `Load`, `Render` (text/json). Inventories FuSaOps tool, detected adapters, and 10 known evidence artefacts with SHA-256 hashes. (REQ-FO-SCI001–004)
+- `fusaops sci [--dir DIR] [--format text|json] [--output PATH]` (REQ-FO-CLI067)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
 |---|---|---|
-| v1.52 | `fusaops sci` | Generate the Software Configuration Index (DO-178C §11.16) aggregated across all language components (mirrors `gofusa sci`) |
 | v1.53 | `fusaops sas` | Generate a Software Accomplishment Summary (DO-178C §11.20) from multi-language evidence (mirrors `gofusa sas`) |
 | v1.54 | `fusaops tara` | Generate a Threat Analysis and Risk Assessment per ISO 21434 Chapter 9 (mirrors `gofusa tara`) |
 | v1.55 | `fusaops fmea` | Generate a dFMEA report aggregated from all language tools (mirrors `gofusa fmea`) |

@@ -2241,6 +2241,36 @@
       "title": "fusaops safety-case subcommand",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-SCI001",
+      "title": "SCI types and constants",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.16"
+    },
+    {
+      "id": "REQ-FO-SCI002",
+      "title": "Build SCI from tool and artefact inventory",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.16"
+    },
+    {
+      "id": "REQ-FO-SCI003",
+      "title": "SCI persistence",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.16"
+    },
+    {
+      "id": "REQ-FO-SCI004",
+      "title": "SCI rendering",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.16"
+    },
+    {
+      "id": "REQ-FO-CLI067",
+      "title": "fusaops sci subcommand",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
     }
   ]
 }

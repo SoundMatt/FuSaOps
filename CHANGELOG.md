@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.52.0] — 2026-06-16
+
+### `fusaops sci` — Software Configuration Index (DO-178C §11.16)
+
+- **`sci` package** — `ItemKind`, `ConfigItem`, `SCI` types; `Build`, `Save`, `Load`, `Render` (text/json). Inventories software configuration items: the FuSaOps tool itself, each detected x-FuSa adapter (with availability), and 10 known evidence artefacts (with SHA-256 hash and size when present). A SHA-256 integrity hash covers the assembled document. (REQ-FO-SCI001, REQ-FO-SCI002, REQ-FO-SCI003, REQ-FO-SCI004)
+- **`fusaops sci [--dir DIR] [--format text|json] [--output PATH]`** — build and render the SCI; persists to `.fusaops-sci.json`; always exits 0. (REQ-FO-CLI067)
+- `fusaops capabilities` updated with `sci` command and `text`/`json` formats.
+- Mirrors `gofusa sci` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 326 requirements (added REQ-FO-SCI001–004, REQ-FO-CLI067)
+- 14 package tests + 6 CLI tests; combined coverage 82.1%
+
 ## [1.51.0] — 2026-06-16
 
 ### `fusaops safety-case` — structured safety argument assembly
@@ -895,7 +908,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.51.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.52.0...HEAD
+[1.52.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.51.0...v1.52.0
 [1.51.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.50.0...v1.51.0
 [1.50.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.48.0...v1.49.0

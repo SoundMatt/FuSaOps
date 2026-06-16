@@ -356,3 +356,76 @@ func TestSafetyCaseInvalidFormat(t *testing.T) {
 		t.Errorf("safety-case invalid format: code=%d err=%q", code, errb)
 	}
 }
+
+// ── fusaops sci ──────────────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-CLI067
+func TestSCIBadFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "sci", "--bogus")
+	if code != 2 {
+		t.Errorf("sci --bogus: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI067
+func TestSCIEmptyDir(t *testing.T) {
+	// Empty dir → no adapters, all artefacts missing → exit 0 (SCI always succeeds).
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "sci", "--dir", dir)
+	if code != 0 {
+		t.Fatalf("sci empty dir: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Software Configuration Index") {
+		t.Errorf("sci output missing header: %q", out[:min(len(out), 200)])
+	}
+	if !strings.Contains(out, "SCI written to") {
+		t.Errorf("sci output missing confirmation: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI067
+func TestSCIJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "sci", "--dir", dir, "--format", "json")
+	if code != 0 {
+		t.Fatalf("sci json: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, `"tool"`) || !strings.Contains(out, `"items"`) {
+		t.Errorf("sci json missing expected fields: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI067
+func TestSCIOutputFile(t *testing.T) {
+	dir := t.TempDir()
+	outFile := filepath.Join(dir, "sci.json")
+	code, _, errb := runArgs(t, "sci", "--dir", dir, "--output", outFile)
+	if code != 0 {
+		t.Fatalf("sci --output: code=%d err=%q", code, errb)
+	}
+	if _, err := os.Stat(outFile); err != nil {
+		t.Errorf("output file not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI067
+func TestSCIGoProject(t *testing.T) {
+	// A project with Go source detects the go adapter.
+	dir := goProject(t)
+	code, out, _ := runArgs(t, "sci", "--dir", dir)
+	if code != 0 {
+		t.Errorf("sci goProject: code=%d", code)
+	}
+	if !strings.Contains(out, "Tool Items") {
+		t.Errorf("sci output missing Tool Items section: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI067
+func TestSCIInvalidFormat(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "sci", "--dir", dir, "--format", "xml")
+	if code != 2 || !strings.Contains(errb, "format") {
+		t.Errorf("sci invalid format: code=%d err=%q", code, errb)
+	}
+}
