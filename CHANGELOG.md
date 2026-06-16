@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.57.0] — 2026-06-16
+
+### `fusaops template` — Safety documentation template generator
+
+- **`doctemplate` package** — `DocKind`, `DocTemplate`, `GeneratedDoc`, `Report` types; `Generate`, `Save`, `Load`, `Render` (text/json). Built-in library of 8 safety document templates: Software Safety Plan, HARA, SRS, Test Plan, TARA, SCI, SAS, and Problem Report. Templates are filtered by target standard(s) and written as Markdown files to an output directory. SHA-256 integrity hash over the generation report. (REQ-FO-TMPL001, REQ-FO-TMPL002, REQ-FO-TMPL003, REQ-FO-TMPL004)
+- **`fusaops template [--dir DIR] [--output-dir DIR] [--standards ISO 26262,...] [--format text|json] [--output PATH]`** — generate and report on templates; always exits 0. (REQ-FO-CLI072)
+- `fusaops capabilities` updated with `template` command and `text`/`json` formats.
+- Mirrors `gofusa template` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 351 requirements (added REQ-FO-TMPL001–004, REQ-FO-CLI072)
+- 15 package tests + 6 CLI tests; combined coverage ≥ 80%
+
 ## [1.56.0] — 2026-06-16
 
 ### `fusaops vuln` — Cross-language dependency vulnerability scan (OSV)
@@ -960,7 +973,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.56.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.57.0...HEAD
+[1.57.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.56.0...v1.57.0
 [1.56.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.55.0...v1.56.0
 [1.55.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.53.0...v1.54.0

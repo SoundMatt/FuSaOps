@@ -48,6 +48,7 @@
 //	tara          Generate a Threat Analysis and Risk Assessment (ISO 21434 Ch. 9)
 //	fmea          Generate a Design Failure Mode and Effects Analysis (IEC 61508 / ISO 26262 Part 8)
 //	vuln          Scan dependency manifests against the OSV vulnerability database
+//	template      Generate safety documentation templates for multi-language projects
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -144,6 +145,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runFMEA(args[1:], stdout, stderr)
 	case "vuln":
 		return runVuln(args[1:], stdout, stderr)
+	case "template":
+		return runTemplate(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -213,6 +216,7 @@ Commands:
   tara          Generate a Threat Analysis and Risk Assessment (ISO 21434 Ch. 9)
   fmea          Generate a Design Failure Mode and Effects Analysis (IEC 61508 / ISO 26262 Part 8)
   vuln          Scan dependency manifests against the OSV vulnerability database
+  template      Generate safety documentation templates for multi-language projects
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 
