@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -32,13 +33,15 @@ func TestKeygen(t *testing.T) {
 		t.Errorf("key is not valid hex: %v", hexErr)
 	}
 
-	// File mode should be 0600 (owner read/write only).
-	info, err := os.Stat(keyPath)
-	if err != nil {
-		t.Fatalf("Stat: %v", err)
-	}
-	if info.Mode().Perm() != 0o600 {
-		t.Errorf("key file mode = %o, want 0600", info.Mode().Perm())
+	// File mode should be 0600 (owner read/write only) — not applicable on Windows.
+	if runtime.GOOS != "windows" {
+		info, statErr := os.Stat(keyPath)
+		if statErr != nil {
+			t.Fatalf("Stat: %v", statErr)
+		}
+		if info.Mode().Perm() != 0o600 {
+			t.Errorf("key file mode = %o, want 0600", info.Mode().Perm())
+		}
 	}
 }
 
