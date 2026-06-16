@@ -168,8 +168,8 @@ func TestSaveLoad(t *testing.T) {
 		t.Fatalf("Build: %v", err)
 	}
 	path := filepath.Join(dir, safetycase.ReportFile)
-	if err := safetycase.Save(path, sc); err != nil {
-		t.Fatalf("Save: %v", err)
+	if saveErr := safetycase.Save(path, sc); saveErr != nil {
+		t.Fatalf("Save: %v", saveErr)
 	}
 	got, err := safetycase.Load(path)
 	if err != nil {
