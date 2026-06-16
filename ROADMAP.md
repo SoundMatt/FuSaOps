@@ -693,13 +693,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.50 — `fusaops release` — cross-language SBOM, provenance, and artifact manifest ✅
+
+**Goal:** Mirror `gofusa release` for a one-command multi-language safety release bundle.
+
+- `release` package — `Provenance`, `Artifact`, `Manifest` types; `BuildProvenance`, `BuildManifest`, `SaveJSON`, `RenderProvenance`, `RenderManifest` (text/json) (REQ-FO-REL001–004)
+- `fusaops release [--dir DIR] [--output-dir DIR]` — SBOM + provenance + manifest (REQ-FO-CLI065)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
 |---|---|---|
-| v1.50 | `fusaops release` | Generate a multi-language SBOM, build provenance, and artifact manifest in one command (mirrors `gofusa release`) |
 | v1.51 | `fusaops safety-case` | Assemble a structured safety case from existing evidence files across all languages (mirrors `gofusa safety-case`) |
 | v1.52 | `fusaops sci` | Generate the Software Configuration Index (DO-178C §11.16) aggregated across all language components (mirrors `gofusa sci`) |
 | v1.53 | `fusaops sas` | Generate a Software Accomplishment Summary (DO-178C §11.20) from multi-language evidence (mirrors `gofusa sas`) |
