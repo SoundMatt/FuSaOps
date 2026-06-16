@@ -675,13 +675,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.48 — `fusaops sign` — HMAC-SHA256 artifact signing ✅
+
+**Goal:** Mirror `gofusa sign` for artifact integrity protection at the FuSaOps multi-language level.
+
+- `sign` package — `Keygen`, `LoadKey`, `Sign`, `Verify` functions; `SigExt = ".sig"` (REQ-FO-SIGN001–004)
+- `fusaops sign --keygen|--key|--verify <file>` — key generation, signing, and verification (REQ-FO-CLI063)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
 |---|---|---|
-| v1.48 | `fusaops sign` | Sign or verify a file using HMAC-SHA256 — stdlib only, no external tools required (mirrors `gofusa sign`) |
 | v1.49 | `fusaops qualify` | Run the built-in tool qualification suite and save a qualification report across all adapters (mirrors `gofusa qualify`) |
 | v1.50 | `fusaops release` | Generate a multi-language SBOM, build provenance, and artifact manifest in one command (mirrors `gofusa release`) |
 | v1.51 | `fusaops safety-case` | Assemble a structured safety case from existing evidence files across all languages (mirrors `gofusa safety-case`) |

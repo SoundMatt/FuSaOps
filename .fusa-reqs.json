@@ -2106,6 +2106,41 @@
       "description": "The fusaops CLI shall provide a 'verify' subcommand with --dir, --output, and --format flags that runs go test -json, saves the evidence bundle, prints results, and exits 1 if any tests fail.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa verify, enabling test evidence collection at the FuSaOps multi-language level."
+    },
+    {
+      "id": "REQ-FO-SIGN001",
+      "title": "Key generation",
+      "description": "sign.Keygen(path) shall generate a cryptographically random 32-byte key, hex-encode it, and write it to path with mode 0o600. SigExt shall be the constant \".sig\".",
+      "priority": "MUST",
+      "rationale": "Provides a secure key material bootstrap for HMAC-SHA256 artifact signing."
+    },
+    {
+      "id": "REQ-FO-SIGN002",
+      "title": "Key loading",
+      "description": "sign.LoadKey(path) shall read and hex-decode a key file, stripping trailing whitespace, and return an error if the file is missing, not valid hex, or the decoded key is shorter than 16 bytes.",
+      "priority": "MUST",
+      "rationale": "Ensures only well-formed keys of sufficient length are accepted for signing operations."
+    },
+    {
+      "id": "REQ-FO-SIGN003",
+      "title": "Artifact signing",
+      "description": "sign.Sign(path, key) shall compute HMAC-SHA256 of the file at path using key, write the hex-encoded digest to path+\".sig\" with mode 0o640, and return the hex-encoded signature.",
+      "priority": "MUST",
+      "rationale": "Provides integrity protection for safety artifacts using stdlib-only HMAC-SHA256."
+    },
+    {
+      "id": "REQ-FO-SIGN004",
+      "title": "Signature verification",
+      "description": "sign.Verify(path, key) shall read path+\".sig\", decode the stored hex signature, recompute HMAC-SHA256 of path, and return nil on match or an error on mismatch or missing signature file.",
+      "priority": "MUST",
+      "rationale": "Allows callers to confirm artifact integrity before use in safety-critical evidence chains."
+    },
+    {
+      "id": "REQ-FO-CLI063",
+      "title": "fusaops sign subcommand",
+      "description": "The fusaops CLI shall provide a 'sign' subcommand with --keygen (generate key), --key (key path), and --verify (verify mode) flags for HMAC-SHA256 artifact signing and verification.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa sign, enabling artifact integrity signing at the FuSaOps multi-language level."
     }
   ]
 }
