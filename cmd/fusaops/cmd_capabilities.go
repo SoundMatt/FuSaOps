@@ -26,6 +26,7 @@ type capabilities struct {
 // runCapabilities reports FuSaOps's supported commands, formats, and standards.
 //
 //fusa:req REQ-FO-CLI054
+//fusa:req REQ-FO-SPEC002
 func runCapabilities(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops capabilities", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -98,7 +99,7 @@ func runCapabilities(args []string, stdout, stderr io.Writer) int {
 			"hara":        {"text", "json", "markdown"},
 		},
 		Standards: []string{
-			"iso26262", "iec61508", "do178c", "iso21434", "unece-r155", "iec62443",
+			"iso26262", "iec61508", "do178c", "iso21434", "unece-r155", "iec62443", "slsa",
 		},
 	}
 

@@ -2463,6 +2463,12 @@
       "title": "stdout clean when --output given (§2.2 no-stdout invariant)",
       "priority": "MUST",
       "standard": "x-FuSa spec §2.2"
+    },
+    {
+      "id": "REQ-FO-SPEC002",
+      "title": "capabilities Standards list includes canonical 'slsa' identifier (§2.4.1)",
+      "priority": "MUST",
+      "standard": "x-FuSa spec §2.4.1"
     }
   ]
 }
