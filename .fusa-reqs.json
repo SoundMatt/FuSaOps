@@ -2176,6 +2176,41 @@
       "description": "The fusaops CLI shall provide a 'qualify' subcommand with --dir, --output, and --format flags that runs tool qualification for all applicable adapters, saves the report, prints a summary, and exits 1 if any component fails.",
       "priority": "MUST",
       "rationale": "Mirrors gofusa qualify, enabling cross-language tool confidence evidence collection at the FuSaOps level."
+    },
+    {
+      "id": "REQ-FO-REL001",
+      "title": "Release artefact types and constants",
+      "description": "The release package shall define SBOMFile (\"sbom.json\"), ProvenanceFile (\"provenance.json\"), ManifestFile (\"artifact-manifest.json\") constants, and Provenance, Artifact, Manifest types with JSON serialisation.",
+      "priority": "MUST",
+      "rationale": "Defines the canonical output schema for multi-language release evidence bundles."
+    },
+    {
+      "id": "REQ-FO-REL002",
+      "title": "Build provenance",
+      "description": "release.BuildProvenance(ctx, root) shall capture the current tool/version/Go runtime info and best-effort VCS state (git rev-parse HEAD, git status --porcelain) into a Provenance record.",
+      "priority": "MUST",
+      "rationale": "Provides reproducibility and traceability evidence for safety artifact releases."
+    },
+    {
+      "id": "REQ-FO-REL003",
+      "title": "Build artifact manifest",
+      "description": "release.BuildManifest(paths) shall compute SHA-256 checksums and file sizes for each path in paths and return a Manifest; missing files are returned as errors.",
+      "priority": "MUST",
+      "rationale": "Ensures integrity of all released artifacts through cryptographic checksums."
+    },
+    {
+      "id": "REQ-FO-REL004",
+      "title": "Release rendering and persistence",
+      "description": "release.SaveJSON(path, v) writes any value as indented JSON; RenderProvenance and RenderManifest support 'text' and 'json' formats, returning errors for unsupported formats.",
+      "priority": "MUST",
+      "rationale": "Provides consistent file output and display for release evidence artefacts."
+    },
+    {
+      "id": "REQ-FO-CLI065",
+      "title": "fusaops release subcommand",
+      "description": "The fusaops CLI shall provide a 'release' subcommand with --dir and --output-dir flags that generates the cross-language SBOM, build provenance, and artifact manifest, saving them to the output directory.",
+      "priority": "MUST",
+      "rationale": "Mirrors gofusa release adapted for the FuSaOps multi-language orchestration context."
     }
   ]
 }

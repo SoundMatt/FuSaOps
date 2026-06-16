@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.50.0] — 2026-06-16
+
+### `fusaops release` — cross-language SBOM, provenance, and artifact manifest
+
+- **`release` package** — `Provenance`, `Artifact`, `Manifest` types; `BuildProvenance` (captures tool version, Go runtime, git VCS state), `BuildManifest` (SHA-256 hashes of all output files), `SaveJSON`, `RenderProvenance`, `RenderManifest` (text/json). File constants: `sbom.json`, `provenance.json`, `artifact-manifest.json`. (REQ-FO-REL001, REQ-FO-REL002, REQ-FO-REL003, REQ-FO-REL004)
+- **`fusaops release [--dir DIR] [--output-dir DIR]`** — run `RunSBOM` across all adapters → `sbom.json`, build provenance → `provenance.json`, hash all outputs → `artifact-manifest.json`. (REQ-FO-CLI065)
+- `fusaops capabilities` updated with `release` command and `text` format.
+- Mirrors `gofusa release` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 321 requirements (added REQ-FO-REL001–004, REQ-FO-CLI065)
+- 15 package tests; combined coverage 81.4%
+
 ## [1.49.0] — 2026-06-16
 
 ### `fusaops qualify` — cross-language tool qualification roll-up
@@ -869,7 +882,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.49.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.50.0...HEAD
+[1.50.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.49.0...v1.50.0
 [1.49.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.48.0...v1.49.0
 [1.48.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.47.0...v1.48.0
 [1.47.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.46.0...v1.47.0
