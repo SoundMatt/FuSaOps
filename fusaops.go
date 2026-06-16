@@ -19,7 +19,7 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "1.57.0"
+const Version = "1.58.0"
 
 // SpecVersion is the x-FuSa specification version this release targets.
 //

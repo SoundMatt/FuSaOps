@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.58.0] — 2026-06-16
+
+### `fusaops hara` — Hazard Analysis and Risk Assessment (ISO 26262-3:2018)
+
+- **`hara` package** — `Severity`, `Exposure`, `Controllability`, `ASIL`, `RiskRating`, `OperationalSituation`, `Hazard`, `SafetyGoal`, `HARA`, `ValidationFinding` types; `DetermineASIL` (full ISO 26262-3:2018 Table 4 — 48 S×E×C combinations); `MaxASIL`; `Load`, `Save`, `Validate`, `Render` (text/json/markdown). Reads `.fusa-hara.json` if present; returns an empty HARA if absent. `Validate` detects HARA002–HARA004 gaps (incomplete risk rating, missing safety goal link, missing ASIL on safety goal). (REQ-FO-HARA001, REQ-FO-HARA002, REQ-FO-HARA003, REQ-FO-HARA004)
+- **`fusaops hara show [--format text|json|markdown] [--output PATH]`** — display HARA as table or JSON.
+- **`fusaops hara init [--project NAME] [--standard STD]`** — create a starter `.fusa-hara.json` with one example hazard and safety goal.
+- **`fusaops hara asil -s S# -e E# -c C#`** — derive ASIL from S/E/C per ISO 26262-3:2018 Table 4. (REQ-FO-CLI073)
+- `fusaops capabilities` updated with `hara` command and `text`/`json`/`markdown` formats.
+- Mirrors `gofusa hara` adapted for the FuSaOps multi-language orchestration context.
+
+### Safety
+- Requirements registry at 356 requirements (added REQ-FO-HARA001–004, REQ-FO-CLI073)
+- 18 package tests + 7 CLI tests; combined coverage ≥ 80%
+
 ## [1.57.0] — 2026-06-16
 
 ### `fusaops template` — Safety documentation template generator
@@ -973,7 +988,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   golangci-lint v2.1.6, DCO sign-off, CodeQL, SARIF upload, Docker build
   smoke-test, concurrency cancellation
 
-[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.57.0...HEAD
+[Unreleased]: https://github.com/SoundMatt/FuSaOps/compare/v1.58.0...HEAD
+[1.58.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.57.0...v1.58.0
 [1.57.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.56.0...v1.57.0
 [1.56.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.55.0...v1.56.0
 [1.55.0]: https://github.com/SoundMatt/FuSaOps/compare/v1.54.0...v1.55.0

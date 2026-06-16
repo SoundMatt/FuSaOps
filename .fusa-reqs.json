@@ -2421,6 +2421,36 @@
       "title": "fusaops template subcommand",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-HARA001",
+      "title": "HARA types and constants",
+      "priority": "MUST",
+      "standard": "ISO 26262"
+    },
+    {
+      "id": "REQ-FO-HARA002",
+      "title": "HARA validation and MaxASIL",
+      "priority": "MUST",
+      "standard": "ISO 26262"
+    },
+    {
+      "id": "REQ-FO-HARA003",
+      "title": "HARA Load, Save, Render",
+      "priority": "MUST",
+      "standard": "ISO 26262"
+    },
+    {
+      "id": "REQ-FO-HARA004",
+      "title": "ASIL determination per ISO 26262-3:2018 Table 4",
+      "priority": "MUST",
+      "standard": "ISO 26262"
+    },
+    {
+      "id": "REQ-FO-CLI073",
+      "title": "fusaops hara subcommand (show|init|asil)",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
     }
   ]
 }
