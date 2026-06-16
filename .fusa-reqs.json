@@ -2391,6 +2391,36 @@
       "title": "fusaops vuln subcommand",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-TMPL001",
+      "title": "doctemplate types and constants",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-TMPL002",
+      "title": "doctemplate Generate function",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-TMPL003",
+      "title": "doctemplate Save and Load",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-TMPL004",
+      "title": "doctemplate rendering",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-CLI072",
+      "title": "fusaops template subcommand",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
     }
   ]
 }

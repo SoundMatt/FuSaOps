@@ -669,3 +669,74 @@ func TestVulnInvalidFormat(t *testing.T) {
 		t.Errorf("vuln invalid format: code=%d err=%q", code, errb)
 	}
 }
+
+// ── fusaops template ──────────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-CLI072
+func TestTemplateBadFlag(t *testing.T) {
+	code, _, errb := runArgs(t, "template", "--bogus")
+	if code != 2 {
+		t.Errorf("template --bogus: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI072
+func TestTemplateSuccess(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "template", "--dir", dir)
+	if code != 0 {
+		t.Fatalf("template: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "Safety Documentation") {
+		t.Errorf("template output missing header: %q", out[:min(len(out), 200)])
+	}
+	if !strings.Contains(out, "Templates written to") {
+		t.Errorf("template output missing confirmation: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI072
+func TestTemplateStandardFilter(t *testing.T) {
+	dir := t.TempDir()
+	code, out, errb := runArgs(t, "template", "--dir", dir, "--standards", "DO-178C")
+	if code != 0 {
+		t.Fatalf("template DO-178C: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "SP-") {
+		t.Errorf("template output missing template IDs: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI072
+func TestTemplateJSON(t *testing.T) {
+	dir := t.TempDir()
+	code, out, _ := runArgs(t, "template", "--dir", dir, "--format", "json")
+	if code != 0 {
+		t.Fatalf("template json: unexpected exit code %d", code)
+	}
+	if !strings.Contains(out, `"generated"`) || !strings.Contains(out, `"totalGenerated"`) {
+		t.Errorf("template json missing expected fields: %q", out[:min(len(out), 200)])
+	}
+}
+
+//fusa:test REQ-FO-CLI072
+func TestTemplateOutputDir(t *testing.T) {
+	dir := t.TempDir()
+	outDir := filepath.Join(dir, "my-docs")
+	code, _, errb := runArgs(t, "template", "--dir", dir, "--output-dir", outDir)
+	if code != 0 {
+		t.Fatalf("template --output-dir: code=%d err=%q", code, errb)
+	}
+	if _, err := os.Stat(outDir); err != nil {
+		t.Errorf("output dir not created: %v", err)
+	}
+}
+
+//fusa:test REQ-FO-CLI072
+func TestTemplateInvalidFormat(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "template", "--dir", dir, "--format", "xml")
+	if code != 2 || !strings.Contains(errb, "format") {
+		t.Errorf("template invalid format: code=%d err=%q", code, errb)
+	}
+}

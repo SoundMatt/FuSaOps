@@ -756,12 +756,18 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.57 — `fusaops template` — Safety documentation template generator ✅
+
+**Goal:** Mirror `gofusa template` for multi-language safety documentation generation.
+
+- `doctemplate` package — `DocKind`, `DocTemplate`, `GeneratedDoc`, `Report` types; `Generate`, `Save`, `Load`, `Render`. 8 built-in Markdown templates; filterable by standard. (REQ-FO-TMPL001–004)
+- `fusaops template [--dir DIR] [--output-dir DIR] [--standards ...] [--format text|json] [--output PATH]`. (REQ-FO-CLI072)
+
+---
+
 ## Planned
 
-The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
-
-| Version | Command | What it does |
-| v1.57 | `fusaops template` | Generate safety documentation templates for multi-language projects (mirrors `gofusa template`) |
+All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.57). Future additions will be driven by new x-FuSa tool features and user requests.
 
 **Language-specific commands** in gofusa (`analyze`, `boundary`, `comp`, `coupling`, `fix`, `lint`, `misra`) operate on Go source or package structure and are intentionally out of scope for FuSaOps — that analysis belongs in each per-language x-FuSa tool.
 
