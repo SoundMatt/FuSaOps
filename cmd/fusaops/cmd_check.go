@@ -48,7 +48,7 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 
-	root, opts, _, err := loadOptions(*dir, *only, stderr)
+	root, opts, cfg, err := loadOptions(*dir, *only, stderr)
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops check: %v\n", err)
 		return 1
@@ -85,6 +85,7 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
+	applyIntegrityLevel(rep, cfg)
 	renderOpts := report.RenderOptions{ShowSuppressed: *showSuppressed, ShowFingerprints: *showFingerprints}
 	if *output != "" {
 		if err := report.RenderToFileWithOptions(rep, *format, *output, renderOpts); err != nil {

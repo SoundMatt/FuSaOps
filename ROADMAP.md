@@ -776,9 +776,19 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.59 — Aggregate report: standard and integrity level fields ✅
+
+**Goal:** Mirror `gofusa` v0.27.0 `sil`/`dal`/`asil` report fields for multi-language projects.
+
+- `report.AggregateReport` gains `Standard`, `ASIL`, `SIL`, `DAL` fields; `config.ProjectConfig` gains `ASIL`, `SIL`, `DAL`. (REQ-FO-RPT020)
+- `fusaops check`/`fusaops report` populate these from `.fusaops.json` via `applyIntegrityLevel`.
+- Text and Markdown renderers show the standard and integrity level in the report header.
+
+---
+
 ## Planned
 
-All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.58). Future additions will be driven by new x-FuSa tool features and user requests.
+All planned commands from the initial gofusa mirror list have been implemented (v1.51–v1.59). Future additions will be driven by new x-FuSa tool features and user requests.
 
 **Language-specific commands** in gofusa (`analyze`, `boundary`, `comp`, `coupling`, `fix`, `lint`, `misra`) operate on Go source or package structure and are intentionally out of scope for FuSaOps — that analysis belongs in each per-language x-FuSa tool.
 

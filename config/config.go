@@ -35,6 +35,9 @@ type Config struct {
 type ProjectConfig struct {
 	Name     string `json:"name"`
 	Standard string `json:"standard,omitempty"` // ISO26262, IEC61508, DO178C, ...
+	ASIL     string `json:"asil,omitempty"`     // ISO 26262 integrity level: ASIL-A … ASIL-D
+	SIL      string `json:"sil,omitempty"`      // IEC 61508 integrity level: SIL-1 … SIL-4
+	DAL      string `json:"dal,omitempty"`      // DO-178C integrity level: DAL-A … DAL-E
 }
 
 // ScanConfig controls discovery and adapter selection.
