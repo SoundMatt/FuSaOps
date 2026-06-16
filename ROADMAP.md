@@ -720,13 +720,21 @@ Deliverables: `fusaops diff`, component-scoped scans, 80%+ coverage, 146 require
 
 ---
 
+## v1.53 — `fusaops sas` — Software Accomplishment Summary (DO-178C §11.20) ✅
+
+**Goal:** Mirror `gofusa sas` for multi-language lifecycle activity evidence aggregation per DO-178C §11.20.
+
+- `sas` package — `ActivityStatus`, `Activity`, `SAS` types; `Build`, `Save`, `Load`, `Render` (text/json). Maps 12 lifecycle activities to evidence artefacts; marks each complete/incomplete/N/A. (REQ-FO-SAS001–004)
+- `fusaops sas [--dir DIR] [--level DAL-A|...|DAL-E] [--format text|json] [--output PATH]` (REQ-FO-CLI068)
+
+---
+
 ## Planned
 
 The following commands are in `gofusa` and apply at the multi-language FuSaOps orchestration level. They will be implemented in roughly this order:
 
 | Version | Command | What it does |
 |---|---|---|
-| v1.53 | `fusaops sas` | Generate a Software Accomplishment Summary (DO-178C §11.20) from multi-language evidence (mirrors `gofusa sas`) |
 | v1.54 | `fusaops tara` | Generate a Threat Analysis and Risk Assessment per ISO 21434 Chapter 9 (mirrors `gofusa tara`) |
 | v1.55 | `fusaops fmea` | Generate a dFMEA report aggregated from all language tools (mirrors `gofusa fmea`) |
 | v1.56 | `fusaops vuln` | Scan all dependency manifests (go.mod, Cargo.toml, requirements.txt, pom.xml, package.json) against the OSV vulnerability database (mirrors `gofusa vuln`) |

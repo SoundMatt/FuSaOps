@@ -2271,6 +2271,36 @@
       "title": "fusaops sci subcommand",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-SAS001",
+      "title": "SAS types and constants",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.20"
+    },
+    {
+      "id": "REQ-FO-SAS002",
+      "title": "Build SAS from lifecycle activity evidence",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.20"
+    },
+    {
+      "id": "REQ-FO-SAS003",
+      "title": "SAS persistence",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.20"
+    },
+    {
+      "id": "REQ-FO-SAS004",
+      "title": "SAS rendering",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.20"
+    },
+    {
+      "id": "REQ-FO-CLI068",
+      "title": "fusaops sas subcommand",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
     }
   ]
 }
