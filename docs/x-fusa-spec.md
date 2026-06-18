@@ -969,7 +969,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.16 · rust-FuSa v0.2.8 · py-FuSa v0.1.4 · java-FuSa v0.2.0). ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-06-18 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.33 · rust-FuSa v0.2.8 · py-FuSa v0.1.8 · java-FuSa v0.3.1). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -989,16 +989,16 @@ Snapshot 2026-06-13 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.16 · ru
 | evidence filenames lowercase-kebab | ✅ | ✅ | ✅ | ✅ | ✅ (v0.1.3) | ✅ (v0.2.0) |
 | exit `2` for usage errors | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (v0.2.0) |
 | exit `3` for runtime errors | ✅ | ✅ | ✅ | ✅ | ✅ (v0.1.3) | ✅ (v0.2.0) |
-| `--no-color`/`NO_COLOR` | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ `--no-color` flag missing (issue #6) |
-| `--output` ⇒ no stdout copy (§2.2) | ✅ (v0.29.0) | ✅ (v0.5.7) | ✅ (v0.12.1+) | ✅ JSON; ▫️ text+--output also prints to stdout | ✅ (v0.1.3) | ✅ (v0.2.0) |
+| `--no-color`/`NO_COLOR` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (v0.3.0, issue #6 fixed) |
+| `--output` ⇒ no stdout copy (§2.2) | ✅ (v0.29.0) | ✅ (v0.5.7) | ✅ (v0.12.1+) | ✅ (v0.2.7) | ✅ (v0.1.3) | ✅ (v0.2.0) |
 | `location.file`/`tags[].file` project-relative | ✅ (v0.30.0) | ✅ | ✅ (v0.12.5) | ✅ | ✅ | ✅ (v0.2.0) |
 | envelope `tool/toolVersion/language` on check + gap | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `kind` + common header on check + gap docs (§3.1) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `kind` + common header on trace/qualify/sbom/pack (§3.1) | ✅ | ✅ | ✅ (v0.12.4) | ✅ | ✅ | ✅ |
-| gap-report `kind` = `"gap-report"` (§3.1) | ✅ | ✅ (v0.5.7) | ✅ | ✅ (v0.2.6) | ⚠️ emits `"<std>-gap-report"` | ✅ (v0.2.0) |
+| gap-report `kind` = `"gap-report"` (§3.1) | ✅ | ✅ (v0.5.7) | ✅ | ✅ (v0.2.6) | ✅ (v0.1.5, issue #1 fixed) | ✅ (v0.2.0) |
 | structured `error {code,message}` on check (§3.2) | ✅ | ✅ | ✅ | ✅ | ✅ (v0.1.3) | ✅ (v0.2.0) |
-| check report `projectRoot` (MUST, §3.2) | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ missing (issue #5) |
-| `capabilities` command (MUST, §9.1) | ✅ | ✅ (v0.5.10) | ✅ (v0.12.3) | ✅ | ✅ | ⚠️ `"iec62443-4-1"` in standards[] but gap-report emits `"iec62443"` |
+| check report `projectRoot` (MUST, §3.2) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (v0.3.0, issue #5 fixed) |
+| `capabilities` command (MUST, §9.1) | ✅ | ✅ (v0.5.10) | ✅ (v0.12.3) | ✅ | ✅ | ✅ (v0.3.0, issue #3 fixed) |
 | `schemaVersion` on check + gap docs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `schemaVersion` on trace/qualify/sbom/pack | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | finding `category` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (v0.2.0) |
@@ -1022,19 +1022,12 @@ The `req`/`impact`/`metrics`/`lint`/`fix` commands are §9.3 optional and
 > **Reference split.** go-FuSa is the **schema** reference and the **exit-code** reference.
 > A conformant tool MUST match both.
 
-**Net change-set to reach full conformance:**
+**All tools are fully conformant as of 2026-06-18.** No open MUST gaps remain.
 
-- **py-FuSa:** gap-report `kind` from `"<std>-gap-report"` → `"gap-report"` (§3.1)
-  across all 7 compliance modules. Tracked in py-FuSa issue #1 (closed; may be deferred).
-- **java-FuSa:** `--no-color` CLI flag missing; only `NO_COLOR` env var is honoured (§2.6 MUST).
-  Filed as java-FuSa issue #6.
-  `projectRoot` absent from check/gap/trace/qualify JSON reports (§3.2 MUST).
-  Filed as java-FuSa issue #5.
-  `capabilities.standards[]` advertises `"iec62443-4-1"` but `iec62443` gap-report
-  emits `"standard": "iec62443"` — inconsistent with all other tools and FuSaOps routing.
-  Filed as java-FuSa issue #3.
-- **rust-FuSa:** `--format text --output <file>` still prints text to stdout while writing to file
-  (§2.2 nuance — JSON-only invocations already conformant).
+Previously tracked MUST gaps now closed:
+- **py-FuSa v0.1.5**: gap-report `kind` fixed from `"<std>-gap-report"` → `"gap-report"` (issue #1 ✅)
+- **java-FuSa v0.3.0**: `--no-color` flag added (issue #6 ✅); `projectRoot` added to JSON reports (issue #5 ✅); `capabilities.standards[]` now emits `"iec62443"` consistently (issue #3 ✅)
+- **rust-FuSa v0.2.7**: `--format text --output <file>` no longer copies text to stdout (§2.2 ✅)
 
 ---
 
