@@ -166,7 +166,7 @@ func Analyse(blocks []Block, dal DAL) *Report {
 	}
 
 	if rep.MCDCRequired {
-		rep.MCDCNote = "MC/DC cannot be automatically verified; requires structural coverage analysis tool (e.g. gcov + manual review)"
+		rep.MCDCNote = "Run 'fusaops coverage --mcdc --mcdc-file <llvm-coverage.json>' to enable automated MC/DC gate (DAL-A prerequisite)"
 	}
 
 	return rep
