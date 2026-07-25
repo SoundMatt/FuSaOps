@@ -7,6 +7,27 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.63.0] — 2026-07-25
+
+### Container: enable c-FuSa and rust-FuSa binaries in all-in-one image
+
+- `ghcr.io/soundmatt/fusaops` now bundles `cfusa` (c-FuSa v0.5.34) and `rsfusa`
+  (rust-FuSa v0.2.9). Both tools now publish GHCR images triggered by tag push.
+- C and Rust projects scanned with the container image produce cfusa/rsfusa
+  findings in the aggregate report — no config change needed.
+- `pyfusa` (Python) and `jfusa` (Java) are deferred: both require additional
+  runtime layers (Python 3.12 and eclipse-temurin JRE respectively). Tracked in
+  py-FuSa#13 and java-FuSa#15.
+
+### Subproject releases
+
+- go-FuSa v0.31.0 — SpecVersion `"1.10.4"` fix + CI builder auto-detection
+- c-FuSa v0.5.34 — SpecVersion `"1.10.4"` fix + docker-publish.yml
+- cpp-FuSa v0.12.6 — SpecVersion `"1.10.4"` fix + MSVC C2338 fix
+- rust-FuSa v0.2.9 — SpecVersion `"1.10.4"` fix + docker-publish.yml
+- py-FuSa v0.1.9 — SpecVersion `"1.10.4"` fix + docker-publish.yml (first tagged release)
+- java-FuSa v0.3.1 — docker-publish.yml (first tagged release)
+
 ## [1.62.0] — 2026-07-25
 
 ### Container: enable cpp-FuSa binary in all-in-one image
