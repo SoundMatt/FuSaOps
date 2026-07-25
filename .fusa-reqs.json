@@ -2702,6 +2702,20 @@
       "priority": "MUST",
       "rationale": "Allows project-wide MC/DC gate policy to be encoded in the config file rather than repeated on every CLI invocation.",
       "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-IMG001",
+      "title": "py-FuSa bundled in all-in-one container image",
+      "description": "The FuSaOps all-in-one container image (ghcr.io/soundmatt/fusaops) shall bundle the py-FuSa (pyfusa) binary and its Python site-packages so that Python projects can be orchestrated without installing py-FuSa separately. The image shall use python:3.12-alpine as its runtime base to provide the Python interpreter required by the pyfusa entry point.",
+      "priority": "MUST",
+      "rationale": "Completes the py-FuSa integration (REQ-FO-ADP027) by making pyfusa available in the packaged distribution; enabled by py-FuSa v0.1.9 publishing its first Docker image to GHCR."
+    },
+    {
+      "id": "REQ-FO-IMG002",
+      "title": "java-FuSa bundled in all-in-one container image",
+      "description": "The FuSaOps all-in-one container image (ghcr.io/soundmatt/fusaops) shall bundle the java-FuSa (jfusa) wrapper script and JAR so that Java projects can be orchestrated without installing java-FuSa separately. The image shall install openjdk21-jre-headless to satisfy the JRE requirement of the jfusa wrapper.",
+      "priority": "MUST",
+      "rationale": "Completes the java-FuSa integration (REQ-FO-ADP028) by making jfusa available in the packaged distribution; enabled by java-FuSa v0.3.1 publishing its first Docker image to GHCR."
     }
   ]
 }
