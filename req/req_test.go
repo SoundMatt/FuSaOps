@@ -267,8 +267,8 @@ func TestParseCSVParentColumn(t *testing.T) {
 
 	// Round-trip: render and re-parse.
 	var buf bytes.Buffer
-	if err := RenderCSV(&buf, entries); err != nil {
-		t.Fatalf("RenderCSV: %v", err)
+	if rerr := RenderCSV(&buf, entries); rerr != nil {
+		t.Fatalf("RenderCSV: %v", rerr)
 	}
 	reparsed, err := ParseCSV(&buf)
 	if err != nil {
