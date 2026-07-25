@@ -50,6 +50,7 @@
 //	vuln          Scan dependency manifests against the OSV vulnerability database
 //	template      Generate safety documentation templates for multi-language projects
 //	hara          Manage Hazard Analysis and Risk Assessment (ISO 26262-3:2018)
+//	vv            Manage V&V independence declarations and report achievable ASIL
 //	serve       Launch the web reporting dashboard
 //	version     Print the FuSaOps version
 //
@@ -150,6 +151,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runTemplate(args[1:], stdout, stderr)
 	case "hara":
 		return runHara(args[1:], stdout, stderr)
+	case "vv":
+		return runVV(args[1:], stdout, stderr)
 	case "serve":
 		return runServe(args[1:], stdout, stderr)
 	case "config":
@@ -221,6 +224,7 @@ Commands:
   vuln          Scan dependency manifests against the OSV vulnerability database
   template      Generate safety documentation templates for multi-language projects
   hara          Manage Hazard Analysis and Risk Assessment (ISO 26262-3:2018)
+  vv            Manage V&V independence declarations and report achievable ASIL
   serve         Launch the web reporting dashboard
   version    Print the FuSaOps version
 

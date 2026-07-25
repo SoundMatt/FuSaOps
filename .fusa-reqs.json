@@ -2469,6 +2469,76 @@
       "title": "capabilities Standards list includes canonical 'slsa' identifier (§2.4.1)",
       "priority": "MUST",
       "standard": "x-FuSa spec §2.4.1"
+    },
+    {
+      "id": "REQ-FO-VV001",
+      "title": "V&V independence declaration types",
+      "description": "FuSaOps shall define a Declaration type holding implementationAuthor, independentReviewer, and independentTestExecutor fields, and a VandVFile constant for auditpack evidence references.",
+      "priority": "MUST",
+      "rationale": "Provides the data model for per-repo V&V independence declarations required by ISO 26262-2:2018 §6.4."
+    },
+    {
+      "id": "REQ-FO-VV002",
+      "title": "AchievableASIL computation per ISO 26262-2:2018 §6.4",
+      "description": "FuSaOps shall compute an independence level (0, 1, or 2) and a maximum achievable ASIL (ASIL-B, ASIL-C, ASIL-D) from a Declaration based on which independence roles are filled.",
+      "priority": "MUST",
+      "rationale": "Enables projects to understand the ceiling on their achievable ASIL given their independence arrangements, per ISO 26262-2:2018 §6.4 Table 2."
+    },
+    {
+      "id": "REQ-FO-VV003",
+      "title": "Validate independence declarations for consistency",
+      "description": "FuSaOps shall validate a Declaration and return human-readable issue strings for problems such as: empty implementationAuthor, reviewer identical to author, executor identical to author, executor set without reviewer.",
+      "priority": "SHOULD",
+      "rationale": "Catches common mistakes before they cause a project to claim a higher ASIL than its independence arrangements actually support."
+    },
+    {
+      "id": "REQ-FO-VV004",
+      "title": "Render independence report in text and json formats",
+      "description": "FuSaOps shall render a Declaration plus derived independenceLevel and achievableAsil in 'text' (markdown-style table) and 'json' formats.",
+      "priority": "MUST",
+      "rationale": "Provides human-readable and machine-readable output for CI and documentation pipelines."
+    },
+    {
+      "id": "REQ-FO-CFG010",
+      "title": "VandVConfig in .fusaops.json schema",
+      "description": "The .fusaops.json configuration file shall support an optional 'vv' section with implementationAuthor, independentReviewer, and independentTestExecutor fields.",
+      "priority": "MUST",
+      "rationale": "Stores V&V independence declarations alongside the project configuration for zero-extra-file operation."
+    },
+    {
+      "id": "REQ-FO-CLI074",
+      "title": "fusaops vv subcommand dispatcher",
+      "description": "The fusaops CLI shall provide a 'vv' top-level command that dispatches to 'show' and 'set' subcommands and accepts a --dir flag.",
+      "priority": "MUST",
+      "rationale": "Entry point for all V&V independence declaration management operations."
+    },
+    {
+      "id": "REQ-FO-CLI075",
+      "title": "fusaops vv show — display declarations and achievable ASIL",
+      "description": "fusaops vv show shall load the project config, display the V&V declarations and computed achievable ASIL in text or json format, and emit any validation warnings to stderr.",
+      "priority": "MUST",
+      "rationale": "Lets developers and auditors quickly inspect the V&V independence status of a project."
+    },
+    {
+      "id": "REQ-FO-CLI076",
+      "title": "fusaops vv set — update independence declarations",
+      "description": "fusaops vv set shall update one or more independence declaration fields in .fusaops.json using explicit flag values, validate the result, and report the updated achievable ASIL.",
+      "priority": "MUST",
+      "rationale": "Provides a CLI interface to record independence declarations without manually editing JSON."
+    },
+    {
+      "id": "REQ-FO-SRV010",
+      "title": "/api/v1/vv JSON endpoint and WithVandV builder",
+      "description": "The FuSaOps server shall expose a /api/v1/vv endpoint returning V&V declarations and derived achievable ASIL as JSON, configurable via the WithVandV builder method.",
+      "priority": "MUST",
+      "rationale": "Enables CI/CD pipelines and dashboards to query V&V independence status via the JSON API."
+    },
+    {
+      "id": "REQ-FO-BADGE003",
+      "title": "/badge/vv.svg independence ASIL SVG badge",
+      "description": "The FuSaOps server shall expose a /badge/vv.svg endpoint returning a shields.io-style SVG badge showing the achievable ASIL derived from V&V independence declarations.",
+      "priority": "MUST",
+      "rationale": "Provides a visual README/dashboard badge showing the V&V independence level at a glance."
     }
   ]
 }

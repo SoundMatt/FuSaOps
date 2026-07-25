@@ -29,6 +29,22 @@ type Config struct {
 	Scan    ScanConfig    `json:"scan"`
 	Report  ReportConfig  `json:"report"`
 	Run     RunConfig     `json:"run,omitempty"`
+	VandV   VandVConfig   `json:"vv,omitempty"`
+}
+
+// VandVConfig holds per-repo V&V independence declarations embedded in .fusaops.json.
+// Independence determines the achievable ASIL per ISO 26262-2:2018 §6.4.
+//
+//fusa:req REQ-FO-CFG010
+type VandVConfig struct {
+	// ImplementationAuthor is the person or team that wrote the implementation.
+	ImplementationAuthor string `json:"implementationAuthor,omitempty"`
+	// IndependentReviewer is the person (distinct from author) who performed
+	// independent design review, satisfying ISO 26262-2:2018 independence for ASIL-C.
+	IndependentReviewer string `json:"independentReviewer,omitempty"`
+	// IndependentTestExecutor is the person (distinct from author) who executed
+	// tests independently, satisfying the additional independence for ASIL-D.
+	IndependentTestExecutor string `json:"independentTestExecutor,omitempty"`
 }
 
 // ProjectConfig holds project identity and safety context.
