@@ -27,6 +27,34 @@ import (
 //fusa:req REQ-FO-QUAL001
 const ReportFile = ".fusaops-qualify-report.json"
 
+// QualificationType distinguishes how a tool-qualification run was performed.
+//
+//fusa:req REQ-FO-QUAL005
+type QualificationType string
+
+const (
+	// QualificationTypeSelf is the default: the project team ran qualification
+	// against its own x-FuSa tools.
+	QualificationTypeSelf QualificationType = "self"
+	// QualificationTypeIndependent signals a TQL-5 / DO-330 externally
+	// certified qualification; a RecordUri pointing to the certificate is
+	// expected alongside this type.
+	QualificationTypeIndependent QualificationType = "independent"
+)
+
+// RunOptions configures optional metadata for a qualification run.
+//
+//fusa:req REQ-FO-QUAL005
+type RunOptions struct {
+	// Type identifies the qualification approach. Empty defaults to
+	// QualificationTypeSelf.
+	Type QualificationType
+	// RecordUri is a URI pointing to the external qualification certificate
+	// (e.g. a TQL-5 or DO-330 record). Only meaningful when Type is
+	// QualificationTypeIndependent.
+	RecordUri string
+}
+
 // ComponentResult holds one adapter's qualification outcome.
 //
 //fusa:req REQ-FO-QUAL001
@@ -47,14 +75,16 @@ func (c ComponentResult) AllPassed() bool { return c.Skipped == "" && c.Failed =
 //
 //fusa:req REQ-FO-QUAL001
 type Report struct {
-	GeneratedAt time.Time         `json:"generatedAt"`
-	GoVersion   string            `json:"goVersion"`
-	ProjectRoot string            `json:"projectRoot"`
-	Total       int               `json:"total"`
-	Passed      int               `json:"passed"`
-	Failed      int               `json:"failed"`
-	Components  []ComponentResult `json:"components"`
-	Hash        string            `json:"hash"`
+	GeneratedAt            time.Time         `json:"generatedAt"`
+	GoVersion              string            `json:"goVersion"`
+	ProjectRoot            string            `json:"projectRoot"`
+	QualificationType      string            `json:"qualificationType,omitempty"`      // REQ-FO-QUAL005
+	QualificationRecordUri string            `json:"qualificationRecordUri,omitempty"` // REQ-FO-QUAL005
+	Total                  int               `json:"total"`
+	Passed                 int               `json:"passed"`
+	Failed                 int               `json:"failed"`
+	Components             []ComponentResult `json:"components"`
+	Hash                   string            `json:"hash"`
 }
 
 // HasFailures reports whether any component failed qualification.
@@ -65,12 +95,22 @@ func (r *Report) HasFailures() bool { return r.Failed > 0 }
 // qualify call fails are recorded as skipped rather than fatal.
 //
 //fusa:req REQ-FO-QUAL002
-func Run(ctx context.Context, adapters []adapter.Adapter, root string) (*Report, error) {
+//fusa:req REQ-FO-QUAL006
+func Run(ctx context.Context, adapters []adapter.Adapter, root string, opts ...RunOptions) (*Report, error) {
 	report := &Report{
 		GeneratedAt: time.Now().UTC(),
 		GoVersion:   runtime.Version(),
 		ProjectRoot: root,
 		Components:  make([]ComponentResult, len(adapters)),
+	}
+
+	// Apply RunOptions: default type is "self".
+	report.QualificationType = string(QualificationTypeSelf)
+	if len(opts) > 0 {
+		if opts[0].Type != "" {
+			report.QualificationType = string(opts[0].Type)
+		}
+		report.QualificationRecordUri = opts[0].RecordUri
 	}
 
 	var mu sync.Mutex
@@ -173,9 +213,18 @@ func Render(w io.Writer, r *Report, format string) error {
 	}
 }
 
+// renderText writes a human-readable text summary of the qualification report.
+//
+//fusa:req REQ-FO-QUAL007
 func renderText(w io.Writer, r *Report) error {
 	fmt.Fprintf(w, "Project:   %s\n", r.ProjectRoot)
 	fmt.Fprintf(w, "Generated: %s\n", r.GeneratedAt.Format("2006-01-02T15:04:05Z"))
+	if r.QualificationType != "" {
+		fmt.Fprintf(w, "Type:      %s\n", r.QualificationType)
+	}
+	if r.QualificationRecordUri != "" {
+		fmt.Fprintf(w, "Record:    %s\n", r.QualificationRecordUri)
+	}
 	fmt.Fprintf(w, "Overall:   %d total  %d passed  %d failed\n", r.Total, r.Passed, r.Failed)
 	fmt.Fprintf(w, "\nComponents:\n")
 	for _, c := range r.Components {
@@ -194,12 +243,14 @@ func renderText(w io.Writer, r *Report) error {
 
 func computeHash(r *Report) string {
 	data, _ := json.Marshal(struct {
-		GeneratedAt time.Time         `json:"generatedAt"`
-		Total       int               `json:"total"`
-		Passed      int               `json:"passed"`
-		Failed      int               `json:"failed"`
-		Components  []ComponentResult `json:"components"`
-	}{r.GeneratedAt, r.Total, r.Passed, r.Failed, r.Components})
+		GeneratedAt            time.Time         `json:"generatedAt"`
+		QualificationType      string            `json:"qualificationType,omitempty"`
+		QualificationRecordUri string            `json:"qualificationRecordUri,omitempty"`
+		Total                  int               `json:"total"`
+		Passed                 int               `json:"passed"`
+		Failed                 int               `json:"failed"`
+		Components             []ComponentResult `json:"components"`
+	}{r.GeneratedAt, r.QualificationType, r.QualificationRecordUri, r.Total, r.Passed, r.Failed, r.Components})
 	h := sha256.Sum256(data)
 	return fmt.Sprintf("sha256:%x", h)
 }

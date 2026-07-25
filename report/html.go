@@ -13,6 +13,7 @@ type htmlData struct {
 	*AggregateReport
 	ShowSuppressed   bool
 	ShowFingerprints bool
+	Qualify          *QualifyInfo
 }
 
 // renderHTML writes a self-contained HTML dashboard for the aggregate report.
@@ -28,7 +29,7 @@ func renderHTML(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 	if err != nil {
 		return fmt.Errorf("report: parse html template: %w", err)
 	}
-	if err := t.Execute(w, htmlData{r, opts.ShowSuppressed, opts.ShowFingerprints}); err != nil {
+	if err := t.Execute(w, htmlData{r, opts.ShowSuppressed, opts.ShowFingerprints, opts.QualifyInfo}); err != nil {
 		return fmt.Errorf("report: execute html template: %w", err)
 	}
 	return nil
@@ -115,6 +116,18 @@ const dashboardTemplate = `<!DOCTYPE html>
 <header>
   <h1>FuSaOps</h1>
   <span class="badge {{statusClass .Summary.Status}}">{{.Summary.Status}}</span>
+  {{if .Qualify}}
+  <div class="qual-section">
+    <span class="badge {{if .Qualify.AllPassed}}status-pass{{else}}status-fail{{end}}">
+      {{if .Qualify.AllPassed}}qualified{{else}}qual-failing{{end}}
+    </span>
+    <span class="sub" style="font-size:11px;margin-left:4px">
+      {{.Qualify.Type}}
+      · {{.Qualify.PassedCount}}/{{.Qualify.Total}} checks
+      {{if .Qualify.RecordUri}}· <a href="{{.Qualify.RecordUri}}" style="color:var(--muted)">certificate</a>{{end}}
+    </span>
+  </div>
+  {{end}}
   <div class="sub">
     {{if .Project}}{{.Project}} · {{end}}{{.Summary.Total}} findings ·
     {{.Summary.Errors}} errors · {{.Summary.Warnings}} warnings · {{.Summary.Infos}} infos

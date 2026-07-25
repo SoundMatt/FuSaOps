@@ -50,6 +50,7 @@ type Server struct {
 	refreshInterval time.Duration  // zero = no scheduled refresh
 	baselineFile    string         // empty = no baseline configured
 	vvDecl          vv.Declaration // populated via WithVandV
+	qualifyPath     string         // empty = auto-discover from root
 
 	mu         sync.RWMutex
 	cached     *report.AggregateReport
@@ -248,6 +249,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/badge/status.svg", s.handleBadge)
 	mux.HandleFunc("/api/v1/vv", s.handleAPIVandV)
 	mux.HandleFunc("/badge/vv.svg", s.handleVandVBadge)
+	mux.HandleFunc("/badge/qualify.svg", s.handleQualifyBadge)
 	mux.HandleFunc("/metrics", s.handleMetrics)
 	if s.fleetCfg != "" {
 		mux.HandleFunc("/fleet", s.handleFleet)
@@ -334,7 +336,8 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := report.Render(w, rep, "html"); err != nil {
+	qi := loadQualifyInfo(s.root, s.qualifyPath)
+	if err := report.RenderWithOptions(w, rep, "html", report.RenderOptions{QualifyInfo: qi}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

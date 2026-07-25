@@ -2575,6 +2575,55 @@
       "title": "fusaops trace --decomp and --decomp-enforce flags",
       "description": "fusaops trace shall accept --decomp (enable gate) and --decomp-enforce warn|error|off|auto (override config enforce) flags, exiting non-zero when severity is error and violations exist.",
       "priority": "MUST"
+    },
+    {
+      "id": "REQ-FO-QUAL005",
+      "title": "QualificationType type and RunOptions struct",
+      "description": "Provides the typed vocabulary for distinguishing self-qualified from independently qualified (TQL-5/DO-330) tool runs.",
+      "priority": "MUST",
+      "rationale": "Enables regulated projects to record whether qualification was performed by the project team or an independent body with an external certificate URI."
+    },
+    {
+      "id": "REQ-FO-QUAL006",
+      "title": "Run() consumes RunOptions; Report carries QualificationType and QualificationRecordUri; hash covers them",
+      "description": "Makes the qualification type and certificate URI part of the tamper-evident integrity hash.",
+      "priority": "MUST",
+      "rationale": "Ensures qualification metadata is cryptographically bound to the report and cannot be altered without invalidating the hash."
+    },
+    {
+      "id": "REQ-FO-QUAL007",
+      "title": "renderText() shows Type and Record lines",
+      "description": "Human-readable output surfaces the assurance level without requiring JSON parsing.",
+      "priority": "MUST",
+      "rationale": "CI log readers and auditors should be able to identify qualification type and certificate URI from plain-text output."
+    },
+    {
+      "id": "REQ-FO-CFG012",
+      "title": "QualifyConfig in .fusaops.json; Validate() rejects unknown types",
+      "description": "Project-level defaults for qualify.type and qualify.recordUri avoid repeating flags on every CI invocation.",
+      "priority": "MUST",
+      "rationale": "Qualification configuration should be checked into source control as part of the project config rather than repeated in every CI command."
+    },
+    {
+      "id": "REQ-FO-CLI078",
+      "title": "fusaops qualify --type and --record-uri flags",
+      "description": "Enables per-run override of qualification type and certificate URI.",
+      "priority": "MUST",
+      "rationale": "Allows operators to specify the qualification approach and external certificate on the command line for flexibility."
+    },
+    {
+      "id": "REQ-FO-CLI079",
+      "title": "fusaops serve --qualify-report flag",
+      "description": "Wires the on-disk qualification report into the dashboard badge.",
+      "priority": "MUST",
+      "rationale": "The dashboard should reflect the current qualification status without requiring a re-run of the qualify subcommand."
+    },
+    {
+      "id": "REQ-FO-SRV011",
+      "title": "/badge/qualify.svg endpoint; qualify section in HTML dashboard",
+      "description": "Provides an at-a-glance qualification gap indicator for the web UI and a machine-readable SVG badge for embedding in README files.",
+      "priority": "MUST",
+      "rationale": "Project stakeholders need a quick visual indicator of tool qualification status alongside the safety findings dashboard."
     }
   ]
 }
