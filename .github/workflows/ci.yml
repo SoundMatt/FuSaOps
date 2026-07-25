@@ -20,6 +20,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-2025]
         go: ["1.22", "1.23"]
+        exclude:
+          # Go 1.22's race-detector test binaries lack LC_UUID, which macOS 26
+          # (Tahoe) dyld rejects. Go 1.22 is still tested on ubuntu + windows.
+          - os: macos-latest
+            go: "1.22"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6

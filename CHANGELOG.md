@@ -7,6 +7,34 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.62.0] — 2026-07-25
+
+### Container: enable cpp-FuSa binary in all-in-one image
+
+- `ghcr.io/soundmatt/fusaops` now bundles `cpfusa` (cpp-FuSa v0.12.5). The
+  `FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa` stage was previously
+  commented out pending the image being published; `ghcr.io/soundmatt/cpp-fusa`
+  is now confirmed published and the stage is active.
+- C++ projects scanned with the container image now produce cpfusa findings in
+  the aggregate report — no config change needed.
+- Remaining four tools (c-FuSa, rust-FuSa, py-FuSa, java-FuSa) are tracked in
+  c-FuSa#44, rust-FuSa#15, py-FuSa#5, java-FuSa#9.
+
+### Tickets raised on x-FuSa subprojects
+
+Container image gaps:
+- c-FuSa#44 — add docker-publish.yml (no ghcr.io/soundmatt/c-fusa image)
+- rust-FuSa#15 — add docker-publish.yml (no ghcr.io/soundmatt/rust-fusa image)
+- py-FuSa#5 — add docker-publish.yml (no ghcr.io/soundmatt/py-fusa image)
+- java-FuSa#9 — add Dockerfile + docker-publish.yml (no image; needs openjdk21-jre)
+
+Stale specVersion constants:
+- go-FuSa#31 — SpecVersion "1.9" should be "1.10.4"
+- c-FuSa#45 — CFUSA_SPEC_VERSION "1.9" should be "1.10.4"
+- cpp-FuSa#15 — SpecVersion "1.10" missing patch; should be "1.10.4"
+- rust-FuSa#16 — SPEC_VERSION "1.10" missing patch; should be "1.10.4"
+- py-FuSa#6 — SPEC_VERSION "1.10.8" diverged from canonical spec (1.10.4)
+
 ## [1.61.0] — 2026-06-16
 
 ### §2.4.1 capabilities `Standards` — add canonical `"slsa"` identifier

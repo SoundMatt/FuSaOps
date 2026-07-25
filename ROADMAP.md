@@ -44,7 +44,7 @@ Deliverables: `fusaops init|scan|adapters|check|report|serve|version`
   bundled tools
 - One-line extension path for future tools, documented in `docs/extending.md`
 
-Bundled today: `gofusa`. `cpfusa`/`cfusa` activate as their images publish.
+Bundled today: `gofusa`, `cpfusa`. `cfusa`/`rsfusa`/`pyfusa`/`jfusa` activate as their images publish (tracked in c-FuSa#44, rust-FuSa#15, py-FuSa#5, java-FuSa#9).
 
 ---
 
