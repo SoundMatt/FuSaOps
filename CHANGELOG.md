@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.69.0] — 2026-07-25
+
+### feat: enable py-FuSa and java-FuSa in the all-in-one container image
+
+- `Dockerfile` — uncomment and activate `FROM ghcr.io/soundmatt/py-fusa:latest AS pyfusa`
+  and `FROM ghcr.io/soundmatt/java-fusa:latest AS jfusa` now that both tools have
+  published Docker images to GHCR (py-FuSa v0.1.9, java-FuSa v0.3.1).
+- Runtime base image changed from `alpine:3.20` to `python:3.12-alpine` (= alpine:3.20
+  + Python 3.12) so the pyfusa entry-point shebang (`#!/usr/local/bin/python3.12`) is
+  satisfied without a separate Python install step.
+- `openjdk21-jre-headless` added to `apk add` to satisfy the `java` requirement of the
+  jfusa shell wrapper.
+- py-FuSa: COPY `/usr/local/bin/pyfusa` + `/usr/local/lib/python3.12/site-packages`
+  from the pyfusa stage (same python:3.12-alpine base → ABI-compatible).
+- java-FuSa: COPY `/usr/local/lib/jfusa.jar` + `/usr/local/bin/jfusa` from the jfusa stage.
+- New requirements: REQ-FO-IMG001 (py-FuSa in image), REQ-FO-IMG002 (java-FuSa in image).
+
 ## [1.68.0] — 2026-07-25
 
 ### feat: provenance builder field with CI auto-detection (go-FuSa v0.31.0 parity)
