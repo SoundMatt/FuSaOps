@@ -41,9 +41,36 @@ type Provenance struct {
 	GoVersion   string    `json:"goVersion"`
 	GOOS        string    `json:"goos"`
 	GOARCH      string    `json:"goarch"`
+	Builder     string    `json:"builder,omitempty"` //fusa:req REQ-FO-REL005
 	VCSRevision string    `json:"vcsRevision,omitempty"`
 	VCSModified bool      `json:"vcsModified"`
 	ProjectRoot string    `json:"projectRoot"`
+}
+
+// DetectBuilder returns the CI/CD system identifier from well-known environment
+// variables, or an empty string when not running in a recognised CI environment.
+// An explicit override (non-empty) is returned as-is.
+//
+//fusa:req REQ-FO-REL005
+func DetectBuilder(override string) string {
+	if override != "" {
+		return override
+	}
+	switch {
+	case os.Getenv("GITHUB_ACTIONS") != "":
+		if ref := os.Getenv("GITHUB_WORKFLOW_REF"); ref != "" {
+			return "github-actions/" + ref
+		}
+		return "github-actions"
+	case os.Getenv("GITLAB_CI") != "":
+		return "gitlab-ci"
+	case os.Getenv("JENKINS_URL") != "":
+		return "jenkins"
+	case os.Getenv("CI") != "":
+		return "ci"
+	default:
+		return ""
+	}
 }
 
 // Artifact is a file path paired with its SHA-256 hex checksum.
@@ -65,9 +92,12 @@ type Manifest struct {
 
 // BuildProvenance captures the current build environment and VCS state.
 // VCS queries are best-effort: if git is unavailable, VCSRevision remains empty.
+// builder is passed to DetectBuilder: if non-empty it is used verbatim;
+// otherwise the CI environment is auto-detected from well-known env vars.
 //
 //fusa:req REQ-FO-REL002
-func BuildProvenance(ctx context.Context, root string) (*Provenance, error) {
+//fusa:req REQ-FO-REL005
+func BuildProvenance(ctx context.Context, root, builder string) (*Provenance, error) {
 	p := &Provenance{
 		GeneratedAt: time.Now().UTC(),
 		Tool:        "fusaops",
@@ -75,6 +105,7 @@ func BuildProvenance(ctx context.Context, root string) (*Provenance, error) {
 		GoVersion:   runtime.Version(),
 		GOOS:        runtime.GOOS,
 		GOARCH:      runtime.GOARCH,
+		Builder:     DetectBuilder(builder),
 		ProjectRoot: root,
 	}
 
@@ -130,6 +161,9 @@ func RenderProvenance(w io.Writer, p *Provenance, format string) error {
 		fmt.Fprintf(w, "Tool:      %s %s\n", p.Tool, p.ToolVersion)
 		fmt.Fprintf(w, "Go:        %s (%s/%s)\n", p.GoVersion, p.GOOS, p.GOARCH)
 		fmt.Fprintf(w, "Generated: %s\n", p.GeneratedAt.Format("2006-01-02T15:04:05Z"))
+		if p.Builder != "" {
+			fmt.Fprintf(w, "Builder:   %s\n", p.Builder)
+		}
 		if p.VCSRevision != "" {
 			modified := ""
 			if p.VCSModified {

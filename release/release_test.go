@@ -45,7 +45,7 @@ func TestTypes(t *testing.T) {
 //fusa:test REQ-FO-REL002
 func TestBuildProvenance(t *testing.T) {
 	dir := t.TempDir()
-	p, err := release.BuildProvenance(context.Background(), dir)
+	p, err := release.BuildProvenance(context.Background(), dir, "")
 	if err != nil {
 		t.Fatalf("BuildProvenance: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestBuildProvenance(t *testing.T) {
 //fusa:test REQ-FO-REL002
 func TestBuildProvenanceGitRepo(t *testing.T) {
 	// Run in FuSaOps repo dir — git should return a commit hash.
-	p, err := release.BuildProvenance(context.Background(), ".")
+	p, err := release.BuildProvenance(context.Background(), ".", "")
 	if err != nil {
 		t.Fatalf("BuildProvenance: %v", err)
 	}
@@ -80,6 +80,96 @@ func TestBuildProvenanceGitRepo(t *testing.T) {
 	// but it should be a 40-char hex string when present.
 	if p.VCSRevision != "" && len(p.VCSRevision) != 40 {
 		t.Errorf("VCSRevision = %q, want 40-char hex or empty", p.VCSRevision)
+	}
+}
+
+//fusa:test REQ-FO-REL005
+func TestDetectBuilderExplicit(t *testing.T) {
+	got := release.DetectBuilder("my-builder")
+	if got != "my-builder" {
+		t.Errorf("DetectBuilder explicit = %q, want my-builder", got)
+	}
+}
+
+//fusa:test REQ-FO-REL005
+func TestDetectBuilderFromEnv(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "true")
+	t.Setenv("GITHUB_WORKFLOW_REF", "")
+	got := release.DetectBuilder("")
+	if got != "github-actions" {
+		t.Errorf("DetectBuilder GitHub = %q, want github-actions", got)
+	}
+}
+
+//fusa:test REQ-FO-REL005
+func TestDetectBuilderGitHubWithRef(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "true")
+	t.Setenv("GITHUB_WORKFLOW_REF", "SoundMatt/FuSaOps/.github/workflows/ci.yml@refs/heads/main")
+	got := release.DetectBuilder("")
+	if got != "github-actions/SoundMatt/FuSaOps/.github/workflows/ci.yml@refs/heads/main" {
+		t.Errorf("DetectBuilder GitHub with ref = %q", got)
+	}
+}
+
+//fusa:test REQ-FO-REL005
+func TestDetectBuilderEmpty(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "")
+	t.Setenv("GITHUB_WORKFLOW_REF", "")
+	t.Setenv("GITLAB_CI", "")
+	t.Setenv("JENKINS_URL", "")
+	t.Setenv("CI", "")
+	got := release.DetectBuilder("")
+	if got != "" {
+		t.Errorf("DetectBuilder empty env = %q, want empty", got)
+	}
+}
+
+//fusa:test REQ-FO-REL005
+func TestBuildProvenanceBuilderField(t *testing.T) {
+	dir := t.TempDir()
+	p, err := release.BuildProvenance(context.Background(), dir, "test-ci")
+	if err != nil {
+		t.Fatalf("BuildProvenance: %v", err)
+	}
+	if p.Builder != "test-ci" {
+		t.Errorf("Builder = %q, want test-ci", p.Builder)
+	}
+}
+
+//fusa:test REQ-FO-REL005
+func TestRenderProvenanceBuilderShown(t *testing.T) {
+	p := &release.Provenance{
+		Tool:        "fusaops",
+		ToolVersion: "1.68.0",
+		GoVersion:   "go1.22.0",
+		GOOS:        "linux",
+		GOARCH:      "amd64",
+		Builder:     "github-actions",
+	}
+	var buf bytes.Buffer
+	if err := release.RenderProvenance(&buf, p, "text"); err != nil {
+		t.Fatalf("RenderProvenance: %v", err)
+	}
+	if !strings.Contains(buf.String(), "github-actions") {
+		t.Errorf("expected 'github-actions' in output:\n%s", buf.String())
+	}
+}
+
+//fusa:test REQ-FO-REL005
+func TestRenderProvenanceBuilderHiddenWhenEmpty(t *testing.T) {
+	p := &release.Provenance{
+		Tool:        "fusaops",
+		ToolVersion: "1.68.0",
+		GoVersion:   "go1.22.0",
+		GOOS:        "linux",
+		GOARCH:      "amd64",
+	}
+	var buf bytes.Buffer
+	if err := release.RenderProvenance(&buf, p, "text"); err != nil {
+		t.Fatalf("RenderProvenance: %v", err)
+	}
+	if strings.Contains(buf.String(), "Builder:") {
+		t.Errorf("should not show 'Builder:' when empty:\n%s", buf.String())
 	}
 }
 

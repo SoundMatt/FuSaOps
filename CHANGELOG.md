@@ -7,6 +7,24 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.68.0] — 2026-07-25
+
+### feat: provenance builder field with CI auto-detection (go-FuSa v0.31.0 parity)
+
+- `release.Provenance.Builder` — new `builder` field (JSON `"builder"`) on the
+  provenance record, matching the x-FuSa spec §7 provenance schema.
+- `release.DetectBuilder(override)` — auto-detects the CI/CD system from env
+  vars: `GITHUB_ACTIONS`+`GITHUB_WORKFLOW_REF` → `"github-actions/<ref>"` or
+  `"github-actions"`; `GITLAB_CI` → `"gitlab-ci"`; `JENKINS_URL` → `"jenkins"`;
+  any `CI` → `"ci"`; local/unknown → `""`. An explicit non-empty override is
+  returned verbatim.
+- `release.BuildProvenance` — gains a `builder` parameter; passes it through
+  `DetectBuilder` so auto-detection applies when the caller passes `""`.
+- `fusaops release --builder <uri>` — new flag for explicit builder override;
+  auto-detection applies when the flag is omitted.
+- Text render (`fusaops release`) shows `Builder:` line when non-empty.
+- New requirements: REQ-FO-REL005, REQ-FO-CLI081.
+
 ## [1.67.0] — 2026-07-25
 
 ### Added — MC/DC Coverage Gate (DO-178C DAL-A prerequisite)
