@@ -26,6 +26,7 @@ import (
 //fusa:req REQ-FO-CLI031
 //fusa:req REQ-FO-CLI032
 //fusa:req REQ-FO-CLI038
+//fusa:req REQ-FO-CLI079
 func runServe(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops serve", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -42,6 +43,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	tlsKey := fs.String("tls-key", "", "TLS key file (PEM); required with --tls-cert")
 	refreshInterval := fs.String("refresh-interval", "", "automatic rescan interval (e.g. 5m, 1h); default disabled")
 	baseline := fs.String("baseline", "", "path to baseline JSON file for /api/v1/diff and POST /api/v1/baseline")
+	qualifyReport := fs.String("qualify-report", "", "path to qualify JSON report for dashboard badge (default: <dir>/.fusaops-qualify-report.json)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -130,6 +132,9 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	}
 	if *baseline != "" {
 		srv = srv.WithBaseline(*baseline)
+	}
+	if *qualifyReport != "" {
+		srv = srv.WithQualifyReport(*qualifyReport)
 	}
 
 	fmt.Fprintf(stdout, "FuSaOps dashboard for %s\n", root)

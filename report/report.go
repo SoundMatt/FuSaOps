@@ -103,6 +103,27 @@ type AggregateReport struct {
 	SuppressedComponents []string `json:"suppressedComponents,omitempty"`
 }
 
+// QualifyInfo carries qualification record metadata into the HTML dashboard
+// renderer. It is populated by server.Server from a qualify.Report file and
+// passed through RenderOptions; it contains no qualify package types so the
+// report package has no dependency on qualify.
+//
+//fusa:req REQ-FO-SRV011
+type QualifyInfo struct {
+	// Type is "self" or "independent".
+	Type string
+	// RecordUri is the URI of the external qualification certificate, if any.
+	RecordUri string
+	// AllPassed is true when all qualification checks passed.
+	AllPassed bool
+	// Total is the total number of qualification checks.
+	Total int
+	// PassedCount is the number of checks that passed.
+	PassedCount int
+	// Failed is the number of checks that failed.
+	Failed int
+}
+
 // RenderOptions controls optional behaviour during report rendering.
 //
 //fusa:req REQ-FO-RPT017
@@ -113,6 +134,11 @@ type RenderOptions struct {
 	// ShowFingerprints causes each finding's fingerprint to be shown inline,
 	// together with a scaffold fusaops suppress add command.
 	ShowFingerprints bool
+	// QualifyInfo, when non-nil, injects a qualification gap section into the
+	// HTML dashboard and drives /badge/qualify.svg.
+	//
+	//fusa:req REQ-FO-SRV011
+	QualifyInfo *QualifyInfo
 }
 
 // New builds an AggregateReport from a set of components, computing per

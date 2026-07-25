@@ -183,3 +183,43 @@ func TestValidateRejectsUnknownDecompEnforce(t *testing.T) {
 		t.Errorf("got %v, want ErrInvalidConfig for unknown enforce value", err)
 	}
 }
+
+//fusa:test REQ-FO-CFG012
+func TestQualifyConfigRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ConfigFile)
+	cfg := Default("qual-test")
+	cfg.Qualify = QualifyConfig{
+		Type:      "independent",
+		RecordUri: "https://cert",
+	}
+	if err := Save(path, cfg); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+	got, err := Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if got.Qualify.Type != "independent" {
+		t.Errorf("Qualify.Type = %q, want \"independent\"", got.Qualify.Type)
+	}
+	if got.Qualify.RecordUri != "https://cert" {
+		t.Errorf("Qualify.RecordUri = %q, want \"https://cert\"", got.Qualify.RecordUri)
+	}
+
+	// Validate accepts "self" and "independent".
+	for _, typ := range []string{"", "self", "independent"} {
+		c := Default("x")
+		c.Qualify.Type = typ
+		if err := Validate(c); err != nil {
+			t.Errorf("Validate with type %q: unexpected error: %v", typ, err)
+		}
+	}
+
+	// Validate rejects unknown types.
+	bad := Default("x")
+	bad.Qualify.Type = "tql5"
+	if err := Validate(bad); !errors.Is(err, fusaops.ErrInvalidConfig) {
+		t.Errorf("Validate with type \"tql5\": got %v, want ErrInvalidConfig", err)
+	}
+}

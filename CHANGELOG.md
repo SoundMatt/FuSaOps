@@ -7,6 +7,31 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.66.0] — 2026-07-25
+
+### Feature: Tool Qualification Record Display (issue #29)
+
+New requirements REQ-FO-QUAL005–007, REQ-FO-CFG012, REQ-FO-CLI078–079,
+REQ-FO-SRV011 across four layers: the qualify schema, config, CLI, and web
+dashboard.
+
+- `qualify.QualificationType` — typed enum: `"self"` (default) or
+  `"independent"` (TQL-5/DO-330 externally certified).
+- `qualify.RunOptions` — passes type and certificate URI into `qualify.Run()`;
+  both fields are covered by the tamper-evident SHA-256 hash.
+- `qualify.Report` — gains `qualificationType` and `qualificationRecordUri`
+  JSON fields; text output (`fusaops qualify`) shows `Type:` and `Record:` lines.
+- `config.QualifyConfig` — new `qualify` section in `.fusaops.json` for
+  project-level defaults; `Validate()` rejects unknown types.
+- `fusaops qualify --type self|independent --record-uri <uri>` — per-run
+  override; config-file defaults are respected when flags are at their defaults.
+- `fusaops serve --qualify-report <path>` — wires an on-disk qualification
+  report into the dashboard.
+- `GET /badge/qualify.svg` — SVG badge: `pending` / `<type> / pass` /
+  `<type> / failing`; proper `Cache-Control` and `Content-Type` headers.
+- HTML dashboard — qualification gap section in the header when a qualify
+  report is available: badge, type, passed/total checks, and certificate link.
+
 ## [1.65.0] — 2026-07-25
 
 ### feat: HLR/LLR requirement decomposition gate

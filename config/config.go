@@ -52,6 +52,7 @@ type Config struct {
 	Run     RunConfig     `json:"run,omitempty"`
 	VandV   VandVConfig   `json:"vv,omitempty"`
 	Trace   TraceConfig   `json:"trace,omitempty"`
+	Qualify QualifyConfig `json:"qualify,omitempty"` //fusa:req REQ-FO-CFG012
 }
 
 // VandVConfig holds per-repo V&V independence declarations embedded in .fusaops.json.
@@ -118,6 +119,16 @@ type RunConfig struct {
 type ReportConfig struct {
 	Format string `json:"format"`           // text | json | html | sarif
 	Output string `json:"output,omitempty"` // file path; stdout if empty
+}
+
+// QualifyConfig controls tool-qualification report settings.
+//
+//fusa:req REQ-FO-CFG012
+type QualifyConfig struct {
+	// Type is the qualification approach: "self" (default) or "independent".
+	Type string `json:"type,omitempty"`
+	// RecordUri is the URI of an external TQL-5/DO-330 qualification certificate.
+	RecordUri string `json:"recordUri,omitempty"`
 }
 
 // Default returns a starter Config for the given project name.
@@ -191,6 +202,11 @@ func Validate(cfg *Config) error {
 	default:
 		return fmt.Errorf("%w: unsupported trace.reqDecomposition.enforce %q (want: off|warn|error|auto)",
 			fusaops.ErrInvalidConfig, cfg.Trace.ReqDecomposition.Enforce)
+	}
+	switch cfg.Qualify.Type {
+	case "", "self", "independent":
+	default:
+		return fmt.Errorf("%w: unsupported qualify.type %q", fusaops.ErrInvalidConfig, cfg.Qualify.Type)
 	}
 	return nil
 }

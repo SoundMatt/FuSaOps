@@ -9,12 +9,14 @@ import (
 	"path/filepath"
 
 	"github.com/SoundMatt/FuSaOps/adapter"
+	"github.com/SoundMatt/FuSaOps/config"
 	"github.com/SoundMatt/FuSaOps/qualify"
 )
 
 // runQualify runs tool qualification for every available x-FuSa adapter.
 //
 //fusa:req REQ-FO-CLI064
+//fusa:req REQ-FO-CLI078
 func runQualify(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops qualify", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -27,9 +29,11 @@ func runQualify(args []string, stdout, stderr io.Writer) int {
 	}
 
 	var (
-		dir    = fs.String("dir", "", "project root directory (default: current directory)")
-		output = fs.String("output", "", "path for the JSON report (default: <dir>/.fusaops-qualify-report.json)")
-		format = fs.String("format", "text", "output format: text, json")
+		dir       = fs.String("dir", "", "project root directory (default: current directory)")
+		output    = fs.String("output", "", "path for the JSON report (default: <dir>/.fusaops-qualify-report.json)")
+		format    = fs.String("format", "text", "output format: text, json")
+		qualType  = fs.String("type", "self", "qualification type: self or independent")
+		recordURI = fs.String("record-uri", "", "URI of external TQL-5/DO-330 qualification certificate")
 	)
 	if err := fs.Parse(args); err != nil {
 		return 2
@@ -45,6 +49,17 @@ func runQualify(args []string, stdout, stderr io.Writer) int {
 		}
 	}
 
+	// Apply config-file defaults for --type and --record-uri when flags are at defaults.
+	cfgPath := filepath.Join(projectRoot, config.ConfigFile)
+	if cfg, err := config.Load(cfgPath); err == nil {
+		if *qualType == "self" && cfg.Qualify.Type != "" {
+			*qualType = cfg.Qualify.Type
+		}
+		if *recordURI == "" && cfg.Qualify.RecordUri != "" {
+			*recordURI = cfg.Qualify.RecordUri
+		}
+	}
+
 	adapters, err := adapter.Default.Applicable(projectRoot)
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops qualify: detect adapters: %v\n", err)
@@ -56,7 +71,11 @@ func runQualify(args []string, stdout, stderr io.Writer) int {
 	}
 
 	fmt.Fprintf(stdout, "Running qualification for %d adapter(s)...\n", len(adapters))
-	report, err := qualify.Run(context.Background(), adapters, projectRoot)
+	report, err := qualify.Run(context.Background(), adapters, projectRoot,
+		qualify.RunOptions{
+			Type:      qualify.QualificationType(*qualType),
+			RecordUri: *recordURI,
+		})
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops qualify: %v\n", err)
 		return 1
@@ -77,6 +96,12 @@ func runQualify(args []string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintf(stdout, "Qualification report written to %s\n", outPath)
 	fmt.Fprintf(stdout, "Integrity hash: %s\n", report.Hash)
+	if report.QualificationType != "" {
+		fmt.Fprintf(stdout, "Qualification type: %s\n", report.QualificationType)
+	}
+	if report.QualificationRecordUri != "" {
+		fmt.Fprintf(stdout, "Certificate URI: %s\n", report.QualificationRecordUri)
+	}
 
 	if report.HasFailures() {
 		return 1

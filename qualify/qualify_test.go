@@ -197,9 +197,11 @@ func TestRunMultipleAdapters(t *testing.T) {
 func TestSaveLoad(t *testing.T) {
 	dir := t.TempDir()
 	r := &qualify.Report{
-		ProjectRoot: "/proj",
-		Total:       5,
-		Passed:      5,
+		ProjectRoot:            "/proj",
+		QualificationType:      "independent",
+		QualificationRecordUri: "https://cert.example",
+		Total:                  5,
+		Passed:                 5,
 		Components: []qualify.ComponentResult{
 			{Language: "go", Tool: "gofusa", Available: true, Total: 5, Passed: 5},
 		},
@@ -227,6 +229,12 @@ func TestSaveLoad(t *testing.T) {
 	}
 	if loaded.Total != 5 || loaded.Passed != 5 {
 		t.Errorf("Total/Passed = %d/%d, want 5/5", loaded.Total, loaded.Passed)
+	}
+	if loaded.QualificationType != "independent" {
+		t.Errorf("QualificationType = %q, want \"independent\"", loaded.QualificationType)
+	}
+	if loaded.QualificationRecordUri != "https://cert.example" {
+		t.Errorf("QualificationRecordUri = %q, want \"https://cert.example\"", loaded.QualificationRecordUri)
 	}
 }
 
@@ -343,5 +351,88 @@ func TestRunHashSet(t *testing.T) {
 	hashHex := strings.TrimPrefix(r.Hash, "sha256:")
 	if _, decErr := hex.DecodeString(hashHex); decErr != nil {
 		t.Errorf("Hash hex invalid: %v", decErr)
+	}
+}
+
+//fusa:test REQ-FO-QUAL005
+func TestQualificationTypeConstants(t *testing.T) {
+	if qualify.QualificationTypeSelf != "self" {
+		t.Errorf("QualificationTypeSelf = %q, want \"self\"", qualify.QualificationTypeSelf)
+	}
+	if qualify.QualificationTypeIndependent != "independent" {
+		t.Errorf("QualificationTypeIndependent = %q, want \"independent\"", qualify.QualificationTypeIndependent)
+	}
+}
+
+//fusa:test REQ-FO-QUAL006
+func TestRunWithOptions(t *testing.T) {
+	adapters := []adapter.Adapter{
+		&qualifyFake{
+			fakeAdapter: fakeAdapter{name: "gofusa", lang: fusaops.LangGo, available: true},
+			result:      &trace.Qualification{Total: 4, Passed: 4},
+		},
+	}
+	r, err := qualify.Run(context.Background(), adapters, "/proj",
+		qualify.RunOptions{
+			Type:      qualify.QualificationTypeIndependent,
+			RecordUri: "https://example.com/cert.pdf",
+		})
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if r.QualificationType != "independent" {
+		t.Errorf("QualificationType = %q, want \"independent\"", r.QualificationType)
+	}
+	if r.QualificationRecordUri != "https://example.com/cert.pdf" {
+		t.Errorf("QualificationRecordUri = %q, want \"https://example.com/cert.pdf\"", r.QualificationRecordUri)
+	}
+	if !strings.HasPrefix(r.Hash, "sha256:") {
+		t.Errorf("Hash = %q, want sha256: prefix", r.Hash)
+	}
+}
+
+//fusa:test REQ-FO-QUAL006
+func TestRunDefaultsToSelf(t *testing.T) {
+	adapters := []adapter.Adapter{
+		&qualifyFake{
+			fakeAdapter: fakeAdapter{name: "gofusa", lang: fusaops.LangGo, available: true},
+			result:      &trace.Qualification{Total: 2, Passed: 2},
+		},
+	}
+	r, err := qualify.Run(context.Background(), adapters, "/proj")
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if r.QualificationType != "self" {
+		t.Errorf("QualificationType = %q, want \"self\"", r.QualificationType)
+	}
+}
+
+//fusa:test REQ-FO-QUAL007
+func TestRenderTextShowsTypeAndRecord(t *testing.T) {
+	r := &qualify.Report{
+		ProjectRoot:            "/proj",
+		QualificationType:      "independent",
+		QualificationRecordUri: "https://example.com/cert.pdf",
+		Total:                  5,
+		Passed:                 5,
+		Components:             []qualify.ComponentResult{},
+	}
+	var buf bytes.Buffer
+	if err := qualify.Render(&buf, r, "text"); err != nil {
+		t.Fatalf("Render text: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "Type:") {
+		t.Errorf("expected 'Type:' in text output:\n%s", out)
+	}
+	if !strings.Contains(out, "Record:") {
+		t.Errorf("expected 'Record:' in text output:\n%s", out)
+	}
+	if !strings.Contains(out, "independent") {
+		t.Errorf("expected 'independent' in text output:\n%s", out)
+	}
+	if !strings.Contains(out, "https://example.com/cert.pdf") {
+		t.Errorf("expected record URI in text output:\n%s", out)
 	}
 }
