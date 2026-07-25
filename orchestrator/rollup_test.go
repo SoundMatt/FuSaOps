@@ -333,7 +333,7 @@ func TestRunSBOMWithWorkers(t *testing.T) {
 func TestRunComp(t *testing.T) {
 	reg := regWith(
 		tracer("gofusa"),
-		&capFake{tool: "cfusa", lang: fusaops.LangC, detect: true, avail: false}, // skipped: not installed
+		&capFake{tool: "cfusa", lang: fusaops.LangC, detect: true, avail: false},     // skipped: not installed
 		&fakeAdapter{tool: "nope", lang: fusaops.LangCpp, detect: true, avail: true}, // not a Compler
 	)
 	agg, err := New(reg).RunComp(context.Background(), t.TempDir(), Options{Project: "p"}, 0, "")
