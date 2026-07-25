@@ -20,15 +20,13 @@
 #   docker run --rm -p 8080:8080 -v "$(pwd)":/project ghcr.io/soundmatt/fusaops serve --addr :8080
 
 # ── Tool stages (source = each x-FuSa's published image) ──────────────────────
-FROM ghcr.io/soundmatt/go-fusa:latest AS gofusa
-FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa
-# c-FuSa v0.5.33 — awaiting docker-publish.yml (c-FuSa#44); enable once published
-# FROM ghcr.io/soundmatt/c-fusa:latest   AS cfusa
-# rust-FuSa v0.2.8 — awaiting docker-publish.yml (rust-FuSa#15); enable once published
-# FROM ghcr.io/soundmatt/rust-fusa:latest AS rsfusa
-# py-FuSa v0.1.8 — awaiting docker-publish.yml (py-FuSa#5); enable once published
+FROM ghcr.io/soundmatt/go-fusa:latest   AS gofusa
+FROM ghcr.io/soundmatt/cpp-fusa:latest  AS cpfusa
+FROM ghcr.io/soundmatt/c-fusa:latest    AS cfusa
+FROM ghcr.io/soundmatt/rust-fusa:latest AS rsfusa
+# py-FuSa requires Python runtime — enable when FuSaOps runtime image adds Python (py-FuSa#13)
 # FROM ghcr.io/soundmatt/py-fusa:latest   AS pyfusa
-# java-FuSa v0.3.1 — awaiting Dockerfile+docker-publish.yml (java-FuSa#9); also needs openjdk21-jre below
+# java-FuSa requires JRE — enable when FuSaOps runtime image adds eclipse-temurin (java-FuSa#15)
 # FROM ghcr.io/soundmatt/java-fusa:latest AS jfusa
 
 # ── Build fusaops ─────────────────────────────────────────────────────────────
@@ -50,10 +48,10 @@ RUN apk add --no-cache git ca-certificates libstdc++
 COPY --from=build  /bin/fusaops          /usr/local/bin/fusaops
 COPY --from=gofusa /usr/local/bin/gofusa /usr/local/bin/gofusa
 COPY --from=cpfusa /usr/local/bin/cpfusa /usr/local/bin/cpfusa
-# COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa   # enable when c-FuSa#44 is resolved
-# COPY --from=rsfusa /usr/local/bin/rsfusa /usr/local/bin/rsfusa  # enable when rust-FuSa#15 is resolved
-# COPY --from=pyfusa /usr/local/bin/pyfusa /usr/local/bin/pyfusa  # enable when py-FuSa#5 is resolved
-# COPY --from=jfusa  /usr/local/bin/jfusa  /usr/local/bin/jfusa   # enable when java-FuSa#9 is resolved
+COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa
+COPY --from=rsfusa /usr/local/bin/rsfusa /usr/local/bin/rsfusa
+# pyfusa requires Python runtime — not yet bundled (py-FuSa#13 tracks runtime image work)
+# jfusa requires JRE — not yet bundled (java-FuSa#15 tracks runtime image work)
 
 WORKDIR /project
 EXPOSE 8080
