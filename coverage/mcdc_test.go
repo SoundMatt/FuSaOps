@@ -378,14 +378,14 @@ func TestGateMCDCFail(t *testing.T) {
 
 func makeTestReport(gatePassed bool) *McdcReport {
 	return &McdcReport{
-		Generated:   mustParseTime("2026-07-25T12:00:00Z"),
-		DAL:         DALA,
-		ProfileMode: "llvm-mcdc",
-		Threshold:   100.0,
-		TotalConds:  2,
+		Generated:    mustParseTime("2026-07-25T12:00:00Z"),
+		DAL:          DALA,
+		ProfileMode:  "llvm-mcdc",
+		Threshold:    100.0,
+		TotalConds:   2,
 		CoveredConds: 1,
-		CondPct:     50.0,
-		GatePassed:  gatePassed,
+		CondPct:      50.0,
+		GatePassed:   gatePassed,
 		Functions: []McdcFunction{
 			{Name: "foo", File: "pkg/foo.go", HasReqTag: true, Covered: false},
 			{Name: "bar", File: "pkg/bar.go", HasReqTag: false, Covered: true},

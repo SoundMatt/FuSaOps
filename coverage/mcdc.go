@@ -59,7 +59,7 @@ type McdcFunction struct {
 type McdcReport struct {
 	Generated     time.Time      `json:"generated"`
 	DAL           DAL            `json:"dal"`
-	ProfileMode   string         `json:"profileMode"`   // always "llvm-mcdc"
+	ProfileMode   string         `json:"profileMode"` // always "llvm-mcdc"
 	Functions     []McdcFunction `json:"functions"`
 	TotalConds    int            `json:"totalConditions"`
 	CoveredConds  int            `json:"coveredConditions"`
