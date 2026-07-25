@@ -41,18 +41,35 @@ type TraceConfig struct {
 	ReqDecomposition ReqDecompositionConfig `json:"reqDecomposition,omitempty"`
 }
 
+// McdcConfig controls MC/DC coverage gate behaviour.
+//
+//fusa:req REQ-FO-CFG013
+type McdcConfig struct {
+	Enabled   bool    `json:"enabled"`
+	Threshold float64 `json:"threshold"` // 0–100; 0 means use default (100.0 for DAL-A)
+}
+
+// CoverageConfig controls coverage subcommand defaults from .fusaops.json.
+//
+//fusa:req REQ-FO-CFG013
+type CoverageConfig struct {
+	DAL  string     `json:"dal,omitempty"` // default DAL if --dal not given
+	Mcdc McdcConfig `json:"mcdc,omitempty"`
+}
+
 // Config is the top-level FuSaOps project configuration.
 //
 //fusa:req REQ-FO-CFG001
 type Config struct {
-	Version string        `json:"version"`
-	Project ProjectConfig `json:"project"`
-	Scan    ScanConfig    `json:"scan"`
-	Report  ReportConfig  `json:"report"`
-	Run     RunConfig     `json:"run,omitempty"`
-	VandV   VandVConfig   `json:"vv,omitempty"`
-	Trace   TraceConfig   `json:"trace,omitempty"`
-	Qualify QualifyConfig `json:"qualify,omitempty"` //fusa:req REQ-FO-CFG012
+	Version  string         `json:"version"`
+	Project  ProjectConfig  `json:"project"`
+	Scan     ScanConfig     `json:"scan"`
+	Report   ReportConfig   `json:"report"`
+	Run      RunConfig      `json:"run,omitempty"`
+	VandV    VandVConfig    `json:"vv,omitempty"`
+	Trace    TraceConfig    `json:"trace,omitempty"`
+	Qualify  QualifyConfig  `json:"qualify,omitempty"`  //fusa:req REQ-FO-CFG012
+	Coverage CoverageConfig `json:"coverage,omitempty"` //fusa:req REQ-FO-CFG013
 }
 
 // VandVConfig holds per-repo V&V independence declarations embedded in .fusaops.json.
@@ -207,6 +224,9 @@ func Validate(cfg *Config) error {
 	case "", "self", "independent":
 	default:
 		return fmt.Errorf("%w: unsupported qualify.type %q", fusaops.ErrInvalidConfig, cfg.Qualify.Type)
+	}
+	if t := cfg.Coverage.Mcdc.Threshold; t != 0 && (t < 0 || t > 100) {
+		return fmt.Errorf("%w: coverage.mcdc.threshold must be in range [0, 100]", fusaops.ErrInvalidConfig)
 	}
 	return nil
 }

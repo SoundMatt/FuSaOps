@@ -223,3 +223,42 @@ func TestQualifyConfigRoundTrip(t *testing.T) {
 		t.Errorf("Validate with type \"tql5\": got %v, want ErrInvalidConfig", err)
 	}
 }
+
+//fusa:test REQ-FO-CFG013
+func TestCoverageConfigSaveLoad(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ConfigFile)
+	cfg := Default("mcdc-test")
+	cfg.Coverage = CoverageConfig{
+		DAL: "DAL-A",
+		Mcdc: McdcConfig{
+			Enabled:   true,
+			Threshold: 95.0,
+		},
+	}
+	if err := Save(path, cfg); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+	got, err := Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if !got.Coverage.Mcdc.Enabled {
+		t.Error("coverage.mcdc.enabled should round-trip to true")
+	}
+	if got.Coverage.Mcdc.Threshold != 95.0 {
+		t.Errorf("coverage.mcdc.threshold: got %.1f, want 95.0", got.Coverage.Mcdc.Threshold)
+	}
+	if got.Coverage.DAL != "DAL-A" {
+		t.Errorf("coverage.dal: got %q, want DAL-A", got.Coverage.DAL)
+	}
+}
+
+//fusa:test REQ-FO-CFG013
+func TestCoverageConfigInvalidThreshold(t *testing.T) {
+	cfg := Default("mcdc-bad")
+	cfg.Coverage.Mcdc.Threshold = 150.0
+	if err := Validate(cfg); !errors.Is(err, fusaops.ErrInvalidConfig) {
+		t.Errorf("got %v, want ErrInvalidConfig for threshold=150", err)
+	}
+}

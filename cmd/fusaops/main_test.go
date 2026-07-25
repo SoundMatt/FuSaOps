@@ -1135,3 +1135,167 @@ func TestPRListJSON(t *testing.T) {
 		t.Errorf("json output missing reports key: %q", out)
 	}
 }
+
+// --------------------------------------------------------------------------
+// MC/DC coverage gate integration tests
+// --------------------------------------------------------------------------
+
+const emptyLLVMJSON = `{"data":[],"type":"llvm.coverage.json.export","version":"2.0.1"}`
+
+const partialLLVMJSON = `{
+  "data": [
+    {
+      "functions": [
+        {
+          "name": "annotatedFunc",
+          "filenames": ["pkg/annotated.go"],
+          "mcdc_records": [
+            {
+              "decision_region": [10, 0, 0, 0, 0, 0, 0, 0],
+              "conditions": [
+                {"id": 0, "covered_true_count": 1, "covered_false_count": 0}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "type": "llvm.coverage.json.export",
+  "version": "2.0.1"
+}`
+
+const fullLLVMJSON = `{
+  "data": [
+    {
+      "functions": [
+        {
+          "name": "safeFunc",
+          "filenames": ["pkg/safe.go"],
+          "mcdc_records": [
+            {
+              "decision_region": [5, 0, 0, 0, 0, 0, 0, 0],
+              "conditions": [
+                {"id": 0, "covered_true_count": 1, "covered_false_count": 1}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "type": "llvm.coverage.json.export",
+  "version": "2.0.1"
+}`
+
+//fusa:test REQ-FO-CLI074
+func TestCoverageMCDCMissingFile(t *testing.T) {
+	code, _, errb := runArgs(t, "coverage", "--mcdc", "--mcdc-file", "/nonexistent/mcdc.json")
+	if code != 1 || !strings.Contains(strings.ToLower(errb), "mcdc") {
+		t.Errorf("missing mcdc-file: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI074
+func TestCoverageMCDCEmptyJSON(t *testing.T) {
+	dir := t.TempDir()
+	mcdcPath := filepath.Join(dir, "mcdc.json")
+	if err := os.WriteFile(mcdcPath, []byte(emptyLLVMJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "coverage", "--mcdc", "--mcdc-file", mcdcPath,
+		"--req-dir", dir, "--format", "text", "--dal", "DAL-A")
+	if code != 0 {
+		t.Fatalf("mcdc empty JSON: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "DO-178C MC/DC") {
+		t.Errorf("output missing DO-178C MC/DC header: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI074
+func TestCoverageMCDCGatePass(t *testing.T) {
+	dir := t.TempDir()
+	mcdcPath := filepath.Join(dir, "mcdc.json")
+	if err := os.WriteFile(mcdcPath, []byte(fullLLVMJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// No annotated functions in req-dir → gate passes if threshold met.
+	code, _, errb := runArgs(t, "coverage", "--mcdc", "--mcdc-file", mcdcPath,
+		"--req-dir", dir, "--format", "text", "--dal", "DAL-A")
+	if code != 0 {
+		t.Fatalf("mcdc gate pass: code=%d err=%q", code, errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI074
+func TestCoverageMCDCGateFailUncoveredReq(t *testing.T) {
+	dir := t.TempDir()
+	mcdcPath := filepath.Join(dir, "mcdc.json")
+	if err := os.WriteFile(mcdcPath, []byte(partialLLVMJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// Write a Go source file that annotates the function named "annotatedFunc".
+	goSrc := "package pkg\n\n// annotatedFunc does something.\n//\n//fusa:req REQ-X\nfunc annotatedFunc() {}\n"
+	if err := os.WriteFile(filepath.Join(dir, "annotated.go"), []byte(goSrc), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, _, errb := runArgs(t, "coverage", "--mcdc", "--mcdc-file", mcdcPath,
+		"--req-dir", dir, "--format", "text", "--dal", "DAL-A")
+	if code != 1 {
+		t.Fatalf("mcdc gate fail: code=%d (want 1) err=%q", code, errb)
+	}
+	if !strings.Contains(errb, "FAILED") {
+		t.Errorf("stderr should contain FAILED: %q", errb)
+	}
+}
+
+//fusa:test REQ-FO-CLI074
+func TestCoverageMCDCJSONFormat(t *testing.T) {
+	dir := t.TempDir()
+	mcdcPath := filepath.Join(dir, "mcdc.json")
+	if err := os.WriteFile(mcdcPath, []byte(emptyLLVMJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "coverage", "--mcdc", "--mcdc-file", mcdcPath,
+		"--req-dir", dir, "--format", "json", "--dal", "DAL-A")
+	if code != 0 {
+		t.Fatalf("mcdc json format: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, `"gatePassed"`) {
+		t.Errorf("json output missing gatePassed key: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI074
+func TestCoverageMCDCMarkdownFormat(t *testing.T) {
+	dir := t.TempDir()
+	mcdcPath := filepath.Join(dir, "mcdc.json")
+	if err := os.WriteFile(mcdcPath, []byte(emptyLLVMJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, errb := runArgs(t, "coverage", "--mcdc", "--mcdc-file", mcdcPath,
+		"--req-dir", dir, "--format", "markdown", "--dal", "DAL-A")
+	if code != 0 {
+		t.Fatalf("mcdc markdown format: code=%d err=%q", code, errb)
+	}
+	if !strings.Contains(out, "DO-178C") {
+		t.Errorf("markdown output missing DO-178C: %q", out)
+	}
+}
+
+//fusa:test REQ-FO-CLI074
+func TestCoverageMCDCThresholdFail(t *testing.T) {
+	dir := t.TempDir()
+	mcdcPath := filepath.Join(dir, "mcdc.json")
+	if err := os.WriteFile(mcdcPath, []byte(fullLLVMJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// fullLLVMJSON has 1 condition, both covered → CondPct=100%.
+	// Threshold=50 → gate passes.
+	code, _, errb := runArgs(t, "coverage", "--mcdc", "--mcdc-file", mcdcPath,
+		"--req-dir", dir, "--format", "text", "--dal", "DAL-A", "--mcdc-threshold", "50")
+	if code != 0 {
+		t.Fatalf("mcdc threshold satisfied: code=%d err=%q", code, errb)
+	}
+}

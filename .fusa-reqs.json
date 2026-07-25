@@ -2624,6 +2624,70 @@
       "description": "Provides an at-a-glance qualification gap indicator for the web UI and a machine-readable SVG badge for embedding in README files.",
       "priority": "MUST",
       "rationale": "Project stakeholders need a quick visual indicator of tool qualification status alongside the safety findings dashboard."
+    },
+    {
+      "id": "REQ-FO-COV004",
+      "title": "McdcReport structured MC/DC coverage type hierarchy",
+      "description": "FuSaOps shall define McdcCondition, McdcDecision, McdcFunction, and McdcReport types capturing LLVM source-based condition/decision coverage data with hasReqTag, gatePassed, and uncoveredReqs fields for DAL-A compliance evidence.",
+      "priority": "MUST",
+      "rationale": "DO-178C §6.4.4.b requires MC/DC evidence at DAL-A; structured types enable machine-readable report generation and downstream tooling.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-COV005",
+      "title": "ParseMCDC: parse LLVM coverage JSON export",
+      "description": "FuSaOps shall provide a ParseMCDC function that reads the LLVM llvm-cov export --format=json output and produces a []McdcFunction slice with per-condition CoveredT/CoveredF/Covered flags derived from covered_true_count and covered_false_count fields.",
+      "priority": "MUST",
+      "rationale": "LLVM source-based MC/DC is the industry-standard mechanism for DO-178C/IEC 61508 condition coverage measurement in C/C++ components.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-COV006",
+      "title": "AnalyseMCDC: aggregate condition coverage with req-annotation awareness",
+      "description": "FuSaOps shall provide an AnalyseMCDC function that merges parsed LLVM coverage data with the //fusa:req-annotated function set, computes aggregate CondPct, sets GatePassed based on UncoveredReqs and threshold, and is deterministic.",
+      "priority": "MUST",
+      "rationale": "Gate semantics must distinguish safety-annotated from unannotated functions; annotated functions must achieve 100% MC/DC for DAL-A.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-COV007",
+      "title": "GateMCDC: coverage gate fails on uncovered conditions in req-annotated functions",
+      "description": "FuSaOps shall provide a GateMCDC function that returns false when any //fusa:req-annotated function has uncovered conditions or when overall condition coverage falls below the configured threshold; the gate passes vacuously when no conditions exist.",
+      "priority": "MUST",
+      "rationale": "DO-178C Level A mandates MC/DC for all requirements-traced code; automatic gate enforcement prevents inadvertent release with coverage gaps.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-COV008",
+      "title": "RenderMCDC: MC/DC report text/json/markdown renderer",
+      "description": "FuSaOps shall provide a RenderMCDC function that writes an McdcReport in 'text', 'json', or 'markdown'/'md' format; text shows gate status, condition pct, and uncovered annotated functions; JSON encodes the full McdcReport; markdown produces a GFM table.",
+      "priority": "MUST",
+      "rationale": "Matches the Render convention in coverage.go; enables CI consumption and human review.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-COV009",
+      "title": "FindAnnotatedFunctions: scan Go source for //fusa:req-annotated function names",
+      "description": "FuSaOps shall provide a FindAnnotatedFunctions function that walks a directory tree for .go files, parses them with go/parser (stdlib), and returns the set of FuncDecl names whose doc-comment group contains a '//fusa:req' annotation.",
+      "priority": "MUST",
+      "rationale": "Required for GateMCDC to identify which functions need 100% MC/DC; uses stdlib only, no external AST tools.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-CLI080",
+      "title": "fusaops coverage --mcdc flag: LLVM source-based MC/DC gate",
+      "description": "The fusaops coverage command shall accept a --mcdc flag that, when set, parses an LLVM coverage JSON (--mcdc-file), scans source for //fusa:req annotations (--req-dir), runs AnalyseMCDC, renders the McdcReport, and exits 1 if the gate fails; --mcdc-threshold sets the minimum condition coverage percentage.",
+      "priority": "MUST",
+      "rationale": "Provides automated DO-178C Level A MC/DC evidence collection from LLVM toolchains integrated with FuSaOps; DAL-A prerequisite.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-CFG013",
+      "title": "CoverageConfig and McdcConfig: mcdc.enabled and mcdc.threshold in .fusaops.json",
+      "description": "FuSaOps shall support a 'coverage' section in .fusaops.json with a nested 'mcdc' object containing 'enabled' (bool) and 'threshold' (float64, range 0–100); Validate shall reject threshold values outside this range; Default config initialises mcdc.enabled=false.",
+      "priority": "MUST",
+      "rationale": "Allows project-wide MC/DC gate policy to be encoded in the config file rather than repeated on every CLI invocation.",
+      "standard": "DO-178C"
     }
   ]
 }

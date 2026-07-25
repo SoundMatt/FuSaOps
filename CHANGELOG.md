@@ -7,6 +7,30 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.67.0] — 2026-07-25
+
+### Added — MC/DC Coverage Gate (DO-178C DAL-A prerequisite)
+
+- `fusaops coverage --mcdc` — LLVM source-based MC/DC coverage gate.
+  When set, parses the LLVM `llvm-cov export --format=json` output
+  (`--mcdc-file`, default `mcdc.json`), scans Go source for `//fusa:req`-annotated
+  functions (`--req-dir`), and fails the gate (exit 1) if any annotated function
+  has uncovered conditions or if overall condition coverage falls below
+  `--mcdc-threshold` (default 100.0%).
+- `coverage.ParseMCDC` — decodes LLVM MC/DC JSON into `[]McdcFunction`.
+- `coverage.AnalyseMCDC` — merges coverage data with annotated function set and
+  computes `McdcReport` with `GatePassed`, `CondPct`, `UncoveredReqs`.
+- `coverage.GateMCDC` — gate accessor over `McdcReport.GatePassed`.
+- `coverage.RenderMCDC` — renders `McdcReport` as text, JSON, or markdown.
+- `coverage.FindAnnotatedFunctions` — stdlib `go/parser` walk returning
+  `//fusa:req`-annotated function names from `.go` source files.
+- `coverage.McdcCondition`, `McdcDecision`, `McdcFunction`, `McdcReport` — new
+  exported types for structured DO-178C MC/DC evidence.
+- `config.CoverageConfig` and `config.McdcConfig` — optional `"coverage"` section
+  in `.fusaops.json` with `mcdc.enabled` and `mcdc.threshold`; `Validate` rejects
+  threshold values outside `[0, 100]`.
+- 8 new requirements: REQ-FO-COV004–COV009, REQ-FO-CLI080, REQ-FO-CFG013.
+
 ## [1.66.0] — 2026-07-25
 
 ### Feature: Tool Qualification Record Display (issue #29)
