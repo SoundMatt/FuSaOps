@@ -107,6 +107,34 @@ func TestRunConfigAndComponentsSaveLoad(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-CFG010
+func TestVandVConfigRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ConfigFile)
+	cfg := Default("vv-test")
+	cfg.VandV = VandVConfig{
+		ImplementationAuthor:    "Alice",
+		IndependentReviewer:     "Bob",
+		IndependentTestExecutor: "Carol",
+	}
+	if err := Save(path, cfg); err != nil {
+		t.Fatal(err)
+	}
+	got, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.VandV.ImplementationAuthor != "Alice" {
+		t.Errorf("got author %q, want Alice", got.VandV.ImplementationAuthor)
+	}
+	if got.VandV.IndependentReviewer != "Bob" {
+		t.Errorf("got reviewer %q, want Bob", got.VandV.IndependentReviewer)
+	}
+	if got.VandV.IndependentTestExecutor != "Carol" {
+		t.Errorf("got executor %q, want Carol", got.VandV.IndependentTestExecutor)
+	}
+}
+
 func TestLoadInvalidJSON(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, ConfigFile)
