@@ -2206,6 +2206,13 @@
       "rationale": "Provides consistent file output and display for release evidence artefacts."
     },
     {
+      "id": "REQ-FO-REL005",
+      "title": "Provenance builder field with CI auto-detection",
+      "description": "release.Provenance shall carry a Builder field (JSON 'builder'); release.DetectBuilder(override) auto-detects the CI/CD system from GITHUB_ACTIONS/GITHUB_WORKFLOW_REF, GITLAB_CI, JENKINS_URL, and CI env vars, returning the override verbatim when non-empty; release.BuildProvenance shall accept a builder parameter and call DetectBuilder.",
+      "priority": "MUST",
+      "rationale": "Aligns FuSaOps provenance.json with the x-FuSa spec §7 schema and go-FuSa v0.31.0 builder field, enabling audit tooling to identify the CI/CD system that produced the release artefacts."
+    },
+    {
       "id": "REQ-FO-CLI065",
       "title": "fusaops release subcommand",
       "description": "The fusaops CLI shall provide a 'release' subcommand with --dir and --output-dir flags that generates the cross-language SBOM, build provenance, and artifact manifest, saving them to the output directory.",
@@ -2680,6 +2687,13 @@
       "priority": "MUST",
       "rationale": "Provides automated DO-178C Level A MC/DC evidence collection from LLVM toolchains integrated with FuSaOps; DAL-A prerequisite.",
       "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-CLI081",
+      "title": "fusaops release --builder flag",
+      "description": "fusaops release shall accept a --builder flag that overrides the auto-detected builder identifier in provenance.json; when omitted, DetectBuilder auto-detects from CI env vars.",
+      "priority": "MUST",
+      "rationale": "Allows projects running in non-standard CI environments or when the auto-detection heuristics do not match to record the correct builder identity in the tamper-evident provenance record."
     },
     {
       "id": "REQ-FO-CFG013",

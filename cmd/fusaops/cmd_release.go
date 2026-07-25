@@ -18,6 +18,7 @@ import (
 // runRelease generates the multi-language SBOM, build provenance, and artifact manifest.
 //
 //fusa:req REQ-FO-CLI065
+//fusa:req REQ-FO-CLI081
 func runRelease(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops release", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -31,6 +32,7 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 	var (
 		dir       = fs.String("dir", "", "project root directory (default: current directory)")
 		outputDir = fs.String("output-dir", "", "output directory for generated files (default: project root)")
+		builder   = fs.String("builder", "", "builder identifier (e.g. 'github-actions'); auto-detected from CI env vars when empty")
 	)
 	if err := fs.Parse(args); err != nil {
 		return 2
@@ -79,7 +81,7 @@ func runRelease(args []string, stdout, stderr io.Writer) int {
 	}
 
 	// Step 2: Build provenance.
-	prov, err := release.BuildProvenance(context.Background(), projectRoot)
+	prov, err := release.BuildProvenance(context.Background(), projectRoot, *builder)
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops release: build provenance: %v\n", err)
 		return 1
