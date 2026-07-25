@@ -21,16 +21,14 @@
 
 # ── Tool stages (source = each x-FuSa's published image) ──────────────────────
 FROM ghcr.io/soundmatt/go-fusa:latest AS gofusa
-# cpp-FuSa v0.12.5 is spec v1.10 aligned; enable once ghcr.io/soundmatt/cpp-fusa is published
-# FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa
-# c-FuSa v0.5.16 is spec v1.10 aligned; enable once ghcr.io/soundmatt/c-fusa is published
+FROM ghcr.io/soundmatt/cpp-fusa:latest AS cpfusa
+# c-FuSa v0.5.33 — awaiting docker-publish.yml (c-FuSa#44); enable once published
 # FROM ghcr.io/soundmatt/c-fusa:latest   AS cfusa
-# rust-FuSa v0.2.6 is spec v1.10 aligned; enable once ghcr.io/soundmatt/rust-fusa is published
+# rust-FuSa v0.2.8 — awaiting docker-publish.yml (rust-FuSa#15); enable once published
 # FROM ghcr.io/soundmatt/rust-fusa:latest AS rsfusa
-# py-FuSa v0.1.4 is spec v1.10 aligned; enable once ghcr.io/soundmatt/py-fusa is published
+# py-FuSa v0.1.8 — awaiting docker-publish.yml (py-FuSa#5); enable once published
 # FROM ghcr.io/soundmatt/py-fusa:latest   AS pyfusa
-# java-FuSa v0.2.0 is spec v1.10 aligned; enable once ghcr.io/soundmatt/java-fusa is published
-# Note: enabling this stage also requires adding `openjdk21-jre` to the apk install line below.
+# java-FuSa v0.3.1 — awaiting Dockerfile+docker-publish.yml (java-FuSa#9); also needs openjdk21-jre below
 # FROM ghcr.io/soundmatt/java-fusa:latest AS jfusa
 
 # ── Build fusaops ─────────────────────────────────────────────────────────────
@@ -51,11 +49,11 @@ RUN apk add --no-cache git ca-certificates libstdc++
 
 COPY --from=build  /bin/fusaops          /usr/local/bin/fusaops
 COPY --from=gofusa /usr/local/bin/gofusa /usr/local/bin/gofusa
-# COPY --from=cpfusa /usr/local/bin/cpfusa /usr/local/bin/cpfusa  # uncomment with FROM stage above
-# COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa   # uncomment with FROM stage above
-# COPY --from=rsfusa /usr/local/bin/rsfusa /usr/local/bin/rsfusa  # uncomment with FROM stage above
-# COPY --from=pyfusa /usr/local/bin/pyfusa /usr/local/bin/pyfusa  # uncomment with FROM stage above
-# COPY --from=jfusa  /usr/local/bin/jfusa  /usr/local/bin/jfusa   # uncomment with FROM stage above
+COPY --from=cpfusa /usr/local/bin/cpfusa /usr/local/bin/cpfusa
+# COPY --from=cfusa  /usr/local/bin/cfusa  /usr/local/bin/cfusa   # enable when c-FuSa#44 is resolved
+# COPY --from=rsfusa /usr/local/bin/rsfusa /usr/local/bin/rsfusa  # enable when rust-FuSa#15 is resolved
+# COPY --from=pyfusa /usr/local/bin/pyfusa /usr/local/bin/pyfusa  # enable when py-FuSa#5 is resolved
+# COPY --from=jfusa  /usr/local/bin/jfusa  /usr/local/bin/jfusa   # enable when java-FuSa#9 is resolved
 
 WORKDIR /project
 EXPOSE 8080
