@@ -164,16 +164,16 @@ func TestCheckDecompositionCrossComponent(t *testing.T) {
 	agg := &Aggregate{
 		Components: []ComponentTrace{
 			{
-				Tool:     "gofusa",
-				Language: "go",
+				Tool:      "gofusa",
+				Language:  "go",
 				Available: true,
 				Requirements: []Requirement{
 					{ID: "HLR-001", Level: LevelHLR},
 				},
 			},
 			{
-				Tool:     "cfusa",
-				Language: "c",
+				Tool:      "cfusa",
+				Language:  "c",
 				Available: true,
 				Requirements: []Requirement{
 					{ID: "LLR-001", Level: LevelLLR, Parent: "HLR-001"}, // cross-component reference
@@ -196,7 +196,7 @@ func TestCheckDecompositionDeterministic(t *testing.T) {
 		{ID: "HLR-001", Level: LevelHLR},
 		{ID: "HLR-002", Level: LevelHLR}, // childless
 		{ID: "LLR-001", Level: LevelLLR, Parent: "HLR-001"},
-		{ID: "LLR-002", Level: LevelLLR}, // unparented
+		{ID: "LLR-002", Level: LevelLLR},                     // unparented
 		{ID: "LLR-003", Level: LevelLLR, Parent: "HLR-NOPE"}, // orphan
 	})
 

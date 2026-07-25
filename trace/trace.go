@@ -131,12 +131,12 @@ type AggregateCoverage struct {
 //fusa:req REQ-FO-TRC009
 //fusa:req REQ-FO-TRC020
 type Aggregate struct {
-	GeneratedAt   time.Time             `json:"generatedAt"`
-	Root          string                `json:"root"`
-	Project       string                `json:"project,omitempty"`
-	Components    []ComponentTrace      `json:"components"`
-	Coverage      AggregateCoverage     `json:"coverage"`
-	Decomposition *DecompositionReport  `json:"decomposition,omitempty"`
+	GeneratedAt   time.Time            `json:"generatedAt"`
+	Root          string               `json:"root"`
+	Project       string               `json:"project,omitempty"`
+	Components    []ComponentTrace     `json:"components"`
+	Coverage      AggregateCoverage    `json:"coverage"`
+	Decomposition *DecompositionReport `json:"decomposition,omitempty"`
 }
 
 // New builds an Aggregate from component traces, summing coverage across every
