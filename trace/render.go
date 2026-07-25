@@ -101,6 +101,19 @@ func renderText(w io.Writer, a *Aggregate) error {
 		fmt.Fprintln(w)
 	}
 
+	// Decomposition section (REQ-FO-TRC022).
+	if a.Decomposition != nil {
+		fmt.Fprintln(w, "── Decomposition ──")
+		if a.Decomposition.Valid() {
+			fmt.Fprintf(w, "  decomposition: PASS (%d HLR, %d LLR)\n", a.Decomposition.HLRCount, a.Decomposition.LLRCount)
+		} else {
+			for _, v := range a.Decomposition.Violations {
+				fmt.Fprintf(w, "  %s\n", v)
+			}
+		}
+		fmt.Fprintln(w)
+	}
+
 	c := a.Coverage
 	if c.SecTestedRequirements > 0 {
 		fmt.Fprintf(w, "TOTAL: %s — %d requirements across %d component(s): %d traced (%d%%), %d tested (%d%%), %d sec-tested (%d%%)\n",
@@ -182,6 +195,20 @@ func renderMarkdown(w io.Writer, a *Aggregate) error {
 		}
 		fmt.Fprintln(w, "\n</details>")
 	}
+
+	// Decomposition violations block (REQ-FO-TRC022).
+	if a.Decomposition != nil {
+		n := len(a.Decomposition.Violations)
+		if n > 0 {
+			fmt.Fprintf(w, "\n<details><summary>Decomposition (%d violation(s))</summary>\n\n", n)
+			for _, v := range a.Decomposition.Violations {
+				fmt.Fprintf(w, "- %s\n", v)
+			}
+			fmt.Fprintln(w, "\n</details>")
+		} else {
+			fmt.Fprintf(w, "\n**Decomposition: PASS** (%d HLR, %d LLR)\n", a.Decomposition.HLRCount, a.Decomposition.LLRCount)
+		}
+	}
 	return nil
 }
 
@@ -218,6 +245,11 @@ var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
  .bar>span{display:block;height:100%;background:#4f8cff}
  .gaps{margin:.4rem 0 0 1rem;padding:0;list-style:none;font-size:.85rem;color:#f0c463}
  .gaps li::before{content:"⚠ ";opacity:.7}
+ .decomp{margin-top:1.2rem;background:#171a21;border-radius:.6rem;padding:.8rem 1rem}
+ .decomp h2{margin:0 0 .5rem;font-size:1rem;color:#9aa3b2}
+ .decomp-pass{color:#7ee2a0;font-weight:600}
+ .decomp-viols{padding:0;margin:.4rem 0 0 1rem;list-style:none;font-size:.85rem;color:#f0c463}
+ .decomp-viols li::before{content:"⚠ ";opacity:.7}
 </style></head><body>
 <header>
  <h1>FuSaOps — Cross-Language Traceability{{if .Project}}: {{.Project}}{{end}}</h1>
@@ -252,5 +284,13 @@ var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
    <th>{{if .Coverage.SecTestedRequirements}}{{.Coverage.SecTestedRequirements}} ({{.Coverage.SecTestedPct}}%){{else}}—{{end}}</th>
    <th></th></tr></tfoot>
  </table>
+{{if .Decomposition}}
+ <div class="decomp">
+  <h2>Decomposition</h2>
+  {{if .Decomposition.Valid}}<p class="decomp-pass">PASS — {{.Decomposition.HLRCount}} HLR, {{.Decomposition.LLRCount}} LLR</p>
+  {{else}}<ul class="decomp-viols">{{range .Decomposition.Violations}}<li>{{.}}</li>{{end}}</ul>
+  {{end}}
+ </div>
+{{end}}
 </main></body></html>
 `))

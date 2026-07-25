@@ -20,6 +20,7 @@ import (
 //fusa:req REQ-FO-CLI011
 //fusa:req REQ-FO-CLI021
 //fusa:req REQ-FO-CLI049
+//fusa:req REQ-FO-CLI077
 func runTrace(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops trace", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -33,11 +34,13 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 	secTested := fs.Int("sec-tested", -1, "fail when sec-tested% < N (0–100)")
 	workers := fs.Int("workers", 0, "max parallel adapters (0 = unlimited; overrides config)")
 	timeout := fs.String("timeout", "", "per-adapter deadline e.g. 30s, 5m (overrides config)")
+	decomp := fs.Bool("decomp", false, "run HLR/LLR requirement decomposition gate")
+	decompEnforce := fs.String("decomp-enforce", "", "decomposition enforcement: warn|error|off|auto (overrides config)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
 
-	root, opts, _, err := loadOptions(*dir, *only, stderr)
+	root, opts, cfg, err := loadOptions(*dir, *only, stderr)
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops trace: %v\n", err)
 		return 1
@@ -62,6 +65,23 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 		}
 		fmt.Fprintf(stderr, "fusaops trace: %v\n", err)
 		return 1
+	}
+
+	// Merge config-driven decomp settings with flag overrides.
+	decompEnabled := *decomp
+	enforce := *decompEnforce
+	if cfg != nil && cfg.Trace.ReqDecomposition.Enforce != "" {
+		if cfg.Trace.ReqDecomposition.Enforce != "off" {
+			decompEnabled = true
+		}
+		if enforce == "" {
+			enforce = cfg.Trace.ReqDecomposition.Enforce
+		}
+	}
+
+	// Run the gate and attach results to the aggregate so renderers can include them.
+	if decompEnabled {
+		agg.Decomposition = trace.CheckDecomposition(agg)
 	}
 
 	renderAgg := agg
@@ -94,6 +114,20 @@ func runTrace(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "fusaops trace: sec-tested coverage %d%% < required %d%%\n",
 			agg.Coverage.SecTestedPct, *secTested)
 		return 1
+	}
+	if agg.Decomposition != nil && !agg.Decomposition.Valid() {
+		dal, asil := "", ""
+		if cfg != nil {
+			dal = cfg.Project.DAL
+			asil = cfg.Project.ASIL
+		}
+		sev := trace.SeverityForDecomposition(enforce, dal, asil)
+		for _, v := range agg.Decomposition.Violations {
+			fmt.Fprintf(stderr, "fusaops trace: decomp: %s\n", v)
+		}
+		if sev == "error" {
+			return 1
+		}
 	}
 	return 0
 }

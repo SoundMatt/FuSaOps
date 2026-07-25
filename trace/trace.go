@@ -18,6 +18,7 @@ import (
 // fields FuSaOps surfaces in the cross-language view are decoded.
 //
 //fusa:req REQ-FO-TRC001
+//fusa:req REQ-FO-TRC019
 type Requirement struct {
 	ID       string `json:"id"`
 	Title    string `json:"title,omitempty"`
@@ -25,6 +26,7 @@ type Requirement struct {
 	Level    string `json:"level,omitempty"`
 	ASIL     string `json:"asil,omitempty"`
 	Status   string `json:"status,omitempty"` // covered | untraced | untested (§5)
+	Parent   string `json:"parent,omitempty"` // ID of parent HLR; set for LLR requirements
 }
 
 // Tag is a single //fusa:req or //fusa:test annotation discovered in a
@@ -127,12 +129,14 @@ type AggregateCoverage struct {
 // Aggregate is the cross-language traceability roll-up.
 //
 //fusa:req REQ-FO-TRC009
+//fusa:req REQ-FO-TRC020
 type Aggregate struct {
-	GeneratedAt time.Time         `json:"generatedAt"`
-	Root        string            `json:"root"`
-	Project     string            `json:"project,omitempty"`
-	Components  []ComponentTrace  `json:"components"`
-	Coverage    AggregateCoverage `json:"coverage"`
+	GeneratedAt   time.Time             `json:"generatedAt"`
+	Root          string                `json:"root"`
+	Project       string                `json:"project,omitempty"`
+	Components    []ComponentTrace      `json:"components"`
+	Coverage      AggregateCoverage     `json:"coverage"`
+	Decomposition *DecompositionReport  `json:"decomposition,omitempty"`
 }
 
 // New builds an Aggregate from component traces, summing coverage across every

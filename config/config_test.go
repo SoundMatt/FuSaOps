@@ -145,3 +145,41 @@ func TestLoadInvalidJSON(t *testing.T) {
 		t.Error("expected error for invalid JSON")
 	}
 }
+
+// TestTraceConfigRoundTrip verifies that TraceConfig.ReqDecomposition.Enforce
+// survives a save/load round-trip.
+//
+//fusa:test REQ-FO-CFG011
+func TestTraceConfigRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ConfigFile)
+	cfg := Default("trace-rt")
+	cfg.Trace = TraceConfig{
+		ReqDecomposition: ReqDecompositionConfig{Enforce: "warn", MinLevel: "LLR"},
+	}
+	if err := Save(path, cfg); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+	got, err := Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if got.Trace.ReqDecomposition.Enforce != "warn" {
+		t.Errorf("enforce: got %q, want %q", got.Trace.ReqDecomposition.Enforce, "warn")
+	}
+	if got.Trace.ReqDecomposition.MinLevel != "LLR" {
+		t.Errorf("minLevel: got %q, want %q", got.Trace.ReqDecomposition.MinLevel, "LLR")
+	}
+}
+
+// TestValidateRejectsUnknownDecompEnforce verifies that Validate rejects an
+// unknown enforce value.
+//
+//fusa:test REQ-FO-CFG011
+func TestValidateRejectsUnknownDecompEnforce(t *testing.T) {
+	cfg := Default("x")
+	cfg.Trace.ReqDecomposition.Enforce = "strict"
+	if err := Validate(cfg); !errors.Is(err, fusaops.ErrInvalidConfig) {
+		t.Errorf("got %v, want ErrInvalidConfig for unknown enforce value", err)
+	}
+}
