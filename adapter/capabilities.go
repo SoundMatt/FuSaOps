@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/SoundMatt/FuSaOps/comp"
 	"github.com/SoundMatt/FuSaOps/sbom"
 	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
@@ -46,6 +47,13 @@ type SBOMer interface {
 //fusa:req REQ-FO-ADP013
 type Packer interface {
 	AuditPack(ctx context.Context, root, dest string) error
+}
+
+// Compler can produce a cyclomatic complexity (V(G)) comp-report per §9.2.
+//
+//fusa:req REQ-FO-ADP029
+type Compler interface {
+	Comp(ctx context.Context, root string, threshold int, dal string) (*comp.Report, error)
 }
 
 // StandardsProvider can produce a §9.3 gap report for a given standard id.
@@ -135,6 +143,29 @@ func (a *cmdAdapter) AuditPack(ctx context.Context, root, dest string) error {
 		return fmt.Errorf("adapter %s: audit-pack produced no file: %w", a.name, err)
 	}
 	return nil
+}
+
+// Comp runs "<tool> comp --format json" with optional threshold/DAL overrides and
+// decodes the resulting comp-report.
+//
+//fusa:req REQ-FO-ADP029
+func (a *cmdAdapter) Comp(ctx context.Context, root string, threshold int, dal string) (*comp.Report, error) {
+	args := []string{"comp", "--format", "json"}
+	if threshold > 0 {
+		args = append(args, "--threshold", fmt.Sprintf("%d", threshold))
+	}
+	if dal != "" {
+		args = append(args, "--dal", dal)
+	}
+	out, err := a.run(ctx, root, a.tool, args...)
+	if err != nil {
+		return nil, fmt.Errorf("adapter %s: comp: %w", a.name, err)
+	}
+	var r comp.Report
+	if err := json.Unmarshal(extractJSON(out), &r); err != nil {
+		return nil, fmt.Errorf("adapter %s: decode comp report: %w", a.name, err)
+	}
+	return &r, nil
 }
 
 // Standards runs "<tool> <standard> --format json" and decodes the gap report.

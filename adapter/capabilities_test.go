@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -156,6 +157,59 @@ func TestAdapterAuditPack(t *testing.T) {
 	})
 	if err := boom.AuditPack(context.Background(), "/r", dest); err == nil {
 		t.Error("expected run error")
+	}
+}
+
+//fusa:test REQ-FO-ADP029
+func TestAdapterComp(t *testing.T) {
+	const compJSON = `{"threshold":10,"totalFunctions":5,"violations":1,"results":[{"file":"main.go","line":3,"name":"Foo","complexity":12,"exceedsThreshold":true}]}`
+	a := capAdapter(func(_ context.Context, _, _ string, args ...string) ([]byte, error) {
+		if args[0] != "comp" {
+			t.Errorf("unexpected subcommand %v", args)
+		}
+		return []byte(compJSON), nil
+	})
+	r, err := a.Comp(context.Background(), "/r", 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Threshold != 10 || r.TotalFunctions != 5 || r.Violations != 1 {
+		t.Errorf("comp report wrong: %+v", r)
+	}
+	var _ Compler = a
+}
+
+func TestAdapterCompThresholdDAL(t *testing.T) {
+	a := capAdapter(func(_ context.Context, _, _ string, args ...string) ([]byte, error) {
+		if argVal(args, "--threshold") != "15" {
+			t.Errorf("expected --threshold 15, got args %v", args)
+		}
+		if argVal(args, "--dal") != "DAL-C" {
+			t.Errorf("expected --dal DAL-C, got args %v", args)
+		}
+		return []byte(`{"threshold":15,"dal":"DAL-C","totalFunctions":2,"violations":0}`), nil
+	})
+	r, err := a.Comp(context.Background(), "/r", 15, "DAL-C")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.DAL != "DAL-C" {
+		t.Errorf("DAL = %q, want DAL-C", r.DAL)
+	}
+}
+
+func TestAdapterCompErrors(t *testing.T) {
+	boom := capAdapter(func(context.Context, string, string, ...string) ([]byte, error) {
+		return nil, fmt.Errorf("exec failed")
+	})
+	if _, err := boom.Comp(context.Background(), "/r", 0, ""); err == nil {
+		t.Error("expected run error")
+	}
+	bad := capAdapter(func(context.Context, string, string, ...string) ([]byte, error) {
+		return []byte("no json here"), nil
+	})
+	if _, err := bad.Comp(context.Background(), "/r", 0, ""); err == nil {
+		t.Error("expected decode error")
 	}
 }
 

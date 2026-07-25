@@ -10,6 +10,7 @@ import (
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
 	"github.com/SoundMatt/FuSaOps/auditpack"
+	"github.com/SoundMatt/FuSaOps/comp"
 	"github.com/SoundMatt/FuSaOps/sbom"
 	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
@@ -248,6 +249,70 @@ type AuditPackResult struct {
 	Manifest *auditpack.Manifest
 	Packed   []string // tools whose per-tool pack was bundled
 	Skipped  []string // "tool: reason" for components that contributed no pack
+}
+
+// RunComp rolls every applicable tool's cyclomatic complexity (V(G)) report up
+// into one cross-language Aggregate. A component whose binary is missing, whose
+// tool does not implement the Compler capability, or whose comp command fails is
+// recorded as skipped so violations from other languages remain visible.
+// threshold overrides the per-tool default threshold (0 = use tool default).
+// dal overrides the DAL level (empty = use tool default).
+// Adapters run in parallel, governed by Options.Workers and Options.Timeout.
+//
+//fusa:req REQ-FO-ORC013
+func (rn *Runner) RunComp(ctx context.Context, root string, opts Options, threshold int, dal string) (*comp.Aggregate, error) {
+	adapters, err := rn.selectAdapters(root, opts)
+	if err != nil {
+		return nil, err
+	}
+	if len(adapters) == 0 {
+		return nil, fusaops.ErrNoAdapters
+	}
+
+	results := make([]comp.ComponentComp, len(adapters))
+	var wg sync.WaitGroup
+	sem := newSem(opts.Workers)
+
+	for i, a := range adapters {
+		wg.Add(1)
+		go func(i int, a adapter.Adapter) {
+			defer wg.Done()
+			if sem != nil {
+				sem <- struct{}{}
+				defer func() { <-sem }()
+			}
+
+			cc := comp.ComponentComp{Language: a.Language().String(), Tool: a.Tool(), Available: a.Available()}
+
+			tctx := ctx
+			var cancel context.CancelFunc
+			if opts.Timeout > 0 {
+				tctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+				defer cancel()
+			}
+
+			switch {
+			case !cc.Available:
+				cc.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
+			default:
+				cr, ok := a.(adapter.Compler)
+				if !ok {
+					cc.Skipped = fmt.Sprintf("%s does not support comp", a.Tool())
+					break
+				}
+				r, cerr := cr.Comp(tctx, root, threshold, dal)
+				if cerr != nil {
+					cc.Skipped = fmt.Sprintf("comp failed: %v", cerr)
+					break
+				}
+				cc.Report = r
+			}
+			results[i] = cc
+		}(i, a)
+	}
+	wg.Wait()
+
+	return comp.New(root, opts.Project, results), nil
 }
 
 // RunAuditPack bundles every applicable tool's audit-pack ZIP together with the

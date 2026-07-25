@@ -890,7 +890,7 @@ thresholds: A ≤ 4, B ≤ 10 (default), C ≤ 15, D ≤ 20. `--dal` overrides
 }
 ```
 
-All five tools implement `comp`. FuSaOps does not roll up `comp-report.json` in spec v1.
+All six tools implement `comp`. FuSaOps rolls up comp-reports into a cross-language aggregate via `fusaops comp` (v1.70.0+). See §10.
 
 ### 9.3 Optional (standards & workflow — MAY)
 
@@ -957,6 +957,7 @@ v0.3 rolls up.
 | `fusaops audit-pack` | `audit-pack --output <f>` | §8 ZIP, nested verbatim |
 | version probe | `version` | §9.1 regex |
 | capability discovery | `capabilities --format json` | §9.1 (when present) |
+| `fusaops comp` | `comp --format json` | §9.2 / §13 `{threshold,totalFunctions,violations,results[]}` |
 | project metadata | `.fusa.json` | §1.2.1 |
 
 **Generic routing.** Every document carries the §3.1 header, so FuSaOps reads the
@@ -1013,6 +1014,7 @@ Snapshot 2026-06-18 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.33 · ru
 | standards canonical §9.3 shape (`satisfied`/`gaps`) | ✅ | ✅ (v0.5.7) | ✅ (v0.12.3) | ✅ (v0.2.6) | ✅ | ✅ (v0.2.0) |
 | `slsa` standard id = `"slsa"`, kind = `"gap-report"` (§2.4.1) | ✅ | ✅ | ✅ (v0.12.3) | ✅ | ✅ | ✅ (v0.2.0) |
 | `comp` command (§9.2 SHOULD) | ✅ (engine rule) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `fusaops comp` roll-up (§9.2 / §10) | — | — | — | — | — | — |
 | trace `secTestedRequirements` (MUST, §5) | ✅ | ✅ | ✅ | ✅ (v0.2.6) | ✅ | ✅ (v0.2.0) |
 | `fusaops trace --gaps/--req-coverage/--sec-tested` (§5) | — | — | — | — | — | — |
 
@@ -1065,7 +1067,7 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 | `sci` → `sci.json` | tool-defined; **conflict**: go stdout-only vs cpp `sci.json` | `sci.json` (envelope + tool-defined body) |
 | `boundary` → `.dot`/`.mermaid` | tool-defined graph text | no JSON contract in v1 |
 | `verify` → `.fusa-evidence.json` | tool-defined | `{ passed, failed, suites:[ {name, passed, failed, tests:[{name, result}]} ] }` (`result` per §6) |
-| `comp` → `comp-report.json` | **canonical — all five tools** (§9.2 SHOULD) | `{ …header(kind:"comp-report"), threshold:N, dal?:"DAL-B", totalFunctions:N, violations:N, results:[{file,line,name,complexity,exceedsThreshold}] }` |
+| `comp` → `comp-report.json` | **canonical — all six tools** (§9.2 SHOULD); **consumed by FuSaOps v1.70.0+** | `{ …header(kind:"comp-report"), threshold:N, dal?:"DAL-B", totalFunctions:N, violations:N, results:[{file,line,name,complexity,exceedsThreshold}] }` |
 
 ---
 
