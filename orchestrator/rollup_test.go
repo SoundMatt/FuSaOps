@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
+	"github.com/SoundMatt/FuSaOps/comp"
 	"github.com/SoundMatt/FuSaOps/sbom"
 	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
@@ -25,10 +26,12 @@ type capFake struct {
 	qual         *trace.Qualification
 	doc          *sbom.Document
 	gapReport    *standards.GapReport
+	compReport   *comp.Report
 	traceErr     error
 	sbomErr      error
 	packErr      error
 	standardsErr error
+	compErr      error
 }
 
 func (f *capFake) Name() string                                             { return f.tool }
@@ -58,6 +61,10 @@ func (f *capFake) Standards(_ context.Context, _, _ string) (*standards.GapRepor
 	return f.gapReport, f.standardsErr
 }
 
+func (f *capFake) Comp(_ context.Context, _ string, _ int, _ string) (*comp.Report, error) {
+	return f.compReport, f.compErr
+}
+
 func tracer(tool string) *capFake {
 	return &capFake{
 		tool: tool, lang: fusaops.LangGo, detect: true, avail: true,
@@ -68,6 +75,8 @@ func tracer(tool string) *capFake {
 			Standard: "iso26262",
 			Summary:  standards.Summary{Total: 10, Satisfied: 9, Partial: 1, Gaps: 0},
 		},
+		compReport: &comp.Report{Threshold: 10, TotalFunctions: 8, Violations: 1,
+			Results: []comp.Function{{File: "x.go", Name: "F", Complexity: 12, ExceedsThreshold: true}}},
 	}
 }
 
@@ -317,5 +326,61 @@ func TestRunSBOMWithWorkers(t *testing.T) {
 	}
 	if len(agg.Components) != 2 {
 		t.Errorf("expected 2 sbom components with workers=2, got %d", len(agg.Components))
+	}
+}
+
+//fusa:test REQ-FO-ORC013
+func TestRunComp(t *testing.T) {
+	reg := regWith(
+		tracer("gofusa"),
+		&capFake{tool: "cfusa", lang: fusaops.LangC, detect: true, avail: false}, // skipped: not installed
+		&fakeAdapter{tool: "nope", lang: fusaops.LangCpp, detect: true, avail: true}, // not a Compler
+	)
+	agg, err := New(reg).RunComp(context.Background(), t.TempDir(), Options{Project: "p"}, 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(agg.Components) != 3 {
+		t.Fatalf("components = %d, want 3", len(agg.Components))
+	}
+	// Components are sorted by tool name: cfusa, gofusa, nope.
+	byTool := make(map[string]comp.ComponentComp, 3)
+	for _, c := range agg.Components {
+		byTool[c.Tool] = c
+	}
+	// gofusa: has comp report
+	if byTool["gofusa"].Report == nil {
+		t.Error("gofusa component should have a report")
+	}
+	if agg.TotalFunctions != 8 || agg.Violations != 1 {
+		t.Errorf("aggregate wrong: funcs=%d violations=%d", agg.TotalFunctions, agg.Violations)
+	}
+	// cfusa: skipped (not installed)
+	if byTool["cfusa"].Skipped == "" {
+		t.Error("cfusa should be skipped")
+	}
+	// nope: skipped (not a Compler)
+	if byTool["nope"].Skipped == "" {
+		t.Error("nope should be skipped (not a Compler)")
+	}
+}
+
+//fusa:test REQ-FO-ORC013
+func TestRunCompErrorRecordedAsSkipped(t *testing.T) {
+	bad := &capFake{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true, compErr: errors.New("comp boom")}
+	agg, err := New(regWith(bad)).RunComp(context.Background(), t.TempDir(), Options{}, 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if agg.Components[0].Skipped == "" {
+		t.Error("expected comp error to be recorded as skipped")
+	}
+}
+
+//fusa:test REQ-FO-ORC013
+func TestRunCompNoAdapters(t *testing.T) {
+	none := regWith(&capFake{tool: "gofusa", detect: false, avail: true})
+	if _, err := New(none).RunComp(context.Background(), t.TempDir(), Options{}, 0, ""); !errors.Is(err, fusaops.ErrNoAdapters) {
+		t.Errorf("expected ErrNoAdapters, got %v", err)
 	}
 }

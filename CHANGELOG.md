@@ -7,6 +7,26 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.70.0] — 2026-07-25
+
+### feat: fusaops comp — cross-language cyclomatic complexity roll-up (§9.2)
+
+All six x-FuSa tools implement the `comp` command (McCabe V(G) per function,
+DO-178C §6.3.4). FuSaOps now consumes and aggregates those results.
+
+- `comp` package — `Report`, `Function`, `ComponentComp`, `Aggregate` types;
+  `New` aggregator; `DALThreshold` / `ValidateDAL` helpers; `Render` / `RenderToFile`
+  in `text` and `json` formats. Canonical schema from x-FuSa spec §13.
+- `adapter.Compler` interface — `Comp(ctx, root, threshold, dal)` capability
+  implemented by `cmdAdapter`: calls `<tool> comp [--threshold N] [--dal DAL-X] --format json`
+  and decodes the comp-report.
+- `orchestrator.RunComp` — parallel execution across all applicable adapters;
+  tools without the binary, capability, or whose comp fails are recorded as skipped.
+- `fusaops comp` CLI — `--threshold`, `--dal` (DAL-A|B|C|D), `--dir`, `--format`,
+  `--output`, `--only`, `--workers`, `--timeout`; exits 1 on violations.
+  DAL-level thresholds: A ≤ 4, B ≤ 10, C ≤ 15, D ≤ 20.
+- New requirements: REQ-FO-COMP001–003, REQ-FO-ADP029, REQ-FO-ORC013, REQ-FO-CLI082.
+
 ## [1.69.0] — 2026-07-25
 
 ### feat: enable py-FuSa and java-FuSa in the all-in-one container image

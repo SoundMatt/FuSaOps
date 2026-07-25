@@ -2716,6 +2716,52 @@
       "description": "The FuSaOps all-in-one container image (ghcr.io/soundmatt/fusaops) shall bundle the java-FuSa (jfusa) wrapper script and JAR so that Java projects can be orchestrated without installing java-FuSa separately. The image shall install openjdk21-jre-headless to satisfy the JRE requirement of the jfusa wrapper.",
       "priority": "MUST",
       "rationale": "Completes the java-FuSa integration (REQ-FO-ADP028) by making jfusa available in the packaged distribution; enabled by java-FuSa v0.3.1 publishing its first Docker image to GHCR."
+    },
+    {
+      "id": "REQ-FO-COMP001",
+      "title": "comp.Report and comp.Function types (§9.2 / §13 canonical schema)",
+      "description": "FuSaOps shall define a comp.Report type matching the x-FuSa spec §13 canonical comp-report.json schema (threshold, dal, totalFunctions, violations, results[]) and a comp.Function type ({file, line, name, complexity, exceedsThreshold}). DALThreshold shall map DAL-A|B|C|D to V(G) limits 4|10|15|20 per DO-178C §6.3.4.",
+      "priority": "MUST",
+      "rationale": "Establishes the shared data model for decoding comp-reports from any x-FuSa tool; schema is canonical and identical across all six tools.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-COMP002",
+      "title": "comp.Aggregate cross-language complexity roll-up",
+      "description": "FuSaOps shall define a comp.Aggregate type that aggregates per-tool ComponentComp results, summing totalFunctions and violations across components whose report is non-nil. New() shall build an Aggregate from a root, project, and component slice. HasViolations() shall return true when Violations > 0.",
+      "priority": "MUST",
+      "rationale": "Enables fusaops comp to produce a single cross-language complexity report analogous to fusaops trace or fusaops sbom.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-COMP003",
+      "title": "comp.Render and comp.RenderToFile (text, json)",
+      "description": "FuSaOps shall provide Render(w, agg, format) supporting formats 'text' (per-component PASS/FAIL lines with violating function names) and 'json' (indented JSON); unknown formats shall return an error. RenderToFile shall write to a named file.",
+      "priority": "MUST",
+      "rationale": "Provides human- and machine-readable output for the cross-language comp aggregate.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-ADP029",
+      "title": "Compler capability interface and cmdAdapter.Comp implementation",
+      "description": "FuSaOps shall define a Compler interface with Comp(ctx, root, threshold, dal) returning (*comp.Report, error). cmdAdapter shall implement Compler by calling '<tool> comp --format json' with optional --threshold and --dal overrides and decoding the comp-report from stdout.",
+      "priority": "MUST",
+      "rationale": "Extends the adapter capability model to cover the §9.2 comp command, enabling RunComp to call each tool's comp analysis."
+    },
+    {
+      "id": "REQ-FO-ORC013",
+      "title": "orchestrator.RunComp cross-language cyclomatic complexity aggregation",
+      "description": "Runner.RunComp(ctx, root, opts, threshold, dal) shall invoke Comp on all applicable adapters in parallel, recording non-Compler adapters and unavailable binaries as skipped, and return a comp.Aggregate. Returns ErrNoAdapters when no applicable adapters exist.",
+      "priority": "MUST",
+      "rationale": "Provides the orchestration layer for cross-language V(G) analysis, matching the RunTrace/RunSBOM/RunStandards pattern."
+    },
+    {
+      "id": "REQ-FO-CLI082",
+      "title": "fusaops comp CLI command",
+      "description": "The fusaops CLI shall provide a 'comp' subcommand accepting --dir, --only, --format (text|json), --output, --threshold, --dal (DAL-A|B|C|D), --workers, --timeout flags. It shall delegate to RunComp, render the cross-language aggregate, and exit 1 when any violations are found.",
+      "priority": "MUST",
+      "rationale": "Exposes the cross-language cyclomatic complexity gate at the CLI level for CI integration; DO-178C §6.3.4 requires bounding V(G) by DAL.",
+      "standard": "DO-178C"
     }
   ]
 }
