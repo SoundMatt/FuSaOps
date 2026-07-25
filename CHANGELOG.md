@@ -7,6 +7,26 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.71.0] — 2026-07-25
+
+### feat: x-FuSa spec v1.10.10 sync — comp consumption and all-tool snapshot
+
+- **`SpecVersion` bumped to `"1.10.10"`** — corrects the spec header (which had stalled
+  at `1.10.4` while §14 accumulated 1.10.5–1.10.9 entries) and adds the MINOR bump for
+  FuSaOps beginning to consume the §9.2 `comp` command (v1.70.0+).
+- **`docs/x-fusa-spec.md` updated to v1.10.10:**
+  - Header: `1.10.4` → `1.10.10`.
+  - §9.2 heading: removed `comp` from "not consumed" list; heading updated to reflect
+    that comp is now consumed.
+  - Intro note (§0): clarified that §9.2 `comp` is consumed since v1.70.0+.
+  - §11 snapshot: updated to 2026-07-25 with go-FuSa v0.31.0, cpp-FuSa v0.12.6,
+    c-FuSa v0.5.34, rust-FuSa v0.2.9, py-FuSa v0.1.9.
+  - §14: added 1.10.10 entry documenting all-tool spec-constant fixes and docker CI additions.
+- New tool releases (all SpecVersion constant fixes + docker-publish.yml):
+  - go-FuSa v0.31.0: CI builder auto-detect + `--builder` flag on `release`
+  - c-FuSa v0.5.34, rust-FuSa v0.2.9, py-FuSa v0.1.9: SpecVersion fix + docker-publish.yml
+  - cpp-FuSa v0.12.6: SpecVersion fix + MSVC compile fix
+
 ## [1.70.0] — 2026-07-25
 
 ### feat: fusaops comp — cross-language cyclomatic complexity roll-up (§9.2)

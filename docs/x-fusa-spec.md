@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.10.4 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.10.10 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -21,11 +21,12 @@ The canonical reference implementation is **go-FuSa**. Where this spec adds a
 field go-FuSa does not yet emit, that field is marked **(new)** and listed in
 §11 as a go-FuSa adoption item.
 
-> **What FuSaOps consumes in spec v1.** Only the §9.1 *required* commands
+> **What FuSaOps consumes in spec v1.** The §9.1 *required* commands
 > (`version`, `init`, `check`, `trace`, `qualify`, `release`, `audit-pack`,
 > `report`) and the §1.2 input files have FuSaOps-consumed schemas. The §9.2
+> `comp` command is also consumed (v1.70.0+, §10). The remaining §9.2
 > *recommended* and §9.3 *optional* commands are **tool-defined and not consumed
-> by FuSaOps in v1** — see §13 for their status and the canonical direction.
+> by FuSaOps** — see §13 for their status and the canonical direction.
 
 ---
 
@@ -860,14 +861,14 @@ shape is identical to `check` (§4). It produces one report for one run and does
 not aggregate across runs. Because `report` never gate-fails, a tool SHOULD treat
 `--strict` on `report` as a usage error (exit `2`).
 
-### 9.2 Recommended (safety evidence — SHOULD; not consumed by FuSaOps v1)
+### 9.2 Recommended (safety evidence — SHOULD)
 
 `verify` · `hara` · `tara` · `fmea` · `safety-case` · `coupling` · `cyber` ·
-`vuln` · `boundary` · `coverage` · `diff` · `comp`. Their JSON is **tool-defined** in spec
-v1 — see §13. A command in this group MAY support `--format json`; if it does it
-**SHOULD carry the §3 envelope** (even though FuSaOps does not consume it in v1)
-so that future consumption — added per §12/§13 — does not force a breaking change
-to add the envelope later.
+`vuln` · `boundary` · `coverage` · `diff`. Their JSON is **tool-defined** — see §13.
+**`comp` is consumed by FuSaOps v1.70.0+** (see below and §10).
+A command in this group MAY support `--format json`; if it does it
+**SHOULD carry the §3 envelope** so that future consumption — added per §12/§13 —
+does not force a breaking change to add the envelope later.
 
 **`comp` (SHOULD).** `comp [--dir <path>] [--threshold <N>] [--dal DAL-A|B|C|D] [--format text|json] [--output <file>]`
 
@@ -970,7 +971,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-06-18 (go-FuSa v0.30.0 · cpp-FuSa v0.12.5 · c-FuSa v0.5.33 · rust-FuSa v0.2.8 · py-FuSa v0.1.8 · java-FuSa v0.3.1). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-07-25 (go-FuSa v0.31.0 · cpp-FuSa v0.12.6 · c-FuSa v0.5.34 · rust-FuSa v0.2.9 · py-FuSa v0.1.9 · java-FuSa v0.3.1). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -1072,6 +1073,18 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.10.10 — 2026-07-25 (comp consumed by FuSaOps v1.70.0+; all-tool spec-version sync)
+
+- **Spec header corrected:** header bumped from `1.10.4` to `1.10.10`, retroactively incorporating the §11/§14 entries written in 1.10.5–1.10.9 that were each additive updates without contract changes.
+- **`comp` consumed by FuSaOps v1.70.0+:** §9.2 heading updated to remove `comp` from the "not consumed" list; intro note (§0) updated accordingly; §13 row already noted v1.70.0+ consumption. This is the MINOR bump per §12 for FuSaOps beginning to consume a §9.2 command.
+- **Version snapshot updated (§11):** go-FuSa v0.31.0 · cpp-FuSa v0.12.6 · c-FuSa v0.5.34 · rust-FuSa v0.2.9 · py-FuSa v0.1.9.
+- **go-FuSa v0.31.0:** `SpecVersion` constant fixed to `"1.10.4"` ✅; `release` command auto-detects CI builder from `GITHUB_ACTIONS`/`CI`/`GITHUB_WORKFLOW_REF` env vars; `--builder` flag added for explicit override. No new MUST gaps.
+- **c-FuSa v0.5.34:** `CFUSA_SCHEMA_VERSION` and `CFUSA_SPEC_VERSION` constants corrected to `"1.10.4"` ✅; `docker-publish.yml` CI added.
+- **cpp-FuSa v0.12.6:** `SpecVersion` constant corrected to `"1.10.4"` ✅; MSVC C2338 compile error in test wrapped.
+- **rust-FuSa v0.2.9:** `SPEC_VERSION` constant corrected to `"1.10.4"` ✅; `docker-publish.yml` CI added.
+- **py-FuSa v0.1.9:** `SPEC_VERSION` corrected to `"1.10.4"` ✅; `docker-publish.yml` CI added (first tagged image release).
+- No new MUST gaps; no §11 table row changes.
 
 ### 1.10.9 — 2026-06-13 (rust-FuSa v0.2.8 gap-report --format md; 100% coverage)
 
