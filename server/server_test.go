@@ -17,6 +17,7 @@ import (
 	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/history"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
+	"github.com/SoundMatt/FuSaOps/vv"
 )
 
 type fakeAdapter struct {
@@ -918,5 +919,175 @@ func TestAPIBaselineSave(t *testing.T) {
 	body := rec.Body.String()
 	if !strings.Contains(body, `"saved"`) {
 		t.Errorf("response missing 'saved': %s", body)
+	}
+}
+
+// TestAPIVandVEmpty verifies /api/v1/vv returns JSON with ASIL-B when no
+// V&V declaration has been configured.
+//
+//fusa:test REQ-FO-SRV010
+func TestAPIVandVEmpty(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/vv", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if !strings.Contains(ct, "application/json") {
+		t.Errorf("Content-Type: got %q, want application/json", ct)
+	}
+	var got map[string]interface{}
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("json unmarshal: %v", err)
+	}
+	if got["achievableAsil"] != "ASIL-B" {
+		t.Errorf("achievableAsil: got %v, want ASIL-B", got["achievableAsil"])
+	}
+	if lvl, ok := got["independenceLevel"].(float64); !ok || int(lvl) != 0 {
+		t.Errorf("independenceLevel: got %v, want 0", got["independenceLevel"])
+	}
+}
+
+// TestAPIVandVWithDeclaration verifies /api/v1/vv reflects the WithVandV builder.
+//
+//fusa:test REQ-FO-SRV010
+func TestAPIVandVWithDeclaration(t *testing.T) {
+	s := newTestServer(t).WithVandV(vv.Declaration{
+		Project:                 "acme",
+		ImplementationAuthor:    "Alice",
+		IndependentReviewer:     "Bob",
+		IndependentTestExecutor: "Carol",
+	})
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/vv", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	var got map[string]interface{}
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("json unmarshal: %v", err)
+	}
+	if got["achievableAsil"] != "ASIL-D" {
+		t.Errorf("achievableAsil: got %v, want ASIL-D", got["achievableAsil"])
+	}
+	if lvl, ok := got["independenceLevel"].(float64); !ok || int(lvl) != 2 {
+		t.Errorf("independenceLevel: got %v, want 2", got["independenceLevel"])
+	}
+	if got["implementationAuthor"] != "Alice" {
+		t.Errorf("implementationAuthor: got %v, want Alice", got["implementationAuthor"])
+	}
+}
+
+// TestVandVBadgeSVGContentType verifies /badge/vv.svg returns image/svg+xml.
+//
+//fusa:test REQ-FO-BADGE003
+func TestVandVBadgeSVGContentType(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/badge/vv.svg", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if ct != "image/svg+xml" {
+		t.Errorf("Content-Type: got %q, want image/svg+xml", ct)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "<svg") {
+		t.Errorf("badge body not SVG: %s", body)
+	}
+}
+
+// TestVandVBadgeReflectsASIL verifies /badge/vv.svg text shows the achievable ASIL.
+//
+//fusa:test REQ-FO-BADGE003
+func TestVandVBadgeReflectsASIL(t *testing.T) {
+	s := newTestServer(t).WithVandV(vv.Declaration{
+		ImplementationAuthor:    "Alice",
+		IndependentReviewer:     "Bob",
+		IndependentTestExecutor: "Carol",
+	})
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/badge/vv.svg", nil))
+	body := rec.Body.String()
+	if !strings.Contains(body, "ASIL-D") {
+		t.Errorf("expected ASIL-D in badge: %s", body)
+	}
+}
+
+// TestVandVBadgeCacheControl verifies /badge/vv.svg carries no-cache headers.
+//
+//fusa:test REQ-FO-BADGE003
+func TestVandVBadgeCacheControl(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/badge/vv.svg", nil))
+	cc := rec.Header().Get("Cache-Control")
+	if !strings.Contains(cc, "no-cache") {
+		t.Errorf("Cache-Control missing no-cache: %q", cc)
+	}
+}
+
+// TestVandVBadgeASILC verifies /badge/vv.svg shows ASIL-C color for reviewer-only.
+//
+//fusa:test REQ-FO-BADGE003
+func TestVandVBadgeASILC(t *testing.T) {
+	s := newTestServer(t).WithVandV(vv.Declaration{
+		ImplementationAuthor: "Alice",
+		IndependentReviewer:  "Bob",
+	})
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/badge/vv.svg", nil))
+	body := rec.Body.String()
+	if !strings.Contains(body, "ASIL-C") {
+		t.Errorf("expected ASIL-C in badge: %s", body)
+	}
+	// ASIL-C color
+	if !strings.Contains(body, "#97ca00") {
+		t.Errorf("expected ASIL-C color #97ca00 in badge: %s", body)
+	}
+}
+
+// TestWithVandV verifies that WithVandV sets the declaration on the server.
+//
+//fusa:test REQ-FO-SRV010
+func TestWithVandV(t *testing.T) {
+	s := newTestServer(t)
+	decl := vv.Declaration{
+		Project:              "myproject",
+		ImplementationAuthor: "Alice",
+	}
+	s2 := s.WithVandV(decl)
+	if s2.vvDecl.Project != "myproject" {
+		t.Errorf("vvDecl.Project: got %q, want myproject", s2.vvDecl.Project)
+	}
+}
+
+// TestExportMIMETypes verifies exportMIME returns the correct content type and
+// extension for each supported format.
+func TestExportMIMETypes(t *testing.T) {
+	cases := []struct {
+		format  string
+		wantCT  string
+		wantExt string
+	}{
+		{"json", "application/json; charset=utf-8", "json"},
+		{"csv", "text/csv; charset=utf-8", "csv"},
+		{"junit", "application/xml; charset=utf-8", "xml"},
+		{"sarif", "application/json; charset=utf-8", "sarif.json"},
+		{"html", "text/html; charset=utf-8", "html"},
+		{"markdown", "text/markdown; charset=utf-8", "md"},
+		{"md", "text/markdown; charset=utf-8", "md"},
+		{"unknown", "text/plain; charset=utf-8", "txt"},
+	}
+	for _, tc := range cases {
+		ct, ext := exportMIME(tc.format)
+		if ct != tc.wantCT {
+			t.Errorf("exportMIME(%q) content-type: got %q, want %q", tc.format, ct, tc.wantCT)
+		}
+		if ext != tc.wantExt {
+			t.Errorf("exportMIME(%q) ext: got %q, want %q", tc.format, ext, tc.wantExt)
+		}
 	}
 }

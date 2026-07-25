@@ -11,6 +11,7 @@ import (
 
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/server"
+	"github.com/SoundMatt/FuSaOps/vv"
 )
 
 // runServe launches the web reporting dashboard.
@@ -92,12 +93,23 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	}
 
 	// Single-project mode.
-	root, opts, _, err := loadOptions(*dir, *only, stderr)
+	root, opts, cfg, err := loadOptions(*dir, *only, stderr)
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops serve: %v\n", err)
 		return 1
 	}
 	srv := server.New(root, orchestrator.New(nil), opts).WithHistoryDir(root)
+	if cfg != nil && (cfg.VandV.ImplementationAuthor != "" ||
+		cfg.VandV.IndependentReviewer != "" ||
+		cfg.VandV.IndependentTestExecutor != "") {
+		decl := vv.Declaration{
+			Project:                 cfg.Project.Name,
+			ImplementationAuthor:    cfg.VandV.ImplementationAuthor,
+			IndependentReviewer:     cfg.VandV.IndependentReviewer,
+			IndependentTestExecutor: cfg.VandV.IndependentTestExecutor,
+		}
+		srv = srv.WithVandV(decl)
+	}
 	if rwUser != "" {
 		srv = srv.WithAuth(rwUser, rwPass)
 	}

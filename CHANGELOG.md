@@ -7,6 +7,42 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.64.0] — 2026-07-25
+
+### feat: V&V independence tracking (GAP-003)
+
+New `fusaops vv` command and supporting infrastructure for per-repo V&V
+independence declarations, achievable ASIL computation, a web JSON API endpoint,
+and an SVG badge.
+
+**New package `vv/`**
+- `vv.Declaration` — holds `implementationAuthor`, `independentReviewer`, and
+  `independentTestExecutor` fields per ISO 26262-2:2018 §6.4.
+- `vv.IndependenceLevel` — returns 0 (none), 1 (reviewer only), or 2 (reviewer + executor).
+- `vv.AchievableASIL` — maps independence level to achievable ASIL: ASIL-B / ASIL-C / ASIL-D.
+- `vv.Validate` — returns human-readable warnings for consistency problems.
+- `vv.Render` — renders declarations in `text` or `json` format.
+
+**New CLI commands**
+- `fusaops vv show [--format text|json] [--output file]` — display current
+  declarations and computed achievable ASIL; prints validation warnings to stderr.
+- `fusaops vv set [--implementation-author X] [--independent-reviewer X]
+  [--independent-test-executor X]` — update fields in `.fusaops.json`; only
+  supplied flags are modified.
+
+**Config schema** (`config.VandVConfig`)
+- New optional `vv` section in `.fusaops.json` with `implementationAuthor`,
+  `independentReviewer`, and `independentTestExecutor` fields.
+
+**Server endpoints** (`fusaops serve`)
+- `GET /api/v1/vv` — JSON response with declarations and `independenceLevel` /
+  `achievableAsil` derived fields.
+- `GET /badge/vv.svg` — SVG badge showing achievable ASIL (green ASIL-D,
+  yellow-green ASIL-C, yellow ASIL-B, grey if unset).
+
+**New requirements:** REQ-FO-VV001–004, REQ-FO-CFG010, REQ-FO-CLI074–076,
+REQ-FO-SRV010, REQ-FO-BADGE003.
+
 ## [1.63.0] — 2026-07-25
 
 ### Container: enable c-FuSa and rust-FuSa binaries in all-in-one image

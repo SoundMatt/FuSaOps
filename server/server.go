@@ -28,6 +28,7 @@ import (
 	"github.com/SoundMatt/FuSaOps/history"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/report"
+	"github.com/SoundMatt/FuSaOps/vv"
 )
 
 // Server serves the FuSaOps dashboard and JSON API.
@@ -48,6 +49,7 @@ type Server struct {
 	webhookURL      string        // empty = no webhook notifications
 	refreshInterval time.Duration // zero = no scheduled refresh
 	baselineFile    string        // empty = no baseline configured
+	vvDecl          vv.Declaration // populated via WithVandV
 
 	mu         sync.RWMutex
 	cached     *report.AggregateReport
@@ -168,6 +170,15 @@ func (s *Server) WithBaseline(path string) *Server {
 	return s
 }
 
+// WithVandV supplies V&V independence declarations for the /api/v1/vv endpoint
+// and /badge/vv.svg badge.
+//
+//fusa:req REQ-FO-SRV010
+func (s *Server) WithVandV(d vv.Declaration) *Server {
+	s.vvDecl = d
+	return s
+}
+
 // compute runs the orchestrator, caches the result, and persists a snapshot.
 //
 //fusa:req REQ-FO-SRV003
@@ -235,6 +246,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/refresh", s.handleRefresh)
 	mux.HandleFunc("/healthz", s.handleHealth)
 	mux.HandleFunc("/badge/status.svg", s.handleBadge)
+	mux.HandleFunc("/api/v1/vv", s.handleAPIVandV)
+	mux.HandleFunc("/badge/vv.svg", s.handleVandVBadge)
 	mux.HandleFunc("/metrics", s.handleMetrics)
 	if s.fleetCfg != "" {
 		mux.HandleFunc("/fleet", s.handleFleet)
@@ -881,6 +894,60 @@ func (s *Server) handleBadge(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	fmt.Fprint(w, svgBadge("fusaops", status, color))
+}
+
+// handleAPIVandV serves the /api/v1/vv JSON endpoint with V&V independence
+// declarations and the derived achievable ASIL.
+//
+//fusa:req REQ-FO-SRV010
+func (s *Server) handleAPIVandV(w http.ResponseWriter, _ *http.Request) {
+	type response struct {
+		Project                 string `json:"project,omitempty"`
+		ImplementationAuthor    string `json:"implementationAuthor,omitempty"`
+		IndependentReviewer     string `json:"independentReviewer,omitempty"`
+		IndependentTestExecutor string `json:"independentTestExecutor,omitempty"`
+		IndependenceLevel       int    `json:"independenceLevel"`
+		AchievableASIL          string `json:"achievableAsil"`
+	}
+	d := s.vvDecl
+	resp := response{
+		Project:                 d.Project,
+		ImplementationAuthor:    d.ImplementationAuthor,
+		IndependentReviewer:     d.IndependentReviewer,
+		IndependentTestExecutor: d.IndependentTestExecutor,
+		IndependenceLevel:       vv.IndependenceLevel(d),
+		AchievableASIL:          vv.AchievableASIL(d),
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(resp)
+}
+
+// handleVandVBadge renders an SVG badge showing the achievable ASIL from the
+// V&V independence declarations.
+//
+//fusa:req REQ-FO-BADGE003
+func (s *Server) handleVandVBadge(w http.ResponseWriter, _ *http.Request) {
+	asil := vv.AchievableASIL(s.vvDecl)
+	color := asilBadgeColor(asil)
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	fmt.Fprint(w, svgBadge("v&v", asil, color))
+}
+
+// asilBadgeColor returns the badge background color for the given achievable ASIL.
+func asilBadgeColor(asil string) string {
+	switch asil {
+	case "ASIL-D":
+		return "#4c1"
+	case "ASIL-C":
+		return "#97ca00"
+	case "ASIL-B":
+		return "#dfb317"
+	default:
+		return "#9f9f9f"
+	}
 }
 
 // svgBadge returns a minimal shields.io-style flat SVG badge.
