@@ -44,11 +44,11 @@ type Server struct {
 	authPass        string
 	authROUser      string // read-only credentials (optional)
 	authROPass      string
-	auditDir        string        // empty = no audit log
-	fleetCfg        string        // empty = fleet dashboard disabled
-	webhookURL      string        // empty = no webhook notifications
-	refreshInterval time.Duration // zero = no scheduled refresh
-	baselineFile    string        // empty = no baseline configured
+	auditDir        string         // empty = no audit log
+	fleetCfg        string         // empty = fleet dashboard disabled
+	webhookURL      string         // empty = no webhook notifications
+	refreshInterval time.Duration  // zero = no scheduled refresh
+	baselineFile    string         // empty = no baseline configured
 	vvDecl          vv.Declaration // populated via WithVandV
 
 	mu         sync.RWMutex
