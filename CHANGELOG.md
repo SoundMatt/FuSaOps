@@ -7,6 +7,32 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.65.0] — 2026-07-25
+
+### feat: HLR/LLR requirement decomposition gate
+
+- **`fusaops trace --decomp`** runs the new cross-language HLR/LLR
+  decomposition gate after collecting the aggregate traceability matrix.
+  Every LLR must reference a known HLR parent; every HLR must have at least
+  one LLR child. Requirements with no `level` field are silently ignored, so
+  legacy matrices remain unaffected.
+- **`fusaops trace --decomp-enforce warn|error|off|auto`** overrides the
+  per-project severity. `auto` (the default) derives severity from the
+  project integrity level: DAL-A/B or ASIL-C/D → `error`; all others →
+  `warn`. The gate never exits non-zero in `warn` mode.
+- **`Config.Trace.ReqDecompositionConfig`** — new `.fusaops.json` section
+  (`trace.reqDecomposition.enforce` / `trace.reqDecomposition.minLevel`).
+  Validated by `config.Validate`; `enforce` accepts `off|warn|error|auto`.
+- **`trace.Requirement.Parent`** — new `parent` field (JSON `"parent"`)
+  carrying the ID of the HLR a given LLR refines. Decoded from tool trace
+  JSON output; also round-trips through `req.Entry.Parent` in CSV import/export.
+- **`trace.CheckDecomposition`** / **`trace.SeverityForDecomposition`** —
+  new exported functions implementing the gate logic.
+- **`trace.DecompositionReport`** / **`trace.DecompositionViolation`** —
+  new types attached to `trace.Aggregate.Decomposition`; automatically
+  included in JSON, text, markdown, and HTML render outputs.
+- New requirement IDs: REQ-FO-TRC019–TRC022, REQ-FO-CFG010, REQ-FO-CLI074.
+
 ## [1.64.0] — 2026-07-25
 
 ### feat: V&V independence tracking (GAP-003)

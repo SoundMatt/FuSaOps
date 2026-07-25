@@ -29,6 +29,7 @@ type Entry struct {
 	Description string `json:"description,omitempty"`
 	Standard    string `json:"standard,omitempty"`
 	Level       string `json:"level,omitempty"`
+	Parent      string `json:"parent,omitempty"` // ID of parent HLR; set for LLR requirements
 	Priority    string `json:"priority,omitempty"`
 	Rationale   string `json:"rationale,omitempty"`
 }
@@ -72,7 +73,7 @@ func SaveRegistry(dir string, entries []Entry) error {
 // ─── CSV ─────────────────────────────────────────────────────────────────────
 
 // ParseCSV reads requirements from a CSV reader.
-// Expected header: id, title, text, standard, level, priority, rationale
+// Expected header: id, title, text, standard, level, parent, priority, rationale
 //
 //fusa:req REQ-FO-REQ002
 func ParseCSV(r io.Reader) ([]Entry, error) {
@@ -112,6 +113,7 @@ func ParseCSV(r io.Reader) ([]Entry, error) {
 			Description: get(row, "description"),
 			Standard:    get(row, "standard"),
 			Level:       get(row, "level"),
+			Parent:      get(row, "parent"),
 			Priority:    get(row, "priority"),
 			Rationale:   get(row, "rationale"),
 		})
@@ -124,11 +126,11 @@ func ParseCSV(r io.Reader) ([]Entry, error) {
 //fusa:req REQ-FO-REQ003
 func RenderCSV(w io.Writer, entries []Entry) error {
 	cw := csv.NewWriter(w)
-	if err := cw.Write([]string{"id", "title", "text", "description", "standard", "level", "priority", "rationale"}); err != nil {
+	if err := cw.Write([]string{"id", "title", "text", "description", "standard", "level", "parent", "priority", "rationale"}); err != nil {
 		return fmt.Errorf("req: write csv header: %w", err)
 	}
 	for _, e := range entries {
-		if err := cw.Write([]string{e.ID, e.Title, e.Text, e.Description, e.Standard, e.Level, e.Priority, e.Rationale}); err != nil {
+		if err := cw.Write([]string{e.ID, e.Title, e.Text, e.Description, e.Standard, e.Level, e.Parent, e.Priority, e.Rationale}); err != nil {
 			return fmt.Errorf("req: write csv row: %w", err)
 		}
 	}

@@ -20,6 +20,27 @@ import (
 // ConfigFile is the conventional name for the FuSaOps configuration file.
 const ConfigFile = ".fusaops.json"
 
+// ReqDecompositionConfig configures the HLR/LLR decomposition gate run by
+// "fusaops trace --decomp".
+//
+//fusa:req REQ-FO-CFG011
+type ReqDecompositionConfig struct {
+	// Enforce is the gate severity: "off" | "warn" | "error" | "auto".
+	// Empty string is treated as "auto": derive severity from the project
+	// integrity level (DAL / ASIL).
+	Enforce string `json:"enforce,omitempty"`
+	// MinLevel is the minimum level a leaf requirement must declare
+	// (default "LLR"). Reserved for future use.
+	MinLevel string `json:"minLevel,omitempty"`
+}
+
+// TraceConfig configures the fusaops trace command.
+//
+//fusa:req REQ-FO-CFG011
+type TraceConfig struct {
+	ReqDecomposition ReqDecompositionConfig `json:"reqDecomposition,omitempty"`
+}
+
 // Config is the top-level FuSaOps project configuration.
 //
 //fusa:req REQ-FO-CFG001
@@ -30,6 +51,7 @@ type Config struct {
 	Report  ReportConfig  `json:"report"`
 	Run     RunConfig     `json:"run,omitempty"`
 	VandV   VandVConfig   `json:"vv,omitempty"`
+	Trace   TraceConfig   `json:"trace,omitempty"`
 }
 
 // VandVConfig holds per-repo V&V independence declarations embedded in .fusaops.json.
@@ -163,6 +185,12 @@ func Validate(cfg *Config) error {
 	case "", "text", "json", "html", "sarif":
 	default:
 		return fmt.Errorf("%w: unsupported report.format %q", fusaops.ErrInvalidConfig, cfg.Report.Format)
+	}
+	switch cfg.Trace.ReqDecomposition.Enforce {
+	case "", "off", "warn", "error", "auto":
+	default:
+		return fmt.Errorf("%w: unsupported trace.reqDecomposition.enforce %q (want: off|warn|error|auto)",
+			fusaops.ErrInvalidConfig, cfg.Trace.ReqDecomposition.Enforce)
 	}
 	return nil
 }

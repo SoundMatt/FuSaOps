@@ -241,3 +241,43 @@ func TestExportPolarionRoundTrip(t *testing.T) {
 		t.Fatalf("want 2, got %d", len(parsed))
 	}
 }
+
+// TestParseCSVParentColumn verifies that a CSV with a "parent" column populates
+// Entry.Parent correctly on round-trip.
+//
+//fusa:test REQ-FO-REQ001
+func TestParseCSVParentColumn(t *testing.T) {
+	data := "id,title,level,parent,priority\nHLR-001,Safety init,HLR,,MUST\nLLR-001,Init sequence,LLR,HLR-001,MUST\n"
+	entries, err := ParseCSV(strings.NewReader(data))
+	if err != nil {
+		t.Fatalf("ParseCSV: %v", err)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("want 2 entries, got %d", len(entries))
+	}
+	if entries[0].Parent != "" {
+		t.Errorf("HLR parent should be empty, got %q", entries[0].Parent)
+	}
+	if entries[1].Parent != "HLR-001" {
+		t.Errorf("LLR parent = %q, want HLR-001", entries[1].Parent)
+	}
+	if entries[1].Level != "LLR" {
+		t.Errorf("LLR level = %q, want LLR", entries[1].Level)
+	}
+
+	// Round-trip: render and re-parse.
+	var buf bytes.Buffer
+	if rerr := RenderCSV(&buf, entries); rerr != nil {
+		t.Fatalf("RenderCSV: %v", rerr)
+	}
+	reparsed, err := ParseCSV(&buf)
+	if err != nil {
+		t.Fatalf("ParseCSV (reparsed): %v", err)
+	}
+	if len(reparsed) != 2 {
+		t.Fatalf("reparsed: want 2, got %d", len(reparsed))
+	}
+	if reparsed[1].Parent != "HLR-001" {
+		t.Errorf("reparsed LLR parent = %q, want HLR-001", reparsed[1].Parent)
+	}
+}

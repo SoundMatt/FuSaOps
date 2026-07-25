@@ -2539,6 +2539,42 @@
       "description": "The FuSaOps server shall expose a /badge/vv.svg endpoint returning a shields.io-style SVG badge showing the achievable ASIL derived from V&V independence declarations.",
       "priority": "MUST",
       "rationale": "Provides a visual README/dashboard badge showing the V&V independence level at a glance."
+    },
+    {
+      "id": "REQ-FO-TRC019",
+      "title": "Requirement parent-reference field",
+      "description": "FuSaOps shall decode and preserve a Parent field on Requirement, carrying the ID of the HLR that a given LLR refines.",
+      "priority": "MUST"
+    },
+    {
+      "id": "REQ-FO-TRC020",
+      "title": "Decomposition violation and report types",
+      "description": "FuSaOps shall define DecompositionViolation (kind/requirementId/parentId/component) and DecompositionReport (hlrCount/llrCount/violations) and attach an optional DecompositionReport to Aggregate.",
+      "priority": "MUST"
+    },
+    {
+      "id": "REQ-FO-TRC021",
+      "title": "CheckDecomposition cross-language HLR/LLR gate",
+      "description": "FuSaOps shall provide CheckDecomposition(a *Aggregate) which verifies that every LLR references a known HLR parent and every HLR has at least one LLR child, ignoring requirements with no Level set.",
+      "priority": "MUST"
+    },
+    {
+      "id": "REQ-FO-TRC022",
+      "title": "Decomposition severity resolver and renderer support",
+      "description": "FuSaOps shall provide SeverityForDecomposition mapping enforce/DAL/ASIL to warn|error|off, and shall render decomposition violations in text, markdown, and HTML trace outputs.",
+      "priority": "MUST"
+    },
+    {
+      "id": "REQ-FO-CFG011",
+      "title": "ReqDecompositionConfig and TraceConfig model",
+      "description": "FuSaOps shall define TraceConfig and ReqDecompositionConfig (enforce, minLevel) under Config.Trace in .fusaops.json, and shall validate that enforce is one of off|warn|error|auto.",
+      "priority": "MUST"
+    },
+    {
+      "id": "REQ-FO-CLI077",
+      "title": "fusaops trace --decomp and --decomp-enforce flags",
+      "description": "fusaops trace shall accept --decomp (enable gate) and --decomp-enforce warn|error|off|auto (override config enforce) flags, exiting non-zero when severity is error and violations exist.",
+      "priority": "MUST"
     }
   ]
 }
