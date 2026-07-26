@@ -1058,3 +1058,221 @@ func TestValidateHeaderMissingFields(t *testing.T) {
 		})
 	}
 }
+
+// TestCheckQualifyEmptyOutput verifies that qualify/output is FAIL when the
+// runner exits 0 but writes nothing to the output file.
+//
+//fusa:test REQ-FO-CNF013
+func TestCheckQualifyEmptyOutput(t *testing.T) {
+	noop := func(dir, binary string, args ...string) ([]byte, []byte, int) {
+		if args[0] == "version" {
+			return []byte("q-FuSa 0.1.0\n"), nil, 0
+		}
+		// qualify exits 0 but does not write to the output file
+		return nil, nil, 0
+	}
+	rep, _ := Run("qualBinary", Options{TempDir: t.TempDir(), RunFunc: noop})
+	for _, r := range rep.Results {
+		if r.ID == "qualify/output" && r.Status == StatusFail {
+			return
+		}
+	}
+	t.Error("expected qualify/output FAIL for empty output file")
+}
+
+// TestCheckQualifyInvalidJSON verifies that non-JSON qualify output results
+// in a qualify/json-parse FAIL, covering the decodeJSON error branch.
+//
+//fusa:test REQ-FO-CNF013
+func TestCheckQualifyInvalidJSON(t *testing.T) {
+	invalid := func(dir, binary string, args ...string) ([]byte, []byte, int) {
+		if args[0] == "version" {
+			return []byte("q-FuSa 0.1.0\n"), nil, 0
+		}
+		if args[0] == "qualify" {
+			outPath := args[len(args)-1]
+			_ = os.WriteFile(outPath, []byte("{not-valid-json}"), 0o600)
+			return nil, nil, 0
+		}
+		return nil, nil, 0
+	}
+	rep, _ := Run("qualBinary", Options{TempDir: t.TempDir(), RunFunc: invalid})
+	for _, r := range rep.Results {
+		if r.ID == "qualify/json-parse" && r.Status == StatusFail {
+			return
+		}
+	}
+	t.Error("expected qualify/json-parse FAIL for invalid JSON output")
+}
+
+// TestCheckQualifyBadCommonHeader verifies that a qualify output with an
+// invalid common header (wrong kind) results in a qualify/common-header FAIL.
+//
+//fusa:test REQ-FO-CNF013
+func TestCheckQualifyBadCommonHeader(t *testing.T) {
+	const payload = `{
+  "schemaVersion": "1.8",
+  "kind": "wrong-kind",
+  "tool": "gofusa",
+  "toolVersion": "0.1.0",
+  "language": "go",
+  "generatedAt": "2026-07-26T00:00:00Z",
+  "total": 1, "passed": 1, "failed": 0
+}`
+	badHeader := func(dir, binary string, args ...string) ([]byte, []byte, int) {
+		if args[0] == "version" {
+			return []byte("q-FuSa 0.1.0\n"), nil, 0
+		}
+		if args[0] == "qualify" {
+			outPath := args[len(args)-1]
+			_ = os.WriteFile(outPath, []byte(payload), 0o600)
+			return nil, nil, 0
+		}
+		return nil, nil, 0
+	}
+	rep, _ := Run("qualBinary", Options{TempDir: t.TempDir(), RunFunc: badHeader})
+	for _, r := range rep.Results {
+		if r.ID == "qualify/common-header" && r.Status == StatusFail {
+			return
+		}
+	}
+	t.Error("expected qualify/common-header FAIL for wrong kind field")
+}
+
+// TestCheckQualifyResultEnumFail verifies that a qualify output containing an
+// invalid result enum value triggers a qualify/result-enum FAIL.
+//
+//fusa:test REQ-FO-CNF013
+func TestCheckQualifyResultEnumFail(t *testing.T) {
+	const payload = `{
+  "schemaVersion": "1.8",
+  "kind": "qualification",
+  "tool": "gofusa",
+  "toolVersion": "0.1.0",
+  "language": "go",
+  "generatedAt": "2026-07-26T00:00:00Z",
+  "total": 1, "passed": 0, "failed": 1,
+  "results": [{"name": "rule-LINT001", "result": "INVALID_ENUM"}]
+}`
+	badEnum := func(dir, binary string, args ...string) ([]byte, []byte, int) {
+		if args[0] == "version" {
+			return []byte("q-FuSa 0.1.0\n"), nil, 0
+		}
+		if args[0] == "qualify" {
+			outPath := args[len(args)-1]
+			_ = os.WriteFile(outPath, []byte(payload), 0o600)
+			return nil, nil, 0
+		}
+		return nil, nil, 0
+	}
+	rep, _ := Run("qualBinary", Options{TempDir: t.TempDir(), RunFunc: badEnum})
+	for _, r := range rep.Results {
+		if r.ID == "qualify/result-enum" && r.Status == StatusFail {
+			return
+		}
+	}
+	t.Error("expected qualify/result-enum FAIL for invalid result enum value")
+}
+
+// TestCheckQualifyNonConformantKeyNames verifies that a qualify output using
+// tests_passed/tests_failed (non-conformant) results in a qualify/key-names
+// FAIL, covering the doc.TestsPassed/TestsFailed branch.
+//
+//fusa:test REQ-FO-CNF013
+func TestCheckQualifyNonConformantKeyNames(t *testing.T) {
+	const payload = `{
+  "schemaVersion": "1.8",
+  "kind": "qualification",
+  "tool": "gofusa",
+  "toolVersion": "0.1.0",
+  "language": "go",
+  "generatedAt": "2026-07-26T00:00:00Z",
+  "tests_passed": 3,
+  "tests_failed": 0
+}`
+	nonConformant := func(dir, binary string, args ...string) ([]byte, []byte, int) {
+		if args[0] == "version" {
+			return []byte("q-FuSa 0.1.0\n"), nil, 0
+		}
+		if args[0] == "qualify" {
+			outPath := args[len(args)-1]
+			_ = os.WriteFile(outPath, []byte(payload), 0o600)
+			return nil, nil, 0
+		}
+		return nil, nil, 0
+	}
+	rep, _ := Run("qualBinary", Options{TempDir: t.TempDir(), RunFunc: nonConformant})
+	for _, r := range rep.Results {
+		if r.ID == "qualify/key-names" && r.Status == StatusFail {
+			return
+		}
+	}
+	t.Error("expected qualify/key-names FAIL for tests_passed/tests_failed non-conformant keys")
+}
+
+// TestCheckQualifyMissingRequiredFields verifies that qualify output with a
+// valid common header but absent total/passed/failed results in a
+// qualify/key-names FAIL, covering the missing-fields branch.
+//
+//fusa:test REQ-FO-CNF013
+func TestCheckQualifyMissingRequiredFields(t *testing.T) {
+	const payload = `{
+  "schemaVersion": "1.8",
+  "kind": "qualification",
+  "tool": "gofusa",
+  "toolVersion": "0.1.0",
+  "language": "go",
+  "generatedAt": "2026-07-26T00:00:00Z"
+}`
+	missingFields := func(dir, binary string, args ...string) ([]byte, []byte, int) {
+		if args[0] == "version" {
+			return []byte("q-FuSa 0.1.0\n"), nil, 0
+		}
+		if args[0] == "qualify" {
+			outPath := args[len(args)-1]
+			_ = os.WriteFile(outPath, []byte(payload), 0o600)
+			return nil, nil, 0
+		}
+		return nil, nil, 0
+	}
+	rep, _ := Run("qualBinary", Options{TempDir: t.TempDir(), RunFunc: missingFields})
+	for _, r := range rep.Results {
+		if r.ID == "qualify/key-names" && r.Status == StatusFail {
+			return
+		}
+	}
+	t.Error("expected qualify/key-names FAIL for missing total/passed/failed fields")
+}
+
+// TestScaffoldSecondWriteError verifies scaffold returns an error when the
+// .fusa-reqs.json write fails (second WriteFile call).
+//
+//fusa:test REQ-FO-CNF005
+func TestScaffoldSecondWriteError(t *testing.T) {
+	dir := t.TempDir()
+	// Make .fusa-reqs.json a directory so WriteFile fails for that path.
+	if err := os.MkdirAll(filepath.Join(dir, ".fusa-reqs.json"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	r := &runner{dir: dir, binary: "gofusa"}
+	if err := r.scaffold(); err == nil {
+		t.Error("scaffold: expected error when .fusa-reqs.json is a directory")
+	}
+}
+
+// TestScaffoldWriteSourceFilesError verifies scaffold returns an error when
+// writeSourceFiles fails (third step), but .fusa.json and .fusa-reqs.json
+// succeed.
+//
+//fusa:test REQ-FO-CNF005
+func TestScaffoldWriteSourceFilesError(t *testing.T) {
+	dir := t.TempDir()
+	// Block main.go so writeSourceFiles fails for the "go" language.
+	if err := os.MkdirAll(filepath.Join(dir, "main.go"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	r := &runner{dir: dir, binary: "gofusa"}
+	if err := r.scaffold(); err == nil {
+		t.Error("scaffold: expected error when main.go is a directory (writeSourceFiles fails)")
+	}
+}
