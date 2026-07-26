@@ -7,6 +7,22 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.99.0] — 2026-07-26
+
+### feat: coverage expansion — slsa.assessArtifactIntegrity, history.writeAll, runSuppressVerify, runStandards
+
+- **`slsa`** — `TestAssessArtifactIntegrityL3SHA256SUMS` and `TestAssessArtifactIntegrityL3DotSha256` 
+  cover both PASS return branches in `assessArtifactIntegrity` (SHA256SUMS candidate and `.sha256`
+  extension); `assessArtifactIntegrity` 77.8% → 100%.
+- **`history`** — `TestStoreWriteError` covers the `os.Create` error path in `writeAll` by calling
+  `Store` on a non-existent directory; `writeAll` 77.8% → 88.9%.
+- **`cmd/fusaops`** — `TestSuppressVerifyAllMatch` covers `len(stale)==0` OK path; 
+  `TestSuppressVerifyEmptyFingerprint` covers the empty-fingerprint `continue` branch in
+  `runSuppressVerify` (75.7% → 83.8%); `TestStandardsGoProjectStdout` covers the
+  `standards.Render(stdout, ...)` path in `runStandards` when no `--output` is given.
+
+Total coverage: 89.8% (↑ from 89.7%).
+
 ## [1.98.0] — 2026-07-26
 
 ### feat: coverage expansion — runDiff, runTrace, runQualify, runPolicy, runVerify error paths

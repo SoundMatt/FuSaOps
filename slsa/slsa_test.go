@@ -276,6 +276,46 @@ func TestStatusIconNA(t *testing.T) {
 	}
 }
 
+// TestAssessArtifactIntegrityL3SHA256SUMS verifies assessArtifactIntegrity returns
+// PASS when SHA256SUMS exists (covers the sha256Candidates return-"PASS" branch).
+//
+//fusa:test REQ-FO-SLSA002
+func TestAssessArtifactIntegrityL3SHA256SUMS(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "SHA256SUMS"), []byte("abc  file.bin\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := Assess(dir, "proj", LevelL3)
+	if err != nil {
+		t.Fatalf("Assess: %v", err)
+	}
+	for _, obj := range rep.Objectives {
+		if obj.ID == "SLSA-L3.3" && obj.Status != "PASS" {
+			t.Errorf("SLSA-L3.3: want PASS for SHA256SUMS file, got %s: %s", obj.Status, obj.Note)
+		}
+	}
+}
+
+// TestAssessArtifactIntegrityL3DotSha256 verifies assessArtifactIntegrity returns
+// PASS when a .sha256 extension file exists (covers the ReadDir loop return-"PASS" branch).
+//
+//fusa:test REQ-FO-SLSA002
+func TestAssessArtifactIntegrityL3DotSha256(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "artifact.sha256"), []byte("deadbeef\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := Assess(dir, "proj", LevelL3)
+	if err != nil {
+		t.Fatalf("Assess: %v", err)
+	}
+	for _, obj := range rep.Objectives {
+		if obj.ID == "SLSA-L3.3" && obj.Status != "PASS" {
+			t.Errorf("SLSA-L3.3: want PASS for .sha256 file, got %s: %s", obj.Status, obj.Note)
+		}
+	}
+}
+
 // TestRenderTextUnknownStatus verifies statusIcon default branch ("!") is reached
 // when an objective has a status outside the known set.
 //
