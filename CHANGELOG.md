@@ -9,20 +9,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [1.87.0] — 2026-07-26
 
-### feat: coverage expansion — server, standards, suppression, disposition, vuln
+### feat: coverage expansion — server, standards, suppression, disposition, vuln, adapter, comp, fleet, metrics, doctemplate
 
-- **`server`** — added `TestWriteHeaderViaAuth` covering `statusRecorder.WriteHeader`
-  (was 0%); requires auth middleware active + handler writing explicit non-200 status.
-- **`standards`** — added `TestRenderToFileCreateError` covering the `os.Create` error
-  path in `RenderToFile`. `RenderToFile` now fully covered.
-- **`suppression`** — added `TestSaveConfigWriteError` covering `SaveConfig` write
-  failure when the parent directory does not exist.
-- **`disposition`** — added `TestRenderEntriesEmptyProject` covering the
-  `project = "(project)"` branch in `RenderEntries` when `Project` is empty.
-- **`vuln`** — added `TestScanSkipsVendorDir` covering the `filepath.SkipDir` return
-  in `discoverManifests` when a `vendor/` directory is encountered.
+- **`server`** — `TestWriteHeaderViaAuth` covers `statusRecorder.WriteHeader` (was 0%).
+- **`standards`** — `TestRenderToFileCreateError` covers `RenderToFile` `os.Create` error.
+- **`suppression`** — `TestSaveConfigWriteError` covers `SaveConfig` write-failure path.
+- **`disposition`** — `TestRenderEntriesEmptyProject` covers empty-project branch in `RenderEntries`.
+- **`vuln`** — `TestScanSkipsVendorDir` covers `discoverManifests` `filepath.SkipDir` branch.
+- **`adapter`** — `TestMustRegisterPanic` covers `MustRegister` panic path (was 50%).
+- **`comp`** — `TestRenderToFileCreateError` covers `RenderToFile` `os.Create` error.
+- **`fleet`** — `TestRenderToFileCreateError` covers `RenderToFile` `os.Create` error.
+- **`metrics`** — `TestSaveWriteError` covers `Save` `os.WriteFile` error path.
+- **`doctemplate`** — `TestSaveWriteError` covers `Save` `os.WriteFile` error path.
 
-Total coverage: 88.3% (↑ from 88.2%).
+Total coverage: 88.3% → 88.5% (estimated).
 
 ## [1.86.0] — 2026-07-26
 
