@@ -500,7 +500,7 @@ weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
 **Bundled tools.** The all-in-one image bundles all six x-FuSa tools: go-FuSa v0.33.0,
-cpp-FuSa v0.14.0, c-FuSa v0.5.37, rust-FuSa v0.3.2, py-FuSa v0.2.1, java-FuSa v0.4.1.
+cpp-FuSa v0.14.0, c-FuSa v0.5.38, rust-FuSa v0.3.3, py-FuSa v0.2.1, java-FuSa v0.4.1.
 All are spec v1.10 aligned and published to GHCR.
 
 > The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
@@ -592,8 +592,8 @@ orchestrates also gates FuSaOps itself.
 |----------|------------|----------|------------------|
 | Go       | go-FuSa    | `gofusa` | ✅ (v0.33.0, spec v1.10) |
 | C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.14.0, spec v1.10) |
-| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.37, spec v1.10) |
-| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.3.2, spec v1.10) |
+| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.38, spec v1.10) |
+| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.3.3, spec v1.10) |
 | Python   | py-FuSa    | `pyfusa` | ✅ (v0.2.1, spec v1.10, alpha) |
 | Java     | java-FuSa  | `jfusa`  | ✅ (v0.4.1, spec v1.10, alpha) |
 

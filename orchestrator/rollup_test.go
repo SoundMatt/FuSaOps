@@ -10,6 +10,7 @@ import (
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/comp"
+	"github.com/SoundMatt/FuSaOps/mcdc"
 	"github.com/SoundMatt/FuSaOps/sbom"
 	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
@@ -27,11 +28,13 @@ type capFake struct {
 	doc          *sbom.Document
 	gapReport    *standards.GapReport
 	compReport   *comp.Report
+	mcdcReport   *mcdc.Report
 	traceErr     error
 	sbomErr      error
 	packErr      error
 	standardsErr error
 	compErr      error
+	mcdcErr      error
 }
 
 func (f *capFake) Name() string                                             { return f.tool }
@@ -65,6 +68,10 @@ func (f *capFake) Comp(_ context.Context, _ string, _ int, _ string) (*comp.Repo
 	return f.compReport, f.compErr
 }
 
+func (f *capFake) MCDC(_ context.Context, _ string) (*mcdc.Report, error) {
+	return f.mcdcReport, f.mcdcErr
+}
+
 func tracer(tool string) *capFake {
 	return &capFake{
 		tool: tool, lang: fusaops.LangGo, detect: true, avail: true,
@@ -77,6 +84,7 @@ func tracer(tool string) *capFake {
 		},
 		compReport: &comp.Report{Threshold: 10, TotalFunctions: 8, Violations: 1,
 			Results: []comp.Function{{File: "x.go", Name: "F", Complexity: 12, ExceedsThreshold: true}}},
+		mcdcReport: &mcdc.Report{TotalConditions: 10, CoveredConditions: 8},
 	}
 }
 
@@ -381,6 +389,55 @@ func TestRunCompErrorRecordedAsSkipped(t *testing.T) {
 func TestRunCompNoAdapters(t *testing.T) {
 	none := regWith(&capFake{tool: "gofusa", detect: false, avail: true})
 	if _, err := New(none).RunComp(context.Background(), t.TempDir(), Options{}, 0, ""); !errors.Is(err, fusaops.ErrNoAdapters) {
+		t.Errorf("expected ErrNoAdapters, got %v", err)
+	}
+}
+
+//fusa:test REQ-FO-MCDC002
+func TestRunMCDC(t *testing.T) {
+	reg := regWith(
+		tracer("gofusa"),
+		&capFake{tool: "cfusa", lang: fusaops.LangC, detect: true, avail: false},     // skipped: not installed
+		&fakeAdapter{tool: "nope", lang: fusaops.LangCpp, detect: true, avail: true}, // not a McdcRunner
+	)
+	agg, err := New(reg).RunMCDC(context.Background(), t.TempDir(), Options{Project: "p"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(agg.Components) != 3 {
+		t.Fatalf("want 3 components, got %d", len(agg.Components))
+	}
+	byTool := make(map[string]mcdc.MCDCComponent, 3)
+	for _, c := range agg.Components {
+		byTool[c.Tool] = c
+	}
+	if byTool["gofusa"].Report == nil {
+		t.Error("gofusa should have an MCDC report")
+	}
+	if byTool["cfusa"].Skipped == "" {
+		t.Error("cfusa should be skipped (not installed)")
+	}
+	if byTool["nope"].Skipped == "" {
+		t.Error("nope should be skipped (not a McdcRunner)")
+	}
+}
+
+//fusa:test REQ-FO-MCDC002
+func TestRunMCDCErrorRecordedAsSkipped(t *testing.T) {
+	bad := &capFake{tool: "gofusa", lang: fusaops.LangGo, detect: true, avail: true, mcdcErr: errors.New("mcdc boom")}
+	agg, err := New(regWith(bad)).RunMCDC(context.Background(), t.TempDir(), Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if agg.Components[0].Skipped == "" {
+		t.Error("expected mcdc error to be recorded as skipped")
+	}
+}
+
+//fusa:test REQ-FO-MCDC002
+func TestRunMCDCNoAdapters(t *testing.T) {
+	none := regWith(&capFake{tool: "gofusa", detect: false, avail: true})
+	if _, err := New(none).RunMCDC(context.Background(), t.TempDir(), Options{}); !errors.Is(err, fusaops.ErrNoAdapters) {
 		t.Errorf("expected ErrNoAdapters, got %v", err)
 	}
 }
