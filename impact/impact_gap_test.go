@@ -112,7 +112,7 @@ func TestAnalyseCleanGitRepo(t *testing.T) {
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Dir = dir
 		cmd.Env = append(os.Environ(), gitEnv...)
-		cmd.CombinedOutput() // ignore errors; best-effort
+		_, _ = cmd.CombinedOutput() // ignore errors; best-effort
 	}
 	run("git", "init", "-b", "main")
 	run("git", "config", "user.email", "test@test.com")

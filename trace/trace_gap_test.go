@@ -17,9 +17,9 @@ import (
 func TestRenderTextQualificationFailed(t *testing.T) {
 	agg := New("/r", "", []ComponentTrace{
 		{
-			Tool:     "gofusa",
-			Language: "go",
-			Available: true,
+			Tool:          "gofusa",
+			Language:      "go",
+			Available:     true,
 			Coverage:      Coverage{TotalRequirements: 4, TracedRequirements: 4, TestedRequirements: 4},
 			Qualification: &Qualification{Total: 3, Passed: 2, Failed: 1},
 		},
