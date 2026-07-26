@@ -2178,3 +2178,139 @@ func TestStandardsGoProjectStdout(t *testing.T) {
 		t.Errorf("iso26262 goProject stdout: unexpected code=2 stderr=%q", stderr.String())
 	}
 }
+
+// ── hooksInstall / hooksRemove error paths ────────────────────────────────────
+
+// TestHooksInstallMkdirAllError verifies hooksInstall returns 1 when the hooks
+// directory cannot be created (MkdirAll error path).
+//
+//fusa:test REQ-FO-HOOKS001
+func TestHooksInstallMkdirAllError(t *testing.T) {
+	// Using a regular file as a path component forces MkdirAll to fail
+	// because the OS cannot treat a file as a directory.
+	f, err := os.CreateTemp(t.TempDir(), "block")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	hookPath := filepath.Join(f.Name(), "hooks", "pre-commit")
+	var stdout, stderr bytes.Buffer
+	code := hooksInstall(hookPath, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("hooksInstall MkdirAll error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "create hooks dir") {
+		t.Errorf("hooksInstall MkdirAll error: want 'create hooks dir' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestHooksInstallWriteError verifies hooksInstall returns 1 when WriteFile
+// fails (unwritable hooks directory).
+//
+//fusa:test REQ-FO-HOOKS001
+func TestHooksInstallWriteError(t *testing.T) {
+	if os.Getuid() == 0 {
+		t.Skip("skipping permission test: running as root")
+	}
+	// Create .git/ with normal permissions, then hooks/ as read+execute only.
+	// This way MkdirAll(hooksDir) succeeds (dir exists) but WriteFile fails.
+	gitDir := filepath.Join(t.TempDir(), ".git")
+	if err := os.Mkdir(gitDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	hooksDir := filepath.Join(gitDir, "hooks")
+	if err := os.Mkdir(hooksDir, 0o500); err != nil {
+		t.Fatal(err)
+	}
+	hookPath := filepath.Join(hooksDir, "pre-commit")
+	var stdout, stderr bytes.Buffer
+	code := hooksInstall(hookPath, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("hooksInstall WriteFile error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "write hook") {
+		t.Errorf("hooksInstall WriteFile error: want 'write hook' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestHooksRemoveNonNotExist verifies hooksRemove returns 1 with a
+// "remove hook" message when os.Remove fails with a non-ENOENT error (e.g.
+// ENOTEMPTY when hookPath is a non-empty directory).
+//
+//fusa:test REQ-FO-HOOKS001
+func TestHooksRemoveNonNotExist(t *testing.T) {
+	dir := t.TempDir()
+	// Make dir non-empty so os.Remove returns ENOTEMPTY (not ENOENT).
+	if err := os.WriteFile(filepath.Join(dir, "x"), []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := hooksRemove(dir, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("hooksRemove ENOTEMPTY: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "remove hook") {
+		t.Errorf("hooksRemove ENOTEMPTY: want 'remove hook' in stderr, got %q", stderr.String())
+	}
+}
+
+// ── runStandards RenderToFile error path ─────────────────────────────────────
+
+// TestStandardsOutputFileError verifies runStandards returns 1 when the
+// --output file cannot be created (RenderToFile error path).
+//
+//fusa:test REQ-FO-CLI015
+func TestStandardsOutputFileError(t *testing.T) {
+	f, err := os.CreateTemp(t.TempDir(), "block")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	// Use a regular file as a path component so os.Create inside RenderToFile fails.
+	badOutput := filepath.Join(f.Name(), "standards.txt")
+	dir := goProject(t)
+	var stdout, stderr bytes.Buffer
+	code := runStandards("iso26262", []string{"--dir", dir, "--output", badOutput}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("runStandards bad output: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+}
+
+// ── runVerify error paths ─────────────────────────────────────────────────────
+
+// TestVerifyRunError verifies runVerify returns 1 when verify.Run cannot
+// execute go test (non-existent project directory).
+//
+//fusa:test REQ-FO-CLI062
+func TestVerifyRunError(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runVerify([]string{"--dir", filepath.Join(t.TempDir(), "nosuchdir")}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("verify non-existent dir: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "run tests") {
+		t.Errorf("verify non-existent dir: want 'run tests' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestVerifyFailedTests verifies runVerify returns 1 and processes output when
+// go test reports failures (bundle.Summary.Failed > 0 path).
+//
+//fusa:test REQ-FO-CLI062
+func TestVerifyFailedTests(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"),
+		[]byte("module failmod\n\ngo 1.22\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "fail_test.go"),
+		[]byte("package failmod\n\nimport \"testing\"\n\nfunc TestAlwaysFail(t *testing.T) { t.Fatal(\"always fails\") }\n"),
+		0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runVerify([]string{"--dir", dir}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("verify failing tests: want 1, got %d (stderr=%q stdout=%q)", code, stderr.String(), stdout.String())
+	}
+}

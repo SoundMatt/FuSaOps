@@ -7,6 +7,28 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.100.0] — 2026-07-26
+
+### feat: coverage expansion — hooksInstall, hooksRemove, runVerify, runStandards, safetycase.hashFile
+
+- **`cmd/fusaops`** — `TestHooksInstallMkdirAllError` covers the `os.MkdirAll` error path in
+  `hooksInstall` using a regular file as a path component; `TestHooksInstallWriteError` covers
+  the `os.WriteFile` error path using a read-only hooks directory; together these bring
+  `hooksInstall` 66.7% → 100%.
+- **`cmd/fusaops`** — `TestHooksRemoveNonNotExist` triggers ENOTEMPTY by passing a non-empty
+  directory as hookPath, covering the non-`IsNotExist` error branch in `hooksRemove`; 75.0% → 100%.
+- **`cmd/fusaops`** — `TestVerifyRunError` covers the `verify.Run` error path by passing a
+  non-existent directory (go-command chdir fails, returns non-ExitError); `TestVerifyFailedTests`
+  covers `bundle.Summary.Failed > 0` by running against a project with a deliberately failing
+  test; `runVerify` 77.8% → 86.1%.
+- **`cmd/fusaops`** — `TestStandardsOutputFileError` covers the `standards.RenderToFile` error
+  path in `runStandards` using a file-as-parent output path; `runStandards` 75.7% → 81.1%.
+- **`safetycase`** — `TestHashFileOpenError` (internal `package safetycase` test file) directly
+  calls `hashFile` with a non-existent path, covering the `os.Open` error return;
+  `hashFile` 75.0% → 87.5%.
+
+Total coverage: 89.9% (↑ from 89.8%).
+
 ## [1.99.0] — 2026-07-26
 
 ### feat: coverage expansion — slsa.assessArtifactIntegrity, history.writeAll, runSuppressVerify, runStandards
