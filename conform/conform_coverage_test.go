@@ -154,9 +154,9 @@ func TestCheckCheckBadRuleID(t *testing.T) {
 	rep, _ := Run("ruleIDBinary", Options{TempDir: t.TempDir(), RunFunc: checkRunFuncWithFindings(
 		"rule-FuSa", []map[string]interface{}{
 			{"ruleId": "bad_lowercase_id", "severity": "INFO",
-				"message":     "msg",
-				"location":    map[string]interface{}{"file": "main.go"},
-				"category":    "lint", "remediation": "fix it",
+				"message":  "msg",
+				"location": map[string]interface{}{"file": "main.go"},
+				"category": "lint", "remediation": "fix it",
 				"fingerprint": "sha256:5529f6e552b61370fcd04fdcf22d73c495c5c9d2746b9293233f0dbb08fe6b27"},
 		},
 	)})
@@ -193,7 +193,7 @@ func TestCheckCheckNilFindings(t *testing.T) {
 				"tool": "nofind-FuSa", "toolVersion": "0.1.0",
 				"language": "go", "generatedAt": "2026-06-10T00:00:00Z",
 				"projectRoot": dir,
-				"summary": map[string]int{"total": 0, "errors": 0, "warnings": 0, "infos": 0},
+				"summary":     map[string]int{"total": 0, "errors": 0, "warnings": 0, "infos": 0},
 				// findings key absent
 			}
 			b, _ := json.Marshal(doc)
@@ -222,7 +222,7 @@ func TestCheckCheckNilSummary(t *testing.T) {
 				"tool": "nosum-FuSa", "toolVersion": "0.1.0",
 				"language": "go", "generatedAt": "2026-06-10T00:00:00Z",
 				"projectRoot": dir,
-				"findings": []interface{}{},
+				"findings":    []interface{}{},
 				// summary absent
 			}
 			b, _ := json.Marshal(doc)
@@ -241,9 +241,9 @@ func TestCheckCheckBadSeverity(t *testing.T) {
 	rep, _ := Run("badsevBinary", Options{TempDir: t.TempDir(), RunFunc: checkRunFuncWithFindings(
 		"badsev-FuSa", []map[string]interface{}{
 			{"ruleId": "LINT001", "severity": "CRITICAL",
-				"message":     "msg",
-				"location":    map[string]interface{}{"file": "main.go"},
-				"category":    "lint", "remediation": "fix",
+				"message":  "msg",
+				"location": map[string]interface{}{"file": "main.go"},
+				"category": "lint", "remediation": "fix",
 				"fingerprint": "sha256:5529f6e552b61370fcd04fdcf22d73c495c5c9d2746b9293233f0dbb08fe6b27"},
 		},
 	)})
@@ -257,8 +257,8 @@ func TestCheckCheckNilLocation(t *testing.T) {
 	rep, _ := Run("nolocBinary", Options{TempDir: t.TempDir(), RunFunc: checkRunFuncWithFindings(
 		"noloc-FuSa", []map[string]interface{}{
 			{"ruleId": "LINT001", "severity": "INFO",
-				"message":     "msg",
-				"category":    "lint", "remediation": "fix",
+				"message":  "msg",
+				"category": "lint", "remediation": "fix",
 				"fingerprint": "sha256:5529f6e552b61370fcd04fdcf22d73c495c5c9d2746b9293233f0dbb08fe6b27"},
 		},
 	)})
@@ -272,9 +272,9 @@ func TestCheckCheckEmptyLocationFile(t *testing.T) {
 	rep, _ := Run("nofileBinary", Options{TempDir: t.TempDir(), RunFunc: checkRunFuncWithFindings(
 		"nofile-FuSa", []map[string]interface{}{
 			{"ruleId": "LINT001", "severity": "INFO",
-				"message":     "msg",
-				"location":    map[string]interface{}{"file": "", "line": 1},
-				"category":    "lint", "remediation": "fix",
+				"message":  "msg",
+				"location": map[string]interface{}{"file": "", "line": 1},
+				"category": "lint", "remediation": "fix",
 				"fingerprint": "sha256:5529f6e552b61370fcd04fdcf22d73c495c5c9d2746b9293233f0dbb08fe6b27"},
 		},
 	)})
@@ -288,9 +288,9 @@ func TestCheckCheckMissingFingerprint(t *testing.T) {
 	rep, _ := Run("nofpBinary", Options{TempDir: t.TempDir(), RunFunc: checkRunFuncWithFindings(
 		"nofp-FuSa", []map[string]interface{}{
 			{"ruleId": "LINT001", "severity": "INFO",
-				"message":     "msg",
-				"location":    map[string]interface{}{"file": "main.go", "line": 1},
-				"category":    "lint", "remediation": "fix it"},
+				"message":  "msg",
+				"location": map[string]interface{}{"file": "main.go", "line": 1},
+				"category": "lint", "remediation": "fix it"},
 			// no fingerprint field
 		},
 	)})
@@ -304,9 +304,9 @@ func TestCheckCheckBadFingerprint(t *testing.T) {
 	rep, _ := Run("badfpBinary", Options{TempDir: t.TempDir(), RunFunc: checkRunFuncWithFindings(
 		"badfp-FuSa", []map[string]interface{}{
 			{"ruleId": "LINT001", "severity": "INFO",
-				"message":     "msg",
-				"location":    map[string]interface{}{"file": "main.go", "line": 1},
-				"category":    "lint", "remediation": "fix it",
+				"message":  "msg",
+				"location": map[string]interface{}{"file": "main.go", "line": 1},
+				"category": "lint", "remediation": "fix it",
 				"fingerprint": "md5:abc123"},
 		},
 	)})

@@ -235,4 +235,3 @@ func TestAPIReportNilReport(t *testing.T) {
 		t.Errorf("/api/v1/report nil cached: got %d, want 503", rec.Code)
 	}
 }
-
