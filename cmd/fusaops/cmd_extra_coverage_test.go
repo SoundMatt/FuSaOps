@@ -1510,13 +1510,19 @@ func TestReqImportDoorsParse(t *testing.T) {
 // ── runRelease additional branches ───────────────────────────────────────────
 
 // TestReleaseBadOutputDir verifies runRelease returns 1 when os.MkdirAll
-// fails because the output directory cannot be created.
+// fails because a path component is a regular file (works on all platforms).
 //
 //fusa:test REQ-FO-CLI065
 func TestReleaseBadOutputDir(t *testing.T) {
+	// Create a regular file, then use it as a path component so MkdirAll fails.
+	f, err := os.CreateTemp(t.TempDir(), "blockfile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	outDir := filepath.Join(f.Name(), "subdir")
 	var stdout, stderr bytes.Buffer
-	// /nonexistent_parent cannot be created → os.MkdirAll fails
-	code := runRelease([]string{"--output-dir", "/nonexistent_parent_xyz/subdir"}, &stdout, &stderr)
+	code := runRelease([]string{"--output-dir", outDir}, &stdout, &stderr)
 	if code != 1 {
 		t.Errorf("release bad output dir: want 1, got %d stderr=%q", code, stderr.String())
 	}
