@@ -147,6 +147,7 @@ const dashboardTemplate = `<!DOCTYPE html>
   </div>
   <nav class="nav-links">
     <a href="/history">History</a>
+    {{if .Comp}}<a href="/comp">Complexity</a>{{end}}
     <a href="/api/report">JSON</a>
     <a href="/refresh">Refresh</a>
   </nav>
@@ -200,7 +201,7 @@ const dashboardTemplate = `<!DOCTYPE html>
 
   {{if .Comp}}
   <section class="comp-section">
-    <h2>Cyclomatic Complexity
+    <h2><a href="/comp" style="color:inherit;text-decoration:none">Cyclomatic Complexity</a>
       <span class="badge {{if gt .Comp.Violations 0}}status-fail{{else}}status-pass{{end}}" style="margin-left:8px;font-size:13px">
         {{if gt .Comp.Violations 0}}{{.Comp.Violations}} violations{{else}}PASS{{end}}
       </span>

@@ -551,6 +551,26 @@ func TestRenderHTMLCompSection(t *testing.T) {
 	}
 }
 
+// TestRenderHTMLCompNavLink verifies the dashboard nav includes a /comp link
+// when CompInfo is non-nil and omits it when CompInfo is nil.
+//
+//fusa:test REQ-FO-SRV013
+func TestRenderHTMLCompNavLink(t *testing.T) {
+	r := New("/root", "demo", sampleComponents())
+	var buf bytes.Buffer
+	_ = RenderWithOptions(&buf, r, "html", RenderOptions{
+		CompInfo: &CompInfo{TotalFunctions: 5, Violations: 0},
+	})
+	if !strings.Contains(buf.String(), `href="/comp"`) {
+		t.Error("nav should contain /comp link when CompInfo is set")
+	}
+	buf.Reset()
+	_ = Render(&buf, r, "html")
+	if strings.Contains(buf.String(), `href="/comp"`) {
+		t.Error("nav should not contain /comp link when CompInfo is nil")
+	}
+}
+
 // TestRenderHTMLCompSectionHidden verifies the comp section is absent when
 // CompInfo is nil.
 //
