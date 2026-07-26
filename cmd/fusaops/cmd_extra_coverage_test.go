@@ -1893,3 +1893,233 @@ func TestSuppressPruneSaveError(t *testing.T) {
 		t.Errorf("suppress prune save error: want 1, got %d stderr=%q", code, stderr.String())
 	}
 }
+
+// TestDiffNoAdapters verifies runDiff exits 1 with "no supported languages" when
+// the project dir contains no language files (ErrNoAdapters path).
+//
+//fusa:test REQ-FO-CLI018
+func TestDiffNoAdapters(t *testing.T) {
+	dir := t.TempDir()
+	bl := filepath.Join(dir, "baseline.json")
+	if err := os.WriteFile(bl, []byte(`{"generatedAt":"2026-01-01T00:00:00Z","components":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runDiff([]string{"--dir", dir, "--baseline", bl}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("diff no-adapters: want 1, got %d", code)
+	}
+	if !strings.Contains(stderr.String(), "no supported languages") {
+		t.Errorf("diff no-adapters: expected 'no supported languages' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestDiffBadFormat verifies runDiff exits 1 when an unsupported --format is
+// given (covers the diff.Render error path).
+//
+//fusa:test REQ-FO-CLI018
+func TestDiffBadFormat(t *testing.T) {
+	dir := goProject(t)
+	bl := filepath.Join(dir, "baseline.json")
+	if err := os.WriteFile(bl, []byte(`{"generatedAt":"2026-01-01T00:00:00Z","components":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runDiff([]string{"--dir", dir, "--baseline", bl, "--format", "xml"}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("diff bad format: want 1, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "render") {
+		t.Errorf("diff bad format: expected 'render' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestDiffOutputCreateError verifies runDiff exits 1 when --output cannot be
+// created (covers the os.Create error path).
+//
+//fusa:test REQ-FO-CLI018
+func TestDiffOutputCreateError(t *testing.T) {
+	dir := goProject(t)
+	bl := filepath.Join(dir, "baseline.json")
+	if err := os.WriteFile(bl, []byte(`{"generatedAt":"2026-01-01T00:00:00Z","components":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.CreateTemp(t.TempDir(), "block")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	badOutput := filepath.Join(f.Name(), "diff.txt")
+	var stdout, stderr bytes.Buffer
+	code := runDiff([]string{"--dir", dir, "--baseline", bl, "--output", badOutput}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("diff output create error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "create output") {
+		t.Errorf("diff output create error: expected 'create output' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestTraceBadFormat verifies runTrace exits 1 when an unsupported --format is
+// given (covers the trace.Render error path via a Go project).
+//
+//fusa:test REQ-FO-CLI011
+func TestTraceBadFormat(t *testing.T) {
+	dir := goProject(t)
+	var stdout, stderr bytes.Buffer
+	code := runTrace([]string{"--dir", dir, "--format", "xml"}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("trace bad format: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestVerifyBadFormat verifies runVerify exits 2 when an unsupported --format
+// is given (covers the verify.Render error path).
+//
+//fusa:test REQ-FO-CLI062
+func TestVerifyBadFormat(t *testing.T) {
+	dir := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := runVerify([]string{"--dir", dir, "--format", "xml"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("verify bad format: want 2, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "render") {
+		t.Errorf("verify bad format: expected 'render' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestQualifyBadFormat verifies runQualify exits 2 when an unsupported --format
+// is given (covers the qualify.Render error path).
+//
+//fusa:test REQ-FO-CLI064
+func TestQualifyBadFormat(t *testing.T) {
+	dir := goProject(t)
+	var stdout, stderr bytes.Buffer
+	code := runQualify([]string{"--dir", dir, "--format", "xml"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("qualify bad format: want 2, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "render") {
+		t.Errorf("qualify bad format: expected 'render' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestQualifySaveError verifies runQualify exits 1 when the output path cannot
+// be written (covers the qualify.Save error path).
+//
+//fusa:test REQ-FO-CLI064
+func TestQualifySaveError(t *testing.T) {
+	dir := goProject(t)
+	f, err := os.CreateTemp(t.TempDir(), "block")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	badOutput := filepath.Join(f.Name(), "qualify-report.json")
+	var stdout, stderr bytes.Buffer
+	code := runQualify([]string{"--dir", dir, "--output", badOutput}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("qualify save error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "save report") {
+		t.Errorf("qualify save error: expected 'save report' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestQualifyRecordURI verifies runQualify prints the certificate URI when
+// --record-uri is set (covers the QualificationRecordUri conditional print).
+//
+//fusa:test REQ-FO-CLI064
+func TestQualifyRecordURI(t *testing.T) {
+	dir := goProject(t)
+	outPath := filepath.Join(t.TempDir(), "qualify-report.json")
+	var stdout, stderr bytes.Buffer
+	code := runQualify([]string{"--dir", dir, "--record-uri", "https://example.com/cert", "--output", outPath}, &stdout, &stderr)
+	if code == 2 {
+		t.Errorf("qualify --record-uri: unexpected flag parse error, code=2 stderr=%q", stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Certificate URI") {
+		t.Errorf("qualify --record-uri: expected 'Certificate URI' in stdout, got %q", stdout.String())
+	}
+}
+
+// TestPolicyBadFormat verifies runPolicy exits 1 when an unsupported --format
+// is given (covers the policy.RenderToFile error path).
+//
+//fusa:test REQ-FO-CLI024
+func TestPolicyBadFormat(t *testing.T) {
+	dir := goProject(t)
+	polPath := filepath.Join(dir, "policy.json")
+	polData := `{"name":"test","rules":[{"id":"R1","maxErrors":100}]}`
+	if err := os.WriteFile(polPath, []byte(polData), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runPolicy([]string{"--dir", dir, "--policy", polPath, "--format", "xml"}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("policy bad format: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestReleaseNoAdapters verifies runRelease exits 0 and prints the "no adapters"
+// SBOM skip message when the project dir contains no language files.
+//
+//fusa:test REQ-FO-CLI065
+func TestReleaseNoAdapters(t *testing.T) {
+	dir := t.TempDir()
+	outDir := filepath.Join(t.TempDir(), "out")
+	var stdout, stderr bytes.Buffer
+	code := runRelease([]string{"--dir", dir, "--output-dir", outDir}, &stdout, &stderr)
+	if code != 0 {
+		t.Errorf("release no-adapters: want 0, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "no adapters detected") {
+		t.Errorf("release no-adapters: expected 'no adapters detected' in stdout, got %q", stdout.String())
+	}
+}
+
+// TestTraceOutputToFile verifies runTrace writes to --output file using a Go
+// project (covers the RenderToFile success path and "Wrote ... to" stderr message).
+//
+//fusa:test REQ-FO-CLI011
+func TestTraceOutputToFile(t *testing.T) {
+	dir := goProject(t)
+	outFile := filepath.Join(t.TempDir(), "trace.json")
+	var stdout, stderr bytes.Buffer
+	code := runTrace([]string{"--dir", dir, "--format", "json", "--output", outFile}, &stdout, &stderr)
+	// Exit 0 (no gaps) or 1 (gaps found); never 2 (flag error).
+	if code == 2 {
+		t.Errorf("trace --output: unexpected code=2 stderr=%q", stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "Wrote") {
+		t.Errorf("trace --output: expected 'Wrote' confirmation in stderr, got %q", stderr.String())
+	}
+}
+
+// TestTraceOutputBadFormat verifies runTrace exits 1 when --output is given
+// with an unsupported format (covers the RenderToFile error path).
+//
+//fusa:test REQ-FO-CLI011
+func TestTraceOutputBadFormat(t *testing.T) {
+	dir := goProject(t)
+	outFile := filepath.Join(t.TempDir(), "trace.xml")
+	var stdout, stderr bytes.Buffer
+	code := runTrace([]string{"--dir", dir, "--format", "xml", "--output", outFile}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("trace --output bad format: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestTraceValidTimeout verifies runTrace accepts a valid --timeout duration
+// (covers the opts.Timeout assignment branch that is skipped on bad/missing timeout).
+//
+//fusa:test REQ-FO-CLI011
+func TestTraceValidTimeout(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runTrace([]string{"--dir", t.TempDir(), "--timeout", "30s"}, &stdout, &stderr)
+	// Empty dir → ErrNoAdapters → return 1; never 2 (flag parse error).
+	if code == 2 {
+		t.Errorf("trace --timeout 30s: unexpected flag parse error, code=2")
+	}
+}
