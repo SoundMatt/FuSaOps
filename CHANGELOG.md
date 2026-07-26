@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.79.0] — 2026-07-26
+
+### docs: spec v1.10.11 snapshot — all-tool safety features, latest versions
+
+- **`SpecVersion` bumped to `"1.10.11"`** — captures the four safety features
+  (HLR/LLR decomposition, tool qualification display, MC/DC coverage, V&V
+  independence) now implemented across all six x-FuSa tools.
+- **`docs/x-fusa-spec.md` updated to v1.10.11:**
+  - Header: `1.10.10` → `1.10.11`.
+  - §11 snapshot updated to 2026-07-26: go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.37 · rust-FuSa v0.3.2 · py-FuSa v0.2.1 · java-FuSa v0.4.1.
+  - §14: added 1.10.11 entry documenting all four safety features and their FuSaOps consumption.
+- **`README.md` updated**: bundled-tool version table updated to latest releases;
+  bundled-tools prose updated to reflect all six tools active in the image.
+
 ## [1.78.0] — 2026-07-26
 
 ### fix: maximize test coverage and requirement traceability
