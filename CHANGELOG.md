@@ -7,6 +7,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.93.0] — 2026-07-26
+
+### feat: coverage expansion — runMetricsRecord, runRelease error paths
+
+- **`cmd/fusaops`** — `TestMetricsRecordLoadError` covers the malformed-JSON branch in
+  `runMetricsRecord` (metrics.Load returns error); `TestMetricsRecordSaveError` covers the
+  Save error path when the directory does not exist; `TestReleaseBadOutputDir` covers the
+  `runRelease` os.MkdirAll failure path for an unwritable output directory.
+
+Total coverage: 89.1% (↑ from 89.0%).
+
 ## [1.92.0] — 2026-07-26
 
 ### feat: coverage expansion — sbom.renderHTML, prInit, prList, runReqImport

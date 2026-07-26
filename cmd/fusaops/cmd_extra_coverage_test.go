@@ -1506,3 +1506,64 @@ func TestReqImportDoorsParse(t *testing.T) {
 		t.Errorf("req import doors parse: unexpected flag error (2), stderr=%q", stderr.String())
 	}
 }
+
+// ── runRelease additional branches ───────────────────────────────────────────
+
+// TestReleaseBadOutputDir verifies runRelease returns 1 when os.MkdirAll
+// fails because a path component is a regular file (works on all platforms).
+//
+//fusa:test REQ-FO-CLI065
+func TestReleaseBadOutputDir(t *testing.T) {
+	// Create a regular file, then use it as a path component so MkdirAll fails.
+	f, err := os.CreateTemp(t.TempDir(), "blockfile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	outDir := filepath.Join(f.Name(), "subdir")
+	var stdout, stderr bytes.Buffer
+	code := runRelease([]string{"--output-dir", outDir}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("release bad output dir: want 1, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "create output directory") {
+		t.Errorf("release bad output dir: expected 'create output directory' in stderr: %q", stderr.String())
+	}
+}
+
+// ── runMetricsRecord additional branches ─────────────────────────────────────
+
+// TestMetricsRecordLoadError verifies runMetricsRecord returns 1 when
+// metrics.Load fails because the metrics file contains malformed JSON.
+//
+//fusa:test REQ-FO-CLI055
+func TestMetricsRecordLoadError(t *testing.T) {
+	dir := t.TempDir()
+	// Write malformed JSON to the metrics file so Load fails.
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops-metrics.json"), []byte("{bad json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runMetricsRecord(dir, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("metrics record load error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestMetricsRecordSaveError verifies runMetricsRecord returns 1 when
+// metrics.Save fails because the directory does not exist.
+//
+//fusa:test REQ-FO-CLI055
+func TestMetricsRecordSaveError(t *testing.T) {
+	// Use a non-existent subdir: Load returns empty TimeSeries (no file = no error)
+	// but Save fails because the parent dir doesn't exist.
+	dir := filepath.Join(t.TempDir(), "nonexistent")
+	var stdout, stderr bytes.Buffer
+	code := runMetricsRecord(dir, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("metrics record save error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "save") {
+		t.Errorf("metrics record save error: expected 'save' in stderr: %q", stderr.String())
+	}
+}
