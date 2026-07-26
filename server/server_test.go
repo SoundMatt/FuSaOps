@@ -1140,6 +1140,68 @@ func TestAPICompWithData(t *testing.T) {
 	}
 }
 
+// TestCompPageEmpty verifies /comp returns a 200 HTML page with a "no data"
+// message when no comp aggregate has been cached.
+//
+//fusa:test REQ-FO-SRV013
+func TestCompPageEmpty(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/comp", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+	if !strings.Contains(body, "Cyclomatic Complexity") {
+		t.Error("comp page missing heading")
+	}
+}
+
+// TestCompPageWithData verifies /comp renders per-component function detail
+// for functions that exceed the threshold.
+//
+//fusa:test REQ-FO-SRV013
+func TestCompPageWithData(t *testing.T) {
+	s := newTestServer(t)
+	s.compMu.Lock()
+	s.compAgg = &comp.Aggregate{
+		Root:    "/repo",
+		Project: "demo",
+		Components: []comp.ComponentComp{{
+			Language:  "go",
+			Tool:      "gofusa",
+			Available: true,
+			Report: &comp.Report{
+				Threshold:      10,
+				DAL:            "DAL-B",
+				TotalFunctions: 3,
+				Violations:     1,
+				Results: []comp.Function{
+					{File: "pkg/foo.go", Line: 42, Name: "BigFunc", Complexity: 12, ExceedsThreshold: true},
+					{File: "pkg/bar.go", Line: 5, Name: "SmallFunc", Complexity: 3, ExceedsThreshold: false},
+				},
+			},
+		}},
+		TotalFunctions: 3,
+		Violations:     1,
+	}
+	s.compMu.Unlock()
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/comp", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+	for _, want := range []string{"BigFunc", "pkg/foo.go", "12", "DAL-B"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("/comp page missing %q", want)
+		}
+	}
+	if strings.Contains(body, "SmallFunc") {
+		t.Error("/comp page should not show functions that do not exceed threshold")
+	}
+}
+
 // TestDashboardShowsCompSection verifies the HTML dashboard includes the comp
 // violations section when a comp aggregate is cached.
 //

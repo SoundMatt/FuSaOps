@@ -2791,6 +2791,13 @@
       "description": "The FuSaOps web server shall compute and cache the cross-language cyclomatic complexity aggregate (RunComp) during each compute cycle and expose it at GET /api/v1/comp as a JSON comp.Aggregate. The server shall use the CompConfig from .fusaops.json (threshold, dal) for the computation.",
       "priority": "MUST",
       "rationale": "Provides programmatic access to comp data for CI pipelines and third-party tooling, consistent with the /api/v1/vv and /api/v1/status pattern."
+    },
+    {
+      "id": "REQ-FO-SRV013",
+      "title": "/comp HTML page showing function-level complexity detail",
+      "description": "The FuSaOps web server shall serve a /comp HTML page that displays the cached comp aggregate with per-component function-level detail for all functions that exceed the configured cyclomatic complexity threshold. The page shall link back to the dashboard and to the /api/v1/comp JSON endpoint. The dashboard nav shall include a Complexity link to /comp when comp data is available.",
+      "priority": "MUST",
+      "rationale": "The /api/v1/comp endpoint provides summary counts; the /comp page exposes function-level detail needed to identify and remediate specific violations."
     }
   ]
 }

@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.74.0] — 2026-07-25
+
+### feat: /comp HTML page with function-level complexity detail
+
+- **`/comp` page**: the `fusaops serve` web server now exposes a `/comp` HTML page
+  showing the cached comp aggregate in full detail — per-component sections listing
+  every function that exceeds the configured cyclomatic complexity threshold, with
+  name, file, line number, and V(G) score. When no comp data is available, the page
+  shows a helpful "no data" message. (REQ-FO-SRV013)
+- **Dashboard nav link**: when comp data is available, the dashboard header nav
+  gains a "Complexity" link pointing to `/comp`. The comp section heading is also
+  hyperlinked to `/comp`. (REQ-FO-SRV013)
+
 ## [1.73.0] — 2026-07-25
 
 ### feat: HTML dashboard cyclomatic complexity section

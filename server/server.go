@@ -261,6 +261,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/healthz", s.handleHealth)
 	mux.HandleFunc("/badge/status.svg", s.handleBadge)
 	mux.HandleFunc("/api/v1/comp", s.handleAPIComp)
+	mux.HandleFunc("/comp", s.handleComp)
 	mux.HandleFunc("/api/v1/vv", s.handleAPIVandV)
 	mux.HandleFunc("/badge/vv.svg", s.handleVandVBadge)
 	mux.HandleFunc("/badge/qualify.svg", s.handleQualifyBadge)
@@ -978,6 +979,108 @@ func (s *Server) handleAPIComp(w http.ResponseWriter, _ *http.Request) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	_ = enc.Encode(agg)
+}
+
+// handleComp renders the full cyclomatic complexity HTML page at /comp showing
+// per-component function-level detail for all functions that exceed the threshold.
+//
+//fusa:req REQ-FO-SRV013
+func (s *Server) handleComp(w http.ResponseWriter, _ *http.Request) {
+	s.compMu.RLock()
+	agg, aggErr := s.compAgg, s.compErr
+	s.compMu.RUnlock()
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprint(w, `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FuSaOps — Cyclomatic Complexity</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f4f6f9;color:#1a1a2e;padding:1.5rem}
+h1{font-size:1.4rem;margin-bottom:1rem}
+h2{font-size:1.1rem;margin:1.2rem 0 .6rem}
+a{color:#4361ee;text-decoration:none}a:hover{text-decoration:underline}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:4px;font-weight:600;font-size:.78rem}
+.pass{background:#d1fae5;color:#065f46}
+.fail{background:#fee2e2;color:#7f1d1d}
+.sub{color:#718096;font-size:.85rem;margin-left:.5rem}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:1.5rem}
+th,td{padding:.6rem .9rem;text-align:left;border-bottom:1px solid #edf2f7;font-size:.85rem}
+th{background:#f8fafc;font-weight:600;color:#4a5568}
+tr:last-child td{border-bottom:none}
+.viol{color:#c53030;font-weight:700}
+.ok{color:#2d6a4f}
+code{font-family:ui-monospace,monospace;font-size:.82rem;color:#4a5568}
+.empty{color:#718096;padding:1rem 0}
+</style>
+</head>
+<body>
+<h1>FuSaOps — Cyclomatic Complexity &nbsp;<a href="/" style="font-size:.8rem;font-weight:400">← dashboard</a></h1>
+`)
+	if aggErr != nil {
+		fmt.Fprintf(w, "<p style=\"color:#c53030\">Error: %s</p></body></html>\n", html.EscapeString(aggErr.Error()))
+		return
+	}
+	if agg == nil {
+		fmt.Fprint(w, `<p class="empty">No complexity data available. Run <code>fusaops comp</code> or wait for the server to compute.</p></body></html>`+"\n")
+		return
+	}
+	badge := `<span class="badge pass">PASS</span>`
+	if agg.Violations > 0 {
+		badge = fmt.Sprintf(`<span class="badge fail">%d violations</span>`, agg.Violations)
+	}
+	fmt.Fprintf(w, "<p>%s <span class=\"sub\">%d functions across %d component(s)</span></p>\n",
+		badge, agg.TotalFunctions, len(agg.Components))
+	for _, c := range agg.Components {
+		fmt.Fprintf(w, "<h2>%s <code>%s</code></h2>\n",
+			html.EscapeString(c.Language), html.EscapeString(c.Tool))
+		if c.Skipped != "" {
+			fmt.Fprintf(w, "<p class=\"empty\">skipped: %s</p>\n", html.EscapeString(c.Skipped))
+			continue
+		}
+		if c.Report == nil {
+			fmt.Fprint(w, "<p class=\"empty\">no report available</p>\n")
+			continue
+		}
+		r := c.Report
+		dal := ""
+		if r.DAL != "" {
+			dal = fmt.Sprintf(" · %s (≤%d)", html.EscapeString(r.DAL), r.Threshold)
+		} else if r.Threshold > 0 {
+			dal = fmt.Sprintf(" · threshold ≤%d", r.Threshold)
+		}
+		fmt.Fprintf(w, "<p class=\"sub\" style=\"margin-bottom:.5rem\">%d functions · %d violations%s</p>\n",
+			r.TotalFunctions, r.Violations, dal)
+		// Show functions that exceed the threshold; if none, show brief summary.
+		var violFuncs []comp.Function
+		for _, f := range r.Results {
+			if f.ExceedsThreshold {
+				violFuncs = append(violFuncs, f)
+			}
+		}
+		if len(violFuncs) == 0 {
+			fmt.Fprint(w, "<p class=\"empty\">No functions exceed the threshold.</p>\n")
+			continue
+		}
+		fmt.Fprint(w, "<table><thead><tr><th>Function</th><th>File</th><th>Line</th><th>V(G)</th></tr></thead><tbody>\n")
+		for _, f := range violFuncs {
+			locLine := ""
+			if f.Line > 0 {
+				locLine = fmt.Sprintf("%d", f.Line)
+			}
+			fmt.Fprintf(w,
+				"<tr><td><code class=\"viol\">%s</code></td><td><code>%s</code></td><td>%s</td><td class=\"viol\">%d</td></tr>\n",
+				html.EscapeString(f.Name),
+				html.EscapeString(f.File),
+				locLine,
+				f.Complexity,
+			)
+		}
+		fmt.Fprint(w, "</tbody></table>\n")
+	}
+	fmt.Fprintf(w, "<p style=\"font-size:.8rem;color:#a0aec0;margin-top:1rem\">V(G) = McCabe cyclomatic complexity · <a href=\"/api/v1/comp\">JSON</a></p>\n</body></html>\n")
 }
 
 // handleAPIVandV serves the /api/v1/vv JSON endpoint with V&V independence
