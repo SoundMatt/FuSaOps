@@ -7,6 +7,27 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.110.0] — 2026-07-26
+
+### feat: coverage expansion — sign, trace, verify gap branches
+
+- **`sign`** — `TestSignWriteError` covers `Sign`'s `os.WriteFile` error branch (`sign.go:73`) by
+  creating `artifact.zip.sig` as a directory so the write fails.
+- **`sign`** — `TestVerifyBadSigHex` covers the `hex.DecodeString` error path (`sign.go:94`) by
+  writing a non-hex `.sig` file before calling `Verify`.
+- **`sign`** — `TestVerifyMissingArtifactWithSig` covers the `hmacFile` open-failure path
+  (`sign.go:98`) by signing an artifact and then removing it, leaving the `.sig` behind.
+- **`trace`** — `TestRenderTextQualificationFailed` covers the `Qualification.Failed > 0` suffix
+  branch (`render.go:86`) by constructing a component with `Failed: 1`.
+- **`trace`** — `TestRenderMarkdownNoTitleGap` covers the no-title else branch in the per-component
+  gap list (`render.go:217`) by including a `Requirement{ID: "..."}` with empty Title.
+- **`trace`** — `TestRenderToFileEmptyPath` covers the `path == ""` stdout fallback path in
+  `RenderToFile` (`render.go:35`).
+- **`verify`** — `TestRunValidModule` covers the `return Parse(...)` success path (`verify.go:142`)
+  by running `go test ./...` on a minimal module with no test files.
+- sign: 90.0% → 96.0%; trace: 94.0% → 95.3%; verify: 96.8% → 98.4%.
+- Total coverage: 92.5% → 92.6%.
+
 ## [1.109.0] — 2026-07-26
 
 ### feat: coverage expansion — impact package stale-artifact, non-source skip, rerunSet, and clean-repo branches

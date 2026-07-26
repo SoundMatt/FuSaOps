@@ -4,6 +4,8 @@ package verify
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -28,4 +30,25 @@ func TestRunNonExistentDir(t *testing.T) {
 	if err == nil {
 		t.Error("Run with non-existent dir: want error, got nil")
 	}
+}
+
+// TestRunValidModule verifies Run reaches the Parse call on the success path
+// (verify.go:142) by running go test on a minimal module with no test files.
+// The command exits 0 and the results are returned without error.
+//
+//fusa:test REQ-FO-VER003
+func TestRunValidModule(t *testing.T) {
+	dir := t.TempDir()
+	goMod := "module testmod\n\ngo 1.21\n"
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte(goMod), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\nfunc main(){}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	results, err := Run(context.Background(), dir)
+	if err != nil {
+		t.Fatalf("Run on minimal module: %v", err)
+	}
+	_ = results // may be empty; we only care that Parse was called without error
 }
