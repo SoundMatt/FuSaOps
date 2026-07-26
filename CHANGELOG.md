@@ -7,6 +7,34 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.106.0] — 2026-07-26
+
+### feat: coverage expansion — server badge/report/comp/history, multi baseline, disposition-list
+
+- **`server`** — `TestBadgeErrorState` / `TestBadgePASSState` / `TestBadgeFAILState` cover the
+  `cErr != nil` (error), PASS, and default (FAIL) badge branches in `server.go:handleBadge`.
+- **`server`** — `TestAPIReportError` covers the `cErr != nil → 500` branch in `handleAPIReport`.
+- **`server`** — `TestAPICompNilAgg` covers the `agg == nil → {}` branch in `handleAPIComp` by
+  creating a server without calling compute.
+- **`server`** — `TestCompPageErrorState` / `TestCompPageNilAgg` / `TestCompPageNoReport` /
+  `TestCompPageNoViolations` cover the `aggErr != nil`, `agg == nil`, `c.Report == nil`, and
+  `len(violFuncs) == 0` branches in `handleComp`.
+- **`server`** — `TestHistoryPageFAILBadge` writes a FAIL snapshot and covers the
+  `sn.Status == "FAIL"` badge branch in `handleHistory`.
+- **`server`** — `TestHistoryPageMultiLanguages` covers the `l.Errors > 0` error-count span and
+  `langs != ""` comma-join branch in the history table.
+- **`server`** — `TestHistoryAPIError` uses a regular file as `histDir` so `os.Open` inside
+  `loadAll` returns a non-IsNotExist error, covering the `history.Load` error branch in
+  `handleAPIHistory`.
+- **`server`** — `TestMultiBaselineMethodNotAllowed` / `TestMultiBaselineNoFindings` cover the
+  GET → 405 and all-projects-errored → findings==nil → 503 branches in
+  `multi.go:handleAPIBaseline`.
+- **`server`** — `TestAPIBaselineWithError` covers the `cErr != nil → 500` branch in
+  `server.go:handleAPIBaseline`.
+- **`cmd/fusaops`** — `TestDispositionListLoadError` covers the `disposition.Load` error branch
+  in `runDispositionList` by placing the dispositions file path as a directory.
+- Total coverage: 91.1% → 91.5%.
+
 ## [1.105.0] — 2026-07-26
 
 ### feat: coverage expansion — MultiServer auth/badge/detail branches, runRelease bad-config

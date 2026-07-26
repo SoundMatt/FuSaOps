@@ -9,7 +9,26 @@ import (
 	"testing"
 
 	"github.com/SoundMatt/FuSaOps/config"
+	"github.com/SoundMatt/FuSaOps/disposition"
 )
+
+// ── runDispositionList ────────────────────────────────────────────────────────
+
+// TestDispositionListLoadError verifies runDispositionList returns 1 when the
+// dispositions file path exists as a directory (non-IsNotExist read error),
+// covering the disposition.Load error branch.
+//
+//fusa:test REQ-FO-CLI060
+func TestDispositionListLoadError(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, disposition.DispositionsFile), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	code := runDispositionList(dir, &bytes.Buffer{}, &bytes.Buffer{})
+	if code != 1 {
+		t.Errorf("disposition list load error: want 1, got %d", code)
+	}
+}
 
 // ── runRelease ────────────────────────────────────────────────────────────────
 
