@@ -998,3 +998,63 @@ func TestScaffoldWritesFiles(t *testing.T) {
 		})
 	}
 }
+
+// TestValidateHeaderBadSchemaVersion verifies a non-empty but malformed
+// schemaVersion value is flagged.
+//
+//fusa:test REQ-FO-CNF008
+func TestValidateHeaderBadSchemaVersion(t *testing.T) {
+	h := commonHeader{
+		SchemaVersion: "notaversion",
+		Kind:          "check-report",
+		Tool:          "gofusa",
+		ToolVersion:   "0.1.0",
+		Language:      "go",
+		GeneratedAt:   "2026-07-26T00:00:00Z",
+	}
+	errs := validateHeader(h, "check-report")
+	found := false
+	for _, e := range errs {
+		if strings.Contains(e, "schemaVersion") && strings.Contains(e, "MAJOR.MINOR") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected MAJOR.MINOR error for bad schemaVersion, got %v", errs)
+	}
+}
+
+// TestValidateHeaderMissingFields covers the tool, toolVersion, and
+// generatedAt missing-field error paths.
+//
+//fusa:test REQ-FO-CNF008
+func TestValidateHeaderMissingFields(t *testing.T) {
+	cases := []struct {
+		name, want string
+		h          commonHeader
+	}{
+		{"missing tool",
+			"missing tool",
+			commonHeader{SchemaVersion: "1.8", Kind: "check-report", ToolVersion: "0.1", Language: "go", GeneratedAt: "x"}},
+		{"missing toolVersion",
+			"missing toolVersion",
+			commonHeader{SchemaVersion: "1.8", Kind: "check-report", Tool: "t", Language: "go", GeneratedAt: "x"}},
+		{"missing generatedAt",
+			"missing generatedAt",
+			commonHeader{SchemaVersion: "1.8", Kind: "check-report", Tool: "t", ToolVersion: "0.1", Language: "go"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			errs := validateHeader(tc.h, "check-report")
+			found := false
+			for _, e := range errs {
+				if strings.Contains(e, tc.want) {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected error containing %q, got %v", tc.want, errs)
+			}
+		})
+	}
+}

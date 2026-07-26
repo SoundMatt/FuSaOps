@@ -264,7 +264,7 @@ func TestCheckBadJSONOutput(t *testing.T) {
 	a := &cmdAdapter{
 		name: "go-FuSa", language: fusaops.LangGo, tool: "gofusa",
 		extensions: []string{".go"},
-		run: fakeRunner("{not valid json}"),
+		run:        fakeRunner("{not valid json}"),
 	}
 	_, err := a.Check(context.Background(), t.TempDir())
 	if err == nil {
