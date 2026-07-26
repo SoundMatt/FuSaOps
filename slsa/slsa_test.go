@@ -215,6 +215,46 @@ func TestAssessSBOMHashesNoPackages(t *testing.T) {
 	}
 }
 
+// TestAssessProvenanceMalformedJSON verifies assessProvenanceField returns GAP
+// when provenance.json is not valid JSON.
+//
+//fusa:test REQ-FO-SLSA002
+func TestAssessProvenanceMalformedJSON(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "provenance.json"), []byte("not-json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := Assess(dir, "proj", LevelL2)
+	if err != nil {
+		t.Fatalf("Assess: %v", err)
+	}
+	for _, obj := range rep.Objectives {
+		if obj.ID == "SLSA-L2.1" && obj.Status != "GAP" {
+			t.Errorf("SLSA-L2.1: want GAP for malformed provenance.json, got %s: %s", obj.Status, obj.Note)
+		}
+	}
+}
+
+// TestAssessArtifactIntegrityDotSha256 verifies assessArtifactIntegrity returns
+// PASS when a file with a .sha256 suffix exists, covering the loop branch.
+//
+//fusa:test REQ-FO-SLSA002
+func TestAssessArtifactIntegrityDotSha256(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "release.sha256"), []byte("abc"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := Assess(dir, "proj", LevelL2)
+	if err != nil {
+		t.Fatalf("Assess: %v", err)
+	}
+	for _, obj := range rep.Objectives {
+		if obj.ID == "SLSA-L2.4" && obj.Status != "PASS" {
+			t.Errorf("SLSA-L2.4: want PASS for .sha256 file, got %s: %s", obj.Status, obj.Note)
+		}
+	}
+}
+
 // TestRenderTextUnknownStatus verifies statusIcon default branch ("!") is reached
 // when an objective has a status outside the known set.
 //

@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.88.0] — 2026-07-26
+
+### feat: coverage expansion — coverage.Parse, conform.scaffold, slsa assessment branches
+
+- **`coverage`** — `TestParseMalformedLines` covers the three `continue` branches in
+  `Parse` (no-colon, wrong-field-count, no-dash-in-range) previously unreachable by
+  well-formed profile input.
+- **`conform`** — `TestScaffoldWriteError` covers the `scaffold()` `os.WriteFile` error
+  return when the project directory does not exist.
+- **`slsa`** — `TestAssessProvenanceMalformedJSON` covers the `json.Unmarshal` error
+  branch in `assessProvenanceField`; `TestAssessArtifactIntegrityDotSha256` covers the
+  `.sha256` file loop branch in `assessArtifactIntegrity`.
+
+Total coverage: 88.4% (↑ from 88.3%).
+
 ## [1.87.0] — 2026-07-26
 
 ### feat: coverage expansion — server, standards, suppression, disposition, vuln, adapter, comp, fleet, metrics, doctemplate

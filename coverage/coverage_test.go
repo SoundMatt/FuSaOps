@@ -255,3 +255,23 @@ func TestAnalyseDecisionCoverage(t *testing.T) {
 		t.Error("DecisionNote should be set")
 	}
 }
+
+// TestParseMalformedLines verifies Parse skips lines that don't match the
+// expected coverage-profile format, covering the colon-absent, wrong-parts-
+// count, and dash-absent continue branches.
+//
+//fusa:test REQ-FO-COV002
+func TestParseMalformedLines(t *testing.T) {
+	profile := "mode: set\n" +
+		"no-colon-here\n" + // triggers colon < 0 branch
+		"pkg/file.go:bad-parts 2\n" + // triggers len(parts) != 3 branch
+		"pkg/file.go:nodash 2 1\n" + // triggers dash < 0 branch
+		"pkg/ok.go:1.10,3.2 2 1\n" // valid line
+	blocks, err := Parse(strings.NewReader(profile))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if len(blocks) != 1 {
+		t.Errorf("want 1 block (valid line only), got %d", len(blocks))
+	}
+}
