@@ -1567,3 +1567,106 @@ func TestMetricsRecordSaveError(t *testing.T) {
 		t.Errorf("metrics record save error: expected 'save' in stderr: %q", stderr.String())
 	}
 }
+
+// ── runBadge additional branches ─────────────────────────────────────────────
+
+// TestBadgeFileReadError verifies runBadge returns 1 when the report file
+// cannot be read (nonexistent path).
+//
+//fusa:test REQ-FO-CLI056
+func TestBadgeFileReadError(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runBadge([]string{filepath.Join(t.TempDir(), "nonexistent.json")}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("badge file read error: want 1, got %d", code)
+	}
+}
+
+// TestBadgeFileUnmarshalError verifies runBadge returns 1 when the report
+// file contains malformed JSON.
+//
+//fusa:test REQ-FO-CLI056
+func TestBadgeFileUnmarshalError(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "bad.json")
+	if err := os.WriteFile(f, []byte("{bad json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runBadge([]string{f}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("badge unmarshal error: want 1, got %d", code)
+	}
+}
+
+// TestBadgeOutputCreateError verifies runBadge returns 1 when the output
+// file cannot be created (parent directory does not exist).
+//
+//fusa:test REQ-FO-CLI056
+func TestBadgeOutputCreateError(t *testing.T) {
+	// Write a minimal valid report JSON.
+	dir := t.TempDir()
+	rep := `{"summary":{"errors":0,"warnings":0,"infos":0},"components":[]}`
+	f := filepath.Join(dir, "rep.json")
+	if err := os.WriteFile(f, []byte(rep), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	outPath := filepath.Join(dir, "missing", "badge.svg")
+	var stdout, stderr bytes.Buffer
+	code := runBadge([]string{"--output", outPath, f}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("badge output create error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// ── prClose additional branches ───────────────────────────────────────────────
+
+// TestPRCloseLoadError verifies prClose returns 1 when pr.Load fails due to
+// malformed JSON in the problems file.
+//
+//fusa:test REQ-FO-CLI061
+func TestPRCloseLoadError(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops-problems.json"), []byte("{bad json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := prClose([]string{"--id", "PR-001"}, dir, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("prClose load error: want 1, got %d", code)
+	}
+}
+
+// TestPRCloseSaveError verifies prClose returns 1 when pr.Save fails because
+// .fusaops-problems.json is a directory (EISDIR on write).
+//
+//fusa:test REQ-FO-CLI061
+func TestPRCloseSaveError(t *testing.T) {
+	// Make .fusaops-problems.json a directory so pr.Load gets EISDIR → returns 1.
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, ".fusaops-problems.json"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := prClose([]string{"--id", "PR-001"}, dir, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("prClose save error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// ── runSuppressVerify additional branches ─────────────────────────────────────
+
+// TestSuppressVerifyLoadError verifies runSuppressVerify returns 1 when the
+// suppressions file contains malformed JSON.
+//
+//fusa:test REQ-FO-SUP008
+func TestSuppressVerifyLoadError(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "bad.json")
+	if err := os.WriteFile(f, []byte("{bad json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runSuppressVerify([]string{"--file", f}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("suppress verify load error: want 1, got %d", code)
+	}
+}

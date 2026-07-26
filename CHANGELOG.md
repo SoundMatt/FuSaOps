@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.94.0] — 2026-07-26
+
+### feat: coverage expansion — runBadge, prClose, runSuppressVerify error paths
+
+- **`cmd/fusaops`** — `TestBadgeFileReadError` covers file-not-found in `runBadge`;
+  `TestBadgeFileUnmarshalError` covers the malformed-JSON parse error; `TestBadgeOutputCreateError`
+  covers the output-file create error; `TestPRCloseLoadError` covers `prClose` load error
+  (malformed JSON); `TestPRCloseSaveError` covers save error (problems path blocked by directory);
+  `TestSuppressVerifyLoadError` covers `runSuppressVerify` load error (malformed suppressions file).
+
+Total coverage: 89.2% (↑ from 89.1%).
+
 ## [1.93.0] — 2026-07-26
 
 ### feat: coverage expansion — runMetricsRecord, runRelease error paths
