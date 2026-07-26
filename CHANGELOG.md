@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.103.0] — 2026-07-26
+
+### feat: coverage expansion — sas/sci/safetycase/doctemplate/qualify/report/metrics Load error paths
+
+- **`sas`, `sci`, `safetycase`, `doctemplate`, `qualify`** — `TestLoadReadError` in each package
+  passes a directory path to `Load` covering the non-IsNotExist read error branch.
+- **`sci`** — `TestKindLabelDefault` (internal test) calls `kindLabel(ItemKind("unknown"))` covering
+  the `default: return string(k)` switch branch.
+- **`report`** — `TestAddFindingInfo` calls `Summary.AddFinding(fusaops.SeverityInfo)` directly to
+  cover the `case fusaops.SeverityInfo: s.Infos++` branch (REQ-FO-SUP004).
+- **`metrics`** — `TestLoadReadError` creates `.fusaops-metrics.json` as a directory then calls
+  `Load(projectRoot)` covering the non-IsNotExist `metrics: read` error path.
+- Total coverage: 90.3% → 90.4%.
+
 ## [1.102.0] — 2026-07-26
 
 ### feat: coverage expansion — runHaraShow/Init, fmea/tara/verify/vuln.Load, slsa.statusIcon, flag parse errors

@@ -26,6 +26,23 @@ func sampleComponents() []Component {
 	}
 }
 
+// TestAddFindingInfo verifies AddFinding increments Infos for SeverityInfo.
+//
+//fusa:test REQ-FO-SUP004
+func TestAddFindingInfo(t *testing.T) {
+	var s Summary
+	s.AddFinding(fusaops.SeverityInfo)
+	if s.Infos != 1 {
+		t.Errorf("Infos: got %d, want 1", s.Infos)
+	}
+	if s.Total != 1 {
+		t.Errorf("Total: got %d, want 1", s.Total)
+	}
+	if s.Errors != 0 || s.Warnings != 0 {
+		t.Errorf("unexpected counters: %+v", s)
+	}
+}
+
 //fusa:test REQ-FO-RPT001
 //fusa:test REQ-FO-RPT003
 //fusa:test REQ-FO-RPT004

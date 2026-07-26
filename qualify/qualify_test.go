@@ -246,6 +246,17 @@ func TestLoadMissing(t *testing.T) {
 	}
 }
 
+// TestLoadReadError verifies Load returns an error for a non-IsNotExist read
+// failure (e.g. the path is a directory rather than a file).
+//
+//fusa:test REQ-FO-QUAL003
+func TestLoadReadError(t *testing.T) {
+	_, err := qualify.Load(t.TempDir())
+	if err == nil {
+		t.Fatal("expected error when path is a directory")
+	}
+}
+
 //fusa:test REQ-FO-QUAL003
 func TestLoadBadJSON(t *testing.T) {
 	dir := t.TempDir()
