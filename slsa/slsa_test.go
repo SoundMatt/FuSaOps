@@ -255,6 +255,27 @@ func TestAssessArtifactIntegrityDotSha256(t *testing.T) {
 	}
 }
 
+// TestLevelNumDefault verifies levelNum returns 0 for an unrecognised Level value,
+// exercising the default return branch.
+//
+//fusa:test REQ-FO-SLSA001
+func TestLevelNumDefault(t *testing.T) {
+	got := levelNum(Level("UNKNOWN"))
+	if got != 0 {
+		t.Errorf("levelNum(UNKNOWN): got %d, want 0", got)
+	}
+}
+
+// TestStatusIconNA verifies statusIcon returns "–" for the N/A case.
+//
+//fusa:test REQ-FO-SLSA003
+func TestStatusIconNA(t *testing.T) {
+	got := statusIcon("N/A")
+	if got != "–" {
+		t.Errorf("statusIcon(N/A): got %q, want \"–\"", got)
+	}
+}
+
 // TestRenderTextUnknownStatus verifies statusIcon default branch ("!") is reached
 // when an objective has a status outside the known set.
 //

@@ -676,5 +676,37 @@ func TestRenderJSONWriteError(t *testing.T) {
 	}
 }
 
+// TestMarkdownBadgePending verifies the default branch of markdownBadge.
+//
+//fusa:test REQ-FO-RPT015
+func TestMarkdownBadgePending(t *testing.T) {
+	got := markdownBadge("UNKNOWN")
+	if !strings.Contains(got, "PENDING") {
+		t.Errorf("markdownBadge(UNKNOWN): want PENDING badge, got %q", got)
+	}
+}
+
+// TestMarkdownSeverityIconInfo verifies the default (INFO) branch of markdownSeverityIcon.
+//
+//fusa:test REQ-FO-RPT015
+func TestMarkdownSeverityIconInfo(t *testing.T) {
+	got := markdownSeverityIcon(fusaops.SeverityInfo)
+	if !strings.Contains(got, "INFO") {
+		t.Errorf("markdownSeverityIcon(INFO): want INFO icon, got %q", got)
+	}
+}
+
+// TestMarkdownLocFileOnly verifies markdownLoc returns a backtick-wrapped filename
+// when the finding has a file but no line number.
+//
+//fusa:test REQ-FO-RPT015
+func TestMarkdownLocFileOnly(t *testing.T) {
+	f := fusaops.Finding{Location: fusaops.Location{File: "main.go"}}
+	got := markdownLoc(f)
+	if got != "`main.go`" {
+		t.Errorf("markdownLoc file-only: got %q, want \"`main.go`\"", got)
+	}
+}
+
 // Ensure errWriter implements io.Writer (compile check).
 var _ io.Writer = errWriter{}

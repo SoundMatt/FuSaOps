@@ -7,6 +7,28 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.89.0] — 2026-07-26
+
+### feat: coverage expansion — report, policy, pr, hara, slsa, trace, verify, vuln
+
+- **`report`** — `TestMarkdownBadgePending` covers `markdownBadge` default (PENDING);
+  `TestMarkdownSeverityIconInfo` covers `markdownSeverityIcon` default (INFO);
+  `TestMarkdownLocFileOnly` covers `markdownLoc` file-only path (line == 0).
+- **`policy`** — `TestScopeLabelToolOnly` covers the tool-only `scopeLabel` branch;
+  `TestScopeLabelNeither` covers the empty-return branch; `TestRenderToFileCreateError`
+  covers `RenderToFile` `os.Create` error.
+- **`pr`** — `TestSaveWriteError` covers `Save` `os.WriteFile` error.
+- **`hara`** — `TestMaxASILUnknownASIL` covers `asilRank` default return (-1) via
+  `MaxASIL` with an unrecognised ASIL string.
+- **`slsa`** — `TestLevelNumDefault` covers `levelNum` default return (0) for an
+  unrecognised Level; `TestStatusIconNA` covers `statusIcon` N/A branch.
+- **`trace`** — `TestRenderJSONWriteError` covers `renderJSON` error path when the
+  writer fails.
+- **`verify`** — `TestSaveWriteError` covers `Save` `os.WriteFile` error.
+- **`vuln`** — confirmed existing `TestSaveWriteError` covers `Save` write error.
+
+Total coverage: 88.7% (↑ from 88.4%).
+
 ## [1.88.0] — 2026-07-26
 
 ### feat: coverage expansion — coverage.Parse, conform.scaffold, slsa assessment branches

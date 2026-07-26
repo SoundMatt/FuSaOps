@@ -249,3 +249,14 @@ func TestRenderUnknownFormat(t *testing.T) {
 		t.Fatal("expected error for unknown format, got nil")
 	}
 }
+
+// TestSaveWriteError verifies Save returns an error when the parent directory
+// does not exist.
+//
+//fusa:test REQ-FO-VER004
+func TestSaveWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "bundle.json")
+	if err := verify.Save(path, verify.New("/proj", nil)); err == nil {
+		t.Error("Save: expected error for non-existent parent directory")
+	}
+}

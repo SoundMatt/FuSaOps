@@ -507,3 +507,13 @@ func TestRenderMarkdownDecompPass(t *testing.T) {
 		t.Errorf("markdown should show Decomposition: PASS:\n%s", buf.String())
 	}
 }
+
+// TestRenderJSONWriteError verifies renderJSON returns an error when the writer fails.
+//
+//fusa:test REQ-FO-TRC013
+func TestRenderJSONWriteError(t *testing.T) {
+	agg := sampleAggregate()
+	if err := renderJSON(failWriter{}, agg); err == nil {
+		t.Error("renderJSON: expected error when Writer fails")
+	}
+}

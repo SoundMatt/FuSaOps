@@ -396,3 +396,17 @@ func TestSaveWriteError(t *testing.T) {
 		t.Error("Save: expected error for non-existent parent directory")
 	}
 }
+
+// TestMaxASILUnknownASIL verifies MaxASIL falls back to ASILQM when a hazard
+// has an unrecognised ASIL string, exercising the asilRank default return.
+//
+//fusa:test REQ-FO-HARA002
+func TestMaxASILUnknownASIL(t *testing.T) {
+	hazards := []hara.Hazard{
+		{Risk: hara.RiskRating{ASIL: hara.ASIL("UNRECOGNISED")}},
+	}
+	got := hara.MaxASIL(hazards)
+	if got != hara.ASILQM {
+		t.Errorf("MaxASIL with unknown ASIL: got %q, want %q", got, hara.ASILQM)
+	}
+}
