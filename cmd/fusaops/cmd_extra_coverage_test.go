@@ -6,7 +6,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,12 +14,6 @@ import (
 	"github.com/SoundMatt/FuSaOps/config"
 	"github.com/SoundMatt/FuSaOps/report"
 )
-
-// errWriter is an io.Writer that always returns an error; used to exercise
-// template/writer error paths in internal tests.
-type errWriter struct{}
-
-func (errWriter) Write([]byte) (int, error) { return 0, errors.New("write error") }
 
 // ── fusaops capabilities ──────────────────────────────────────────────────────
 
