@@ -2318,3 +2318,162 @@ func TestVerifyFailedTests(t *testing.T) {
 		t.Errorf("verify failing tests: want 1, got %d (stderr=%q stdout=%q)", code, stderr.String(), stdout.String())
 	}
 }
+
+// ── runInit config.Save error path ───────────────────────────────────────────
+
+// TestInitSaveError verifies runInit returns 1 when config.Save fails because
+// the parent directory of the config file does not exist.
+//
+//fusa:test REQ-FO-CLI004
+func TestInitSaveError(t *testing.T) {
+	// Non-existent subdir → config.Save → os.WriteFile fails.
+	dir := filepath.Join(t.TempDir(), "nosuchdir")
+	var stdout, stderr bytes.Buffer
+	code := runInit([]string{"--dir", dir, "--name", "testproj"}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("init save error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "fusaops init") {
+		t.Errorf("init save error: want 'fusaops init' in stderr, got %q", stderr.String())
+	}
+}
+
+// ── loadOptions malformed config path ────────────────────────────────────────
+
+// TestLoadOptionsMalformedConfig verifies commands that use loadOptions return 1
+// when .fusaops.json exists but is not valid JSON (covers the non-ErrNoConfig
+// config load error return in loadOptions).
+//
+//fusa:test REQ-FO-CLI007
+func TestLoadOptionsMalformedConfig(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops.json"), []byte("not-json{{{"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runStandards("iso26262", []string{"--dir", dir}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("malformed config: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "fusaops iso26262") {
+		t.Errorf("malformed config: want command name in stderr, got %q", stderr.String())
+	}
+}
+
+// ── runMCDC os.Open error and scan-warning paths ──────────────────────────────
+
+// TestCoverageMCDCOpenError verifies runMCDC returns 1 when the MC/DC JSON
+// file cannot be opened (os.Open error path).
+//
+//fusa:test REQ-FO-CLI080
+func TestCoverageMCDCOpenError(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runCoverage(
+		[]string{"--mcdc", "--mcdc-file", filepath.Join(t.TempDir(), "nonexistent.json"), "--dir", t.TempDir()},
+		&stdout, &stderr,
+	)
+	if code != 1 {
+		t.Errorf("mcdc open error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "open mcdc-file") {
+		t.Errorf("mcdc open error: want 'open mcdc-file' in stderr, got %q", stderr.String())
+	}
+}
+
+// ── runMCDC cwd fallback and render error paths ───────────────────────────────
+
+// TestCoverageMCDCCwdFallback verifies the cwd fallback in runMCDC when both
+// --dir and --req-dir are absent (rDir="" after both checks → uses os.Getwd).
+//
+//fusa:test REQ-FO-CLI080
+func TestCoverageMCDCCwdFallback(t *testing.T) {
+	dir := t.TempDir()
+	mcdcFile := filepath.Join(dir, "mcdc.json")
+	if err := os.WriteFile(mcdcFile, []byte(emptyLLVMJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// No --dir and no --req-dir → rDir = cwd (covers the os.Getwd() fallback branch).
+	var stdout, stderr bytes.Buffer
+	code := runCoverage([]string{"--mcdc", "--mcdc-file", mcdcFile}, &stdout, &stderr)
+	if code != 0 {
+		t.Errorf("mcdc cwd fallback: want 0, got %d (stderr=%q)", code, stderr.String())
+	}
+}
+
+// TestCoverageMCDCRenderError verifies runMCDC returns 2 when the format is
+// unsupported (RenderMCDC error path).
+//
+//fusa:test REQ-FO-CLI080
+func TestCoverageMCDCRenderError(t *testing.T) {
+	dir := t.TempDir()
+	mcdcFile := filepath.Join(dir, "mcdc.json")
+	if err := os.WriteFile(mcdcFile, []byte(emptyLLVMJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runCoverage(
+		[]string{"--mcdc", "--mcdc-file", mcdcFile, "--dir", dir, "--format", "xml"},
+		&stdout, &stderr,
+	)
+	if code != 2 {
+		t.Errorf("mcdc render error: want 2, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "render mcdc") {
+		t.Errorf("mcdc render error: want 'render mcdc' in stderr, got %q", stderr.String())
+	}
+}
+
+// ── runReqExport output create error path ────────────────────────────────────
+
+// TestReqExportOutputCreateError verifies runReqExport returns 1 when the
+// --output file cannot be created (os.Create error path).
+//
+//fusa:test REQ-FO-CLI052
+func TestReqExportOutputCreateError(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".fusa-reqs.json"),
+		[]byte(`{"requirements":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// Use a regular file as a path component to force os.Create to fail.
+	f, err := os.CreateTemp(t.TempDir(), "block")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	badOutput := filepath.Join(f.Name(), "out.csv")
+	var stdout, stderr bytes.Buffer
+	code := runReqExport([]string{"--output", badOutput}, dir, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("req export create error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "create") {
+		t.Errorf("req export create error: want 'create' in stderr, got %q", stderr.String())
+	}
+}
+
+// ── runSafetyCase save error path ────────────────────────────────────────────
+
+// TestSafetyCaseSaveError verifies runSafetyCase returns 1 when the output
+// file cannot be written (safetycase.Save error path).
+//
+//fusa:test REQ-FO-CLI066
+func TestSafetyCaseSaveError(t *testing.T) {
+	f, err := os.CreateTemp(t.TempDir(), "block")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	badOutput := filepath.Join(f.Name(), "safety-case.json")
+	var stdout, stderr bytes.Buffer
+	code := runSafetyCase(
+		[]string{"--dir", t.TempDir(), "--output", badOutput},
+		&stdout, &stderr,
+	)
+	if code != 1 {
+		t.Errorf("safety-case save error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "fusaops safety-case") {
+		t.Errorf("safety-case save error: want 'fusaops safety-case' in stderr, got %q", stderr.String())
+	}
+}
