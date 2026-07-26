@@ -180,3 +180,14 @@ func TestRenderUnknown(t *testing.T) {
 		t.Error("expected error for unknown format")
 	}
 }
+
+// TestSaveWriteError verifies Save returns an error when the project root
+// directory does not exist.
+//
+//fusa:test REQ-FO-MET002
+func TestSaveWriteError(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "missing")
+	if err := Save(root, &TimeSeries{}); err == nil {
+		t.Error("Save: expected error for non-existent project root")
+	}
+}

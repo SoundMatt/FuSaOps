@@ -3,6 +3,7 @@ package comp_test
 import (
 	"bytes"
 	"encoding/json"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -90,5 +91,16 @@ func TestRenderToFile(t *testing.T) {
 	path := t.TempDir() + "/comp.json"
 	if err := comp.RenderToFile(makeAgg(), "json", path); err != nil {
 		t.Fatalf("RenderToFile: %v", err)
+	}
+}
+
+// TestRenderToFileCreateError verifies RenderToFile returns an error when the
+// output file cannot be created (parent directory does not exist).
+//
+//fusa:test REQ-FO-COMP003
+func TestRenderToFileCreateError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.json")
+	if err := comp.RenderToFile(makeAgg(), "json", path); err == nil {
+		t.Error("RenderToFile: expected error for non-existent parent directory")
 	}
 }
