@@ -14,6 +14,7 @@ type htmlData struct {
 	ShowSuppressed   bool
 	ShowFingerprints bool
 	Qualify          *QualifyInfo
+	Comp             *CompInfo
 }
 
 // renderHTML writes a self-contained HTML dashboard for the aggregate report.
@@ -29,13 +30,22 @@ func renderHTML(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 	if err != nil {
 		return fmt.Errorf("report: parse html template: %w", err)
 	}
-	if err := t.Execute(w, htmlData{r, opts.ShowSuppressed, opts.ShowFingerprints, opts.QualifyInfo}); err != nil {
+	if err := t.Execute(w, htmlData{r, opts.ShowSuppressed, opts.ShowFingerprints, opts.QualifyInfo, opts.CompInfo}); err != nil {
 		return fmt.Errorf("report: execute html template: %w", err)
 	}
 	return nil
 }
 
 var htmlFuncs = template.FuncMap{
+	"compThresholdLabel": func(dal string, threshold int) string {
+		if dal != "" {
+			return fmt.Sprintf("%s (≤%d)", dal, threshold)
+		}
+		if threshold > 0 {
+			return fmt.Sprintf("≤%d", threshold)
+		}
+		return "—"
+	},
 	"sevClass": func(s fusaops.Severity) string {
 		switch s {
 		case fusaops.SeverityError:
@@ -110,6 +120,8 @@ const dashboardTemplate = `<!DOCTYPE html>
              border-radius:4px; padding:1px 5px; margin-top:3px; cursor:default; }
   .empty { color:var(--muted); padding:40px; text-align:center; }
   footer { color:var(--muted); font-size:12px; padding:24px 32px; border-top:1px solid var(--line); }
+  .comp-section { margin-top:28px; }
+  .comp-section h2 { font-size:16px; margin:0 0 12px; font-weight:600; }
 </style>
 </head>
 <body>
@@ -185,6 +197,35 @@ const dashboardTemplate = `<!DOCTYPE html>
     </tbody>
   </table>
   {{if eq .Summary.Total 0}}<div class="empty">No findings. All components passed.</div>{{end}}
+
+  {{if .Comp}}
+  <section class="comp-section">
+    <h2>Cyclomatic Complexity
+      <span class="badge {{if gt .Comp.Violations 0}}status-fail{{else}}status-pass{{end}}" style="margin-left:8px;font-size:13px">
+        {{if gt .Comp.Violations 0}}{{.Comp.Violations}} violations{{else}}PASS{{end}}
+      </span>
+      <span class="sub" style="font-size:12px;margin-left:8px">{{.Comp.TotalFunctions}} functions total</span>
+    </h2>
+    <table>
+      <thead><tr><th>Language</th><th>Tool</th><th>Functions</th><th>Violations</th><th>Threshold</th></tr></thead>
+      <tbody>
+      {{range .Comp.Components}}
+        <tr>
+          <td>{{.Language}}</td>
+          <td>{{.Tool}}</td>
+          {{if .Skipped}}
+            <td colspan="3" class="c-info">skipped: {{.Skipped}}</td>
+          {{else}}
+            <td>{{.TotalFunctions}}</td>
+            <td>{{if gt .Violations 0}}<span class="c-err"><b>{{.Violations}}</b></span>{{else}}0{{end}}</td>
+            <td>{{compThresholdLabel .DAL .Threshold}}</td>
+          {{end}}
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+  </section>
+  {{end}}
 
   {{$showSup := .ShowSuppressed}}
   {{range .Components}}{{if .SuppressedFindings}}

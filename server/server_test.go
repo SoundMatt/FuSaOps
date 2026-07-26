@@ -1139,3 +1139,37 @@ func TestAPICompWithData(t *testing.T) {
 		t.Errorf("totalFunctions: got %v, want 5", got["totalFunctions"])
 	}
 }
+
+// TestDashboardShowsCompSection verifies the HTML dashboard includes the comp
+// violations section when a comp aggregate is cached.
+//
+//fusa:test REQ-FO-RPT021
+//fusa:test REQ-FO-SRV012
+func TestDashboardShowsCompSection(t *testing.T) {
+	s := newTestServer(t)
+	s.compMu.Lock()
+	s.compAgg = &comp.Aggregate{
+		Root:    "/repo",
+		Project: "demo",
+		Components: []comp.ComponentComp{{
+			Language:  "go",
+			Tool:      "gofusa",
+			Available: true,
+			Report:    &comp.Report{Threshold: 10, DAL: "DAL-B", TotalFunctions: 8, Violations: 1},
+		}},
+		TotalFunctions: 8,
+		Violations:     1,
+	}
+	s.compMu.Unlock()
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+	for _, want := range []string{"Cyclomatic Complexity", "violations", "gofusa", "DAL-B"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("dashboard missing %q", want)
+		}
+	}
+}

@@ -103,6 +103,31 @@ type AggregateReport struct {
 	SuppressedComponents []string `json:"suppressedComponents,omitempty"`
 }
 
+// CompInfo carries cyclomatic complexity aggregate data into the HTML dashboard
+// renderer. It is populated by server.Server from a comp.Aggregate and passed
+// through RenderOptions; it contains no comp package types so the report
+// package has no dependency on comp.
+//
+//fusa:req REQ-FO-RPT021
+type CompInfo struct {
+	TotalFunctions int
+	Violations     int
+	Components     []CompComponent
+}
+
+// CompComponent is one tool/language entry in CompInfo.
+//
+//fusa:req REQ-FO-RPT021
+type CompComponent struct {
+	Language       string
+	Tool           string
+	TotalFunctions int
+	Violations     int
+	Threshold      int
+	DAL            string
+	Skipped        string
+}
+
 // QualifyInfo carries qualification record metadata into the HTML dashboard
 // renderer. It is populated by server.Server from a qualify.Report file and
 // passed through RenderOptions; it contains no qualify package types so the
@@ -139,6 +164,11 @@ type RenderOptions struct {
 	//
 	//fusa:req REQ-FO-SRV011
 	QualifyInfo *QualifyInfo
+	// CompInfo, when non-nil, injects a cyclomatic complexity section into the
+	// HTML dashboard showing per-component violation counts and thresholds.
+	//
+	//fusa:req REQ-FO-RPT021
+	CompInfo *CompInfo
 }
 
 // New builds an AggregateReport from a set of components, computing per

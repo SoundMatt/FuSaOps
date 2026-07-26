@@ -7,6 +7,22 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.73.0] — 2026-07-25
+
+### feat: HTML dashboard cyclomatic complexity section
+
+- **Dashboard comp section**: the `fusaops serve` web dashboard now renders a
+  **Cyclomatic Complexity** section below the findings table when the server has a
+  cached comp aggregate. The section shows a pass/fail badge, total function count,
+  and a per-component table with language, tool, function count, violation count, and
+  threshold (DAL-labelled when applicable). The section is hidden when no comp data
+  is available. (REQ-FO-RPT021)
+- **`report.CompInfo` / `report.CompComponent`**: new types in the `report` package
+  carry comp aggregate data into the HTML renderer without a `report→comp` import
+  cycle. `RenderOptions.CompInfo` wires them through `RenderWithOptions`. (REQ-FO-RPT021)
+- **`server.compInfoFromAggregate`**: helper converts `comp.Aggregate` to
+  `report.CompInfo` and is called by `handleIndex` on every dashboard request. (REQ-FO-RPT021)
+
 ## [1.72.0] — 2026-07-25
 
 ### feat: comp capabilities registration, config support, and /api/v1/comp endpoint
