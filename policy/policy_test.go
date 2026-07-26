@@ -3,6 +3,7 @@ package policy
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,10 @@ import (
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/report"
 )
+
+type errWriter struct{}
+
+func (errWriter) Write([]byte) (int, error) { return 0, errors.New("write error") }
 
 func makeReport(errs, warns int) *report.AggregateReport {
 	var findings []fusaops.Finding
@@ -355,5 +360,16 @@ func TestRenderToFileCreateError(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "missing", "report.json")
 	if err := RenderToFile(nil, &PolicyReport{}, "json", path); err == nil {
 		t.Error("RenderToFile: expected error for non-existent parent directory")
+	}
+}
+
+// TestRenderHTMLWriteError verifies renderHTML returns an error when the writer
+// fails (exercises the template.Execute error branch).
+//
+//fusa:test REQ-FO-POL006
+func TestRenderHTMLWriteError(t *testing.T) {
+	pr := &PolicyReport{}
+	if err := renderHTML(errWriter{}, pr); err == nil {
+		t.Error("renderHTML: expected error when writer fails")
 	}
 }

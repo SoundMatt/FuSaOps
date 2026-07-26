@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.97.0] — 2026-07-26
+
+### feat: coverage expansion — sarifLevel default case, req.RenderCSV flush error, policy.renderHTML write error
+
+- **`report`** — `TestSarifLevelInfo` covers the `sarifLevel` default branch (`SeverityInfo` → `"note"`);
+  `sarifLevel` coverage 75% → 100%.
+- **`req`** — `TestRenderCSVWriteError` covers the `cw.Error()` return path via an always-failing
+  writer; exercises the `Flush` error propagation in `RenderCSV`.
+- **`policy`** — `TestRenderHTMLWriteError` covers the `template.Execute` error branch in `renderHTML`;
+  `renderHTML` coverage 75% → 100%.
+
+Total coverage: 89.5% (↑ from 89.4%).
+
 ## [1.96.0] — 2026-07-26
 
 ### feat: coverage expansion — runReport, runSBOM bad-format, runStandards bad-format, runSuppressPrune save error
