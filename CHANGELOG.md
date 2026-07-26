@@ -21,8 +21,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - **`fmea`** — `TestPriorityLabelCritical` (internal test) calls `priorityLabel(201)` covering the
   `case rpn > 200` CRITICAL branch; `TestLoadReadError` passes a directory path to `fmea.Load`
   triggering the non-IsNotExist read error; `fmea` package 94.6% → 97.3%.
-- **`slsa`** — `TestStatusIconGAP` calls `statusIcon("GAP")` covering the second switch case;
-  `slsa` package 96.0% → 96.9%.
+- **`slsa`** — `TestStatusIconPASS` and `TestStatusIconGAP` call `statusIcon` directly to cover the
+  PASS and GAP switch branches; `slsa` package 96.0% → 98.0%.
 - **`tara`, `verify`, `vuln`** — `TestLoadReadError` in each package passes a directory to the
   respective `Load` function covering the non-IsNotExist read error branch; `tara` 95.4% → 97.3%,
   `verify` 95.2% → 96.8%, `vuln` 92.6% → 93.4%.
@@ -30,7 +30,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   to cover `fs.Parse` error branches; `TestTemplateSaveError` covers `doctemplate.Save` error via
   bad `--output` path.
 
-Total coverage: 90.3% (↑ from 90.1%).
+Total coverage: 90.3% (↑ from 90.1%). slsa package 96.0% → 98.0%.
 
 ## [1.101.0] — 2026-07-26
 
