@@ -7,6 +7,33 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.108.0] — 2026-07-26
+
+### feat: coverage expansion — orchestrator timeout/semaphore/detect-error/component-pin branches
+
+- **`orchestrator`** — `TestRunWithTimeout` covers the per-job timeout branch (`j.timeout > 0`) in
+  the main `Run` goroutine (orchestrator.go:187–190) by passing `Options{Timeout: 1ms}`.
+- **`orchestrator`** — `TestRunDetectError` and `TestRunComponentDetectError` cover the
+  `Registry.Applicable` failure paths (orchestrator.go:117–119 and 132–134) via a new
+  `detectErrFake` adapter whose `Detect` method returns an error.
+- **`orchestrator`** — `TestRunComponentOnlyFilter` covers the `Only`-filter skip inside the
+  component-pin scan loop (orchestrator.go:139–141) by requiring a tool name absent from
+  `Components`.
+- **`orchestrator`** — `TestRunComponentPinTimeout` covers the per-component `pin.Timeout > 0`
+  override branch (orchestrator.go:145–147) via a `ComponentPin{Timeout: 1ms}`.
+- **`orchestrator`** — `TestRunTraceWithTimeout` and `TestRunSBOMWithTimeout` cover the timeout
+  branches in `RunTrace` (rollup.go:86–89) and `RunSBOM` (rollup.go:154–157).
+- **`orchestrator`** — `TestRunSBOMNoAdapters` covers the `ErrNoAdapters` early-return in `RunSBOM`
+  (rollup.go:133–135) via a zero-detect adapter.
+- **`orchestrator`** — `TestRunStandardsWithWorkersAndTimeout`, `TestRunCompWithWorkersAndTimeout`,
+  `TestRunMCDCWithWorkersAndTimeout`, `TestRunAuditPackWithWorkersAndTimeout` cover both the
+  semaphore (`sem != nil`) blocks (rollup.go:208–210, 281–283, 343–345, 418–420) and the timeout
+  branches (rollup.go:217–220, 290–293, 352–355, 425–429) by passing `Workers: 2, Timeout: 1ms`.
+- **`orchestrator`** — `TestRunAuditPackUnavailableAdapter` covers the `!a.Available()` skip path
+  inside `RunAuditPack` (rollup.go:425–429) via an adapter with `avail: false`.
+- orchestrator package: 90.1% → 99.5%.
+- Total coverage: 91.9% → 92.4%.
+
 ## [1.107.0] — 2026-07-26
 
 ### feat: coverage expansion — cmd_serve With* branches, multi-serve options, release provenance
