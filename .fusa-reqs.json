@@ -1681,6 +1681,13 @@
       "rationale": "Monorepo operators can track per-component safety metrics in a single Prometheus scrape target."
     },
     {
+      "id": "REQ-FO-MTR003",
+      "title": "Cyclomatic complexity metrics in /metrics",
+      "description": "When the server has a cached comp aggregate with at least one function (TotalFunctions > 0 or Violations > 0), the /metrics endpoint shall include: fusaops_comp_functions_total, fusaops_comp_violations_total, and fusaops_comp_status (1=PASS, 2=FAIL). The metrics shall be omitted when no comp data is available.",
+      "priority": "MUST",
+      "rationale": "Prometheus/Grafana integrations need cyclomatic complexity violations as a scrape-able safety gate metric alongside finding counts."
+    },
+    {
       "id": "REQ-FO-SUP001",
       "title": "Suppression config format",
       "description": "A .fusaops-suppress.json file shall contain a JSON object with a 'suppressions' array. Each entry shall have 'fingerprint' (spec \u00a74.2 fingerprint string), 'reason' (mandatory rationale string), and optional 'expires' (ISO-8601 date YYYY-MM-DD). Entries with empty fingerprints are ignored.",
