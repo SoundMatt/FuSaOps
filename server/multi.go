@@ -628,7 +628,7 @@ func (ms *MultiServer) handleMetrics(w http.ResponseWriter, _ *http.Request) {
 		p.mu.RLock()
 		rep, pErr := p.cached, p.err
 		p.mu.RUnlock()
-		text := buildMetrics(rep, pErr, p.name)
+		text := buildMetrics(rep, pErr, p.name, nil)
 		// Append the findings lines; skip the repeated HELP/TYPE headers.
 		for _, line := range strings.Split(text, "\n") {
 			if strings.HasPrefix(line, "fusaops_findings_total{") {
@@ -643,7 +643,7 @@ func (ms *MultiServer) handleMetrics(w http.ResponseWriter, _ *http.Request) {
 		p.mu.RLock()
 		rep, pErr := p.cached, p.err
 		p.mu.RUnlock()
-		text := buildMetrics(rep, pErr, p.name)
+		text := buildMetrics(rep, pErr, p.name, nil)
 		for _, line := range strings.Split(text, "\n") {
 			if strings.HasPrefix(line, "fusaops_status{") {
 				b.WriteString(line)

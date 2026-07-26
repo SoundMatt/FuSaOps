@@ -1175,22 +1175,39 @@ func fireWebhook(url, prev, current string, errors int) {
 	}
 }
 
+// compMetricData carries comp violation counts into buildMetrics without
+// creating a dependency on the comp package from the metrics path.
+type compMetricData struct {
+	TotalFunctions int
+	Violations     int
+}
+
 // handleMetrics serves an OpenMetrics / Prometheus text exposition of current findings.
 //
 //fusa:req REQ-FO-MTR001
+//fusa:req REQ-FO-MTR003
 func (s *Server) handleMetrics(w http.ResponseWriter, _ *http.Request) {
 	s.mu.RLock()
 	rep, rErr := s.cached, s.err
 	s.mu.RUnlock()
+	s.compMu.RLock()
+	compAgg := s.compAgg
+	s.compMu.RUnlock()
+	var cd *compMetricData
+	if compAgg != nil && (compAgg.TotalFunctions > 0 || compAgg.Violations > 0) {
+		cd = &compMetricData{TotalFunctions: compAgg.TotalFunctions, Violations: compAgg.Violations}
+	}
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
-	fmt.Fprint(w, buildMetrics(rep, rErr, ""))
+	fmt.Fprint(w, buildMetrics(rep, rErr, "", cd))
 }
 
 // buildMetrics produces an OpenMetrics text exposition from an aggregate report.
 // project is an optional label value added to all metrics (empty = single-project mode).
+// cd, when non-nil, adds cyclomatic complexity gauges.
 //
 //fusa:req REQ-FO-MTR001
-func buildMetrics(rep *report.AggregateReport, rErr error, project string) string {
+//fusa:req REQ-FO-MTR003
+func buildMetrics(rep *report.AggregateReport, rErr error, project string, cd *compMetricData) string {
 	var errors, warnings, infos int
 	status := "pending"
 	if rErr != nil {
@@ -1235,6 +1252,25 @@ func buildMetrics(rep *report.AggregateReport, rErr error, project string) strin
 		fmt.Fprintf(&b, "fusaops_status{%s} %d\n", plabelTrimmed, statusCode)
 	} else {
 		fmt.Fprintf(&b, "fusaops_status %d\n", statusCode)
+	}
+	if cd != nil {
+		compStatus := 1 // PASS
+		if cd.Violations > 0 {
+			compStatus = 2 // FAIL
+		}
+		b.WriteString("# HELP fusaops_comp_functions_total Total functions analysed for cyclomatic complexity\n")
+		b.WriteString("# TYPE fusaops_comp_functions_total gauge\n")
+		fmt.Fprintf(&b, "fusaops_comp_functions_total{%s} %d\n", plabel, cd.TotalFunctions)
+		b.WriteString("# HELP fusaops_comp_violations_total Functions exceeding the cyclomatic complexity threshold\n")
+		b.WriteString("# TYPE fusaops_comp_violations_total gauge\n")
+		fmt.Fprintf(&b, "fusaops_comp_violations_total{%s} %d\n", plabel, cd.Violations)
+		b.WriteString("# HELP fusaops_comp_status Cyclomatic complexity gate: 1=PASS 2=FAIL\n")
+		b.WriteString("# TYPE fusaops_comp_status gauge\n")
+		if plabelTrimmed != "" {
+			fmt.Fprintf(&b, "fusaops_comp_status{%s} %d\n", plabelTrimmed, compStatus)
+		} else {
+			fmt.Fprintf(&b, "fusaops_comp_status %d\n", compStatus)
+		}
 	}
 	b.WriteString("# EOF\n")
 	return b.String()

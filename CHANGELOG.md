@@ -7,6 +7,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.75.0] — 2026-07-25
+
+### feat: cyclomatic complexity metrics in /metrics endpoint
+
+- **`/metrics` comp gauges**: when the server has a cached comp aggregate with at
+  least one analysed function, the OpenMetrics endpoint now includes three additional
+  gauges: `fusaops_comp_functions_total`, `fusaops_comp_violations_total`, and
+  `fusaops_comp_status` (1=PASS, 2=FAIL). The metrics are omitted when no comp data
+  is available (no adapters implement `Compler` or all were skipped). (REQ-FO-MTR003)
+
 ## [1.74.0] — 2026-07-25
 
 ### feat: /comp HTML page with function-level complexity detail

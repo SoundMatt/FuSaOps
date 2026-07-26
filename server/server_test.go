@@ -602,6 +602,52 @@ func TestAuditLogWritten(t *testing.T) {
 	}
 }
 
+// TestMetricsCompAbsent verifies /metrics omits comp metrics when no comp
+// aggregate has been cached.
+//
+//fusa:test REQ-FO-MTR003
+func TestMetricsCompAbsent(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	body := rec.Body.String()
+	if strings.Contains(body, "fusaops_comp_") {
+		t.Errorf("/metrics should not include comp metrics when compAgg is nil:\n%s", body)
+	}
+}
+
+// TestMetricsCompPresent verifies /metrics includes comp violation gauges when
+// a comp aggregate is cached.
+//
+//fusa:test REQ-FO-MTR003
+func TestMetricsCompPresent(t *testing.T) {
+	s := newTestServer(t)
+	s.compMu.Lock()
+	s.compAgg = &comp.Aggregate{TotalFunctions: 20, Violations: 3}
+	s.compMu.Unlock()
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	body := rec.Body.String()
+	for _, want := range []string{
+		"fusaops_comp_functions_total",
+		"fusaops_comp_violations_total",
+		"fusaops_comp_status",
+		"fusaops_comp_violations_total{} 3",
+		"fusaops_comp_functions_total{} 20",
+		"fusaops_comp_status 2", // violations > 0 → FAIL → 2
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("/metrics missing %q:\n%s", want, body)
+		}
+	}
+}
+
 // TestMetricsContentType verifies /metrics returns OpenMetrics content type.
 //
 //fusa:test REQ-FO-MTR001
