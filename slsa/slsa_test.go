@@ -276,6 +276,26 @@ func TestStatusIconNA(t *testing.T) {
 	}
 }
 
+// TestStatusIconGAP verifies statusIcon returns "✗" for the GAP case.
+//
+//fusa:test REQ-FO-SLSA003
+func TestStatusIconGAP(t *testing.T) {
+	got := statusIcon("GAP")
+	if got != "✗" {
+		t.Errorf("statusIcon(GAP): got %q, want \"✗\"", got)
+	}
+}
+
+// TestStatusIconPASS verifies statusIcon returns "✓" for the PASS case.
+//
+//fusa:test REQ-FO-SLSA003
+func TestStatusIconPASS(t *testing.T) {
+	got := statusIcon("PASS")
+	if got != "✓" {
+		t.Errorf("statusIcon(PASS): got %q, want \"✓\"", got)
+	}
+}
+
 // TestAssessArtifactIntegrityL3SHA256SUMS verifies assessArtifactIntegrity returns
 // PASS when SHA256SUMS exists (covers the sha256Candidates return-"PASS" branch).
 //

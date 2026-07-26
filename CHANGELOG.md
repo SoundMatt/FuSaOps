@@ -7,6 +7,31 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.102.0] — 2026-07-26
+
+### feat: coverage expansion — runHaraShow/Init, fmea/tara/verify/vuln.Load, slsa.statusIcon, flag parse errors
+
+- **`cmd/fusaops`** — `TestHaraInitProjectDefault` exercises the `filepath.Base(projectRoot)` name
+  fallback in `runHaraInit` when `--project` is omitted; `TestHaraInitSaveError` covers the
+  `hara.Save` error path via a non-existent projectRoot; `runHaraInit` 80.0% → 95.0%.
+- **`cmd/fusaops`** — `TestHaraShowLoadError` places a directory at `.fusa-hara.json` to force a
+  non-IsNotExist `hara.Load` error; `TestHaraShowOutputCreateError` passes a file-as-parent bad
+  `--output` path; `TestHaraShowValidationFindings` writes a HARA with an unlinked hazard and
+  combines with `--output` to trigger the validation-gap warning branch; `runHaraShow` 80.8% → 100%.
+- **`fmea`** — `TestPriorityLabelCritical` (internal test) calls `priorityLabel(201)` covering the
+  `case rpn > 200` CRITICAL branch; `TestLoadReadError` passes a directory path to `fmea.Load`
+  triggering the non-IsNotExist read error; `fmea` package 94.6% → 97.3%.
+- **`slsa`** — `TestStatusIconPASS` and `TestStatusIconGAP` call `statusIcon` directly to cover the
+  PASS and GAP switch branches; `slsa` package 96.0% → 98.0%.
+- **`tara`, `verify`, `vuln`** — `TestLoadReadError` in each package passes a directory to the
+  respective `Load` function covering the non-IsNotExist read error branch; `tara` 95.4% → 97.3%,
+  `verify` 95.2% → 96.8%, `vuln` 92.6% → 93.4%.
+- **`cmd/fusaops`** — `TestVersionFlagParseError` and `TestScanFlagParseError` pass unknown flags
+  to cover `fs.Parse` error branches; `TestTemplateSaveError` covers `doctemplate.Save` error via
+  bad `--output` path.
+
+Total coverage: 90.3% (↑ from 90.1%). slsa package 96.0% → 98.0%.
+
 ## [1.101.0] — 2026-07-26
 
 ### feat: coverage expansion — runInit, loadOptions, runMCDC, runReqExport, runSafetyCase

@@ -2477,3 +2477,146 @@ func TestSafetyCaseSaveError(t *testing.T) {
 		t.Errorf("safety-case save error: want 'fusaops safety-case' in stderr, got %q", stderr.String())
 	}
 }
+
+// ── runHaraInit / runHaraShow additional branches ─────────────────────────────
+
+// TestHaraInitProjectDefault verifies runHaraInit uses filepath.Base(projectRoot)
+// as the project name when --project is not supplied.
+//
+//fusa:test REQ-FO-CLI073
+func TestHaraInitProjectDefault(t *testing.T) {
+	dir := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := runHaraInit([]string{}, dir, &stdout, &stderr)
+	if code != 0 {
+		t.Errorf("hara init default project: want 0, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Created") {
+		t.Errorf("hara init default project: missing 'Created' in stdout: %q", stdout.String())
+	}
+}
+
+// TestHaraInitSaveError verifies runHaraInit returns 1 when hara.Save fails
+// because the projectRoot directory does not exist.
+//
+//fusa:test REQ-FO-CLI073
+func TestHaraInitSaveError(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "nonexistent")
+	var stdout, stderr bytes.Buffer
+	code := runHaraInit([]string{}, dir, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("hara init save error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "fusaops hara init") {
+		t.Errorf("hara init save error: want 'fusaops hara init' in stderr, got %q", stderr.String())
+	}
+}
+
+// TestHaraShowLoadError verifies runHaraShow returns 1 when hara.Load fails
+// because .fusa-hara.json is a directory (unreadable as a file).
+//
+//fusa:test REQ-FO-CLI073
+func TestHaraShowLoadError(t *testing.T) {
+	dir := t.TempDir()
+	// Place a directory where the HARA file is expected to force a read error.
+	if err := os.Mkdir(filepath.Join(dir, ".fusa-hara.json"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runHaraShow([]string{}, dir, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("hara show load error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+}
+
+// TestHaraShowOutputCreateError verifies runHaraShow returns 1 when os.Create
+// fails for the --output path.
+//
+//fusa:test REQ-FO-CLI073
+func TestHaraShowOutputCreateError(t *testing.T) {
+	f, err := os.CreateTemp(t.TempDir(), "block")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	badOutput := filepath.Join(f.Name(), "hara.txt")
+	var stdout, stderr bytes.Buffer
+	code := runHaraShow([]string{"--output", badOutput}, t.TempDir(), &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("hara show output create error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+}
+
+// TestHaraShowValidationFindings verifies runHaraShow emits a warning when
+// validation finds gaps and --output is set (covers the len(findings)>0 path).
+//
+//fusa:test REQ-FO-CLI073
+func TestHaraShowValidationFindings(t *testing.T) {
+	dir := t.TempDir()
+	// Write a HARA with a hazard that has no safety goals linked — triggers Validate findings.
+	haraJSON := `{
+		"project":"test","standard":"ISO 26262","hazards":[
+			{"id":"H-001","description":"d","situations":["OS-001"],
+			 "risk":{"severity":"S2","exposure":"E3","controllability":"C2","asil":"ASIL B"},
+			 "safetyGoals":[]}
+		],"safetyGoals":[],"operationalSituations":[{"id":"OS-001","description":"normal"}]
+	}`
+	if err := os.WriteFile(filepath.Join(dir, ".fusa-hara.json"), []byte(haraJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	outFile := filepath.Join(t.TempDir(), "out.txt")
+	var stdout, stderr bytes.Buffer
+	code := runHaraShow([]string{"--output", outFile}, dir, &stdout, &stderr)
+	if code != 0 {
+		t.Errorf("hara show validation findings: want 0, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "gap") {
+		t.Errorf("hara show validation findings: want 'gap' in stderr, got %q", stderr.String())
+	}
+}
+
+// ── flag-parse error paths ────────────────────────────────────────────────────
+
+// TestVersionFlagParseError verifies runVersion returns 2 for an unknown flag,
+// covering the fs.Parse error branch.
+//
+//fusa:test REQ-FO-CLI001
+func TestVersionFlagParseError(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runVersion([]string{"--bogus-flag-xyz"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("version flag parse error: want 2, got %d (stderr=%q)", code, stderr.String())
+	}
+}
+
+// TestScanFlagParseError verifies runScan returns 2 for an unknown flag.
+//
+//fusa:test REQ-FO-CLI005
+func TestScanFlagParseError(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runScan([]string{"--bogus-flag-xyz"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("scan flag parse error: want 2, got %d (stderr=%q)", code, stderr.String())
+	}
+}
+
+// TestTemplateSaveError verifies runTemplate returns 1 when the report output
+// file cannot be created (file-as-directory trick).
+//
+//fusa:test REQ-FO-CLI072
+func TestTemplateSaveError(t *testing.T) {
+	f, err := os.CreateTemp(t.TempDir(), "block")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	badOutput := filepath.Join(f.Name(), "templates.json")
+	var stdout, stderr bytes.Buffer
+	code := runTemplate([]string{"--dir", t.TempDir(), "--output", badOutput}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("template save error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "fusaops template") {
+		t.Errorf("template save error: want 'fusaops template' in stderr, got %q", stderr.String())
+	}
+}
