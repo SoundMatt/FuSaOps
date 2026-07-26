@@ -75,7 +75,7 @@ func TestDispositionAddSaveError(t *testing.T) {
 	if err := os.Chmod(dir, 0o555); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { os.Chmod(dir, 0o755) })
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o755) })
 	var stdout, stderr bytes.Buffer
 	code := runDispositionAdd([]string{
 		"--rule", "R001", "--reviewer", "dev", "--rationale", "ok",
