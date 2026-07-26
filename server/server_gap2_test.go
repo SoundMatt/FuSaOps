@@ -300,21 +300,24 @@ func TestHistoryPageMultiLanguages(t *testing.T) {
 }
 
 // TestHistoryAPIError verifies /api/v1/history returns 500 when history.Load
-// fails because histDir is a regular file (not a directory), so the OS cannot
-// open the JSONL path inside it, covering the history.Load error branch.
+// fails because the JSONL file path is a directory, causing bufio.Scanner.Scan
+// to return a read error (EISDIR / equivalent) that propagates through loadAll,
+// covering the history.Load error branch. Works on all platforms.
 //
 //fusa:test REQ-FO-HST004
 func TestHistoryAPIError(t *testing.T) {
-	// Create a regular file and use its path as histDir so that
-	// filepath.Join(histDir, history.Filename) is inside a non-directory, causing
-	// os.Open to fail with "not a directory" (not IsNotExist → propagated error).
-	histFile := filepath.Join(t.TempDir(), "hist-as-file")
-	if err := os.WriteFile(histFile, []byte("x"), 0o644); err != nil {
+	// Create the Filename path as a directory. os.Open(dir) succeeds on all
+	// platforms, but bufio.Scanner.Scan() reading from a directory fd returns a
+	// non-IsNotExist error (EISDIR on POSIX, ERROR_INVALID_FUNCTION on Windows),
+	// so loadAll propagates it and handleAPIHistory returns 500.
+	histDir := t.TempDir()
+	jsonlDir := filepath.Join(histDir, history.Filename)
+	if err := os.Mkdir(jsonlDir, 0o750); err != nil {
 		t.Fatal(err)
 	}
 
 	reg := adapter.NewRegistry()
-	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{}).WithHistoryDir(histFile)
+	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{}).WithHistoryDir(histDir)
 
 	rec := httptest.NewRecorder()
 	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/history", nil))
