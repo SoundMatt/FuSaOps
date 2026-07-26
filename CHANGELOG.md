@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.98.0] — 2026-07-26
+
+### feat: coverage expansion — runDiff, runTrace, runQualify, runPolicy, runVerify error paths
+
+- **`cmd/fusaops`** — `TestDiffNoAdapters` covers ErrNoAdapters path in `runDiff` (empty dir); 
+  `TestDiffBadFormat` covers `diff.Render` error path; `TestDiffOutputCreateError` covers `os.Create`
+  error for `--output`; `TestTraceBadFormat` + `TestTraceOutputToFile` + `TestTraceOutputBadFormat` +
+  `TestTraceValidTimeout` cover `trace.Render/RenderToFile` error paths and `opts.Timeout` assignment;
+  `TestQualifyBadFormat` + `TestQualifySaveError` + `TestQualifyRecordURI` cover qualify render/save
+  errors and certificate-URI print; `TestVerifyBadFormat` covers `verify.Render` error path;
+  `TestPolicyBadFormat` covers `policy.RenderToFile` unsupported-format error path.
+
+Improvements: `runDiff` 71.9%→84.2%, `runPolicy` 75.0%→82.1%, `runQualify` 72.2%→81.5%,
+`runTrace` 74.3%→81.1%.
+
+Total coverage: 89.7% (↑ from 89.5%).
+
 ## [1.97.0] — 2026-07-26
 
 ### feat: coverage expansion — sarifLevel default case, req.RenderCSV flush error, policy.renderHTML write error
