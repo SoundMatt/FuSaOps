@@ -585,3 +585,55 @@ func TestRenderHTMLCompSectionHidden(t *testing.T) {
 		t.Error("html should not include comp section when CompInfo is nil")
 	}
 }
+
+// ── QualifyInfo.IsIndependent() (REQ-FO-QLF011) ──────────────────────────────
+
+//fusa:test REQ-FO-QLF011
+func TestQualifyInfoIsIndependent(t *testing.T) {
+	// nil receiver should return false
+	var q *QualifyInfo
+	if q.IsIndependent() {
+		t.Error("nil QualifyInfo.IsIndependent() should be false")
+	}
+	// empty reviewer → not independent
+	q = &QualifyInfo{}
+	if q.IsIndependent() {
+		t.Error("empty IndependentReviewer should return false")
+	}
+	// populated reviewer → independent
+	q = &QualifyInfo{IndependentReviewer: "Alice Engineer"}
+	if !q.IsIndependent() {
+		t.Error("populated IndependentReviewer should return true")
+	}
+}
+
+// ── MCDCInfo.CoveragePct() (REQ-FO-MCDC003) ──────────────────────────────────
+
+//fusa:test REQ-FO-MCDC003
+func TestMCDCInfoCoveragePct(t *testing.T) {
+	// nil receiver → 100 (guard)
+	var m *MCDCInfo
+	if got := m.CoveragePct(); got != 100 {
+		t.Errorf("nil MCDCInfo.CoveragePct() = %d, want 100", got)
+	}
+	// zero total → 100 (guard)
+	m = &MCDCInfo{TotalConditions: 0, CoveredConditions: 0}
+	if got := m.CoveragePct(); got != 100 {
+		t.Errorf("zero total CoveragePct() = %d, want 100", got)
+	}
+	// 6 of 8 → 75%
+	m = &MCDCInfo{TotalConditions: 8, CoveredConditions: 6}
+	if got := m.CoveragePct(); got != 75 {
+		t.Errorf("CoveragePct(6/8) = %d, want 75", got)
+	}
+	// 10 of 10 → 100%
+	m = &MCDCInfo{TotalConditions: 10, CoveredConditions: 10}
+	if got := m.CoveragePct(); got != 100 {
+		t.Errorf("CoveragePct(10/10) = %d, want 100", got)
+	}
+	// 0 of 5 → 0%
+	m = &MCDCInfo{TotalConditions: 5, CoveredConditions: 0}
+	if got := m.CoveragePct(); got != 0 {
+		t.Errorf("CoveragePct(0/5) = %d, want 0", got)
+	}
+}

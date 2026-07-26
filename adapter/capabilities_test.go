@@ -213,6 +213,77 @@ func TestAdapterCompErrors(t *testing.T) {
 	}
 }
 
+// TestAdapterMCDC verifies the McdcRunner capability path: args, JSON decode, and
+// interface satisfaction.
+//
+//fusa:test REQ-FO-MCDC001
+func TestAdapterMCDC(t *testing.T) {
+	const mcdcJSON = `{
+		"tool":"gofusa","language":"go","toolVersion":"v0.32.0",
+		"totalConditions":8,"coveredConditions":6,
+		"totalDecisions":3,"coveredDecisions":2,
+		"gatePassed":false,
+		"decisions":[{"name":"checkSafety","file":"safety.go","line":42,"mcdcCovered":false}]
+	}`
+	a := capAdapter(func(_ context.Context, _, _ string, args ...string) ([]byte, error) {
+		if args[0] != "comp" {
+			t.Errorf("expected subcommand 'comp', got %q", args[0])
+		}
+		hasMCDC := false
+		for _, arg := range args {
+			if arg == "--mcdc" {
+				hasMCDC = true
+			}
+		}
+		if !hasMCDC {
+			t.Error("expected --mcdc flag in MCDC call")
+		}
+		hasFormat := false
+		for i, arg := range args {
+			if arg == "--format" && i+1 < len(args) && args[i+1] == "json" {
+				hasFormat = true
+			}
+		}
+		if !hasFormat {
+			t.Error("expected --format json in MCDC call")
+		}
+		return []byte(mcdcJSON), nil
+	})
+	r, err := a.MCDC(context.Background(), "/r")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.TotalConditions != 8 {
+		t.Errorf("TotalConditions = %d, want 8", r.TotalConditions)
+	}
+	if r.CoveredConditions != 6 {
+		t.Errorf("CoveredConditions = %d, want 6", r.CoveredConditions)
+	}
+	if r.GatePassed {
+		t.Error("GatePassed = true, want false")
+	}
+	if len(r.Decisions) != 1 {
+		t.Errorf("Decisions len = %d, want 1", len(r.Decisions))
+	}
+	// Confirm it satisfies the McdcRunner capability interface.
+	var _ McdcRunner = a
+}
+
+func TestAdapterMCDCErrors(t *testing.T) {
+	boom := capAdapter(func(context.Context, string, string, ...string) ([]byte, error) {
+		return nil, fmt.Errorf("exec failed")
+	})
+	if _, err := boom.MCDC(context.Background(), "/r"); err == nil {
+		t.Error("expected run error")
+	}
+	bad := capAdapter(func(context.Context, string, string, ...string) ([]byte, error) {
+		return []byte("no json here"), nil
+	})
+	if _, err := bad.MCDC(context.Background(), "/r"); err == nil {
+		t.Error("expected decode error")
+	}
+}
+
 func TestExtractJSON(t *testing.T) {
 	cases := map[string]string{
 		"prefix {\"a\":1} suffix": `{"a":1}`,

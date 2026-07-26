@@ -178,3 +178,71 @@ func TestWithQualifyReport(t *testing.T) {
 		t.Errorf("expected 'pass' in badge from custom path, got:\n%s", body)
 	}
 }
+
+// TestAPIQualifyEndpointPending verifies /api/v1/qualify returns empty JSON
+// when no qualify report is on disk.
+//
+//fusa:test REQ-FO-SRV014
+func TestAPIQualifyEndpointPending(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/qualify", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	// With no qualify report the body should be the empty-object sentinel.
+	body := strings.TrimSpace(rec.Body.String())
+	if body != "{}" {
+		t.Errorf("expected {}, got: %s", body)
+	}
+}
+
+// TestAPIQualifyEndpointWithReport verifies /api/v1/qualify returns the full
+// qualify report as JSON, including independence fields.
+//
+//fusa:test REQ-FO-SRV014
+//fusa:test REQ-FO-QLF010
+func TestAPIQualifyEndpointWithReport(t *testing.T) {
+	dir := t.TempDir()
+	path := writeQualifyReport(t, dir, &qualify.Report{
+		QualificationType:   "independent",
+		IndependentReviewer: "Bob Auditor",
+		QualificationMethod: "TQL-5",
+		AchievableASIL:      "ASIL-D",
+		Total:               10,
+		Passed:              10,
+		Failed:              0,
+		Components:          []qualify.ComponentResult{},
+	})
+	s := newTestServer(t)
+	s = s.WithQualifyReport(path)
+
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/qualify", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if !strings.Contains(ct, "application/json") {
+		t.Errorf("Content-Type = %q, want application/json", ct)
+	}
+	var out map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+		t.Fatalf("response not JSON: %v", err)
+	}
+	if out["type"] != "independent" {
+		t.Errorf("type = %v, want independent", out["type"])
+	}
+	if out["independentReviewer"] != "Bob Auditor" {
+		t.Errorf("independentReviewer = %v, want Bob Auditor", out["independentReviewer"])
+	}
+	if out["achievableAsil"] != "ASIL-D" {
+		t.Errorf("achievableAsil = %v, want ASIL-D", out["achievableAsil"])
+	}
+	if out["isIndependent"] != true {
+		t.Errorf("isIndependent = %v, want true", out["isIndependent"])
+	}
+	if out["allPassed"] != true {
+		t.Errorf("allPassed = %v, want true", out["allPassed"])
+	}
+}

@@ -436,3 +436,100 @@ func TestRenderTextShowsTypeAndRecord(t *testing.T) {
 		t.Errorf("expected record URI in text output:\n%s", out)
 	}
 }
+
+// TestIndependentReviewerFields verifies that V&V independence fields are
+// decoded from the tool's qualify output and propagated through Run() to the
+// ComponentResult. Covers REQ-FO-QLF010 (V&V independence fields).
+//
+//fusa:test REQ-FO-QLF010
+func TestIndependentReviewerFields(t *testing.T) {
+	adapters := []adapter.Adapter{
+		&qualifyFake{
+			fakeAdapter: fakeAdapter{name: "gofusa", lang: fusaops.LangGo, available: true},
+			result: &trace.Qualification{
+				Total:               10,
+				Passed:              10,
+				Failed:              0,
+				IndependentReviewer: "Bob Auditor",
+				QualificationMethod: "TQL-5",
+			},
+		},
+	}
+	r, err := qualify.Run(context.Background(), adapters, "/proj")
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if len(r.Components) != 1 {
+		t.Fatalf("components = %d, want 1", len(r.Components))
+	}
+	cr := r.Components[0]
+	if cr.IndependentReviewer != "Bob Auditor" {
+		t.Errorf("IndependentReviewer = %q, want \"Bob Auditor\"", cr.IndependentReviewer)
+	}
+	if cr.QualificationMethod != "TQL-5" {
+		t.Errorf("QualificationMethod = %q, want \"TQL-5\"", cr.QualificationMethod)
+	}
+}
+
+// TestIsIndependent verifies the IsIndependent() helpers on ComponentResult and
+// Report. Covers REQ-FO-QLF011 (independence reporting).
+//
+//fusa:test REQ-FO-QLF011
+func TestIsIndependent(t *testing.T) {
+	// ComponentResult: no reviewer → not independent
+	cr := qualify.ComponentResult{}
+	if cr.IsIndependent() {
+		t.Error("empty IndependentReviewer: IsIndependent() should be false")
+	}
+	// ComponentResult: reviewer set → independent
+	cr.IndependentReviewer = "Carol Checker"
+	if !cr.IsIndependent() {
+		t.Error("set IndependentReviewer: IsIndependent() should be true")
+	}
+
+	// Report: no reviewer → not independent
+	rep := &qualify.Report{}
+	if rep.IsIndependent() {
+		t.Error("empty Report.IndependentReviewer: IsIndependent() should be false")
+	}
+	// Report: reviewer set → independent
+	rep.IndependentReviewer = "Dave Reviewer"
+	if !rep.IsIndependent() {
+		t.Error("set Report.IndependentReviewer: IsIndependent() should be true")
+	}
+}
+
+// TestRenderTextShowsIndependentReviewer verifies the text renderer surfaces
+// V&V independence fields when populated (REQ-FO-QLF010).
+//
+//fusa:test REQ-FO-QLF010
+func TestRenderTextShowsIndependentReviewer(t *testing.T) {
+	r := &qualify.Report{
+		ProjectRoot:          "/proj",
+		QualificationType:    "independent",
+		QualificationMethod:  "TQL-5",
+		QualifierIdentity:    "SafetyLab GmbH",
+		ImplementationAuthor: "Alice Dev",
+		IndependentReviewer:  "Bob Auditor",
+		AchievableASIL:       "ASIL-D",
+		Total:                5,
+		Passed:               5,
+		Components: []qualify.ComponentResult{
+			{
+				Language: "go", Tool: "gofusa", Available: true,
+				Total: 5, Passed: 5, Failed: 0,
+				IndependentReviewer: "Bob Auditor",
+			},
+		},
+	}
+	var buf bytes.Buffer
+	if err := qualify.Render(&buf, r, "text"); err != nil {
+		t.Fatalf("Render text: %v", err)
+	}
+	out := buf.String()
+	for _, want := range []string{"Bob Auditor", "TQL-5", "SafetyLab GmbH", "Alice Dev", "ASIL-D", "[independent]"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("text output missing %q:\n%s", want, out)
+		}
+	}
+}
