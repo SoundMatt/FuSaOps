@@ -361,3 +361,14 @@ func TestRenderToFile(t *testing.T) {
 		t.Error("output missing project field")
 	}
 }
+
+// TestRenderToFileCreateError verifies RenderToFile returns an error when the
+// output file cannot be created (parent directory does not exist).
+//
+//fusa:test REQ-FO-FLT004
+func TestRenderToFileCreateError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "fleet.json")
+	if err := RenderToFile(nil, &FleetReport{}, "json", path); err == nil {
+		t.Error("RenderToFile: expected error for non-existent parent directory")
+	}
+}

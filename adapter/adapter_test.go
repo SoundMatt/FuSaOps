@@ -134,6 +134,21 @@ func TestRegistryRegisterDuplicate(t *testing.T) {
 	}
 }
 
+// TestMustRegisterPanic verifies MustRegister panics when the underlying
+// Register call returns an error (duplicate tool name).
+//
+//fusa:test REQ-FO-ADP007
+func TestMustRegisterPanic(t *testing.T) {
+	r := NewRegistry()
+	r.MustRegister(newGoFuSa())
+	defer func() {
+		if recover() == nil {
+			t.Error("MustRegister: expected panic on duplicate tool, got none")
+		}
+	}()
+	r.MustRegister(newGoFuSa()) // must panic
+}
+
 //fusa:test REQ-FO-ADP008
 func TestRegistryApplicable(t *testing.T) {
 	dir := t.TempDir()

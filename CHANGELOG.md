@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.87.0] — 2026-07-26
+
+### feat: coverage expansion — server, standards, suppression, disposition, vuln, adapter, comp, fleet, metrics, doctemplate
+
+- **`server`** — `TestWriteHeaderViaAuth` covers `statusRecorder.WriteHeader` (was 0%).
+- **`standards`** — `TestRenderToFileCreateError` covers `RenderToFile` `os.Create` error.
+- **`suppression`** — `TestSaveConfigWriteError` covers `SaveConfig` write-failure path.
+- **`disposition`** — `TestRenderEntriesEmptyProject` covers empty-project branch in `RenderEntries`.
+- **`vuln`** — `TestScanSkipsVendorDir` covers `discoverManifests` `filepath.SkipDir` branch.
+- **`adapter`** — `TestMustRegisterPanic` covers `MustRegister` panic path (was 50%).
+- **`comp`** — `TestRenderToFileCreateError` covers `RenderToFile` `os.Create` error.
+- **`fleet`** — `TestRenderToFileCreateError` covers `RenderToFile` `os.Create` error.
+- **`metrics`** — `TestSaveWriteError` covers `Save` `os.WriteFile` error path.
+- **`doctemplate`** — `TestSaveWriteError` covers `Save` `os.WriteFile` error path.
+
+Total coverage: 88.3% → 88.5% (estimated).
+
 ## [1.86.0] — 2026-07-26
 
 ### feat: coverage expansion — tara, vuln, config, disposition

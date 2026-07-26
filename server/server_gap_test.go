@@ -191,3 +191,26 @@ func TestAPIFleetNotReady(t *testing.T) {
 		t.Errorf("/api/fleet (not ready): want 503, got %d", rec.Code)
 	}
 }
+
+// ── statusRecorder.WriteHeader ────────────────────────────────────────────────
+
+// TestWriteHeaderViaAuth verifies that statusRecorder.WriteHeader is exercised
+// when the auth middleware is active and the inner handler writes an explicit
+// non-200 status code.
+//
+//fusa:test REQ-FO-AUTH001
+func TestWriteHeaderViaAuth(t *testing.T) {
+	s := newTestServer(t).WithAuth("admin", "secret")
+	// Inject a scan error so /api/v1/status returns 500 explicitly.
+	s.mu.Lock()
+	s.err = errors.New("injected scan error for WriteHeader coverage")
+	s.mu.Unlock()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/status", nil)
+	req.SetBasicAuth("admin", "secret")
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, req)
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("want 500, got %d", rec.Code)
+	}
+}

@@ -3,6 +3,7 @@ package standards
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -526,6 +527,18 @@ func TestRenderMarkdownSkipped(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), "not installed") {
 		t.Error("expected skip reason in markdown output")
+	}
+}
+
+// TestRenderToFileCreateError verifies RenderToFile returns an error when it
+// cannot create the output file (parent directory does not exist).
+//
+//fusa:test REQ-FO-STD007
+func TestRenderToFileCreateError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.txt")
+	agg := &Aggregate{Standard: "iso26262", Generated: time.Now()}
+	if err := RenderToFile(agg, "text", path); err == nil {
+		t.Error("RenderToFile: expected error for non-existent parent directory")
 	}
 }
 

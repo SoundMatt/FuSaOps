@@ -336,3 +336,31 @@ func TestSaveWriteError(t *testing.T) {
 		t.Error("Save: expected error for non-existent parent directory")
 	}
 }
+
+// TestScanSkipsVendorDir verifies that Scan (and discoverManifests underneath)
+// skips vendor/ directories, covering the filepath.SkipDir return branch.
+//
+//fusa:test REQ-FO-VULN001
+func TestScanSkipsVendorDir(t *testing.T) {
+	dir := t.TempDir()
+	// Root-level manifest — should be found.
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module test\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Manifest inside vendor/ — must be skipped.
+	vendorDir := filepath.Join(dir, "vendor")
+	if err := os.Mkdir(vendorDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(vendorDir, "go.mod"), []byte("module nested\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	rep, err := vuln.Scan(dir, fakeRunnerAbsent)
+	if err != nil {
+		t.Fatalf("Scan: %v", err)
+	}
+	if rep.TotalManifests != 1 {
+		t.Errorf("TotalManifests: want 1 (vendor skipped), got %d", rep.TotalManifests)
+	}
+}
