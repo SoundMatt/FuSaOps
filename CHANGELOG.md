@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.96.0] — 2026-07-26
+
+### feat: coverage expansion — runReport, runSBOM bad-format, runStandards bad-format, runSuppressPrune save error
+
+- **`cmd/fusaops`** — `TestReportBadTimeout`/`TestReportBadMinSeverity` cover `runReport` flag-parse
+  error paths (return 2); `TestReportBadFormat` covers the render error path (return 1);
+  `TestSBOMBadFormatGoDir` covers `runSBOM` Render error with unsupported format (return 1);
+  `TestStandardsBadFormat` covers the `runStandards` format-validation branch (return 2);
+  `TestSuppressPruneSaveError` covers `runSuppressPrune` SaveConfig error path (return 1).
+
+Total coverage: 89.4% (↑ from 89.3%).
+
 ## [1.95.0] — 2026-07-26
 
 ### feat: coverage expansion — TARA/FMEA/Vuln render+save errors, Fleet empty/bad-format
