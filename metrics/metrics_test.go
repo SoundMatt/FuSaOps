@@ -36,6 +36,21 @@ func TestLoadMissing(t *testing.T) {
 	}
 }
 
+// TestLoadReadError verifies Load returns an error when the metrics file path
+// is a directory (non-IsNotExist read failure).
+//
+//fusa:test REQ-FO-MET002
+func TestLoadReadError(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, MetricsFile), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	_, err := Load(dir)
+	if err == nil {
+		t.Fatal("expected error when metrics file is a directory")
+	}
+}
+
 //fusa:test REQ-FO-MET002
 func TestSaveLoad(t *testing.T) {
 	dir := t.TempDir()
