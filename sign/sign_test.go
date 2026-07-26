@@ -241,3 +241,14 @@ func TestVerifyWrongKey(t *testing.T) {
 		t.Fatal("expected error for wrong key, got nil")
 	}
 }
+
+// TestKeygenWriteError verifies Keygen returns an error when the parent
+// directory does not exist.
+//
+//fusa:test REQ-FO-SIGN001
+func TestKeygenWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "key.hex")
+	if err := sign.Keygen(path); err == nil {
+		t.Error("Keygen: expected error for non-existent parent directory")
+	}
+}

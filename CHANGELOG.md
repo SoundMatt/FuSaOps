@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.84.0] — 2026-07-26
+
+### feat: coverage expansion — write-error paths across 6 more packages
+
+- **`config`** — `TestSaveWriteError` covers the `os.WriteFile` failure branch in `Save`.
+- **`disposition`** — `TestSaveWriteError` covers the `os.WriteFile` failure branch in `Save`.
+- **`tara`** — `TestSaveWriteError` covers the `os.WriteFile` failure branch in `Save`.
+- **`history`** — `TestPruneWriteAllError` covers the `os.Create` failure branch in
+  `writeAll` by replacing the history file with a directory before calling `Prune`.
+- **`sign`** — `TestKeygenWriteError` covers the `os.WriteFile` failure branch in `Keygen`.
+- **Total coverage: 87.5% → 87.6%** (all packages ≥ 80%).
+
 ## [1.83.0] — 2026-07-26
 
 ### fix: resolve gofusa selfcheck findings; maximize coverage across 12 packages

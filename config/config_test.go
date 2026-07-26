@@ -283,3 +283,14 @@ func TestCompConfigSaveLoad(t *testing.T) {
 		t.Errorf("comp.dal: got %q, want DAL-C", got.Comp.DAL)
 	}
 }
+
+// TestSaveWriteError verifies Save returns an error when the parent directory
+// does not exist.
+//
+//fusa:test REQ-FO-CFG005
+func TestSaveWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.json")
+	if err := Save(path, Default("testproject")); err == nil {
+		t.Error("Save: expected error for non-existent parent directory")
+	}
+}

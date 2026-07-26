@@ -2,6 +2,7 @@ package disposition
 
 import (
 	"bytes"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -128,5 +129,16 @@ func TestRenderEntries(t *testing.T) {
 	out := buf.String()
 	if !strings.Contains(out, "RULE001") || !strings.Contains(out, "alice") {
 		t.Errorf("render output missing expected content: %q", out)
+	}
+}
+
+// TestSaveWriteError verifies Save returns an error when the project root
+// directory does not exist.
+//
+//fusa:test REQ-FO-DISP002
+func TestSaveWriteError(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "missing")
+	if err := Save(root, &Log{}); err == nil {
+		t.Error("Save: expected error for non-existent root directory")
 	}
 }
