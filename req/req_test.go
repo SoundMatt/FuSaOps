@@ -242,6 +242,169 @@ func TestExportPolarionRoundTrip(t *testing.T) {
 	}
 }
 
+// ── ParseCodebeamer edge cases ───────────────────────────────────────────────
+
+//fusa:test REQ-FO-REQ002
+func TestParseCodebeamerInvalidXML(t *testing.T) {
+	_, err := ParseCodebeamer([]byte("not xml"))
+	if err == nil {
+		t.Error("expected error for invalid Codebeamer XML")
+	}
+}
+
+//fusa:test REQ-FO-REQ002
+func TestParseCodebeamerFallbackToName(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><tracker>
+<item><name>REQ-NAME</name><summary>Title via name</summary></item>
+</tracker>`
+	entries, err := ParseCodebeamer([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParseCodebeamer: %v", err)
+	}
+	if len(entries) != 1 || entries[0].ID != "REQ-NAME" {
+		t.Errorf("expected ID=REQ-NAME via name fallback, got %+v", entries)
+	}
+}
+
+//fusa:test REQ-FO-REQ002
+func TestParseCodebeamerSkipsEmptyID(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><tracker>
+<item><summary>No ID</summary></item>
+</tracker>`
+	entries, err := ParseCodebeamer([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParseCodebeamer: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("expected 0 entries (empty id+name skipped), got %d", len(entries))
+	}
+}
+
+//fusa:test REQ-FO-REQ002
+func TestParseCodebeamerWithLevelField(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><tracker>
+<item id="REQ-1"><name>REQ-1</name><summary>Title</summary>
+<customFields><field id="level">HLR</field></customFields>
+</item>
+</tracker>`
+	entries, err := ParseCodebeamer([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParseCodebeamer: %v", err)
+	}
+	if len(entries) != 1 || entries[0].Level != "HLR" {
+		t.Errorf("expected Level=HLR, got %+v", entries)
+	}
+}
+
+// ── ParseJama edge cases ─────────────────────────────────────────────────────
+
+//fusa:test REQ-FO-REQ002
+func TestParseJamaInvalidXML(t *testing.T) {
+	_, err := ParseJama([]byte("not xml"))
+	if err == nil {
+		t.Error("expected error for invalid Jama XML")
+	}
+}
+
+//fusa:test REQ-FO-REQ002
+func TestParseJamaFallbackToName(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><items>
+<item><name>REQ-NAME</name></item>
+</items>`
+	entries, err := ParseJama([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParseJama: %v", err)
+	}
+	if len(entries) != 1 || entries[0].ID != "REQ-NAME" {
+		t.Errorf("expected ID=REQ-NAME via name fallback, got %+v", entries)
+	}
+}
+
+//fusa:test REQ-FO-REQ002
+func TestParseJamaSkipsEmptyID(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><items>
+<item><name></name></item>
+</items>`
+	entries, err := ParseJama([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParseJama: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("expected 0 entries (empty id+name skipped), got %d", len(entries))
+	}
+}
+
+//fusa:test REQ-FO-REQ002
+func TestParseJamaWithLevelField(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><items>
+<item id="REQ-1"><name>Title</name>
+<fields><field id="level" value="LLR"/></fields>
+</item>
+</items>`
+	entries, err := ParseJama([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParseJama: %v", err)
+	}
+	if len(entries) != 1 || entries[0].Level != "LLR" {
+		t.Errorf("expected Level=LLR, got %+v", entries)
+	}
+}
+
+// ── ParsePolarion edge cases ─────────────────────────────────────────────────
+
+//fusa:test REQ-FO-REQ002
+func TestParsePolarionInvalidXML(t *testing.T) {
+	_, err := ParsePolarion([]byte("not xml"))
+	if err == nil {
+		t.Error("expected error for invalid Polarion XML")
+	}
+}
+
+//fusa:test REQ-FO-REQ002
+func TestParsePolarionSkipsEmptyID(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><workitems>
+<workitem><title>No ID workitem</title></workitem>
+</workitems>`
+	entries, err := ParsePolarion([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParsePolarion: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("expected 0 entries (empty id skipped), got %d", len(entries))
+	}
+}
+
+//fusa:test REQ-FO-REQ002
+func TestParsePolarionWithLevelField(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><workitems>
+<workitem id="REQ-1"><title>Safety requirement</title>
+<customFields><customField id="level" value="HLR"/></customFields>
+</workitem>
+</workitems>`
+	entries, err := ParsePolarion([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParsePolarion: %v", err)
+	}
+	if len(entries) != 1 || entries[0].Level != "HLR" {
+		t.Errorf("expected Level=HLR, got %+v", entries)
+	}
+}
+
+// ── SaveRegistry / LoadRegistry edge cases ──────────────────────────────────
+
+//fusa:test REQ-FO-REQ001
+func TestSaveRegistryReadOnlyDir(t *testing.T) {
+	dir := t.TempDir()
+	// Make the dir read-only so WriteFile fails.
+	if err := os.Chmod(dir, 0o555); err != nil {
+		t.Skip("cannot chmod dir:", err)
+	}
+	t.Cleanup(func() { os.Chmod(dir, 0o755) })
+	if err := SaveRegistry(dir, []Entry{{ID: "X"}}); err == nil {
+		t.Error("expected error writing to read-only dir")
+	}
+}
+
 // TestParseCSVParentColumn verifies that a CSV with a "parent" column populates
 // Entry.Parent correctly on round-trip.
 //

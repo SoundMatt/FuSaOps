@@ -328,6 +328,62 @@ func TestRenderTextSeverityDetail(t *testing.T) {
 	}
 }
 
+// TestRenderTextSeverityDetailPlural verifies plural severity labels (2 errors, etc.)
+// and info-severity detail in text output.
+//
+//fusa:test REQ-FO-DIF004
+func TestRenderTextSeverityDetailPlural(t *testing.T) {
+	finding := func(id string, sev fusaops.Severity) fusaops.Finding {
+		return fusaops.Finding{RuleID: id, Severity: sev, Message: "m", Location: fusaops.Location{File: "f.go"}}
+	}
+	res := &Result{
+		Added: []fusaops.Finding{
+			finding("E1", fusaops.SeverityError),
+			finding("E2", fusaops.SeverityError),
+			finding("W1", fusaops.SeverityWarning),
+			finding("W2", fusaops.SeverityWarning),
+			finding("I1", fusaops.SeverityInfo),
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "text", false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "2 errors") {
+		t.Errorf("expected '2 errors' in output: %s", out)
+	}
+	if !strings.Contains(out, "2 warnings") {
+		t.Errorf("expected '2 warnings' in output: %s", out)
+	}
+	if !strings.Contains(out, "1 info") {
+		t.Errorf("expected '1 info' in output: %s", out)
+	}
+}
+
+// TestRenderTextSeverityDetailInfoPlural verifies plural "infos" label.
+//
+//fusa:test REQ-FO-DIF004
+func TestRenderTextSeverityDetailInfoPlural(t *testing.T) {
+	finding := func(id string, sev fusaops.Severity) fusaops.Finding {
+		return fusaops.Finding{RuleID: id, Severity: sev, Message: "m", Location: fusaops.Location{File: "f.go"}}
+	}
+	res := &Result{
+		Added: []fusaops.Finding{
+			finding("I1", fusaops.SeverityInfo),
+			finding("I2", fusaops.SeverityInfo),
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "text", false); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "2 infos") {
+		t.Errorf("expected '2 infos' in output: %s", out)
+	}
+}
+
 // TestRenderJSONSummary verifies JSON output includes generatedAt and summary fields.
 //
 //fusa:test REQ-FO-DIF004

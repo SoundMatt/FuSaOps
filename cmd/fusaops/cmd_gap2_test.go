@@ -263,3 +263,49 @@ func TestMetricsShowBadOutputPath(t *testing.T) {
 		t.Errorf("metrics show bad output: expected 'create' in stderr: %q", stderr.String())
 	}
 }
+
+// ── runRelease without --dir (os.Getwd path) ─────────────────────────────────
+
+// TestReleaseNoDirFlag exercises the os.Getwd() fallback in runRelease when
+// --dir is not provided. Output goes to a temp dir to avoid writing files into
+// the repo.
+//
+//fusa:test REQ-FO-CLI065
+//fusa:test REQ-FO-CLI081
+func TestReleaseNoDirFlag(t *testing.T) {
+	outDir := t.TempDir()
+	var stdout, stderr bytes.Buffer
+	code := runRelease([]string{"--output-dir", outDir}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("release --output-dir only: want 0, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "Provenance written") {
+		t.Errorf("expected provenance confirmation in stdout: %q", stdout.String())
+	}
+	if _, err := os.Stat(filepath.Join(outDir, "provenance.json")); err != nil {
+		t.Errorf("provenance.json not written: %v", err)
+	}
+}
+
+// ── runHooks install ──────────────────────────────────────────────────────────
+
+// TestHooksInstallHookPath verifies hooksInstall creates the hook file when invoked
+// directly with a hook path in a fresh temporary directory.
+//
+//fusa:test REQ-FO-CLI079
+func TestHooksInstallHookPath(t *testing.T) {
+	dir := t.TempDir()
+	hookPath := filepath.Join(dir, ".git", "hooks", "pre-commit")
+	var stdout, stderr bytes.Buffer
+	code := hooksInstall(hookPath, &stdout, &stderr)
+	if code != 0 {
+		t.Errorf("hooksInstall: want 0, got %d stderr=%q", code, stderr.String())
+	}
+	if _, err := os.Stat(hookPath); err != nil {
+		t.Errorf("pre-commit hook not created: %v", err)
+	}
+	if !strings.Contains(stdout.String(), "pre-commit hook installed") {
+		t.Errorf("expected install confirmation in stdout: %q", stdout.String())
+	}
+}
+

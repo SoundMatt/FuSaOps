@@ -7,6 +7,25 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.82.0] — 2026-07-26
+
+### feat: maximize test coverage in req, diff, report, cmd packages
+
+- **`req/req_test.go`** — 12 new tests covering error paths and edge cases in
+  `ParseCodebeamer`, `ParseJama`, and `ParsePolarion` (invalid XML, empty-ID
+  fallback to name, skip-empty, and custom level field); `SaveRegistry` read-only
+  dir error path. req package coverage 82.0% → **91.2%**.
+- **`diff/diff_test.go`** — 2 new tests for plural severity labels ("2 errors",
+  "2 warnings", "2 infos") and info-severity detail in `severityDetail`.
+  diff package coverage 84.5% → **87.9%**.
+- **`report/report_test.go`** — 3 new tests for `renderHTML`, `renderCSV`, and
+  `renderJSON` write-error paths via an `errWriter` that returns an error on every
+  Write call. report package coverage 91.2% → **91.9%**.
+- **`cmd/fusaops/cmd_gap2_test.go`** — 3 new tests: release without `--dir` (exercises
+  `os.Getwd()` path), `hooksInstall` happy path with a fresh hook path.
+  cmd package coverage 81.4% → **81.5%**.
+- **Total coverage: 87.3%** (up from 86.9%; all packages ≥ 80%).
+
 ## [1.81.0] — 2026-07-26
 
 ### docs: spec v1.10.12 snapshot — rust-FuSa v0.3.4 Dockerfile fix
