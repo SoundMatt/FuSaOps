@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -524,5 +525,142 @@ func TestRenderDiffUnsupportedFormat(t *testing.T) {
 	res := Compare(baseline, nil)
 	if err := Render(&bytes.Buffer{}, res, "xml", false); err == nil {
 		t.Error("expected error for unsupported format")
+	}
+}
+
+// TestCompareSortByLine verifies that when added findings share a file but have
+// different line numbers, they are sorted by line ascending.
+//
+//fusa:test REQ-FO-DIF002
+func TestCompareSortByLine(t *testing.T) {
+	a := fusaops.Finding{RuleID: "R1", Severity: fusaops.SeverityWarning, Location: fusaops.Location{File: "a.go", Line: 10}, Fingerprint: "sha256:aaa111"}
+	b := fusaops.Finding{RuleID: "R1", Severity: fusaops.SeverityWarning, Location: fusaops.Location{File: "a.go", Line: 3}, Fingerprint: "sha256:bbb222"}
+	res := Compare(&Baseline{Findings: []fusaops.Finding{}}, []fusaops.Finding{a, b})
+	if len(res.Added) != 2 {
+		t.Fatalf("expected 2 added, got %d", len(res.Added))
+	}
+	if res.Added[0].Location.Line != 3 {
+		t.Errorf("expected line 3 first (sorted ascending), got %d", res.Added[0].Location.Line)
+	}
+}
+
+// TestCompareSortByRuleID verifies that when added findings share file and line,
+// they are sorted by ruleID ascending.
+//
+//fusa:test REQ-FO-DIF002
+func TestCompareSortByRuleID(t *testing.T) {
+	a := fusaops.Finding{RuleID: "ZZZ", Severity: fusaops.SeverityWarning, Location: fusaops.Location{File: "a.go", Line: 1}, Fingerprint: "sha256:zzz999"}
+	b := fusaops.Finding{RuleID: "AAA", Severity: fusaops.SeverityWarning, Location: fusaops.Location{File: "a.go", Line: 1}, Fingerprint: "sha256:aaa000"}
+	res := Compare(&Baseline{Findings: []fusaops.Finding{}}, []fusaops.Finding{a, b})
+	if len(res.Added) != 2 {
+		t.Fatalf("expected 2 added, got %d", len(res.Added))
+	}
+	if res.Added[0].RuleID != "AAA" {
+		t.Errorf("expected AAA first (sorted by ruleID), got %q", res.Added[0].RuleID)
+	}
+}
+
+// TestRenderDiffMarkdownWithRemovals verifies the Removed section appears in
+// markdown output when findings exist in baseline but not in current.
+//
+//fusa:test REQ-FO-DIF006
+func TestRenderDiffMarkdownWithRemovals(t *testing.T) {
+	f := fusaops.Finding{
+		RuleID: "LINT001", Severity: fusaops.SeverityError, Message: "old issue",
+		Location: fusaops.Location{File: "x.go", Line: 5}, Fingerprint: "sha256:rem001",
+	}
+	baseline := &Baseline{Findings: []fusaops.Finding{f}}
+	res := Compare(baseline, []fusaops.Finding{})
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "markdown", false); err != nil {
+		t.Fatalf("Render markdown: %v", err)
+	}
+	if !strings.Contains(buf.String(), "## ➖ Removed") {
+		t.Errorf("expected '## ➖ Removed' section in markdown output:\n%s", buf.String())
+	}
+}
+
+// TestSaveBaselineWriteError verifies SaveBaseline returns an error when the
+// parent directory does not exist.
+//
+//fusa:test REQ-FO-DIF005
+func TestSaveBaselineWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "baseline.json")
+	if err := SaveBaseline(path, nil); err == nil {
+		t.Error("SaveBaseline: expected error for non-existent parent directory")
+	}
+}
+
+// TestRemovedSortByLine verifies that when removed findings share a file but
+// differ by line, the Removed slice is sorted by line ascending.
+//
+//fusa:test REQ-FO-DIF002
+func TestRemovedSortByLine(t *testing.T) {
+	a := fusaops.Finding{RuleID: "R1", Severity: fusaops.SeverityWarning, Location: fusaops.Location{File: "b.go", Line: 20}, Fingerprint: "sha256:rsl001"}
+	b := fusaops.Finding{RuleID: "R1", Severity: fusaops.SeverityWarning, Location: fusaops.Location{File: "b.go", Line: 7}, Fingerprint: "sha256:rsl002"}
+	baseline := &Baseline{Findings: []fusaops.Finding{a, b}}
+	res := Compare(baseline, []fusaops.Finding{})
+	if len(res.Removed) != 2 {
+		t.Fatalf("expected 2 removed, got %d", len(res.Removed))
+	}
+	if res.Removed[0].Location.Line != 7 {
+		t.Errorf("expected line 7 first (sorted ascending), got %d", res.Removed[0].Location.Line)
+	}
+}
+
+// TestRemovedSortByRuleID verifies that when removed findings share file and
+// line, the Removed slice is sorted by ruleID ascending.
+//
+//fusa:test REQ-FO-DIF002
+func TestRemovedSortByRuleID(t *testing.T) {
+	a := fusaops.Finding{RuleID: "ZZZ", Severity: fusaops.SeverityWarning, Location: fusaops.Location{File: "b.go", Line: 1}, Fingerprint: "sha256:rsrid01"}
+	b := fusaops.Finding{RuleID: "AAA", Severity: fusaops.SeverityWarning, Location: fusaops.Location{File: "b.go", Line: 1}, Fingerprint: "sha256:rsrid02"}
+	baseline := &Baseline{Findings: []fusaops.Finding{a, b}}
+	res := Compare(baseline, []fusaops.Finding{})
+	if len(res.Removed) != 2 {
+		t.Fatalf("expected 2 removed, got %d", len(res.Removed))
+	}
+	if res.Removed[0].RuleID != "AAA" {
+		t.Errorf("expected AAA first (sorted by ruleID), got %q", res.Removed[0].RuleID)
+	}
+}
+
+// TestSummaryRemovedInfo verifies that INFO-severity removed findings increment
+// RemovedInfos (the default branch in Summary).
+//
+//fusa:test REQ-FO-DIF004
+func TestSummaryRemovedInfo(t *testing.T) {
+	res := &Result{
+		Removed: []fusaops.Finding{
+			{Severity: fusaops.SeverityInfo},
+		},
+	}
+	s := res.Summary()
+	if s.RemovedInfos != 1 {
+		t.Errorf("RemovedInfos: want 1, got %d", s.RemovedInfos)
+	}
+}
+
+// TestRenderTextWithRemovals verifies the renderText path when Removed findings
+// are present, covering the removedStr detail suffix branch.
+//
+//fusa:test REQ-FO-DIF003
+func TestRenderTextWithRemovals(t *testing.T) {
+	f := fusaops.Finding{
+		RuleID: "LINT001", Severity: fusaops.SeverityError, Message: "fixed issue",
+		Location: fusaops.Location{File: "a.go", Line: 3}, Fingerprint: "sha256:txtrem01",
+	}
+	baseline := &Baseline{Findings: []fusaops.Finding{f}}
+	res := Compare(baseline, []fusaops.Finding{})
+	var buf bytes.Buffer
+	if err := Render(&buf, res, "text", false); err != nil {
+		t.Fatalf("Render text: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "1 removed") {
+		t.Errorf("text output missing '1 removed':\n%s", out)
+	}
+	if !strings.Contains(out, "──── Removed ────") {
+		t.Errorf("text output missing Removed section:\n%s", out)
 	}
 }

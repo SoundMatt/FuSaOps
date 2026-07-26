@@ -222,7 +222,7 @@ func TestPruneWriteAllError(t *testing.T) {
 	if err := os.Mkdir(histPath, 0o750); err != nil {
 		t.Fatalf("Mkdir: %v", err)
 	}
-	if _, err := Prune(dir, 1); err == nil {
-		t.Error("Prune: expected error when history path is a directory")
+	if n, err := Prune(dir, 1); err == nil {
+		t.Errorf("Prune: expected error when history path is a directory, got nil (removed %d)", n)
 	}
 }
