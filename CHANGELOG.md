@@ -7,6 +7,32 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.111.0] — 2026-07-26
+
+### feat: coverage expansion — cmd config/fmea/history/scan/policy gap branches
+
+- **`cmd/fusaops`** — `TestConfigValidateBadFlag` covers the `fs.Parse` error return in
+  `runConfigValidate` (cmd_config.go:43-45).
+- **`cmd/fusaops`** — `TestConfigValidateWithAdapters` covers the `len(cfg.Scan.Adapters) > 0`
+  output branch in `runConfigValidate` (cmd_config.go:68-70) by writing a config with adapters.
+- **`cmd/fusaops`** — `TestConfigShowNoConfig` covers the `ErrNoConfig` branch in `runConfigShow`
+  (cmd_config.go:96-99) by passing a directory with no `.fusaops.json`.
+- **`cmd/fusaops`** — `TestConfigShowBadJSON` covers the generic load error branch in
+  `runConfigShow` (cmd_config.go:100-101) by placing malformed JSON in `.fusaops.json`.
+- **`cmd/fusaops`** — `TestFMEANoDirFlag` covers the `if projectRoot == ""` block in `runFMEA`
+  (cmd_fmea.go:42-44) by omitting the `--dir` flag, triggering `os.Getwd()`.
+- **`cmd/fusaops`** — `TestHistoryListBadFlag` covers the parse error branch in
+  `runHistoryList` (cmd_history.go:43-45).
+- **`cmd/fusaops`** — `TestHistoryListLoadError` covers the `history.Load` error return in
+  `runHistoryList` (cmd_history.go:53-56) by making the history file a directory.
+- **`cmd/fusaops`** — `TestHistoryPruneFileFlag` covers the `if *file != ""` dir-resolution
+  branch in `runHistoryPrune` (cmd_history.go:103-105).
+- **`cmd/fusaops`** — `TestHistoryPruneError` covers the `history.Prune` error return in
+  `runHistoryPrune` (cmd_history.go:108-111) by making the history file a directory.
+- **`cmd/fusaops`** — `TestPolicyLoadOptionsError` covers the `loadOptions` error path in
+  `runPolicy` (cmd_policy.go:36-39) by placing malformed `.fusaops.json` alongside a valid policy.
+- Total coverage: 92.6% → 92.8%.
+
 ## [1.110.0] — 2026-07-26
 
 ### feat: coverage expansion — sign, trace, verify gap branches
