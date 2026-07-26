@@ -192,6 +192,17 @@ func TestPruneNothingToRemove(t *testing.T) {
 	}
 }
 
+// TestSaveConfigWriteError verifies SaveConfig returns an error when the output
+// path is in a non-existent directory.
+//
+//fusa:test REQ-FO-SUP005
+func TestSaveConfigWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "s.json")
+	if err := suppression.SaveConfig(path, suppression.Config{}); err == nil {
+		t.Error("SaveConfig: expected error for non-existent parent directory")
+	}
+}
+
 // TestSaveConfigRoundTrip verifies JSON round-trip preserves all fields.
 //
 //fusa:test REQ-FO-SUP005

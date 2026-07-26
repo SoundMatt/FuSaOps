@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.87.0] — 2026-07-26
+
+### feat: coverage expansion — server, standards, suppression, disposition, vuln
+
+- **`server`** — added `TestWriteHeaderViaAuth` covering `statusRecorder.WriteHeader`
+  (was 0%); requires auth middleware active + handler writing explicit non-200 status.
+- **`standards`** — added `TestRenderToFileCreateError` covering the `os.Create` error
+  path in `RenderToFile`. `RenderToFile` now fully covered.
+- **`suppression`** — added `TestSaveConfigWriteError` covering `SaveConfig` write
+  failure when the parent directory does not exist.
+- **`disposition`** — added `TestRenderEntriesEmptyProject` covering the
+  `project = "(project)"` branch in `RenderEntries` when `Project` is empty.
+- **`vuln`** — added `TestScanSkipsVendorDir` covering the `filepath.SkipDir` return
+  in `discoverManifests` when a `vendor/` directory is encountered.
+
+Total coverage: 88.3% (↑ from 88.2%).
+
 ## [1.86.0] — 2026-07-26
 
 ### feat: coverage expansion — tara, vuln, config, disposition

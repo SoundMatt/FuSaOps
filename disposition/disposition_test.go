@@ -151,6 +151,28 @@ func TestRenderEntries(t *testing.T) {
 	}
 }
 
+// TestRenderEntriesEmptyProject verifies RenderEntries uses "(project)" when
+// the Project field is empty, covering the `project = "(project)"` branch.
+//
+//fusa:test REQ-FO-DISP003
+func TestRenderEntriesEmptyProject(t *testing.T) {
+	log := &Log{
+		Project: "", // deliberately empty
+		Entries: []Entry{
+			{RuleID: "RULE002", Language: "go", Action: ActionAccept,
+				Reviewer: "bob", Rationale: "no project name",
+				Date: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)},
+		},
+	}
+	var buf bytes.Buffer
+	if err := RenderEntries(&buf, log); err != nil {
+		t.Fatalf("RenderEntries empty project: %v", err)
+	}
+	if !strings.Contains(buf.String(), "(project)") {
+		t.Errorf("expected '(project)' in output: %q", buf.String())
+	}
+}
+
 // TestSaveWriteError verifies Save returns an error when the project root
 // directory does not exist.
 //
