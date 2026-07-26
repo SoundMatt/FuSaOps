@@ -7,6 +7,24 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.89.0] — 2026-07-26
+
+### feat: coverage expansion — report markdown helpers, policy scopeLabel, pr.Save, hara.MaxASIL
+
+- **`report`** — `TestMarkdownBadgePending` covers the `default` branch of `markdownBadge`
+  (unknown status → PENDING badge); `TestMarkdownSeverityIconInfo` covers the `default`
+  branch of `markdownSeverityIcon` (SeverityInfo → ℹ️ INFO); `TestMarkdownLocFileOnly`
+  covers the file-only path in `markdownLoc` (file present, line == 0).
+- **`policy`** — `TestScopeLabelToolOnly` covers the tool-only branch of `scopeLabel`;
+  `TestScopeLabelNeither` covers the empty-return branch; `TestRenderToFileCreateError`
+  covers `RenderToFile` `os.Create` error when parent directory does not exist.
+- **`pr`** — `TestSaveWriteError` covers `Save` `os.WriteFile` error when project root
+  does not exist.
+- **`hara`** — `TestMaxASILUnknownASIL` covers `asilRank` default return (-1) by calling
+  `MaxASIL` with an unrecognised ASIL string.
+
+Total coverage: 88.6% (↑ from 88.4%).
+
 ## [1.88.0] — 2026-07-26
 
 ### feat: coverage expansion — coverage.Parse, conform.scaffold, slsa assessment branches

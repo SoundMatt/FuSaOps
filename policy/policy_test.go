@@ -325,3 +325,35 @@ func TestRenderMarkdownPipeEscape(t *testing.T) {
 		t.Error("unescaped pipe character in markdown table cell")
 	}
 }
+
+// TestScopeLabelToolOnly verifies scopeLabel returns [tool=X] when only Tool is set.
+//
+//fusa:test REQ-FO-POL003
+func TestScopeLabelToolOnly(t *testing.T) {
+	got := scopeLabel(Rule{Tool: "gofusa"})
+	if got != " [tool=gofusa]" {
+		t.Errorf("scopeLabel tool-only: got %q, want \" [tool=gofusa]\"", got)
+	}
+}
+
+// TestScopeLabelNeither verifies scopeLabel returns empty string when neither
+// Language nor Tool is set.
+//
+//fusa:test REQ-FO-POL003
+func TestScopeLabelNeither(t *testing.T) {
+	got := scopeLabel(Rule{})
+	if got != "" {
+		t.Errorf("scopeLabel neither: got %q, want empty string", got)
+	}
+}
+
+// TestRenderToFileCreateError verifies RenderToFile returns an error when the
+// output file cannot be created (parent directory does not exist).
+//
+//fusa:test REQ-FO-POL004
+func TestRenderToFileCreateError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "report.json")
+	if err := RenderToFile(nil, &PolicyReport{}, "json", path); err == nil {
+		t.Error("RenderToFile: expected error for non-existent parent directory")
+	}
+}
