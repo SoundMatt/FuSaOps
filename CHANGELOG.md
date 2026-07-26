@@ -7,6 +7,29 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.109.0] — 2026-07-26
+
+### feat: coverage expansion — impact package stale-artifact, non-source skip, rerunSet, and clean-repo branches
+
+- **`impact`** — `TestCheckArtifactsStale` covers the time-format stale-reason branch
+  (`impact.go:261–267`) by creating a `check-report.json` with mtime set to epoch and calling
+  `checkArtifacts` with `latestSrc = time.Now()`, confirming `Stale: true` and a non-empty Reason.
+- **`impact`** — `TestScanAnnotationsNonSource` covers the `!sourceExtensions[ext]` early-return
+  (`impact.go:174`) by creating a `.txt` file with a `//fusa:req` annotation and verifying the
+  ID is not collected.
+- **`impact`** — `TestRenderTextWithTestsNeeded` covers the `TestsNeeded` loop (`impact.go:320–322`)
+  and the `RerunTests` section (`impact.go:345–350`) by constructing a Report with both fields
+  populated and calling `Render(&buf, rep, "text")`.
+- **`impact`** — `TestAnalyseCleanGitRepo` covers the `len(changes) == 0` early-return
+  (`impact.go:98–100`) by initialising a git repo, making one commit, and calling `Analyse`
+  with no pending working-tree changes.
+- **`impact`** — `TestAnalyseAnnotatedChanged` covers the `rerunSet` population loop
+  (`impact.go:138–140` and `149–151`) by creating a committed `impl.go`/`impl_test.go` pair
+  with matching `//fusa:req`/`//fusa:test` annotations, then modifying `impl.go` so it appears
+  in `git diff HEAD`.
+- impact package: ~89.7% → 96.8%.
+- Total coverage: 92.4% → 92.5%.
+
 ## [1.108.0] — 2026-07-26
 
 ### feat: coverage expansion — orchestrator timeout/semaphore/detect-error/component-pin branches
