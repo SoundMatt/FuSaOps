@@ -7,6 +7,28 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.104.0] — 2026-07-26
+
+### feat: coverage expansion — disposition flag/load/save errors, TARA no-dir, req parse branches
+
+- **`cmd/fusaops`** — `TestDispositionFlagParseError` covers the `fs.Parse` error branch in
+  `runDisposition`; `TestDispositionAddFlagParseError` covers the same in `runDispositionAdd`.
+- **`cmd/fusaops`** — `TestDispositionAddLoadError` and `TestDispositionShowLoadError` place the
+  dispositions file path as a directory to trigger the non-IsNotExist `disposition.Load` error
+  branch in `runDispositionAdd` and `runDispositionShow` respectively.
+- **`cmd/fusaops`** — `TestDispositionAddSaveError` uses a read-only directory to cover the
+  `disposition.Save` error branch in `runDispositionAdd`.
+- **`cmd/fusaops`** — `TestDispositionShowWithLanguage` and `TestDispositionShowWithReference`
+  add dispositions carrying `--lang` and `--ref` to cover the `e.Language != ""` and
+  `e.Reference != ""` output branches in `runDispositionShow`.
+- **`cmd/fusaops`** — `TestTARANoDirFlag` calls `runTARA` without `--dir` to exercise the
+  `os.Getwd()` fallback branch (line 40).
+- **`req`** — `TestLoadRegistryBadJSON` covers the `json.Unmarshal` error branch in `LoadRegistry`.
+- **`req`** — `TestParseDOORSEmptyAttrs` and `TestParseDOORSEmptyID` cover the
+  `len(attrs) == 0 → continue` and `e.ID == "" → continue` branches in `ParseDOORS`.
+- **`req`** — `TestParseCSVEmptyIDRow` covers the `id == "" → continue` branch in `ParseCSV`.
+- Total coverage: 90.4% → 90.7%.
+
 ## [1.103.0] — 2026-07-26
 
 ### feat: coverage expansion — sas/sci/safetycase/doctemplate/qualify/report/metrics Load error paths
