@@ -136,6 +136,9 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	if *qualifyReport != "" {
 		srv = srv.WithQualifyReport(*qualifyReport)
 	}
+	if cfg != nil {
+		srv = srv.WithComp(cfg.Comp.Threshold, cfg.Comp.DAL)
+	}
 
 	fmt.Fprintf(stdout, "FuSaOps dashboard for %s\n", root)
 	fmt.Fprintf(stdout, "Listening on %s://localhost%s  (Ctrl-C to stop)\n", scheme, *addr)

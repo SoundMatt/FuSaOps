@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.72.0] — 2026-07-25
+
+### feat: comp capabilities registration, config support, and /api/v1/comp endpoint
+
+- **`capabilities` fix**: `comp` is now listed in the `commands[]` array and the
+  `formats` map (`["text","json"]`) of the `fusaops capabilities` discovery document.
+  (REQ-FO-CLI083)
+- **`config.CompConfig`**: new `.fusaops.json` section `"comp": { "threshold": N, "dal": "DAL-X" }`
+  lets projects set the cyclomatic complexity threshold once for all tools. The server
+  and `fusaops comp` CLI both read this config. (REQ-FO-CFG014)
+- **`server`: `/api/v1/comp`**: the web server now computes a cross-language comp
+  aggregate (`RunComp`) during each refresh cycle and exposes it at `GET /api/v1/comp`
+  as JSON. `WithComp(threshold, dal)` is the builder method. (REQ-FO-SRV012)
+- New requirements: REQ-FO-CLI083, REQ-FO-CFG014, REQ-FO-SRV012
+
 ## [1.71.0] — 2026-07-25
 
 ### feat: x-FuSa spec v1.10.10 sync — comp consumption and all-tool snapshot

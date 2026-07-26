@@ -2762,6 +2762,28 @@
       "priority": "MUST",
       "rationale": "Exposes the cross-language cyclomatic complexity gate at the CLI level for CI integration; DO-178C §6.3.4 requires bounding V(G) by DAL.",
       "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-CLI083",
+      "title": "comp registered in fusaops capabilities",
+      "description": "The fusaops capabilities document shall list 'comp' in its commands[] array and register 'comp' in its formats map with supported formats ['text','json'], so tooling and orchestrators can discover the command via standard §9.1 discovery.",
+      "priority": "MUST",
+      "rationale": "The capabilities document is the §9.1 discovery mechanism; every command must be listed there so downstream tools can determine whether fusaops supports comp without trial-and-error invocation."
+    },
+    {
+      "id": "REQ-FO-CFG014",
+      "title": "CompConfig: comp.threshold and comp.dal in .fusaops.json",
+      "description": "FuSaOps shall support a 'comp' section in .fusaops.json with 'threshold' (int, cyclomatic complexity ceiling) and 'dal' (string, DO-178C DAL level); when threshold is 0 the DAL-derived default is used; the server shall read these values to configure the /api/v1/comp endpoint.",
+      "priority": "MUST",
+      "rationale": "Allows project-wide comp gate policy to be encoded in the config file rather than repeated on every CLI invocation and makes the serve dashboard use the same thresholds as the CLI.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-SRV012",
+      "title": "/api/v1/comp endpoint and server comp integration",
+      "description": "The FuSaOps web server shall compute and cache the cross-language cyclomatic complexity aggregate (RunComp) during each compute cycle and expose it at GET /api/v1/comp as a JSON comp.Aggregate. The server shall use the CompConfig from .fusaops.json (threshold, dal) for the computation.",
+      "priority": "MUST",
+      "rationale": "Provides programmatic access to comp data for CI pipelines and third-party tooling, consistent with the /api/v1/vv and /api/v1/status pattern."
     }
   ]
 }

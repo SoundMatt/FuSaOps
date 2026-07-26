@@ -23,6 +23,7 @@ import (
 	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
+	"github.com/SoundMatt/FuSaOps/comp"
 	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/fleet"
 	"github.com/SoundMatt/FuSaOps/history"
@@ -51,11 +52,17 @@ type Server struct {
 	baselineFile    string         // empty = no baseline configured
 	vvDecl          vv.Declaration // populated via WithVandV
 	qualifyPath     string         // empty = auto-discover from root
+	compThreshold   int            // 0 = use DAL default
+	compDAL         string         // empty = use DAL-B default
 
 	mu         sync.RWMutex
 	cached     *report.AggregateReport
 	err        error
 	prevStatus string // previous status for webhook change detection
+
+	compMu  sync.RWMutex
+	compAgg *comp.Aggregate
+	compErr error
 
 	fleetMu  sync.RWMutex
 	fleetRep *fleet.FleetReport
@@ -183,6 +190,7 @@ func (s *Server) WithVandV(d vv.Declaration) *Server {
 // compute runs the orchestrator, caches the result, and persists a snapshot.
 //
 //fusa:req REQ-FO-SRV003
+//fusa:req REQ-FO-SRV012
 func (s *Server) compute(ctx context.Context) {
 	rep, err := s.runner.Run(ctx, s.root, s.opts)
 	s.mu.Lock()
@@ -203,6 +211,11 @@ func (s *Server) compute(ctx context.Context) {
 			go fireWebhook(s.webhookURL, prev, newStatus, rep.Summary.Errors)
 		}
 	}
+	// Run comp separately; missing Compler adapters are silently skipped.
+	compAgg, compErr := s.runner.RunComp(ctx, s.root, s.opts, s.compThreshold, s.compDAL)
+	s.compMu.Lock()
+	s.compAgg, s.compErr = compAgg, compErr
+	s.compMu.Unlock()
 	if s.fleetCfg != "" {
 		s.computeFleet(ctx)
 	}
@@ -247,6 +260,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/refresh", s.handleRefresh)
 	mux.HandleFunc("/healthz", s.handleHealth)
 	mux.HandleFunc("/badge/status.svg", s.handleBadge)
+	mux.HandleFunc("/api/v1/comp", s.handleAPIComp)
 	mux.HandleFunc("/api/v1/vv", s.handleAPIVandV)
 	mux.HandleFunc("/badge/vv.svg", s.handleVandVBadge)
 	mux.HandleFunc("/badge/qualify.svg", s.handleQualifyBadge)
@@ -897,6 +911,39 @@ func (s *Server) handleBadge(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "image/svg+xml")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	fmt.Fprint(w, svgBadge("fusaops", status, color))
+}
+
+// WithComp sets the cyclomatic complexity threshold and DAL for the
+// /api/v1/comp endpoint. threshold=0 means use the DAL default.
+//
+//fusa:req REQ-FO-SRV012
+func (s *Server) WithComp(threshold int, dal string) *Server {
+	s.compThreshold = threshold
+	s.compDAL = dal
+	return s
+}
+
+// handleAPIComp serves the /api/v1/comp JSON endpoint with the cached
+// cross-language cyclomatic complexity aggregate.
+//
+//fusa:req REQ-FO-SRV012
+func (s *Server) handleAPIComp(w http.ResponseWriter, _ *http.Request) {
+	s.compMu.RLock()
+	agg, err := s.compAgg, s.compErr
+	s.compMu.RUnlock()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if agg == nil {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, "{}\n")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(agg)
 }
 
 // handleAPIVandV serves the /api/v1/vv JSON endpoint with V&V independence
