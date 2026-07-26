@@ -3,11 +3,18 @@ package report
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
 	"strings"
 	"testing"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 )
+
+// errWriter returns an error on every Write call.
+type errWriter struct{}
+
+func (errWriter) Write(_ []byte) (int, error) { return 0, errors.New("write failed") }
 
 func sampleComponents() []Component {
 	return []Component{
@@ -637,3 +644,37 @@ func TestMCDCInfoCoveragePct(t *testing.T) {
 		t.Errorf("CoveragePct(0/5) = %d, want 0", got)
 	}
 }
+
+// TestRenderHTMLWriteError verifies renderHTML returns an error when the writer fails.
+//
+//fusa:test REQ-FO-RPT012
+//fusa:test REQ-FO-RPT016
+func TestRenderHTMLWriteError(t *testing.T) {
+	r := New("/root", "demo", sampleComponents())
+	if err := renderHTML(errWriter{}, r, RenderOptions{}); err == nil {
+		t.Error("expected error when Writer fails during HTML template execution")
+	}
+}
+
+// TestRenderCSVWriteError verifies renderCSV returns an error when the writer fails.
+//
+//fusa:test REQ-FO-RPT001
+func TestRenderCSVWriteError(t *testing.T) {
+	r := New("/root", "demo", sampleComponents())
+	if err := renderCSV(errWriter{}, r); err == nil {
+		t.Error("expected error when Writer fails during CSV render")
+	}
+}
+
+// TestRenderJSONWriteError verifies renderJSON returns an error when the writer fails.
+//
+//fusa:test REQ-FO-RPT001
+func TestRenderJSONWriteError(t *testing.T) {
+	r := New("/root", "demo", sampleComponents())
+	if err := renderJSON(errWriter{}, r); err == nil {
+		t.Error("expected error when Writer fails during JSON render")
+	}
+}
+
+// Ensure errWriter implements io.Writer (compile check).
+var _ io.Writer = errWriter{}
