@@ -7,6 +7,26 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.101.0] — 2026-07-26
+
+### feat: coverage expansion — runInit, loadOptions, runMCDC, runReqExport, runSafetyCase
+
+- **`cmd/fusaops`** — `TestInitSaveError` covers the `config.Save` error path in `runInit` by
+  passing a non-existent parent directory; `runInit` 79.2% → 87.5%.
+- **`cmd/fusaops`** — `TestLoadOptionsMalformedConfig` writes malformed `.fusaops.json` into a
+  temp dir and calls `runStandards`, triggering the non-`ErrNoConfig` config error return in
+  `loadOptions`; `loadOptions` 78.6% → 82.1%.
+- **`cmd/fusaops`** — `TestCoverageMCDCCwdFallback` calls `runCoverage --mcdc` without `--dir` or
+  `--req-dir`, exercising the `os.Getwd()` cwd fallback in `runMCDC`; `TestCoverageMCDCRenderError`
+  passes `--format xml` to trigger `coverage.RenderMCDC` unsupported-format error (return 2);
+  together these bring `runMCDC` 79.3% → 93.1%.
+- **`cmd/fusaops`** — `TestReqExportOutputCreateError` covers the `os.Create` error path in
+  `runReqExport` using a file-as-parent bad output path; `runReqExport` 78.9% → 84.2%.
+- **`cmd/fusaops`** — `TestSafetyCaseSaveError` covers the `safetycase.Save` error path in
+  `runSafetyCase` via bad `--output` path; `runSafetyCase` 79.6% → 83.7%.
+
+Total coverage: 90.1% (↑ from 89.9%).
+
 ## [1.100.0] — 2026-07-26
 
 ### feat: coverage expansion — hooksInstall, hooksRemove, runVerify, runStandards, safetycase.hashFile
