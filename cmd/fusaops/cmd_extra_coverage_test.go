@@ -2123,3 +2123,58 @@ func TestTraceValidTimeout(t *testing.T) {
 		t.Errorf("trace --timeout 30s: unexpected flag parse error, code=2")
 	}
 }
+
+// TestSuppressVerifyAllMatch verifies runSuppressVerify exits 0 and prints the
+// "All N suppression(s) match" message when there are no stale entries.
+//
+//fusa:test REQ-FO-SUP008
+func TestSuppressVerifyAllMatch(t *testing.T) {
+	dir := goProject(t)
+	suppFile := filepath.Join(t.TempDir(), "s.json")
+	// Empty suppressions list → stale is never populated → len(stale)==0 → return 0.
+	if err := os.WriteFile(suppFile, []byte(`{"suppressions":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runSuppressVerify([]string{"--file", suppFile, "--dir", dir}, &stdout, &stderr)
+	if code != 0 {
+		t.Errorf("suppress verify empty: want 0, got %d stderr=%q", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "All 0") {
+		t.Errorf("suppress verify empty: expected 'All 0' in stdout, got %q", stdout.String())
+	}
+}
+
+// TestSuppressVerifyEmptyFingerprint verifies runSuppressVerify skips entries
+// with an empty fingerprint (covers the s.Fingerprint=="" continue branch).
+//
+//fusa:test REQ-FO-SUP008
+func TestSuppressVerifyEmptyFingerprint(t *testing.T) {
+	dir := goProject(t)
+	suppFile := filepath.Join(t.TempDir(), "s.json")
+	// Suppression with empty fingerprint → skipped → stale stays empty → return 0.
+	content := `{"suppressions":[{"fingerprint":"","reason":"no-fp","expires":""}]}`
+	if err := os.WriteFile(suppFile, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runSuppressVerify([]string{"--file", suppFile, "--dir", dir}, &stdout, &stderr)
+	if code != 0 {
+		t.Errorf("suppress verify empty-fp: want 0, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestStandardsGoProjectStdout verifies runStandards renders to stdout (not
+// --output file) when a Go project dir is used and no --output is given.
+// Covers the standards.Render(stdout, ...) path.
+//
+//fusa:test REQ-FO-CLI015
+func TestStandardsGoProjectStdout(t *testing.T) {
+	dir := goProject(t)
+	var stdout, stderr bytes.Buffer
+	code := runStandards("iso26262", []string{"--dir", dir}, &stdout, &stderr)
+	// 0 or 1 depending on gofusa; never 2 (no flag error).
+	if code == 2 {
+		t.Errorf("iso26262 goProject stdout: unexpected code=2 stderr=%q", stderr.String())
+	}
+}

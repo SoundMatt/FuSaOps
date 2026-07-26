@@ -226,3 +226,16 @@ func TestPruneWriteAllError(t *testing.T) {
 		t.Errorf("Prune: expected error when history path is a directory, got nil (removed %d)", n)
 	}
 }
+
+// TestStoreWriteError verifies Store returns an error when the history dir does
+// not exist (covers the os.Create error path in writeAll).
+//
+//fusa:test REQ-FO-HST002
+func TestStoreWriteError(t *testing.T) {
+	snap := FromReport(makeReport(0, 0, 0))
+	// Non-existent subdirectory → writeAll os.Create fails.
+	err := Store(filepath.Join(t.TempDir(), "nonexistent-subdir"), snap)
+	if err == nil {
+		t.Error("Store: expected error for non-existent directory")
+	}
+}
