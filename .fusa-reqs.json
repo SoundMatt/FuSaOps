@@ -2466,6 +2466,13 @@
       "standard": "ISO 26262"
     },
     {
+      "id": "REQ-FO-RPT021",
+      "title": "HTML dashboard cyclomatic complexity section",
+      "description": "When the server has a cached comp.Aggregate, the HTML dashboard shall render a Cyclomatic Complexity section showing per-component function counts, violation counts, and thresholds. The section is omitted when no comp data is available.",
+      "priority": "MUST",
+      "standard": "DO-178C"
+    },
+    {
       "id": "REQ-FO-SPEC001",
       "title": "stdout clean when --output given (§2.2 no-stdout invariant)",
       "priority": "MUST",

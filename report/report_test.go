@@ -521,3 +521,47 @@ func TestJSONReportHasIntegrityFields(t *testing.T) {
 		t.Error("JSON output should contain sil field")
 	}
 }
+
+// TestRenderHTMLCompSection verifies the dashboard includes the comp section
+// when CompInfo is non-nil.
+//
+//fusa:test REQ-FO-RPT021
+func TestRenderHTMLCompSection(t *testing.T) {
+	r := New("/root", "demo", sampleComponents())
+	var buf bytes.Buffer
+	err := RenderWithOptions(&buf, r, "html", RenderOptions{
+		CompInfo: &CompInfo{
+			TotalFunctions: 12,
+			Violations:     2,
+			Components: []CompComponent{
+				{Language: "go", Tool: "gofusa", TotalFunctions: 12, Violations: 2, Threshold: 10, DAL: "DAL-B"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("renderHTML: %v", err)
+	}
+	html := buf.String()
+	for _, want := range []string{
+		"Cyclomatic Complexity", "2 violations", "12", "gofusa", "DAL-B (≤10)",
+	} {
+		if !strings.Contains(html, want) {
+			t.Errorf("html missing %q", want)
+		}
+	}
+}
+
+// TestRenderHTMLCompSectionHidden verifies the comp section is absent when
+// CompInfo is nil.
+//
+//fusa:test REQ-FO-RPT021
+func TestRenderHTMLCompSectionHidden(t *testing.T) {
+	r := New("/root", "demo", sampleComponents())
+	var buf bytes.Buffer
+	if err := Render(&buf, r, "html"); err != nil {
+		t.Fatalf("renderHTML: %v", err)
+	}
+	if strings.Contains(buf.String(), "Cyclomatic Complexity") {
+		t.Error("html should not include comp section when CompInfo is nil")
+	}
+}

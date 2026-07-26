@@ -349,11 +349,45 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no report available yet", http.StatusServiceUnavailable)
 		return
 	}
+	s.compMu.RLock()
+	compAgg := s.compAgg
+	s.compMu.RUnlock()
+	var compInfo *report.CompInfo
+	if compAgg != nil {
+		compInfo = compInfoFromAggregate(compAgg)
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	qi := loadQualifyInfo(s.root, s.qualifyPath)
-	if err := report.RenderWithOptions(w, rep, "html", report.RenderOptions{QualifyInfo: qi}); err != nil {
+	opts := report.RenderOptions{QualifyInfo: qi, CompInfo: compInfo}
+	if err := report.RenderWithOptions(w, rep, "html", opts); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// compInfoFromAggregate converts a comp.Aggregate into a report.CompInfo for
+// the HTML dashboard renderer. The conversion avoids a report→comp import cycle.
+//
+//fusa:req REQ-FO-RPT021
+func compInfoFromAggregate(agg *comp.Aggregate) *report.CompInfo {
+	info := &report.CompInfo{
+		TotalFunctions: agg.TotalFunctions,
+		Violations:     agg.Violations,
+	}
+	for _, c := range agg.Components {
+		cc := report.CompComponent{
+			Language: c.Language,
+			Tool:     c.Tool,
+			Skipped:  c.Skipped,
+		}
+		if c.Report != nil {
+			cc.TotalFunctions = c.Report.TotalFunctions
+			cc.Violations = c.Report.Violations
+			cc.Threshold = c.Report.Threshold
+			cc.DAL = c.Report.DAL
+		}
+		info.Components = append(info.Components, cc)
+	}
+	return info
 }
 
 // handleAPIReport serves the cached report as JSON.
