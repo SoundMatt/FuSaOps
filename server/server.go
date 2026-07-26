@@ -27,6 +27,7 @@ import (
 	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/fleet"
 	"github.com/SoundMatt/FuSaOps/history"
+	"github.com/SoundMatt/FuSaOps/mcdc"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
 	"github.com/SoundMatt/FuSaOps/report"
 	"github.com/SoundMatt/FuSaOps/vv"
@@ -63,6 +64,10 @@ type Server struct {
 	compMu  sync.RWMutex
 	compAgg *comp.Aggregate
 	compErr error
+
+	mcdcMu  sync.RWMutex
+	mcdcAgg *mcdc.MCDCAggregate
+	mcdcErr error
 
 	fleetMu  sync.RWMutex
 	fleetRep *fleet.FleetReport
@@ -216,6 +221,11 @@ func (s *Server) compute(ctx context.Context) {
 	s.compMu.Lock()
 	s.compAgg, s.compErr = compAgg, compErr
 	s.compMu.Unlock()
+	// Run MC/DC separately; missing McdcRunner adapters are silently skipped.
+	mcdcAgg, mcdcErr := s.runner.RunMCDC(ctx, s.root, s.opts)
+	s.mcdcMu.Lock()
+	s.mcdcAgg, s.mcdcErr = mcdcAgg, mcdcErr
+	s.mcdcMu.Unlock()
 	if s.fleetCfg != "" {
 		s.computeFleet(ctx)
 	}
@@ -262,6 +272,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/badge/status.svg", s.handleBadge)
 	mux.HandleFunc("/api/v1/comp", s.handleAPIComp)
 	mux.HandleFunc("/comp", s.handleComp)
+	mux.HandleFunc("/api/v1/mcdc", s.handleAPIMCDC)
+	mux.HandleFunc("/mcdc", s.handleMCDC)
 	mux.HandleFunc("/api/v1/vv", s.handleAPIVandV)
 	mux.HandleFunc("/badge/vv.svg", s.handleVandVBadge)
 	mux.HandleFunc("/badge/qualify.svg", s.handleQualifyBadge)
@@ -353,16 +365,49 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	s.compMu.RLock()
 	compAgg := s.compAgg
 	s.compMu.RUnlock()
+	s.mcdcMu.RLock()
+	mcdcAgg := s.mcdcAgg
+	s.mcdcMu.RUnlock()
 	var compInfo *report.CompInfo
 	if compAgg != nil {
 		compInfo = compInfoFromAggregate(compAgg)
 	}
+	var mcdcInfo *report.MCDCInfo
+	if mcdcAgg != nil && mcdcAgg.TotalConditions > 0 {
+		mcdcInfo = mcdcInfoFromAggregate(mcdcAgg)
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	qi := loadQualifyInfo(s.root, s.qualifyPath)
-	opts := report.RenderOptions{QualifyInfo: qi, CompInfo: compInfo}
+	opts := report.RenderOptions{QualifyInfo: qi, CompInfo: compInfo, MCDCInfo: mcdcInfo}
 	if err := report.RenderWithOptions(w, rep, "html", opts); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// mcdcInfoFromAggregate converts an mcdc.MCDCAggregate into a report.MCDCInfo
+// for the HTML dashboard renderer. The conversion avoids a report→mcdc import cycle.
+//
+//fusa:req REQ-FO-MCDC003
+func mcdcInfoFromAggregate(agg *mcdc.MCDCAggregate) *report.MCDCInfo {
+	info := &report.MCDCInfo{
+		TotalConditions:   agg.TotalConditions,
+		CoveredConditions: agg.CoveredConditions,
+		GatePassed:        agg.GatePassed,
+	}
+	for _, c := range agg.Components {
+		mc := report.MCDCComponent{
+			Language: c.Language,
+			Tool:     c.Tool,
+			Skipped:  c.Skipped,
+		}
+		if c.Report != nil {
+			mc.TotalConditions = c.Report.TotalConditions
+			mc.CoveredConditions = c.Report.CoveredConditions
+			mc.GatePassed = c.Report.GatePassed
+		}
+		info.Components = append(info.Components, mc)
+	}
+	return info
 }
 
 // compInfoFromAggregate converts a comp.Aggregate into a report.CompInfo for
@@ -1081,6 +1126,107 @@ code{font-family:ui-monospace,monospace;font-size:.82rem;color:#4a5568}
 		fmt.Fprint(w, "</tbody></table>\n")
 	}
 	fmt.Fprintf(w, "<p style=\"font-size:.8rem;color:#a0aec0;margin-top:1rem\">V(G) = McCabe cyclomatic complexity · <a href=\"/api/v1/comp\">JSON</a></p>\n</body></html>\n")
+}
+
+// handleAPIMCDC serves the /api/v1/mcdc JSON endpoint with the cached
+// cross-language MC/DC coverage aggregate.
+//
+//fusa:req REQ-FO-MCDC002
+func (s *Server) handleAPIMCDC(w http.ResponseWriter, _ *http.Request) {
+	s.mcdcMu.RLock()
+	agg, err := s.mcdcAgg, s.mcdcErr
+	s.mcdcMu.RUnlock()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if agg == nil {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, "{}\n")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(agg)
+}
+
+// handleMCDC renders the full MC/DC coverage HTML page at /mcdc.
+//
+//fusa:req REQ-FO-MCDC003
+func (s *Server) handleMCDC(w http.ResponseWriter, _ *http.Request) {
+	s.mcdcMu.RLock()
+	agg, aggErr := s.mcdcAgg, s.mcdcErr
+	s.mcdcMu.RUnlock()
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprint(w, `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FuSaOps — MC/DC Coverage</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f4f6f9;color:#1a1a2e;padding:1.5rem}
+h1{font-size:1.4rem;margin-bottom:1rem}
+h2{font-size:1.1rem;margin:1.2rem 0 .6rem}
+a{color:#4361ee;text-decoration:none}a:hover{text-decoration:underline}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:4px;font-weight:600;font-size:.78rem}
+.pass{background:#d1fae5;color:#065f46}
+.fail{background:#fee2e2;color:#7f1d1d}
+.sub{color:#718096;font-size:.85rem;margin-left:.5rem}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:1.5rem}
+th,td{padding:.6rem .9rem;text-align:left;border-bottom:1px solid #edf2f7;font-size:.85rem}
+th{background:#f8fafc;font-weight:600;color:#4a5568}
+tr:last-child td{border-bottom:none}
+.viol{color:#c53030;font-weight:700}
+.ok{color:#2d6a4f}
+code{font-family:ui-monospace,monospace;font-size:.82rem;color:#4a5568}
+.empty{color:#718096;padding:1rem 0}
+</style>
+</head>
+<body>
+<h1>FuSaOps — MC/DC Coverage &nbsp;<a href="/" style="font-size:.8rem;font-weight:400">← dashboard</a></h1>
+`)
+	if aggErr != nil {
+		fmt.Fprintf(w, "<p style=\"color:#c53030\">Error: %s</p></body></html>\n", html.EscapeString(aggErr.Error()))
+		return
+	}
+	if agg == nil {
+		fmt.Fprint(w, `<p class="empty">No MC/DC data available. Ensure x-FuSa tools support --mcdc.</p></body></html>`+"\n")
+		return
+	}
+	badge := `<span class="badge pass">PASS</span>`
+	if !agg.GatePassed {
+		badge = `<span class="badge fail">FAIL</span>`
+	}
+	fmt.Fprintf(w, "<p>%s <span class=\"sub\">%d/%d conditions covered (%d%%) across %d component(s)</span></p>\n",
+		badge, agg.CoveredConditions, agg.TotalConditions, agg.CoveragePct(), len(agg.Components))
+	fmt.Fprint(w, "<table><thead><tr><th>Language</th><th>Tool</th><th>Conditions</th><th>Covered</th><th>Coverage</th><th>Gate</th></tr></thead><tbody>\n")
+	for _, c := range agg.Components {
+		if c.Skipped != "" {
+			fmt.Fprintf(w,
+				"<tr><td>%s</td><td><code>%s</code></td><td colspan=\"4\" class=\"empty\">skipped: %s</td></tr>\n",
+				html.EscapeString(c.Language), html.EscapeString(c.Tool), html.EscapeString(c.Skipped))
+			continue
+		}
+		if c.Report == nil {
+			fmt.Fprintf(w,
+				"<tr><td>%s</td><td><code>%s</code></td><td colspan=\"4\" class=\"empty\">no report</td></tr>\n",
+				html.EscapeString(c.Language), html.EscapeString(c.Tool))
+			continue
+		}
+		r := c.Report
+		gateBadge := `<span class="ok">PASS</span>`
+		if !r.GatePassed {
+			gateBadge = `<span class="viol">FAIL</span>`
+		}
+		fmt.Fprintf(w,
+			"<tr><td>%s</td><td><code>%s</code></td><td>%d</td><td>%d</td><td>%d%%</td><td>%s</td></tr>\n",
+			html.EscapeString(c.Language), html.EscapeString(c.Tool),
+			r.TotalConditions, r.CoveredConditions, r.CoveragePct(), gateBadge)
+	}
+	fmt.Fprintf(w, "</tbody></table>\n<p style=\"font-size:.8rem;color:#a0aec0;margin-top:1rem\">MC/DC = Modified Condition/Decision Coverage · DO-178C Level A / ISO 26262 ASIL-D · <a href=\"/api/v1/mcdc\">JSON</a></p>\n</body></html>\n")
 }
 
 // handleAPIVandV serves the /api/v1/vv JSON endpoint with V&V independence

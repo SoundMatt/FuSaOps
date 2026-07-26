@@ -15,6 +15,7 @@ type htmlData struct {
 	ShowFingerprints bool
 	Qualify          *QualifyInfo
 	Comp             *CompInfo
+	MCDC             *MCDCInfo
 }
 
 // renderHTML writes a self-contained HTML dashboard for the aggregate report.
@@ -30,7 +31,7 @@ func renderHTML(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 	if err != nil {
 		return fmt.Errorf("report: parse html template: %w", err)
 	}
-	if err := t.Execute(w, htmlData{r, opts.ShowSuppressed, opts.ShowFingerprints, opts.QualifyInfo, opts.CompInfo}); err != nil {
+	if err := t.Execute(w, htmlData{r, opts.ShowSuppressed, opts.ShowFingerprints, opts.QualifyInfo, opts.CompInfo, opts.MCDCInfo}); err != nil {
 		return fmt.Errorf("report: execute html template: %w", err)
 	}
 	return nil
@@ -122,6 +123,8 @@ const dashboardTemplate = `<!DOCTYPE html>
   footer { color:var(--muted); font-size:12px; padding:24px 32px; border-top:1px solid var(--line); }
   .comp-section { margin-top:28px; }
   .comp-section h2 { font-size:16px; margin:0 0 12px; font-weight:600; }
+  .mcdc-section { margin-top:28px; }
+  .mcdc-section h2 { font-size:16px; margin:0 0 12px; font-weight:600; }
 </style>
 </head>
 <body>
@@ -133,10 +136,17 @@ const dashboardTemplate = `<!DOCTYPE html>
     <span class="badge {{if .Qualify.AllPassed}}status-pass{{else}}status-fail{{end}}">
       {{if .Qualify.AllPassed}}qualified{{else}}qual-failing{{end}}
     </span>
+    {{if .Qualify.IsIndependent}}
+    <span class="badge status-pass" style="margin-left:4px;font-size:11px">independently-qualified</span>
+    {{else}}
+    <span class="badge" style="margin-left:4px;font-size:11px;background:rgba(138,147,166,.15);color:var(--muted)">self-qualified</span>
+    {{end}}
     <span class="sub" style="font-size:11px;margin-left:4px">
       {{.Qualify.Type}}
       · {{.Qualify.PassedCount}}/{{.Qualify.Total}} checks
       {{if .Qualify.RecordUri}}· <a href="{{.Qualify.RecordUri}}" style="color:var(--muted)">certificate</a>{{end}}
+      {{if .Qualify.IndependentReviewer}}· reviewer: {{.Qualify.IndependentReviewer}}{{end}}
+      {{if .Qualify.AchievableASIL}}· achievable: {{.Qualify.AchievableASIL}}{{end}}
     </span>
   </div>
   {{end}}
@@ -148,6 +158,7 @@ const dashboardTemplate = `<!DOCTYPE html>
   <nav class="nav-links">
     <a href="/history">History</a>
     {{if .Comp}}<a href="/comp">Complexity</a>{{end}}
+    {{if .MCDC}}<a href="/mcdc">MC/DC</a>{{end}}
     <a href="/api/report">JSON</a>
     <a href="/refresh">Refresh</a>
   </nav>
@@ -220,6 +231,35 @@ const dashboardTemplate = `<!DOCTYPE html>
             <td>{{.TotalFunctions}}</td>
             <td>{{if gt .Violations 0}}<span class="c-err"><b>{{.Violations}}</b></span>{{else}}0{{end}}</td>
             <td>{{compThresholdLabel .DAL .Threshold}}</td>
+          {{end}}
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+  </section>
+  {{end}}
+
+  {{if .MCDC}}
+  <section class="mcdc-section">
+    <h2><a href="/mcdc" style="color:inherit;text-decoration:none">MC/DC Coverage</a>
+      <span class="badge {{if .MCDC.GatePassed}}status-pass{{else}}status-fail{{end}}" style="margin-left:8px;font-size:13px">
+        {{if .MCDC.GatePassed}}PASS{{else}}FAIL{{end}}
+      </span>
+      <span class="sub" style="font-size:12px;margin-left:8px">{{.MCDC.CoveredConditions}}/{{.MCDC.TotalConditions}} conditions ({{.MCDC.CoveragePct}}%)</span>
+    </h2>
+    <table>
+      <thead><tr><th>Language</th><th>Tool</th><th>Conditions</th><th>Covered</th><th>Gate</th></tr></thead>
+      <tbody>
+      {{range .MCDC.Components}}
+        <tr>
+          <td>{{.Language}}</td>
+          <td>{{.Tool}}</td>
+          {{if .Skipped}}
+            <td colspan="3" class="c-info">skipped: {{.Skipped}}</td>
+          {{else}}
+            <td>{{.TotalConditions}}</td>
+            <td>{{.CoveredConditions}}</td>
+            <td>{{if .GatePassed}}<span class="c-info">PASS</span>{{else}}<span class="c-err"><b>FAIL</b></span>{{end}}</td>
           {{end}}
         </tr>
       {{end}}

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/SoundMatt/FuSaOps/comp"
+	"github.com/SoundMatt/FuSaOps/mcdc"
 	"github.com/SoundMatt/FuSaOps/sbom"
 	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
@@ -61,6 +62,13 @@ type Compler interface {
 //fusa:req REQ-FO-ADP018
 type StandardsProvider interface {
 	Standards(ctx context.Context, root, standard string) (*standards.GapReport, error)
+}
+
+// McdcRunner can produce a §9.4 MC/DC coverage report via the --mcdc flag.
+//
+//fusa:req REQ-FO-MCDC001
+type McdcRunner interface {
+	MCDC(ctx context.Context, root string) (*mcdc.Report, error)
 }
 
 // Trace runs "<tool> trace --format json" and decodes the matrix from stdout.
@@ -164,6 +172,23 @@ func (a *cmdAdapter) Comp(ctx context.Context, root string, threshold int, dal s
 	var r comp.Report
 	if err := json.Unmarshal(extractJSON(out), &r); err != nil {
 		return nil, fmt.Errorf("adapter %s: decode comp report: %w", a.name, err)
+	}
+	return &r, nil
+}
+
+// MCDC runs "<tool> comp --mcdc --format json" and decodes the MC/DC report.
+// The --mcdc flag signals the tool to emit a structured MC/DC coverage report
+// rather than a standard cyclomatic complexity report.
+//
+//fusa:req REQ-FO-MCDC001
+func (a *cmdAdapter) MCDC(ctx context.Context, root string) (*mcdc.Report, error) {
+	out, err := a.run(ctx, root, a.tool, "comp", "--mcdc", "--format", "json")
+	if err != nil {
+		return nil, fmt.Errorf("adapter %s: mcdc: %w", a.name, err)
+	}
+	var r mcdc.Report
+	if err := json.Unmarshal(extractJSON(out), &r); err != nil {
+		return nil, fmt.Errorf("adapter %s: decode mcdc report: %w", a.name, err)
 	}
 	return &r, nil
 }

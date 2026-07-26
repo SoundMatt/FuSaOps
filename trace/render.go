@@ -87,6 +87,16 @@ func renderText(w io.Writer, a *Aggregate) error {
 			}
 			fmt.Fprintln(w)
 		}
+		if c.HLRLLRSummary != nil {
+			fmt.Fprintf(w, "  hlr/llr: %d HLR → %d LLR", c.HLRLLRSummary.HLRCount, c.HLRLLRSummary.LLRCount)
+			if c.HLRLLRSummary.Orphaned > 0 {
+				fmt.Fprintf(w, "  orphaned: %d", c.HLRLLRSummary.Orphaned)
+			}
+			if c.HLRLLRSummary.Uncovered > 0 {
+				fmt.Fprintf(w, "  uncovered: %d", c.HLRLLRSummary.Uncovered)
+			}
+			fmt.Fprintln(w)
+		}
 		for _, r := range c.Requirements {
 			status := r.Status
 			if status == "" {
@@ -98,6 +108,20 @@ func renderText(w io.Writer, a *Aggregate) error {
 				fmt.Fprintf(w, "  gap  %s  (%s)\n", r.ID, status)
 			}
 		}
+		fmt.Fprintln(w)
+	}
+
+	// Aggregate HLR/LLR summary (REQ-FO-TRC030).
+	if a.HLRLLRSummary != nil {
+		fmt.Fprintln(w, "── HLR/LLR Summary ──")
+		fmt.Fprintf(w, "  %d HLR → %d LLR", a.HLRLLRSummary.HLRCount, a.HLRLLRSummary.LLRCount)
+		if a.HLRLLRSummary.Orphaned > 0 {
+			fmt.Fprintf(w, "  orphaned: %d", a.HLRLLRSummary.Orphaned)
+		}
+		if a.HLRLLRSummary.Uncovered > 0 {
+			fmt.Fprintf(w, "  uncovered: %d", a.HLRLLRSummary.Uncovered)
+		}
+		fmt.Fprintln(w)
 		fmt.Fprintln(w)
 	}
 
@@ -250,6 +274,10 @@ var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
  .decomp-pass{color:#7ee2a0;font-weight:600}
  .decomp-viols{padding:0;margin:.4rem 0 0 1rem;list-style:none;font-size:.85rem;color:#f0c463}
  .decomp-viols li::before{content:"⚠ ";opacity:.7}
+ .hlrllr{margin-top:1.2rem;background:#171a21;border-radius:.6rem;padding:.8rem 1rem}
+ .hlrllr h2{margin:0 0 .5rem;font-size:1rem;color:#9aa3b2}
+ .hlrllr-ok{color:#7ee2a0;font-weight:600}
+ .hlrllr-warn{color:#f0c463;font-weight:600}
 </style></head><body>
 <header>
  <h1>FuSaOps — Cross-Language Traceability{{if .Project}}: {{.Project}}{{end}}</h1>
@@ -259,7 +287,7 @@ var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
 <main>
  <table>
   <thead><tr><th>Tool</th><th>Language</th><th class="num">Requirements</th>
-   <th>Traced</th><th>Tested</th><th>Sec-Tested</th><th class="num">Qualification</th></tr></thead>
+   <th>Traced</th><th>Tested</th><th>Sec-Tested</th><th class="num">Qualification</th><th class="num">HLR→LLR</th></tr></thead>
   <tbody>
   {{range .Components}}
    <tr>
@@ -272,9 +300,10 @@ var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
      <td><div class="bar"><span style="width:{{testedPct .}}%"></span></div>{{.Coverage.TestedRequirements}} ({{testedPct .}}%)</td>
      <td>{{if .Coverage.SecTestedRequirements}}<div class="bar"><span style="width:{{secTestedPct .}}%"></span></div>{{.Coverage.SecTestedRequirements}} ({{secTestedPct .}}%){{else}}—{{end}}</td>
      <td class="num">{{if .Qualification}}{{.Qualification.Passed}}/{{.Qualification.Total}}{{else}}—{{end}}</td>
+     <td class="num">{{if .HLRLLRSummary}}{{.HLRLLRSummary.HLRCount}} → {{.HLRLLRSummary.LLRCount}}{{else}}—{{end}}</td>
     {{end}}
    </tr>
-   {{if .Requirements}}<tr><td colspan="7"><ul class="gaps">{{range .Requirements}}<li>{{.ID}}{{if .Title}} — {{.Title}}{{end}}{{if .Status}} ({{.Status}}){{end}}</li>{{end}}</ul></td></tr>{{end}}
+   {{if .Requirements}}<tr><td colspan="8"><ul class="gaps">{{range .Requirements}}<li>{{.ID}}{{if .Title}} — {{.Title}}{{end}}{{if .Status}} ({{.Status}}){{end}}{{if .Parent}} [parent: {{.Parent}}]{{end}}</li>{{end}}</ul></td></tr>{{end}}
   {{end}}
   </tbody>
   <tfoot><tr><th>TOTAL</th><th></th>
@@ -282,13 +311,25 @@ var traceTemplate = template.Must(template.New("trace").Funcs(template.FuncMap{
    <th>{{.Coverage.TracedRequirements}} ({{.Coverage.TracedPct}}%)</th>
    <th>{{.Coverage.TestedRequirements}} ({{.Coverage.TestedPct}}%)</th>
    <th>{{if .Coverage.SecTestedRequirements}}{{.Coverage.SecTestedRequirements}} ({{.Coverage.SecTestedPct}}%){{else}}—{{end}}</th>
-   <th></th></tr></tfoot>
+   <th></th>
+   <th class="num">{{if .HLRLLRSummary}}{{.HLRLLRSummary.HLRCount}} → {{.HLRLLRSummary.LLRCount}}{{else}}—{{end}}</th>
+   </tr></tfoot>
  </table>
 {{if .Decomposition}}
  <div class="decomp">
   <h2>Decomposition</h2>
   {{if .Decomposition.Valid}}<p class="decomp-pass">PASS — {{.Decomposition.HLRCount}} HLR, {{.Decomposition.LLRCount}} LLR</p>
   {{else}}<ul class="decomp-viols">{{range .Decomposition.Violations}}<li>{{.}}</li>{{end}}</ul>
+  {{end}}
+ </div>
+{{end}}
+{{if .HLRLLRSummary}}
+ <div class="hlrllr">
+  <h2>HLR/LLR Decomposition</h2>
+  {{if and (eq .HLRLLRSummary.Orphaned 0) (eq .HLRLLRSummary.Uncovered 0)}}
+   <p class="hlrllr-ok">PASS — {{.HLRLLRSummary.HLRCount}} HLR → {{.HLRLLRSummary.LLRCount}} LLR (no orphans or uncovered HLRs)</p>
+  {{else}}
+   <p class="hlrllr-warn">{{.HLRLLRSummary.HLRCount}} HLR → {{.HLRLLRSummary.LLRCount}} LLR · orphaned LLRs: {{.HLRLLRSummary.Orphaned}} · uncovered HLRs: {{.HLRLLRSummary.Uncovered}}</p>
   {{end}}
  </div>
 {{end}}

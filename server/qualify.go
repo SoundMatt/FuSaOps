@@ -36,12 +36,17 @@ func loadQualifyInfo(root, qualifyPath string) *report.QualifyInfo {
 		typ = "self"
 	}
 	return &report.QualifyInfo{
-		Type:        typ,
-		RecordUri:   qr.QualificationRecordUri,
-		AllPassed:   !qr.HasFailures(),
-		Total:       qr.Total,
-		PassedCount: qr.Passed,
-		Failed:      qr.Failed,
+		Type:                 typ,
+		RecordUri:            qr.QualificationRecordUri,
+		AllPassed:            !qr.HasFailures(),
+		Total:                qr.Total,
+		PassedCount:          qr.Passed,
+		Failed:               qr.Failed,
+		QualificationMethod:  qr.QualificationMethod,
+		QualifierIdentity:    qr.QualifierIdentity,
+		ImplementationAuthor: qr.ImplementationAuthor,
+		IndependentReviewer:  qr.IndependentReviewer,
+		AchievableASIL:       qr.AchievableASIL,
 	}
 }
 
