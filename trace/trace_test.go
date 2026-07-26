@@ -200,6 +200,16 @@ func TestFilterGapsTagDerived(t *testing.T) {
 	}
 }
 
+// writeError is a minimal error type that avoids importing extra packages.
+type writeError string
+
+func (e writeError) Error() string { return string(e) }
+
+// failWriter always returns an error on Write, used to trigger error paths.
+type failWriter struct{}
+
+func (failWriter) Write([]byte) (int, error) { return 0, writeError("write error") }
+
 func sampleAggregate() *Aggregate {
 	return New("/r", "proj", []ComponentTrace{
 		{Tool: "gofusa", Language: "go", Available: true,
@@ -360,5 +370,140 @@ func TestRenderUnknownAndToFile(t *testing.T) {
 	}
 	if err := RenderToFile(sampleAggregate(), "json", filepath.Join(t.TempDir(), "nope", "x.json")); err == nil {
 		t.Error("expected error creating file in missing dir")
+	}
+}
+
+// TestRenderTextHLRLLR exercises the component-level and aggregate HLRLLRSummary
+// sections of renderText, including the Orphaned and Uncovered sub-lines.
+//
+//fusa:test REQ-FO-TRC030
+//fusa:test REQ-FO-TRC014
+func TestRenderTextHLRLLR(t *testing.T) {
+	agg := New("/r", "proj", []ComponentTrace{
+		{Tool: "gofusa", Language: "go", Available: true,
+			Coverage:      Coverage{TotalRequirements: 4, TracedRequirements: 4, TestedRequirements: 4},
+			HLRLLRSummary: &HLRLLRSummary{HLRCount: 3, LLRCount: 6, Orphaned: 0, Uncovered: 1},
+		},
+	})
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "text"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"hlr/llr:", "HLR/LLR Summary", "uncovered:"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("renderText missing %q:\n%s", want, out)
+		}
+	}
+}
+
+// TestRenderTextDecomposition exercises the Decomposition section of renderText
+// for both the valid (no violations) and violation cases.
+//
+//fusa:test REQ-FO-TRC014
+func TestRenderTextDecomposition(t *testing.T) {
+	agg := New("/r", "", []ComponentTrace{
+		{Tool: "gofusa", Language: "go", Available: true,
+			Coverage: Coverage{TotalRequirements: 2, TracedRequirements: 2, TestedRequirements: 2}},
+	})
+	// Valid decomposition: no violations → "PASS" line.
+	agg.Decomposition = &DecompositionReport{HLRCount: 2, LLRCount: 4}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "text"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "Decomposition") || !strings.Contains(out, "PASS") {
+		t.Errorf("renderText should show Decomposition PASS:\n%s", out)
+	}
+
+	// Decomposition with one violation → violation string should appear.
+	agg.Decomposition = &DecompositionReport{
+		HLRCount: 1,
+		LLRCount: 1,
+		Violations: []DecompositionViolation{
+			{Kind: "childless-hlr", RequirementID: "REQ-H001", Component: "gofusa"},
+		},
+	}
+	var buf2 bytes.Buffer
+	if err := Render(&buf2, agg, "text"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf2.String(), "REQ-H001") {
+		t.Errorf("renderText Decomposition should list violation REQ-H001:\n%s", buf2.String())
+	}
+}
+
+// TestRenderHTMLHLRLLRAndDecomp verifies that the HTML template renders its
+// HLRLLRSummary and Decomposition sections without error when those fields are set.
+//
+//fusa:test REQ-FO-TRC015
+//fusa:test REQ-FO-TRC030
+func TestRenderHTMLHLRLLRAndDecomp(t *testing.T) {
+	agg := New("/r", "proj", []ComponentTrace{
+		{Tool: "gofusa", Language: "go", Available: true,
+			Coverage:      Coverage{TotalRequirements: 4, TracedRequirements: 4, TestedRequirements: 4},
+			HLRLLRSummary: &HLRLLRSummary{HLRCount: 2, LLRCount: 4, Orphaned: 1, Uncovered: 0},
+		},
+	})
+	agg.Decomposition = &DecompositionReport{HLRCount: 2, LLRCount: 4}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "html"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"decomp", "hlrllr", "Decomposition"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("html missing %q in output", want)
+		}
+	}
+}
+
+// TestRenderHTMLWriteError covers the error-return path in renderHTML by using
+// a writer that always fails.
+//
+//fusa:test REQ-FO-TRC015
+func TestRenderHTMLWriteError(t *testing.T) {
+	err := Render(failWriter{}, sampleAggregate(), "html")
+	if err == nil {
+		t.Error("expected error from failing writer")
+	}
+	if !strings.Contains(err.Error(), "html render") {
+		t.Errorf("expected 'html render' in error, got %v", err)
+	}
+}
+
+// TestRenderMarkdownSecTested exercises the per-component sec-tested column and
+// the aggregate sec-tested total row in renderMarkdown.
+//
+//fusa:test REQ-FO-TRC018
+//fusa:test REQ-FO-TRC016
+func TestRenderMarkdownSecTested(t *testing.T) {
+	agg := New("/r", "", []ComponentTrace{
+		{Tool: "gofusa", Language: "go", Available: true,
+			Coverage: Coverage{TotalRequirements: 10, TracedRequirements: 10, TestedRequirements: 10, SecTestedRequirements: 7}},
+	})
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "markdown"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "70%") {
+		t.Errorf("markdown should show sec-tested percentage:\n%s", out)
+	}
+}
+
+// TestRenderMarkdownDecompPass exercises the Decomposition PASS path in renderMarkdown.
+//
+//fusa:test REQ-FO-TRC018
+func TestRenderMarkdownDecompPass(t *testing.T) {
+	agg := sampleAggregate()
+	agg.Decomposition = &DecompositionReport{HLRCount: 3, LLRCount: 6}
+	var buf bytes.Buffer
+	if err := Render(&buf, agg, "markdown"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "Decomposition: PASS") {
+		t.Errorf("markdown should show Decomposition: PASS:\n%s", buf.String())
 	}
 }

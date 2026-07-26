@@ -971,7 +971,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-07-26 (go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.37 · rust-FuSa v0.3.2 · py-FuSa v0.2.1 · java-FuSa v0.4.1). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-07-26 (go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.38 · rust-FuSa v0.3.3 · py-FuSa v0.2.1 · java-FuSa v0.4.1). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -1076,14 +1076,14 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 
 ### 1.10.11 — 2026-07-26 (4 safety features; version snapshot updated to latest releases)
 
-- **Version snapshot updated (§11):** go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.37 · rust-FuSa v0.3.2 · py-FuSa v0.2.1 · java-FuSa v0.4.1. All tools fully conformant.
+- **Version snapshot updated (§11):** go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.38 · rust-FuSa v0.3.3 · py-FuSa v0.2.1 · java-FuSa v0.4.1. All tools fully conformant.
 - **go-FuSa v0.32.0 / v0.33.0:** Four safety features implemented — HLR/LLR hierarchical traceability (`--strict-hlr-llr`), tool qualification display (`--qualification-method`, `--qualifier`, `--record-uri`), MC/DC coverage measurement (`--mcdc`, `--mcdc-file`, `--mcdc-threshold`), and V&V independence declaration (`--implementation-author`, `--independent-reviewer`, `--independent-test-executor`, `--achievable-asil`). v0.33.0 adds coverage/req annotation improvements.
-- **c-FuSa v0.5.35 / v0.5.36 / v0.5.37:** Same four safety features. v0.5.36 fixes TOCTOU in `qt_setup()` (CWE-78). v0.5.37 fixes engine cleanup in `cmd_qualify()` (Linux heap corruption on test suite) and removes CodeQL comment alert.
+- **c-FuSa v0.5.35–v0.5.38:** Same four safety features. v0.5.36 fixes TOCTOU in `qt_setup()` (CWE-78). v0.5.37 fixes engine cleanup in `cmd_qualify()`. v0.5.38 fixes `realpath` buffer overflow in `cmd_init` (`_FORTIFY_SOURCE=2` abort on ubuntu-22.04; missing `_GNU_SOURCE` guard caused clang compile error and gcc 64-bit pointer truncation).
 - **cpp-FuSa v0.13.0 / v0.14.0:** Same four safety features. v0.14.0 adds coverage improvements and req annotations.
-- **rust-FuSa v0.3.0 / v0.3.1 / v0.3.2:** Same four safety features. v0.3.1 adds test coverage for 12 previously-untested subcommands. v0.3.2 fixes aarch64 cross-compilation linker.
+- **rust-FuSa v0.3.0–v0.3.3:** Same four safety features. v0.3.1 adds test coverage for 12 previously-untested subcommands. v0.3.2 fixes aarch64 cross-compilation linker. v0.3.3 regenerates `Cargo.lock` (stale lock file caused `--locked` build failure in Release CI).
 - **py-FuSa v0.2.0 / v0.2.1:** Same four safety features. v0.2.1 adds coverage improvements.
 - **java-FuSa v0.4.0 / v0.4.1:** Same four safety features. v0.4.1 adds coverage improvements.
-- **FuSaOps v1.77.0 / v1.78.0:** Consumes the four safety features across all adapters — HLR/LLR roll-up in `trace`, V&V independence and qualification badge in `qualify`, MC/DC cross-language aggregate in new `mcdc` package with `/api/v1/mcdc` endpoint and `/mcdc` HTML page.
+- **FuSaOps v1.77.0–v1.80.0:** Consumes the four safety features. v1.79.0 docs snapshot. v1.80.0 raises test coverage to 86.9% across orchestrator, slsa, trace, server, verify, and cmd packages.
 - No new MUST conformance gaps. No §11 table row changes.
 
 ### 1.10.10 — 2026-07-25 (comp consumed by FuSaOps v1.70.0+; all-tool spec-version sync)

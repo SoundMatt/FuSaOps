@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.80.0] — 2026-07-26
+
+### feat: maximize test coverage across orchestrator, slsa, trace, server, verify, cmd
+
+- **`orchestrator/rollup_test.go`** — additional `RunMCDC` tests covering edge cases and
+  error paths; orchestrator coverage 88.2%.
+- **`slsa/slsa_test.go`** — `assessSBOMHashes` edge-case tests; slsa coverage 91.8%.
+- **`trace/trace_test.go`** — HLR/LLR decomposition, `renderHTML`, `renderMarkdown`
+  tests; trace coverage 93.6%.
+- **`cmd/fusaops/cmd_gap2_test.go`** — 14 new CLI subcommand tests; cmd coverage 81.4%.
+- **`server/server_gap_test.go`** — 10 new HTTP endpoint tests; server coverage 84.8%.
+- **`verify/verify_gap_test.go`** — additional verify path test; verify coverage 84.1%.
+- **Total coverage: 86.9%** (up from previous release; all packages ≥ 80%).
+- **`docs/x-fusa-spec.md` §11 tool versions updated**: c-FuSa v0.5.38 · rust-FuSa v0.3.3.
+
 ## [1.79.0] — 2026-07-26
 
 ### docs: spec v1.10.11 snapshot — all-tool safety features, latest versions

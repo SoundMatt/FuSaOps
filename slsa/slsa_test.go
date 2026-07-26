@@ -154,3 +154,63 @@ func TestRenderUnknownFormat(t *testing.T) {
 		t.Errorf("expected unsupported format error, got %v", err)
 	}
 }
+
+//fusa:test REQ-FO-SLSA002
+func TestAssessSBOMHashesWithPackages(t *testing.T) {
+	dir := t.TempDir()
+	sbomJSON := `{"packages":[{"name":"dep","version":"v1"}]}`
+	if err := os.WriteFile(filepath.Join(dir, "sbom.json"), []byte(sbomJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := Assess(dir, "proj", LevelL3)
+	if err != nil {
+		t.Fatalf("Assess: %v", err)
+	}
+	for _, obj := range rep.Objectives {
+		if obj.ID == "SLSA-L3.2" && obj.Status != "PASS" {
+			t.Errorf("SLSA-L3.2 should PASS with packages in sbom.json, got %s: %s", obj.Status, obj.Note)
+		}
+	}
+}
+
+//fusa:test REQ-FO-SLSA002
+func TestAssessSBOMHashesMalformedJSON(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "sbom.json"), []byte("not-json{{{"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := Assess(dir, "proj", LevelL3)
+	if err != nil {
+		t.Fatalf("Assess: %v", err)
+	}
+	for _, obj := range rep.Objectives {
+		if obj.ID == "SLSA-L3.2" {
+			if obj.Status != "GAP" {
+				t.Errorf("SLSA-L3.2 should be GAP for malformed sbom.json, got %s", obj.Status)
+			}
+			if !strings.Contains(obj.Note, "not valid JSON") {
+				t.Errorf("SLSA-L3.2 note should mention invalid JSON, got %q", obj.Note)
+			}
+		}
+	}
+}
+
+//fusa:test REQ-FO-SLSA002
+func TestAssessSBOMHashesNoPackages(t *testing.T) {
+	dir := t.TempDir()
+	// Valid JSON but no packages/components/dependencies arrays.
+	if err := os.WriteFile(filepath.Join(dir, "sbom.json"), []byte(`{"version":"1.0"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := Assess(dir, "proj", LevelL3)
+	if err != nil {
+		t.Fatalf("Assess: %v", err)
+	}
+	for _, obj := range rep.Objectives {
+		if obj.ID == "SLSA-L3.2" {
+			if obj.Status != "GAP" {
+				t.Errorf("SLSA-L3.2 should be GAP when sbom.json has no packages, got %s", obj.Status)
+			}
+		}
+	}
+}
