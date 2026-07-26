@@ -464,3 +464,79 @@ func TestRenderCSVWriteError(t *testing.T) {
 		t.Error("RenderCSV: expected error from failing writer")
 	}
 }
+
+// TestLoadRegistryBadJSON verifies LoadRegistry returns an error when the
+// registry file exists but contains malformed JSON.
+//
+//fusa:test REQ-FO-REQ001
+func TestLoadRegistryBadJSON(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ReqsFile), []byte("{bad json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err := LoadRegistry(dir)
+	if err == nil {
+		t.Error("expected error for malformed JSON in registry")
+	}
+}
+
+// TestParseDOORSEmptyAttrs verifies ParseDOORS skips SPEC-OBJECTs that have
+// no attribute values, covering the "len(attrs) == 0 → continue" branch.
+//
+//fusa:test REQ-FO-REQ002
+func TestParseDOORSEmptyAttrs(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><REQ-IF><CORE-CONTENT><SPEC-OBJECTS>
+<SPEC-OBJECT><VALUES></VALUES></SPEC-OBJECT>
+<SPEC-OBJECT><VALUES>
+<ATTRIBUTE-VALUE-STRING THE-VALUE="REQ-1"/>
+</VALUES></SPEC-OBJECT>
+</SPEC-OBJECTS></CORE-CONTENT></REQ-IF>`
+	entries, err := ParseDOORS([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParseDOORS: %v", err)
+	}
+	if len(entries) != 1 || entries[0].ID != "REQ-1" {
+		t.Errorf("want 1 entry with ID=REQ-1; got %v", entries)
+	}
+}
+
+// TestParseDOORSEmptyID verifies ParseDOORS skips objects whose first
+// attribute value is empty, covering the "e.ID == "" → continue" branch.
+//
+//fusa:test REQ-FO-REQ002
+func TestParseDOORSEmptyID(t *testing.T) {
+	xmlData := `<?xml version="1.0"?><REQ-IF><CORE-CONTENT><SPEC-OBJECTS>
+<SPEC-OBJECT><VALUES>
+<ATTRIBUTE-VALUE-STRING THE-VALUE=""/>
+<ATTRIBUTE-VALUE-STRING THE-VALUE="Title without ID"/>
+</VALUES></SPEC-OBJECT>
+<SPEC-OBJECT><VALUES>
+<ATTRIBUTE-VALUE-STRING THE-VALUE="REQ-2"/>
+</VALUES></SPEC-OBJECT>
+</SPEC-OBJECTS></CORE-CONTENT></REQ-IF>`
+	entries, err := ParseDOORS([]byte(xmlData))
+	if err != nil {
+		t.Fatalf("ParseDOORS: %v", err)
+	}
+	if len(entries) != 1 || entries[0].ID != "REQ-2" {
+		t.Errorf("want 1 entry with ID=REQ-2; got %v", entries)
+	}
+}
+
+// TestParseCSVEmptyIDRow verifies ParseCSV skips rows where the id field is
+// empty, covering the "id == "" → continue" branch.
+//
+//fusa:test REQ-FO-REQ002
+func TestParseCSVEmptyIDRow(t *testing.T) {
+	data := "id,title\nREQ-1,First\n,Skip this row\nREQ-3,Third\n"
+	entries, err := ParseCSV(strings.NewReader(data))
+	if err != nil {
+		t.Fatalf("ParseCSV: %v", err)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("want 2 entries (empty-ID skipped), got %d: %v", len(entries), entries)
+	}
+	if entries[0].ID != "REQ-1" || entries[1].ID != "REQ-3" {
+		t.Errorf("unexpected IDs: %v", entries)
+	}
+}
