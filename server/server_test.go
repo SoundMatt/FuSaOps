@@ -14,6 +14,7 @@ import (
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/adapter"
+	"github.com/SoundMatt/FuSaOps/comp"
 	"github.com/SoundMatt/FuSaOps/diff"
 	"github.com/SoundMatt/FuSaOps/history"
 	"github.com/SoundMatt/FuSaOps/orchestrator"
@@ -1089,5 +1090,52 @@ func TestExportMIMETypes(t *testing.T) {
 		if ext != tc.wantExt {
 			t.Errorf("exportMIME(%q) ext: got %q, want %q", tc.format, ext, tc.wantExt)
 		}
+	}
+}
+
+// TestAPICompEmpty verifies /api/v1/comp returns {} when no comp data is cached.
+//
+//fusa:test REQ-FO-SRV012
+func TestAPICompEmpty(t *testing.T) {
+	s := newTestServer(t)
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/comp", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	ct := rec.Header().Get("Content-Type")
+	if !strings.Contains(ct, "application/json") {
+		t.Errorf("Content-Type: got %q, want application/json", ct)
+	}
+}
+
+// TestAPICompWithData verifies /api/v1/comp returns the cached comp aggregate.
+//
+//fusa:test REQ-FO-SRV012
+func TestAPICompWithData(t *testing.T) {
+	s := newTestServer(t)
+	s.compMu.Lock()
+	s.compAgg = &comp.Aggregate{
+		Root:           "/repo",
+		Project:        "demo",
+		Components:     []comp.ComponentComp{{Language: "go", Tool: "gofusa", Available: true, Report: &comp.Report{Threshold: 10, TotalFunctions: 5, Violations: 1}}},
+		TotalFunctions: 5,
+		Violations:     1,
+	}
+	s.compMu.Unlock()
+	rec := httptest.NewRecorder()
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/comp", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want 200", rec.Code)
+	}
+	var got map[string]interface{}
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatalf("json unmarshal: %v", err)
+	}
+	if v, _ := got["violations"].(float64); int(v) != 1 {
+		t.Errorf("violations: got %v, want 1", got["violations"])
+	}
+	if v, _ := got["totalFunctions"].(float64); int(v) != 5 {
+		t.Errorf("totalFunctions: got %v, want 5", got["totalFunctions"])
 	}
 }

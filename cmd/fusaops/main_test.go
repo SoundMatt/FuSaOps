@@ -367,6 +367,24 @@ func TestCapabilities(t *testing.T) {
 	}
 }
 
+// TestCapabilitiesComp verifies comp is listed in fusaops capabilities.
+//
+//fusa:test REQ-FO-CLI083
+func TestCapabilitiesComp(t *testing.T) {
+	_, out, _ := runArgs(t, "capabilities")
+	var m map[string]interface{}
+	if err := json.Unmarshal([]byte(out), &m); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+	cmds, _ := m["commands"].([]interface{})
+	for _, c := range cmds {
+		if c == "comp" {
+			return
+		}
+	}
+	t.Errorf("capabilities commands missing 'comp': %v", cmds)
+}
+
 // TestCapabilitiesStandardsSLSA verifies "slsa" is present as a canonical §2.4.1 standard.
 //
 //fusa:test REQ-FO-SPEC002

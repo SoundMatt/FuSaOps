@@ -27,6 +27,7 @@ type capabilities struct {
 //
 //fusa:req REQ-FO-CLI054
 //fusa:req REQ-FO-SPEC002
+//fusa:req REQ-FO-CLI083
 func runCapabilities(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("fusaops capabilities", flag.ContinueOnError)
 	fs.SetOutput(stderr)
@@ -54,12 +55,13 @@ func runCapabilities(args []string, stdout, stderr io.Writer) int {
 		SpecVersion:   fusaops.SpecVersion,
 		Commands: []string{
 			"version", "capabilities", "init", "config", "scan", "adapters",
-			"check", "report", "trace", "sbom", "audit-pack", "diff",
+			"check", "report", "trace", "sbom", "audit-pack", "comp", "diff",
 			"suppress", "conform", "coverage", "req", "metrics", "badge", "slsa", "hooks", "impact", "disposition", "pr", "verify", "sign", "qualify", "release", "safety-case", "sci", "sas", "tara", "fmea", "vuln", "template", "hara", "vv",
 			"iso26262", "iec61508", "do178", "iso21434", "unece", "iec62443",
 			"policy", "fleet", "history", "serve",
 		},
 		Formats: map[string][]string{
+			"comp":        {"text", "json"},
 			"check":       {"text", "json", "html", "sarif", "junit", "csv", "markdown"},
 			"report":      {"text", "json", "html", "sarif", "junit", "csv", "markdown"},
 			"trace":       {"text", "json", "html", "markdown"},

@@ -262,3 +262,24 @@ func TestCoverageConfigInvalidThreshold(t *testing.T) {
 		t.Errorf("got %v, want ErrInvalidConfig for threshold=150", err)
 	}
 }
+
+//fusa:test REQ-FO-CFG014
+func TestCompConfigSaveLoad(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, ConfigFile)
+	cfg := Default("comp-test")
+	cfg.Comp = CompConfig{Threshold: 15, DAL: "DAL-C"}
+	if err := Save(path, cfg); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+	got, err := Load(path)
+	if err != nil {
+		t.Fatalf("load: %v", err)
+	}
+	if got.Comp.Threshold != 15 {
+		t.Errorf("comp.threshold: got %d, want 15", got.Comp.Threshold)
+	}
+	if got.Comp.DAL != "DAL-C" {
+		t.Errorf("comp.dal: got %q, want DAL-C", got.Comp.DAL)
+	}
+}

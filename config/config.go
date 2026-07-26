@@ -57,6 +57,18 @@ type CoverageConfig struct {
 	Mcdc McdcConfig `json:"mcdc,omitempty"`
 }
 
+// CompConfig configures the fusaops comp command and /api/v1/comp endpoint.
+//
+//fusa:req REQ-FO-CFG014
+type CompConfig struct {
+	// Threshold is the McCabe cyclomatic complexity ceiling per function.
+	// 0 means use the DAL default (DAL-B → 10 when DAL is empty).
+	Threshold int `json:"threshold,omitempty"`
+	// DAL is the DO-178C design assurance level used to derive the threshold
+	// when Threshold is 0 (e.g. "DAL-A" → 4, "DAL-B" → 10).
+	DAL string `json:"dal,omitempty"`
+}
+
 // Config is the top-level FuSaOps project configuration.
 //
 //fusa:req REQ-FO-CFG001
@@ -70,6 +82,7 @@ type Config struct {
 	Trace    TraceConfig    `json:"trace,omitempty"`
 	Qualify  QualifyConfig  `json:"qualify,omitempty"`  //fusa:req REQ-FO-CFG012
 	Coverage CoverageConfig `json:"coverage,omitempty"` //fusa:req REQ-FO-CFG013
+	Comp     CompConfig     `json:"comp,omitempty"`     //fusa:req REQ-FO-CFG014
 }
 
 // VandVConfig holds per-repo V&V independence declarations embedded in .fusaops.json.
