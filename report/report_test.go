@@ -708,5 +708,15 @@ func TestMarkdownLocFileOnly(t *testing.T) {
 	}
 }
 
+// TestSarifLevelInfo verifies sarifLevel returns "note" for SeverityInfo (the
+// default branch), covering the previously missing switch case.
+//
+//fusa:test REQ-FO-RPT011
+func TestSarifLevelInfo(t *testing.T) {
+	if got := sarifLevel(fusaops.SeverityInfo); got != "note" {
+		t.Errorf("sarifLevel(INFO) = %q, want note", got)
+	}
+}
+
 // Ensure errWriter implements io.Writer (compile check).
 var _ io.Writer = errWriter{}

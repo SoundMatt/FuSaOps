@@ -3,6 +3,7 @@ package req
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -445,5 +446,21 @@ func TestParseCSVParentColumn(t *testing.T) {
 	}
 	if reparsed[1].Parent != "HLR-001" {
 		t.Errorf("reparsed LLR parent = %q, want HLR-001", reparsed[1].Parent)
+	}
+}
+
+// errCSVWriter always fails after the buffer fills, triggering RenderCSV's Flush error.
+type errCSVWriter struct{}
+
+func (errCSVWriter) Write([]byte) (int, error) { return 0, errors.New("write error") }
+
+// TestRenderCSVWriteError verifies RenderCSV returns an error when the writer
+// fails (exercises the cw.Error() return path via Flush).
+//
+//fusa:test REQ-FO-REQ002
+func TestRenderCSVWriteError(t *testing.T) {
+	entries := []Entry{{ID: "REQ-1", Title: "Foo"}}
+	if err := RenderCSV(errCSVWriter{}, entries); err == nil {
+		t.Error("RenderCSV: expected error from failing writer")
 	}
 }
