@@ -308,4 +308,3 @@ func TestHooksInstallHookPath(t *testing.T) {
 		t.Errorf("expected install confirmation in stdout: %q", stdout.String())
 	}
 }
-

@@ -399,7 +399,7 @@ func TestSaveRegistryReadOnlyDir(t *testing.T) {
 	if err := os.Chmod(dir, 0o555); err != nil {
 		t.Skip("cannot chmod dir:", err)
 	}
-	t.Cleanup(func() { os.Chmod(dir, 0o755) })
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o755) })
 	if err := SaveRegistry(dir, []Entry{{ID: "X"}}); err == nil {
 		t.Error("expected error writing to read-only dir")
 	}
