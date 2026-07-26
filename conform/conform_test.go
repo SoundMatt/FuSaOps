@@ -950,6 +950,22 @@ func TestFingerprintNonASCII(t *testing.T) {
 	}
 }
 
+// TestScaffoldWriteError verifies scaffold returns an error when the project
+// directory does not exist.
+//
+//fusa:test REQ-FO-CNF005
+func TestScaffoldWriteError(t *testing.T) {
+	r := &runner{
+		dir:    filepath.Join(t.TempDir(), "missing"),
+		binary: "gofusa",
+		run:    func(d, b string, a ...string) ([]byte, []byte, int) { return nil, nil, 0 },
+		report: &Report{},
+	}
+	if err := r.scaffold(); err == nil {
+		t.Error("scaffold: expected error for non-existent project directory")
+	}
+}
+
 // TestScaffoldWritesFiles verifies scaffold creates the fixture files.
 //
 //fusa:test REQ-FO-CNF005
