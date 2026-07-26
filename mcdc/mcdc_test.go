@@ -116,6 +116,12 @@ func TestMCDCComponentFields(t *testing.T) {
 	if c.Language != "rust" {
 		t.Errorf("Language = %q, want %q", c.Language, "rust")
 	}
+	if c.Tool != "rsfusa" {
+		t.Errorf("Tool = %q, want %q", c.Tool, "rsfusa")
+	}
+	if c.Skipped != "" {
+		t.Errorf("Skipped = %q, want %q", c.Skipped, "")
+	}
 	if !c.Report.GatePassed {
 		t.Error("GatePassed should be true")
 	}

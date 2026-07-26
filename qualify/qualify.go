@@ -60,13 +60,13 @@ type RunOptions struct {
 //fusa:req REQ-FO-QUAL001
 //fusa:req REQ-FO-QLF010
 type ComponentResult struct {
-	Language               string `json:"language"`
-	Tool                   string `json:"tool"`
-	Available              bool   `json:"available"`
-	Skipped                string `json:"skipped,omitempty"`
-	Total                  int    `json:"total"`
-	Passed                 int    `json:"passed"`
-	Failed                 int    `json:"failed"`
+	Language  string `json:"language"`
+	Tool      string `json:"tool"`
+	Available bool   `json:"available"`
+	Skipped   string `json:"skipped,omitempty"`
+	Total     int    `json:"total"`
+	Passed    int    `json:"passed"`
+	Failed    int    `json:"failed"`
 	// V&V independence fields (REQ-FO-QLF010).
 	QualificationMethod    string `json:"qualificationMethod,omitempty"`
 	QualifierIdentity      string `json:"qualifierIdentity,omitempty"`
@@ -90,22 +90,22 @@ func (c ComponentResult) IsIndependent() bool { return c.IndependentReviewer != 
 //fusa:req REQ-FO-QUAL001
 //fusa:req REQ-FO-QLF010
 type Report struct {
-	GeneratedAt            time.Time         `json:"generatedAt"`
-	GoVersion              string            `json:"goVersion"`
-	ProjectRoot            string            `json:"projectRoot"`
-	QualificationType      string            `json:"qualificationType,omitempty"`      // REQ-FO-QUAL005
-	QualificationRecordUri string            `json:"qualificationRecordUri,omitempty"` // REQ-FO-QUAL005
+	GeneratedAt            time.Time `json:"generatedAt"`
+	GoVersion              string    `json:"goVersion"`
+	ProjectRoot            string    `json:"projectRoot"`
+	QualificationType      string    `json:"qualificationType,omitempty"`      // REQ-FO-QUAL005
+	QualificationRecordUri string    `json:"qualificationRecordUri,omitempty"` // REQ-FO-QUAL005
 	// V&V independence fields (REQ-FO-QLF010).
-	QualificationMethod    string            `json:"qualificationMethod,omitempty"`
-	QualifierIdentity      string            `json:"qualifierIdentity,omitempty"`
-	ImplementationAuthor   string            `json:"implementationAuthor,omitempty"`
-	IndependentReviewer    string            `json:"independentReviewer,omitempty"`
-	AchievableASIL         string            `json:"achievableAsil,omitempty"`
-	Total                  int               `json:"total"`
-	Passed                 int               `json:"passed"`
-	Failed                 int               `json:"failed"`
-	Components             []ComponentResult `json:"components"`
-	Hash                   string            `json:"hash"`
+	QualificationMethod  string            `json:"qualificationMethod,omitempty"`
+	QualifierIdentity    string            `json:"qualifierIdentity,omitempty"`
+	ImplementationAuthor string            `json:"implementationAuthor,omitempty"`
+	IndependentReviewer  string            `json:"independentReviewer,omitempty"`
+	AchievableASIL       string            `json:"achievableAsil,omitempty"`
+	Total                int               `json:"total"`
+	Passed               int               `json:"passed"`
+	Failed               int               `json:"failed"`
+	Components           []ComponentResult `json:"components"`
+	Hash                 string            `json:"hash"`
 }
 
 // IsIndependent reports whether the qualification was performed with an

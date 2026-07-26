@@ -37,15 +37,15 @@ type Decision struct {
 //
 //fusa:req REQ-FO-MCDC001
 type Report struct {
-	Tool             string     `json:"tool,omitempty"`
-	Language         string     `json:"language,omitempty"`
-	ToolVersion      string     `json:"toolVersion,omitempty"`
-	TotalConditions  int        `json:"totalConditions"`
-	CoveredConditions int       `json:"coveredConditions"`
-	TotalDecisions   int        `json:"totalDecisions"`
-	CoveredDecisions int        `json:"coveredDecisions"`
-	GatePassed       bool       `json:"gatePassed"`
-	Decisions        []Decision `json:"decisions,omitempty"`
+	Tool              string     `json:"tool,omitempty"`
+	Language          string     `json:"language,omitempty"`
+	ToolVersion       string     `json:"toolVersion,omitempty"`
+	TotalConditions   int        `json:"totalConditions"`
+	CoveredConditions int        `json:"coveredConditions"`
+	TotalDecisions    int        `json:"totalDecisions"`
+	CoveredDecisions  int        `json:"coveredDecisions"`
+	GatePassed        bool       `json:"gatePassed"`
+	Decisions         []Decision `json:"decisions,omitempty"`
 }
 
 // CoveragePct returns the whole-number MC/DC condition-coverage percentage.
