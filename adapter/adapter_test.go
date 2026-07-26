@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -216,5 +217,57 @@ func TestCmdAdapterStandards(t *testing.T) {
 	}
 	if r.Summary.Satisfied != 1 {
 		t.Errorf("satisfied: got %d, want 1", r.Summary.Satisfied)
+	}
+}
+
+// TestCmdAdapterStandardsRunError verifies Standards returns an error when the
+// runner itself fails (e.g., tool not installed).
+//
+//fusa:test REQ-FO-ADP019
+func TestCmdAdapterStandardsRunError(t *testing.T) {
+	a := &cmdAdapter{
+		name: "go-FuSa", language: fusaops.LangGo, tool: "gofusa",
+		extensions: []string{".go"},
+		run: func(_ context.Context, _, _ string, _ ...string) ([]byte, error) {
+			return nil, errors.New("tool not found")
+		},
+	}
+	_, err := a.Standards(context.Background(), t.TempDir(), "iso26262")
+	if err == nil {
+		t.Error("Standards: expected error when runner fails")
+	}
+}
+
+// TestCmdAdapterStandardsBadJSON verifies Standards returns an error when the
+// runner returns output that cannot be decoded as a GapReport.
+//
+//fusa:test REQ-FO-ADP019
+func TestCmdAdapterStandardsBadJSON(t *testing.T) {
+	a := &cmdAdapter{
+		name: "go-FuSa", language: fusaops.LangGo, tool: "gofusa",
+		extensions: []string{".go"},
+		run: func(_ context.Context, _, _ string, _ ...string) ([]byte, error) {
+			return []byte("not-valid-json"), nil
+		},
+	}
+	_, err := a.Standards(context.Background(), t.TempDir(), "iso26262")
+	if err == nil {
+		t.Error("Standards: expected error for malformed JSON output")
+	}
+}
+
+// TestCheckBadJSONOutput verifies Check returns an error when the runner writes
+// malformed JSON to the output file, covering the parseToolReport error branch.
+//
+//fusa:test REQ-FO-ADP005
+func TestCheckBadJSONOutput(t *testing.T) {
+	a := &cmdAdapter{
+		name: "go-FuSa", language: fusaops.LangGo, tool: "gofusa",
+		extensions: []string{".go"},
+		run:        fakeRunner("{not valid json}"),
+	}
+	_, err := a.Check(context.Background(), t.TempDir())
+	if err == nil {
+		t.Error("Check: expected error for malformed JSON in output file")
 	}
 }

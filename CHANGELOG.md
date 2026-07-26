@@ -7,6 +7,22 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.90.0] — 2026-07-26
+
+### feat: coverage expansion — adapter.Check, adapter.Standards, release.DetectBuilder, standards.displayName
+
+- **`adapter`** — `TestCmdAdapterStandardsRunError` covers `Standards` run-error path;
+  `TestCmdAdapterStandardsBadJSON` covers `Standards` JSON decode error path;
+  `TestCheckBadJSONOutput` covers `Check` parseToolReport error when runner writes
+  malformed JSON.
+- **`release`** — `TestDetectBuilderGitLab`, `TestDetectBuilderJenkins`, and
+  `TestDetectBuilderGenericCI` cover the GitLab, Jenkins, and generic-CI branches of
+  `DetectBuilder` (was 70%).
+- **`standards`** — add `"iec62443"` and `"unece"` to `TestDisplayName` table, covering
+  the two previously-untested `displayName` cases (was 80%).
+
+Total coverage: 88.9% (↑ from 88.7%).
+
 ## [1.89.0] — 2026-07-26
 
 ### feat: coverage expansion — report, policy, pr, hara, slsa, trace, verify, vuln

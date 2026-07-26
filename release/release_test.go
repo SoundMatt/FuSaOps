@@ -364,3 +364,42 @@ func TestSaveJSONWriteError(t *testing.T) {
 		t.Error("SaveJSON: expected error for non-existent parent directory")
 	}
 }
+
+// TestDetectBuilderGitLab verifies GITLAB_CI is recognised.
+//
+//fusa:test REQ-FO-REL005
+func TestDetectBuilderGitLab(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "")
+	t.Setenv("GITLAB_CI", "true")
+	got := release.DetectBuilder("")
+	if got != "gitlab-ci" {
+		t.Errorf("DetectBuilder gitlab-ci: got %q, want \"gitlab-ci\"", got)
+	}
+}
+
+// TestDetectBuilderJenkins verifies JENKINS_URL is recognised.
+//
+//fusa:test REQ-FO-REL005
+func TestDetectBuilderJenkins(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "")
+	t.Setenv("GITLAB_CI", "")
+	t.Setenv("JENKINS_URL", "http://jenkins.example.com")
+	got := release.DetectBuilder("")
+	if got != "jenkins" {
+		t.Errorf("DetectBuilder jenkins: got %q, want \"jenkins\"", got)
+	}
+}
+
+// TestDetectBuilderGenericCI verifies the generic CI env var is recognised.
+//
+//fusa:test REQ-FO-REL005
+func TestDetectBuilderGenericCI(t *testing.T) {
+	t.Setenv("GITHUB_ACTIONS", "")
+	t.Setenv("GITLAB_CI", "")
+	t.Setenv("JENKINS_URL", "")
+	t.Setenv("CI", "true")
+	got := release.DetectBuilder("")
+	if got != "ci" {
+		t.Errorf("DetectBuilder generic CI: got %q, want \"ci\"", got)
+	}
+}

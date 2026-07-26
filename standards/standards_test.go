@@ -294,6 +294,8 @@ func TestDisplayName(t *testing.T) {
 		{"iso21434", "ISO 21434"},
 		{"iec62443-4-1", "IEC 62443-4-1"},
 		{"iec62443-4-2", "IEC 62443-4-2"},
+		{"iec62443", "IEC 62443"},
+		{"unece", "UNECE R155/R156"},
 		{"unknown-std", "unknown-std"},
 	}
 	for _, tc := range cases {
