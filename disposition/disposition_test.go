@@ -2,6 +2,7 @@ package disposition
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -39,6 +40,24 @@ func TestLoadMissing(t *testing.T) {
 	}
 	if len(log.Entries) != 0 {
 		t.Errorf("want empty, got %d entries", len(log.Entries))
+	}
+}
+
+// TestLoadReadError verifies Load returns an error when the dispositions file
+// path is occupied by a directory (os.ReadFile on a directory returns a
+// non-ErrNotExist error on all platforms).
+//
+//fusa:test REQ-FO-DISP002
+func TestLoadReadError(t *testing.T) {
+	dir := t.TempDir()
+	// Replace the expected JSON file with a directory so ReadFile fails with
+	// EISDIR (Linux/macOS) or access-denied (Windows) — neither is ErrNotExist.
+	dispDir := filepath.Join(dir, DispositionsFile)
+	if err := os.Mkdir(dispDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(dir); err == nil {
+		t.Error("Load: expected error when dispositions path is a directory")
 	}
 }
 
