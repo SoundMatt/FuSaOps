@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.76.0] — 2026-07-26
+
+### feat: CLI tests for `fusaops comp` (REQ-FO-CLI082)
+
+- **`cmd_comp_test.go`**: adds 10 focused CLI-level tests for `runComp` covering
+  no-language detection (`TestCompNoLanguages`), text and JSON output formats,
+  invalid `--dal`, invalid `--timeout`, `--output` file write with stderr
+  confirmation, `--workers` flag parsing, valid `DAL-B` threshold, invalid format
+  error path, and bad output path error path.
+- Coverage on `cmd/fusaops/cmd_comp.go:runComp` rises from **0% → 71.4%**.
+  Overall project coverage increases from **82.0% → 82.5%**.
+
 ## [1.75.0] — 2026-07-25
 
 ### feat: cyclomatic complexity metrics in /metrics endpoint
