@@ -971,7 +971,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-07-26 (go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.38 · rust-FuSa v0.3.3 · py-FuSa v0.2.1 · java-FuSa v0.4.1). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-07-26 (go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.38 · rust-FuSa v0.3.4 · py-FuSa v0.2.1 · java-FuSa v0.4.1). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -1073,6 +1073,13 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.10.12 — 2026-07-26 (rust-FuSa v0.3.4 Dockerfile fix; version snapshot updated)
+
+- **Version snapshot updated (§11):** go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.38 · rust-FuSa v0.3.4 · py-FuSa v0.2.1 · java-FuSa v0.4.1. All tools fully conformant.
+- **rust-FuSa v0.3.4:** Removes explicit `--target x86_64-unknown-linux-musl` from Dockerfile. The Release CI builds `linux/amd64,linux/arm64` via QEMU; on the arm64 builder the explicit x86_64 target caused `can't find crate for 'std'`. Using `cargo build --release` lets `rust:alpine` use the native musl target per platform.
+- **FuSaOps v1.81.0:** Docs snapshot updated to rust-FuSa v0.3.4.
+- No new MUST conformance gaps. No §11 table row changes.
 
 ### 1.10.11 — 2026-07-26 (4 safety features; version snapshot updated to latest releases)
 
