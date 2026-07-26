@@ -3,11 +3,16 @@ package sbom
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+type errWriter struct{}
+
+func (errWriter) Write([]byte) (int, error) { return 0, errors.New("write error") }
 
 const sampleDoc = `{
   "module": "github.com/example/m",
@@ -237,5 +242,16 @@ func TestRenderMarkdownSkipped(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), "not installed") {
 		t.Error("expected skip reason in markdown output")
+	}
+}
+
+// TestRenderHTMLWriteError verifies renderHTML returns an error when the writer
+// fails, covering the template.Execute error branch.
+//
+//fusa:test REQ-FO-SBM010
+func TestRenderHTMLWriteError(t *testing.T) {
+	a := New("/r", "p", nil)
+	if err := renderHTML(errWriter{}, a); err == nil {
+		t.Error("renderHTML: expected error when writer fails")
 	}
 }

@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.92.0] — 2026-07-26
+
+### feat: coverage expansion — sbom.renderHTML, prInit, prList, runReqImport
+
+- **`sbom`** — `TestRenderHTMLWriteError` covers the `renderHTML` template-execute error
+  path (was 66.7%).
+- **`cmd/fusaops`** — `TestPRInitSaveError` covers the `prInit` Save error path;
+  `TestPRInitDirDot` covers the `dir=="."` / os.Getwd branch; `TestPRListLoadError`
+  covers the `prList` pr.Load error path (malformed JSON); `TestPRListRenderError`
+  covers the `prList` pr.Render error path (unsupported format); `TestReqImportUnknownFormat`
+  covers the `runReqImport` default switch case; `TestReqImportDoorsReadError` covers
+  the non-CSV read error path; `TestReqImportDoorsParse` exercises the DOORS parse branch.
+
+Total coverage: 89.0% (↑ from 88.8%).
+
 ## [1.91.0] — 2026-07-26
 
 ### feat: coverage expansion — conform, cmd, server, verify
