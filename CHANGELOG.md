@@ -7,6 +7,24 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.91.0] — 2026-07-26
+
+### feat: coverage expansion — conform, cmd, server, verify
+
+- **`conform`** — seven new tests targeting `checkQualify` (empty output → `qualify/output` FAIL;
+  invalid JSON → `qualify/json-parse` FAIL; wrong common header kind → `qualify/common-header`
+  FAIL; non-conformant `tests_passed`/`tests_failed` keys → `qualify/key-names` FAIL; missing
+  total/passed/failed → `qualify/key-names` FAIL; invalid result enum → `qualify/result-enum`
+  FAIL); two new tests targeting `scaffold` (second WriteFile error; writeSourceFiles error).
+  `checkQualify` coverage: 76.5% → 94.1%; `scaffold` coverage: 77.8% → 100%.
+- **`cmd/fusaops`** — gap tests for `runDiff`, `runDispositionList`, `runQualify`, `runTrace`,
+  `runVerify`, `runSAS`, `runSCI`, `runMetricsRecord`, `runMetricsShow`, `runRelease`, and
+  `hooksInstall` (previously uncovered branches).
+- **`server`** — gap tests for additional API handler branches.
+- **`verify`** — gap test for `Save` write-error path.
+
+Total coverage: 88.8% (↑ from 88.7%).
+
 ## [1.90.0] — 2026-07-26
 
 ### feat: coverage expansion — adapter.Check, adapter.Standards, release.DetectBuilder, standards.displayName
