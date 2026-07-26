@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/SoundMatt/FuSaOps/config"
@@ -31,6 +32,31 @@ func TestDispositionListLoadError(t *testing.T) {
 }
 
 // ── runRelease ────────────────────────────────────────────────────────────────
+
+// TestReleaseSaveProvenanceError verifies runRelease returns 1 when provenance
+// cannot be written because the output directory is read-only, covering the
+// release.SaveJSON provenance error branch.
+//
+//fusa:test REQ-FO-CLI065
+func TestReleaseSaveProvenanceError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("os.Chmod read-only semantics not enforced on Windows")
+	}
+	if os.Getuid() == 0 {
+		t.Skip("cannot test permission denied as root")
+	}
+	dir := t.TempDir()
+	outDir := t.TempDir()
+	if err := os.Chmod(outDir, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(outDir, 0o755) })
+	var stdout, stderr bytes.Buffer
+	code := runRelease([]string{"--dir", dir, "--output-dir", outDir}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("runRelease save-provenance error: want 1, got %d (stderr=%q)", code, stderr.String())
+	}
+}
 
 // TestReleaseBadConfig verifies runRelease returns 1 when the project directory
 // contains a malformed .fusaops.json, triggering the loadOptions error path.

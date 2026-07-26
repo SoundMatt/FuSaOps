@@ -7,6 +7,26 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.107.0] — 2026-07-26
+
+### feat: coverage expansion — cmd_serve With* branches, multi-serve options, release provenance
+
+- **`cmd/fusaops`** — `TestServeAllWithFlags` exercises all With* option branches in `runServe`
+  (`WithAuth`, `WithAuthRO`, `WithAuditLog`, `WithFleetConfig`, `WithWebhook`,
+  `WithRefreshInterval`, `WithBaseline`, `WithQualifyReport`, `WithVandV`, `WithComp`) by
+  passing all optional flags plus `--tls-cert /nonexistent` so `ListenAndServeTLS` fails fast.
+  Also covers `authOK = true` (line 60) and the VandV config block (lines 106–114).
+- **`cmd/fusaops`** — `TestServeLoadOptionsError` covers the `loadOptions` error path (lines 99–102)
+  in `runServe` by placing a malformed `.fusaops.json` in the project directory.
+- **`cmd/fusaops`** — `TestServeInvalidAddrHTTP` covers the non-TLS `ListenAndServe` error body
+  (lines 153–156) by using port 99999 (out-of-range) without `--tls-cert`.
+- **`cmd/fusaops`** — `TestServeMultiWithAllFlags` covers all With* branches in `runServeMulti`
+  (`WithAuth`, `WithAuthRO`, `WithAuditLog`, `WithRefreshInterval`, `WithBaseline`) and the
+  `ListenAndServe` error path by routing through `runServe --projects` with port 99999.
+- **`cmd/fusaops`** — `TestReleaseSaveProvenanceError` covers the `release.SaveJSON` provenance
+  error branch in `runRelease` by making the output directory read-only (chmod 0555).
+- Total coverage: 91.5% → 91.9%.
+
 ## [1.106.0] — 2026-07-26
 
 ### feat: coverage expansion — server badge/report/comp/history, multi baseline, disposition-list
