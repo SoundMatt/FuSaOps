@@ -7,6 +7,25 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.86.0] — 2026-07-26
+
+### feat: coverage expansion — tara, vuln, config, disposition
+
+- **`tara`** — added internal `TestRiskMatrixUncoveredBranches` covering all
+  `riskMatrix` combinations not exercised by the standard scenarios
+  (`ImpactMajor×default`, `ImpactModerate×High/default`, outer `default`).
+  `riskMatrix` now 100%.
+- **`vuln`** — added internal `runner_test.go` with `TestRunCommandGoVersion`,
+  `TestDefaultRunnerEmptyArgs`, `TestDefaultRunnerGoVersion` covering the real
+  `runCommand` and `defaultRunner` execution paths.
+- **`config`** — added `TestLoadDirectoryNotExist` covering the
+  non-`ErrNotExist` read-error branch in `Load` (os.ReadFile on a directory
+  → EISDIR).
+- **`disposition`** — added `TestLoadReadError` covering the non-`ErrNotExist`
+  read-error branch in `Load` (projectRoot is a regular file → ENOTDIR).
+- **Total coverage: 88.0% → 88.2%** (tara: 89.0%→95.9%; vuln: 88.5%→91.8%;
+  config: 88.2%→91.2%; disposition: 87.5%→90.0%).
+
 ## [1.85.0] — 2026-07-26
 
 ### fix + feat: gofusa blank-identifier fix; coverage expansion across 5 packages

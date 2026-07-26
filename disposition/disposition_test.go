@@ -2,6 +2,7 @@ package disposition
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -39,6 +40,25 @@ func TestLoadMissing(t *testing.T) {
 	}
 	if len(log.Entries) != 0 {
 		t.Errorf("want empty, got %d entries", len(log.Entries))
+	}
+}
+
+// TestLoadReadError verifies Load returns an error when projectRoot is a
+// regular file (not a directory), causing os.ReadFile to fail with ENOTDIR
+// rather than ErrNotExist.
+//
+//fusa:test REQ-FO-DISP002
+func TestLoadReadError(t *testing.T) {
+	dir := t.TempDir()
+	// Create a regular file and use it as projectRoot; the child path will not
+	// be accessible (ENOTDIR on all platforms).
+	f, err := os.CreateTemp(dir, "not-a-dir-*.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = f.Close()
+	if _, loadErr := Load(f.Name()); loadErr == nil {
+		t.Error("Load: expected error when projectRoot is a regular file")
 	}
 }
 

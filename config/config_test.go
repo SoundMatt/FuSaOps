@@ -48,6 +48,20 @@ func TestLoadMissingReturnsErrNoConfig(t *testing.T) {
 	}
 }
 
+// TestLoadDirectoryNotExist verifies Load returns a non-ErrNoConfig error when
+// the path is a directory (os.ReadFile returns EISDIR, not ErrNotExist).
+//
+//fusa:test REQ-FO-CFG004
+func TestLoadDirectoryNotExist(t *testing.T) {
+	_, err := Load(t.TempDir())
+	if err == nil {
+		t.Error("Load: expected error when path is a directory")
+	}
+	if errors.Is(err, fusaops.ErrNoConfig) {
+		t.Errorf("Load: got ErrNoConfig but expected read-error for directory path")
+	}
+}
+
 //fusa:test REQ-FO-CFG006
 func TestValidateRejectsBadFormat(t *testing.T) {
 	cfg := Default("x")
