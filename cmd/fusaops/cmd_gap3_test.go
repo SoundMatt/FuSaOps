@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -68,6 +69,9 @@ func TestDispositionAddLoadError(t *testing.T) {
 //
 //fusa:test REQ-FO-CLI060
 func TestDispositionAddSaveError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("os.Chmod read-only semantics not enforced on Windows")
+	}
 	if os.Getuid() == 0 {
 		t.Skip("cannot test permission denied as root")
 	}
