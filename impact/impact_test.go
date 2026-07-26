@@ -245,3 +245,46 @@ func TestRenderTextEmpty(t *testing.T) {
 		t.Errorf("empty report missing no-changes message: %q", buf.String())
 	}
 }
+
+// TestAppendUniqDuplicate verifies appendUniq returns the original slice
+// unchanged when the value is already present.
+//
+//fusa:test REQ-FO-IMP002
+func TestAppendUniqDuplicate(t *testing.T) {
+	s := []string{"a", "b", "c"}
+	result := appendUniq(s, "b")
+	if len(result) != 3 || result[1] != "b" {
+		t.Errorf("appendUniq duplicate: want unchanged slice len=3, got %v", result)
+	}
+}
+
+// TestAnalyseWithFromRef verifies the fromRef-only branch of changedFiles is
+// exercised (else-if toRef == "" path). In a non-git dir the command fails but
+// the args selection code is still executed.
+//
+//fusa:test REQ-FO-IMP002
+func TestAnalyseWithFromRef(t *testing.T) {
+	// Non-git dir → changedFiles returns error → Analyse proceeds with no changes.
+	rep, err := Analyse(t.TempDir(), "HEAD~1", "")
+	if err != nil {
+		t.Fatalf("Analyse: %v", err)
+	}
+	if len(rep.ChangedFiles) != 0 {
+		t.Errorf("expected no changes in non-git dir, got %d", len(rep.ChangedFiles))
+	}
+}
+
+// TestAnalyseWithBothRefs verifies the both-refs branch of changedFiles is
+// exercised (else path with fromRef and toRef both set).
+//
+//fusa:test REQ-FO-IMP002
+func TestAnalyseWithBothRefs(t *testing.T) {
+	// Non-git dir → changedFiles returns error → Analyse proceeds with no changes.
+	rep, err := Analyse(t.TempDir(), "HEAD~1", "HEAD")
+	if err != nil {
+		t.Fatalf("Analyse: %v", err)
+	}
+	if len(rep.ChangedFiles) != 0 {
+		t.Errorf("expected no changes in non-git dir, got %d", len(rep.ChangedFiles))
+	}
+}

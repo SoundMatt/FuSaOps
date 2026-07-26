@@ -441,3 +441,60 @@ func TestRunMCDCNoAdapters(t *testing.T) {
 		t.Errorf("expected ErrNoAdapters, got %v", err)
 	}
 }
+
+// detectErrAdapter wraps capFake and injects an error from Detect so that
+// selectAdapters propagates the error upward without any adapter being selected.
+type detectErrAdapter struct{ *capFake }
+
+func (d *detectErrAdapter) Detect(string) (bool, error) {
+	return false, errors.New("scan: detect error injected by test")
+}
+
+//fusa:test REQ-FO-ORC004
+func TestRunTraceSelectError(t *testing.T) {
+	reg := regWith(&detectErrAdapter{&capFake{tool: "gofusa", lang: fusaops.LangGo}})
+	if _, err := New(reg).RunTrace(context.Background(), t.TempDir(), Options{}); err == nil {
+		t.Error("RunTrace: expected error from selectAdapters when Detect fails")
+	}
+}
+
+//fusa:test REQ-FO-ORC005
+func TestRunSBOMSelectError(t *testing.T) {
+	reg := regWith(&detectErrAdapter{&capFake{tool: "gofusa", lang: fusaops.LangGo}})
+	if _, err := New(reg).RunSBOM(context.Background(), t.TempDir(), Options{}); err == nil {
+		t.Error("RunSBOM: expected error from selectAdapters when Detect fails")
+	}
+}
+
+//fusa:test REQ-FO-ORC007
+func TestRunStandardsSelectError(t *testing.T) {
+	reg := regWith(&detectErrAdapter{&capFake{tool: "gofusa", lang: fusaops.LangGo}})
+	if _, err := New(reg).RunStandards(context.Background(), t.TempDir(), "iso26262", Options{}); err == nil {
+		t.Error("RunStandards: expected error from selectAdapters when Detect fails")
+	}
+}
+
+//fusa:test REQ-FO-ORC013
+func TestRunCompSelectError(t *testing.T) {
+	reg := regWith(&detectErrAdapter{&capFake{tool: "gofusa", lang: fusaops.LangGo}})
+	if _, err := New(reg).RunComp(context.Background(), t.TempDir(), Options{}, 0, ""); err == nil {
+		t.Error("RunComp: expected error from selectAdapters when Detect fails")
+	}
+}
+
+//fusa:test REQ-FO-MCDC002
+func TestRunMCDCSelectError(t *testing.T) {
+	reg := regWith(&detectErrAdapter{&capFake{tool: "gofusa", lang: fusaops.LangGo}})
+	if _, err := New(reg).RunMCDC(context.Background(), t.TempDir(), Options{}); err == nil {
+		t.Error("RunMCDC: expected error from selectAdapters when Detect fails")
+	}
+}
+
+//fusa:test REQ-FO-ORC006
+func TestRunAuditPackSelectError(t *testing.T) {
+	reg := regWith(&detectErrAdapter{&capFake{tool: "gofusa", lang: fusaops.LangGo}})
+	dest := filepath.Join(t.TempDir(), "out.zip")
+	if _, err := New(reg).RunAuditPack(context.Background(), t.TempDir(), dest, Options{}); err == nil {
+		t.Error("RunAuditPack: expected error from selectAdapters when Detect fails")
+	}
+}

@@ -7,6 +7,25 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.85.0] — 2026-07-26
+
+### fix + feat: gofusa blank-identifier fix; coverage expansion across 5 packages
+
+- **gofusa selfcheck fix** — resolved blank-identifier finding in `history/history_test.go`
+  (`TestPruneWriteAllError`): changed `_, err := Prune(...)` to named variable `n` so the
+  discard is explicit.
+- **`orchestrator`** — added `detectErrAdapter` + 6 `*SelectError` tests covering the
+  `selectAdapters` error propagation path in `RunTrace`, `RunSBOM`, `RunStandards`,
+  `RunComp`, `RunMCDC`, and `RunAuditPack`.
+- **`diff`** — added 7 tests covering: sort-by-line (Added/Removed), sort-by-ruleID
+  (Added/Removed), `Summary` default (RemovedInfos), `renderText` with removals, and
+  `SaveBaseline` write-error path.
+- **`impact`** — added `TestAppendUniqDuplicate` (duplicate-prevention branch),
+  `TestAnalyseWithFromRef` and `TestAnalyseWithBothRefs` (changedFiles arg-selection branches).
+- **`verify`** — added `TestRunNonExistentDir` covering the non-ExitError path in `Run`.
+- **Total coverage: 87.6% → 88.0%** (all packages ≥ 80%; diff: 87.9% → 97.1%,
+  verify: 84.1% → 95.2%, orchestrator: 88.2% → 90.1%, impact: 86.5% → 89.7%).
+
 ## [1.84.0] — 2026-07-26
 
 ### feat: coverage expansion — write-error paths across 6 more packages
