@@ -50,13 +50,26 @@ type Coverage struct {
 	SecTestedRequirements int `json:"secTestedRequirements,omitempty"` // §5
 }
 
+// HLRLLRSummary holds the headline HLR/LLR decomposition figures decoded from a
+// tool's trace matrix. Orphaned is the count of LLRs referencing a non-existent
+// HLR parent; Uncovered is the count of HLRs with no LLR children.
+//
+//fusa:req REQ-FO-TRC030
+type HLRLLRSummary struct {
+	HLRCount  int `json:"hlrCount"`
+	LLRCount  int `json:"llrCount"`
+	Orphaned  int `json:"orphaned"`
+	Uncovered int `json:"uncovered"`
+}
+
 // Matrix mirrors the JSON document a tool emits from "trace --format json".
 //
 //fusa:req REQ-FO-TRC004
 type Matrix struct {
-	Requirements []Requirement `json:"requirements"`
-	Tags         []Tag         `json:"tags"`
-	Coverage     Coverage      `json:"coverage"`
+	Requirements  []Requirement  `json:"requirements"`
+	Tags          []Tag          `json:"tags"`
+	Coverage      Coverage       `json:"coverage"`
+	HLRLLRSummary *HLRLLRSummary `json:"hlrllrSummary,omitempty"` // REQ-FO-TRC030
 }
 
 // Qualification mirrors the headline figures of a tool's qualification report
@@ -73,6 +86,7 @@ type Qualification struct {
 // ComponentTrace is one language's contribution to the aggregate matrix.
 //
 //fusa:req REQ-FO-TRC006
+//fusa:req REQ-FO-TRC030
 type ComponentTrace struct {
 	Language      string         `json:"language"`
 	Tool          string         `json:"tool"`
@@ -82,6 +96,7 @@ type ComponentTrace struct {
 	Requirements  []Requirement  `json:"requirements,omitempty"`
 	Tags          []Tag          `json:"tags,omitempty"`
 	Qualification *Qualification `json:"qualification,omitempty"`
+	HLRLLRSummary *HLRLLRSummary `json:"hlrllrSummary,omitempty"` // REQ-FO-TRC030
 }
 
 // pct returns whole-number percent of n over total, guarding division by zero.
@@ -130,6 +145,7 @@ type AggregateCoverage struct {
 //
 //fusa:req REQ-FO-TRC009
 //fusa:req REQ-FO-TRC020
+//fusa:req REQ-FO-TRC030
 type Aggregate struct {
 	GeneratedAt   time.Time            `json:"generatedAt"`
 	Root          string               `json:"root"`
@@ -137,15 +153,18 @@ type Aggregate struct {
 	Components    []ComponentTrace     `json:"components"`
 	Coverage      AggregateCoverage    `json:"coverage"`
 	Decomposition *DecompositionReport `json:"decomposition,omitempty"`
+	HLRLLRSummary *HLRLLRSummary       `json:"hlrllrSummary,omitempty"` // REQ-FO-TRC030
 }
 
 // New builds an Aggregate from component traces, summing coverage across every
 // component whose matrix was collected. Components are sorted by tool name for
 // deterministic output. Skipped components contribute nothing to the totals, so
 // coverage gaps caused by a missing tool stay visible rather than inflating the
-// percentage.
+// percentage. HLRLLRSummary is aggregated from any component matrices that carry
+// the per-tool summary.
 //
 //fusa:req REQ-FO-TRC010
+//fusa:req REQ-FO-TRC030
 func New(root, project string, components []ComponentTrace) *Aggregate {
 	sort.Slice(components, func(i, j int) bool { return components[i].Tool < components[j].Tool })
 	a := &Aggregate{
@@ -154,6 +173,8 @@ func New(root, project string, components []ComponentTrace) *Aggregate {
 		Project:     project,
 		Components:  components,
 	}
+	var hlrllr HLRLLRSummary
+	hasHLRLLR := false
 	for _, c := range components {
 		if c.Skipped != "" {
 			continue // a missing tool must not inflate or shrink coverage
@@ -162,10 +183,20 @@ func New(root, project string, components []ComponentTrace) *Aggregate {
 		a.Coverage.TracedRequirements += c.Coverage.TracedRequirements
 		a.Coverage.TestedRequirements += c.Coverage.TestedRequirements
 		a.Coverage.SecTestedRequirements += c.Coverage.SecTestedRequirements
+		if c.HLRLLRSummary != nil {
+			hlrllr.HLRCount += c.HLRLLRSummary.HLRCount
+			hlrllr.LLRCount += c.HLRLLRSummary.LLRCount
+			hlrllr.Orphaned += c.HLRLLRSummary.Orphaned
+			hlrllr.Uncovered += c.HLRLLRSummary.Uncovered
+			hasHLRLLR = true
+		}
 	}
 	a.Coverage.TracedPct = pct(a.Coverage.TracedRequirements, a.Coverage.TotalRequirements)
 	a.Coverage.TestedPct = pct(a.Coverage.TestedRequirements, a.Coverage.TotalRequirements)
 	a.Coverage.SecTestedPct = pct(a.Coverage.SecTestedRequirements, a.Coverage.TotalRequirements)
+	if hasHLRLLR {
+		a.HLRLLRSummary = &hlrllr
+	}
 	return a
 }
 

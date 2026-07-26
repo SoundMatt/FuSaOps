@@ -11,6 +11,7 @@ import (
 	"github.com/SoundMatt/FuSaOps/adapter"
 	"github.com/SoundMatt/FuSaOps/auditpack"
 	"github.com/SoundMatt/FuSaOps/comp"
+	"github.com/SoundMatt/FuSaOps/mcdc"
 	"github.com/SoundMatt/FuSaOps/sbom"
 	"github.com/SoundMatt/FuSaOps/standards"
 	"github.com/SoundMatt/FuSaOps/trace"
@@ -313,6 +314,68 @@ func (rn *Runner) RunComp(ctx context.Context, root string, opts Options, thresh
 	wg.Wait()
 
 	return comp.New(root, opts.Project, results), nil
+}
+
+// RunMCDC rolls every applicable tool's MC/DC coverage report up into one
+// cross-language MCDCAggregate. A component whose binary is missing, whose tool
+// does not implement the McdcRunner capability, or whose command fails is
+// recorded as skipped. Adapters run in parallel, governed by Options.Workers
+// and Options.Timeout.
+//
+//fusa:req REQ-FO-MCDC002
+func (rn *Runner) RunMCDC(ctx context.Context, root string, opts Options) (*mcdc.MCDCAggregate, error) {
+	adapters, err := rn.selectAdapters(root, opts)
+	if err != nil {
+		return nil, err
+	}
+	if len(adapters) == 0 {
+		return nil, fusaops.ErrNoAdapters
+	}
+
+	results := make([]mcdc.MCDCComponent, len(adapters))
+	var wg sync.WaitGroup
+	sem := newSem(opts.Workers)
+
+	for i, a := range adapters {
+		wg.Add(1)
+		go func(i int, a adapter.Adapter) {
+			defer wg.Done()
+			if sem != nil {
+				sem <- struct{}{}
+				defer func() { <-sem }()
+			}
+
+			cc := mcdc.MCDCComponent{Language: a.Language().String(), Tool: a.Tool(), Available: a.Available()}
+
+			tctx := ctx
+			var cancel context.CancelFunc
+			if opts.Timeout > 0 {
+				tctx, cancel = context.WithTimeout(ctx, opts.Timeout)
+				defer cancel()
+			}
+
+			switch {
+			case !cc.Available:
+				cc.Skipped = fmt.Sprintf("%s binary not found on PATH", a.Tool())
+			default:
+				mr, ok := a.(adapter.McdcRunner)
+				if !ok {
+					cc.Skipped = fmt.Sprintf("%s does not support MC/DC", a.Tool())
+					break
+				}
+				r, merr := mr.MCDC(tctx, root)
+				if merr != nil {
+					cc.Skipped = fmt.Sprintf("mcdc failed: %v", merr)
+					break
+				}
+				cc.Report = r
+			}
+			results[i] = cc
+		}(i, a)
+	}
+	wg.Wait()
+
+	return mcdc.New(root, opts.Project, results), nil
 }
 
 // RunAuditPack bundles every applicable tool's audit-pack ZIP together with the

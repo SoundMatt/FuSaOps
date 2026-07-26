@@ -7,6 +7,59 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.77.0] — 2026-07-26
+
+### feat: HLR/LLR traceability, tool qualification display, MC/DC, V&V independence
+
+Four new x-FuSa cross-language features tracking the tool PRs across all six adapters
+(go-FuSa #39, c-FuSa #55, cpp-FuSa #26, rust-FuSa #26, py-FuSa #14, java-FuSa #16).
+
+#### HLR/LLR Decomposition (REQ-FO-TRC030)
+
+- **`trace.HLRLLRSummary`**: new struct with `HLRCount`, `LLRCount`, `Orphaned`, and
+  `Uncovered` counts decoded from each tool's trace matrix JSON.
+- **`trace.Matrix.HLRLLRSummary`**: per-tool matrix now carries the optional
+  HLR/LLR summary alongside its requirements and coverage.
+- **`trace.ComponentTrace.HLRLLRSummary`**: per-component aggregate carries the
+  per-tool summary for roll-up.
+- **`trace.Aggregate.HLRLLRSummary`**: cross-language roll-up sums all non-skipped
+  component HLR/LLR counts into a single aggregate summary.
+- **Text/HTML renderers** show HLR→LLR hierarchy per component and in the totals
+  row; the HTML page gains a new HLR/LLR section below Decomposition.
+- **Requirement gaps** in the HTML trace page now show `[parent: <id>]` for LLRs.
+
+#### Tool Qualification V&V Independence (REQ-FO-QLF010, REQ-FO-QLF011)
+
+- **`qualify.ComponentResult`**: six new fields — `QualificationMethod`,
+  `QualifierIdentity`, `QualificationRecordUri`, `ImplementationAuthor`,
+  `IndependentReviewer`, `AchievableASIL` — decoded from each tool's qualify JSON.
+- **`qualify.Report`**: same six fields at the aggregate level; `IsIndependent()`
+  helper returns true when `IndependentReviewer` is set.
+- **`report.QualifyInfo`**: five new fields propagated from the qualify report into
+  the HTML renderer; `IsIndependent()` helper drives the dashboard badge.
+- **HTML dashboard**: qualification section now shows an
+  **independently-qualified** (green) or **self-qualified** (muted) badge;
+  reviewer name and achievable ASIL are displayed when present.
+- **`qualify.renderText`**: text output shows all new fields when populated.
+
+#### MC/DC Coverage (REQ-FO-MCDC001, REQ-FO-MCDC002, REQ-FO-MCDC003)
+
+- **`mcdc/` package**: new package with `Report`, `MCDCComponent`, and
+  `MCDCAggregate` types for per-tool and cross-language MC/DC coverage tracking.
+- **`adapter.McdcRunner`**: new capability interface; `cmdAdapter.MCDC()` shells out
+  to `<tool> comp --mcdc --format json`.
+- **`orchestrator.RunMCDC()`**: parallel roll-up analogous to `RunComp()`, recording
+  skipped components for tools that do not implement `McdcRunner`.
+- **`report.MCDCInfo` / `report.MCDCComponent`**: carry MC/DC data into HTML
+  renderer without a `report→mcdc` import cycle; wired through `RenderOptions.MCDCInfo`.
+- **`/api/v1/mcdc`**: new JSON endpoint serving the cached `MCDCAggregate`.
+- **`/mcdc`**: new HTML page with per-component MC/DC coverage table and gate
+  status, following the `/comp` page pattern.
+- **Dashboard nav**: MC/DC nav link appears when data is available; dashboard
+  section shows gate badge and condition coverage.
+- **`server.mcdcInfoFromAggregate`**: converts `mcdc.MCDCAggregate` to
+  `report.MCDCInfo` without import cycle.
+
 ## [1.76.0] — 2026-07-26
 
 ### feat: CLI tests for `fusaops comp` (REQ-FO-CLI082)

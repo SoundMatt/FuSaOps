@@ -2805,6 +2805,51 @@
       "description": "The FuSaOps web server shall serve a /comp HTML page that displays the cached comp aggregate with per-component function-level detail for all functions that exceed the configured cyclomatic complexity threshold. The page shall link back to the dashboard and to the /api/v1/comp JSON endpoint. The dashboard nav shall include a Complexity link to /comp when comp data is available.",
       "priority": "MUST",
       "rationale": "The /api/v1/comp endpoint provides summary counts; the /comp page exposes function-level detail needed to identify and remediate specific violations."
+    },
+    {
+      "id": "REQ-FO-TRC030",
+      "title": "HLR/LLR decomposition summary in trace matrix and aggregate",
+      "description": "FuSaOps shall define HLRLLRSummary with HLRCount, LLRCount, Orphaned, and Uncovered counts. The per-tool Matrix shall carry an optional HLRLLRSummary field decoded from the tool's trace JSON. ComponentTrace and Aggregate shall aggregate the summary across non-skipped components. Text and HTML renderers shall display the HLR→LLR hierarchy, orphan count, and uncovered HLR count.",
+      "priority": "MUST",
+      "rationale": "DO-178C and ISO 26262 both require that HLRs be decomposed into traceable LLRs; surfacing orphaned and childless requirements at the cross-language level allows teams to catch decomposition gaps before audit.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-QLF010",
+      "title": "V&V independence fields in ComponentResult and Report",
+      "description": "FuSaOps shall add QualificationMethod, QualifierIdentity, QualificationRecordUri, ImplementationAuthor, IndependentReviewer, and AchievableASIL fields to qualify.ComponentResult and qualify.Report. The JSON encoder and hash shall include these fields. QualifyInfo in the report package shall carry the same fields into the HTML renderer.",
+      "priority": "MUST",
+      "rationale": "ISO 26262 Part 8 §11 and DO-330 require evidence of independence between implementation and verification; capturing these fields in the qualification report makes that evidence machine-readable.",
+      "standard": "ISO 26262"
+    },
+    {
+      "id": "REQ-FO-QLF011",
+      "title": "IsIndependent() helper and independence badge in dashboard",
+      "description": "FuSaOps shall provide IsIndependent() methods on qualify.ComponentResult, qualify.Report, and report.QualifyInfo. The HTML dashboard shall display an 'independently-qualified' badge (green) when IndependentReviewer is set, or a 'self-qualified' badge (muted) otherwise.",
+      "priority": "MUST",
+      "rationale": "Auditors need a clear visual indicator of independence status in the tool qualification evidence; a badge on the dashboard provides immediate visibility."
+    },
+    {
+      "id": "REQ-FO-MCDC001",
+      "title": "MC/DC report types and McdcRunner capability interface",
+      "description": "FuSaOps shall define Report (with TotalConditions, CoveredConditions, GatePassed, Decisions, Conditions), MCDCComponent, and MCDCAggregate in the mcdc/ package. The adapter.McdcRunner interface shall expose MCDC(ctx, root) returning (*mcdc.Report, error). cmdAdapter.MCDC() shall shell out to '<tool> comp --mcdc --format json'.",
+      "priority": "MUST",
+      "rationale": "DO-178C Level A and ISO 26262 ASIL-D require MC/DC coverage for safety-critical software; the McdcRunner capability follows the same pattern as Compler to remain optional for lower-criticality tools.",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-MCDC002",
+      "title": "orchestrator.RunMCDC cross-language MC/DC aggregation",
+      "description": "Runner.RunMCDC(ctx, root, opts) shall invoke MCDC on all applicable adapters in parallel, recording non-McdcRunner adapters and unavailable binaries as skipped, and return an mcdc.MCDCAggregate. Returns ErrNoAdapters when no applicable adapters exist.",
+      "priority": "MUST",
+      "rationale": "Provides the orchestration layer for cross-language MC/DC analysis, matching the RunComp/RunTrace pattern."
+    },
+    {
+      "id": "REQ-FO-MCDC003",
+      "title": "/api/v1/mcdc, /mcdc page, and dashboard MC/DC section",
+      "description": "The FuSaOps web server shall expose a /api/v1/mcdc JSON endpoint and a /mcdc HTML page showing per-component MC/DC condition coverage and gate status. The dashboard shall include an MC/DC section with gate badge and condition coverage percentage when data is available. MCDCInfo in the report package shall carry aggregated MC/DC data to the HTML renderer without a report→mcdc import cycle.",
+      "priority": "MUST",
+      "rationale": "MC/DC data must be visible to developers and auditors alongside the findings dashboard; the /mcdc page follows the /comp page pattern for consistency."
     }
   ]
 }

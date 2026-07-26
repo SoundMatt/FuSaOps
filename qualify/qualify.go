@@ -58,6 +58,7 @@ type RunOptions struct {
 // ComponentResult holds one adapter's qualification outcome.
 //
 //fusa:req REQ-FO-QUAL001
+//fusa:req REQ-FO-QLF010
 type ComponentResult struct {
 	Language  string `json:"language"`
 	Tool      string `json:"tool"`
@@ -66,26 +67,52 @@ type ComponentResult struct {
 	Total     int    `json:"total"`
 	Passed    int    `json:"passed"`
 	Failed    int    `json:"failed"`
+	// V&V independence fields (REQ-FO-QLF010).
+	QualificationMethod    string `json:"qualificationMethod,omitempty"`
+	QualifierIdentity      string `json:"qualifierIdentity,omitempty"`
+	QualificationRecordUri string `json:"qualificationRecordUri,omitempty"`
+	ImplementationAuthor   string `json:"implementationAuthor,omitempty"`
+	IndependentReviewer    string `json:"independentReviewer,omitempty"`
+	AchievableASIL         string `json:"achievableAsil,omitempty"`
 }
 
-// Passed reports whether the component qualification passed (no failures).
+// AllPassed reports whether the component qualification passed (no failures).
 func (c ComponentResult) AllPassed() bool { return c.Skipped == "" && c.Failed == 0 }
+
+// IsIndependent reports whether this component used an independent reviewer,
+// indicating a higher trust level for the qualification evidence.
+//
+//fusa:req REQ-FO-QLF011
+func (c ComponentResult) IsIndependent() bool { return c.IndependentReviewer != "" }
 
 // Report is the cross-language qualification roll-up.
 //
 //fusa:req REQ-FO-QUAL001
+//fusa:req REQ-FO-QLF010
 type Report struct {
-	GeneratedAt            time.Time         `json:"generatedAt"`
-	GoVersion              string            `json:"goVersion"`
-	ProjectRoot            string            `json:"projectRoot"`
-	QualificationType      string            `json:"qualificationType,omitempty"`      // REQ-FO-QUAL005
-	QualificationRecordUri string            `json:"qualificationRecordUri,omitempty"` // REQ-FO-QUAL005
-	Total                  int               `json:"total"`
-	Passed                 int               `json:"passed"`
-	Failed                 int               `json:"failed"`
-	Components             []ComponentResult `json:"components"`
-	Hash                   string            `json:"hash"`
+	GeneratedAt            time.Time `json:"generatedAt"`
+	GoVersion              string    `json:"goVersion"`
+	ProjectRoot            string    `json:"projectRoot"`
+	QualificationType      string    `json:"qualificationType,omitempty"`      // REQ-FO-QUAL005
+	QualificationRecordUri string    `json:"qualificationRecordUri,omitempty"` // REQ-FO-QUAL005
+	// V&V independence fields (REQ-FO-QLF010).
+	QualificationMethod  string            `json:"qualificationMethod,omitempty"`
+	QualifierIdentity    string            `json:"qualifierIdentity,omitempty"`
+	ImplementationAuthor string            `json:"implementationAuthor,omitempty"`
+	IndependentReviewer  string            `json:"independentReviewer,omitempty"`
+	AchievableASIL       string            `json:"achievableAsil,omitempty"`
+	Total                int               `json:"total"`
+	Passed               int               `json:"passed"`
+	Failed               int               `json:"failed"`
+	Components           []ComponentResult `json:"components"`
+	Hash                 string            `json:"hash"`
 }
+
+// IsIndependent reports whether the qualification was performed with an
+// independent reviewer (higher trust level per ISO 26262 Part 8 §11).
+//
+//fusa:req REQ-FO-QLF011
+func (r *Report) IsIndependent() bool { return r.IndependentReviewer != "" }
 
 // HasFailures reports whether any component failed qualification.
 func (r *Report) HasFailures() bool { return r.Failed > 0 }
@@ -216,6 +243,7 @@ func Render(w io.Writer, r *Report, format string) error {
 // renderText writes a human-readable text summary of the qualification report.
 //
 //fusa:req REQ-FO-QUAL007
+//fusa:req REQ-FO-QLF010
 func renderText(w io.Writer, r *Report) error {
 	fmt.Fprintf(w, "Project:   %s\n", r.ProjectRoot)
 	fmt.Fprintf(w, "Generated: %s\n", r.GeneratedAt.Format("2006-01-02T15:04:05Z"))
@@ -224,6 +252,21 @@ func renderText(w io.Writer, r *Report) error {
 	}
 	if r.QualificationRecordUri != "" {
 		fmt.Fprintf(w, "Record:    %s\n", r.QualificationRecordUri)
+	}
+	if r.QualificationMethod != "" {
+		fmt.Fprintf(w, "Method:    %s\n", r.QualificationMethod)
+	}
+	if r.QualifierIdentity != "" {
+		fmt.Fprintf(w, "Qualifier: %s\n", r.QualifierIdentity)
+	}
+	if r.ImplementationAuthor != "" {
+		fmt.Fprintf(w, "Author:    %s\n", r.ImplementationAuthor)
+	}
+	if r.IndependentReviewer != "" {
+		fmt.Fprintf(w, "Reviewer:  %s (independent)\n", r.IndependentReviewer)
+	}
+	if r.AchievableASIL != "" {
+		fmt.Fprintf(w, "Achievable ASIL: %s\n", r.AchievableASIL)
 	}
 	fmt.Fprintf(w, "Overall:   %d total  %d passed  %d failed\n", r.Total, r.Passed, r.Failed)
 	fmt.Fprintf(w, "\nComponents:\n")
@@ -235,7 +278,11 @@ func renderText(w io.Writer, r *Report) error {
 			if c.Failed > 0 {
 				status = "FAIL"
 			}
-			fmt.Fprintf(w, "  %-10s %-12s  %s  %d/%d passed\n", c.Language, c.Tool, status, c.Passed, c.Total)
+			ind := ""
+			if c.IsIndependent() {
+				ind = " [independent]"
+			}
+			fmt.Fprintf(w, "  %-10s %-12s  %s  %d/%d passed%s\n", c.Language, c.Tool, status, c.Passed, c.Total, ind)
 		}
 	}
 	return nil
@@ -246,11 +293,21 @@ func computeHash(r *Report) string {
 		GeneratedAt            time.Time         `json:"generatedAt"`
 		QualificationType      string            `json:"qualificationType,omitempty"`
 		QualificationRecordUri string            `json:"qualificationRecordUri,omitempty"`
+		QualificationMethod    string            `json:"qualificationMethod,omitempty"`
+		QualifierIdentity      string            `json:"qualifierIdentity,omitempty"`
+		ImplementationAuthor   string            `json:"implementationAuthor,omitempty"`
+		IndependentReviewer    string            `json:"independentReviewer,omitempty"`
+		AchievableASIL         string            `json:"achievableAsil,omitempty"`
 		Total                  int               `json:"total"`
 		Passed                 int               `json:"passed"`
 		Failed                 int               `json:"failed"`
 		Components             []ComponentResult `json:"components"`
-	}{r.GeneratedAt, r.QualificationType, r.QualificationRecordUri, r.Total, r.Passed, r.Failed, r.Components})
+	}{
+		r.GeneratedAt, r.QualificationType, r.QualificationRecordUri,
+		r.QualificationMethod, r.QualifierIdentity,
+		r.ImplementationAuthor, r.IndependentReviewer, r.AchievableASIL,
+		r.Total, r.Passed, r.Failed, r.Components,
+	})
 	h := sha256.Sum256(data)
 	return fmt.Sprintf("sha256:%x", h)
 }

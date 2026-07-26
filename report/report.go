@@ -134,6 +134,7 @@ type CompComponent struct {
 // report package has no dependency on qualify.
 //
 //fusa:req REQ-FO-SRV011
+//fusa:req REQ-FO-QLF010
 type QualifyInfo struct {
 	// Type is "self" or "independent".
 	Type string
@@ -147,6 +148,52 @@ type QualifyInfo struct {
 	PassedCount int
 	// Failed is the number of checks that failed.
 	Failed int
+	// V&V independence fields (REQ-FO-QLF010).
+	QualificationMethod  string
+	QualifierIdentity    string
+	ImplementationAuthor string
+	IndependentReviewer  string
+	AchievableASIL       string
+}
+
+// IsIndependent reports whether an independent reviewer was declared.
+//
+//fusa:req REQ-FO-QLF011
+func (q *QualifyInfo) IsIndependent() bool {
+	return q != nil && q.IndependentReviewer != ""
+}
+
+// MCDCInfo carries MC/DC aggregate data into the HTML dashboard renderer.
+// It is populated by server.Server from an mcdc.MCDCAggregate and passed
+// through RenderOptions; it contains no mcdc package types so the report
+// package has no dependency on mcdc.
+//
+//fusa:req REQ-FO-MCDC003
+type MCDCInfo struct {
+	TotalConditions   int
+	CoveredConditions int
+	GatePassed        bool
+	Components        []MCDCComponent
+}
+
+// MCDCComponent is one tool/language entry in MCDCInfo.
+//
+//fusa:req REQ-FO-MCDC003
+type MCDCComponent struct {
+	Language          string
+	Tool              string
+	Skipped           string
+	TotalConditions   int
+	CoveredConditions int
+	GatePassed        bool
+}
+
+// CoveragePct returns the whole-number MC/DC coverage percentage.
+func (m *MCDCInfo) CoveragePct() int {
+	if m == nil || m.TotalConditions == 0 {
+		return 100
+	}
+	return m.CoveredConditions * 100 / m.TotalConditions
 }
 
 // RenderOptions controls optional behaviour during report rendering.
@@ -169,6 +216,11 @@ type RenderOptions struct {
 	//
 	//fusa:req REQ-FO-RPT021
 	CompInfo *CompInfo
+	// MCDCInfo, when non-nil, injects an MC/DC coverage section into the
+	// HTML dashboard.
+	//
+	//fusa:req REQ-FO-MCDC003
+	MCDCInfo *MCDCInfo
 }
 
 // New builds an AggregateReport from a set of components, computing per
