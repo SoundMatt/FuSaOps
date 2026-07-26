@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -2209,6 +2210,9 @@ func TestHooksInstallMkdirAllError(t *testing.T) {
 //
 //fusa:test REQ-FO-HOOKS001
 func TestHooksInstallWriteError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping permission test: Windows does not enforce POSIX directory write bits")
+	}
 	if os.Getuid() == 0 {
 		t.Skip("skipping permission test: running as root")
 	}
