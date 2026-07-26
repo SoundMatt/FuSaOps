@@ -7,6 +7,31 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.105.0] — 2026-07-26
+
+### feat: coverage expansion — MultiServer auth/badge/detail branches, runRelease bad-config
+
+- **`server`** — `TestNewMultiWithAdapter` covers the `p.Adapter != ""` branch in `NewMulti`.
+- **`server`** — `TestMultiAuthRWSuccess` covers the `role = "rw"` assignment and the
+  `statusRecorder + ServeHTTP` execution path in `authWrap`.
+- **`server`** — `TestMultiAuthUnauthorized` covers the `role == "" → 401 Unauthorized` branch.
+- **`server`** — `TestMultiAuthAuditLogging` covers the `ms.auditDir != ""` audit-append path.
+- **`server`** — `TestMultiHandleOverviewFAILBadge` / `TestMultiHandleOverviewPASSBadge` /
+  `TestMultiHandleOverviewPENDINGBadge` cover all three badge variants in `handleOverview`,
+  plus the `pErr != nil` and `rep == nil` state branches.
+- **`server`** — `TestMultiAPIProjectsFAIL` / `TestMultiAPIProjectsPENDING` cover the
+  `pErr != nil` and `rep == nil` branches in `handleAPIProjects`.
+- **`server`** — `TestMultiProjectPageFAIL` (500) / `TestMultiProjectPagePENDING` (503) /
+  `TestMultiProjectPagePASS` (PASS badge + "No findings") / `TestMultiProjectPageERRORSeverity`
+  (`class="err"` for ERROR findings) cover the four main branches in `makeProjectHandler`.
+- **`server`** — `TestMultiBadgeAggFAIL` / `TestMultiBadgeAggPASS` / `TestMultiBadgeAggSkipError`
+  cover the FAIL, PASS, and error-skip branches in `handleBadge`.
+- **`server`** — `TestMultiProjectBadgeFAIL` / `TestMultiProjectBadgePASS` /
+  `TestMultiProjectBadgeERROR` cover all three status paths in `makeProjectBadgeHandler`.
+- **`cmd/fusaops`** — `TestReleaseBadConfig` writes a malformed `.fusaops.json` and calls
+  `runRelease` to cover the `loadOptions` error branch (lines 62–65).
+- Total coverage: 90.7% → 91.1%.
+
 ## [1.104.0] — 2026-07-26
 
 ### feat: coverage expansion — disposition flag/load/save errors, TARA no-dir, req parse branches
