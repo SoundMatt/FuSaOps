@@ -43,22 +43,21 @@ func TestLoadMissing(t *testing.T) {
 	}
 }
 
-// TestLoadReadError verifies Load returns an error when projectRoot is a
-// regular file (not a directory), causing os.ReadFile to fail with ENOTDIR
-// rather than ErrNotExist.
+// TestLoadReadError verifies Load returns an error when the dispositions file
+// path is occupied by a directory (os.ReadFile on a directory returns a
+// non-ErrNotExist error on all platforms).
 //
 //fusa:test REQ-FO-DISP002
 func TestLoadReadError(t *testing.T) {
 	dir := t.TempDir()
-	// Create a regular file and use it as projectRoot; the child path will not
-	// be accessible (ENOTDIR on all platforms).
-	f, err := os.CreateTemp(dir, "not-a-dir-*.json")
-	if err != nil {
+	// Replace the expected JSON file with a directory so ReadFile fails with
+	// EISDIR (Linux/macOS) or access-denied (Windows) — neither is ErrNotExist.
+	dispDir := filepath.Join(dir, DispositionsFile)
+	if err := os.Mkdir(dispDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	_ = f.Close()
-	if _, loadErr := Load(f.Name()); loadErr == nil {
-		t.Error("Load: expected error when projectRoot is a regular file")
+	if _, err := Load(dir); err == nil {
+		t.Error("Load: expected error when dispositions path is a directory")
 	}
 }
 
