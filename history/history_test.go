@@ -200,3 +200,29 @@ NOT_JSON
 		t.Errorf("want 2 valid lines, got %d", len(got))
 	}
 }
+
+// TestPruneWriteAllError verifies Prune propagates errors from writeAll when
+// the history file cannot be overwritten.
+//
+//fusa:test REQ-FO-HST004
+func TestPruneWriteAllError(t *testing.T) {
+	dir := t.TempDir()
+	snap := FromReport(makeReport(0, 0, 0))
+	// Write enough snapshots to exceed keep=1 so Prune calls writeAll.
+	for range 3 {
+		if err := Store(dir, snap); err != nil {
+			t.Fatalf("Store: %v", err)
+		}
+	}
+	// Replace the history file with a directory so os.Create fails.
+	histPath := filepath.Join(dir, Filename)
+	if err := os.Remove(histPath); err != nil {
+		t.Fatalf("Remove: %v", err)
+	}
+	if err := os.Mkdir(histPath, 0o750); err != nil {
+		t.Fatalf("Mkdir: %v", err)
+	}
+	if _, err := Prune(dir, 1); err == nil {
+		t.Error("Prune: expected error when history path is a directory")
+	}
+}
