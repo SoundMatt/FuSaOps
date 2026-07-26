@@ -74,13 +74,17 @@ type Matrix struct {
 
 // Qualification mirrors the headline figures of a tool's qualification report
 // ("<tool> qualify"). It is the tool-confidence evidence (ISO 26262 §11) rolled
-// up alongside requirement coverage.
+// up alongside requirement coverage. IndependentReviewer and QualificationMethod
+// are decoded from go-FuSa v0.32.0+ qualify JSON (REQ-FO-QLF010).
 //
 //fusa:req REQ-FO-TRC005
+//fusa:req REQ-FO-QLF010
 type Qualification struct {
-	Total  int `json:"total"`
-	Passed int `json:"passed"`
-	Failed int `json:"failed"`
+	Total               int    `json:"total"`
+	Passed              int    `json:"passed"`
+	Failed              int    `json:"failed"`
+	IndependentReviewer string `json:"independentReviewer,omitempty"`
+	QualificationMethod string `json:"qualificationMethod,omitempty"`
 }
 
 // ComponentTrace is one language's contribution to the aggregate matrix.

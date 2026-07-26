@@ -2807,6 +2807,13 @@
       "rationale": "The /api/v1/comp endpoint provides summary counts; the /comp page exposes function-level detail needed to identify and remediate specific violations."
     },
     {
+      "id": "REQ-FO-SRV014",
+      "title": "/api/v1/qualify JSON endpoint for programmatic qualification access",
+      "description": "The FuSaOps web server shall expose a /api/v1/qualify JSON endpoint that returns the cached qualification report including type, allPassed, total, passedCount, failed, independence fields (qualificationMethod, qualifierIdentity, implementationAuthor, independentReviewer, achievableAsil), and an isIndependent boolean. The endpoint shall return {} when no qualification report is available.",
+      "priority": "MUST",
+      "rationale": "External tooling and CI pipelines require programmatic access to the qualification report; /badge/qualify.svg is human-facing only. The /api/v1/qualify endpoint provides the machine-readable equivalent used by automated compliance checks."
+    },
+    {
       "id": "REQ-FO-TRC030",
       "title": "HLR/LLR decomposition summary in trace matrix and aggregate",
       "description": "FuSaOps shall define HLRLLRSummary with HLRCount, LLRCount, Orphaned, and Uncovered counts. The per-tool Matrix shall carry an optional HLRLLRSummary field decoded from the tool's trace JSON. ComponentTrace and Aggregate shall aggregate the summary across non-skipped components. Text and HTML renderers shall display the HLR→LLR hierarchy, orphan count, and uncovered HLR count.",

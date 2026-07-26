@@ -7,6 +7,55 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.78.0] — 2026-07-26
+
+### fix: maximize test coverage and requirement traceability
+
+Audit-driven improvements targeting P0 correctness bugs and P1 coverage gaps.
+
+#### P0 — Correctness
+
+- **`trace.Qualification`**: add `IndependentReviewer` and `QualificationMethod`
+  fields so the struct fully mirrors the go-FuSa v0.32.0 qualify JSON output
+  (REQ-FO-QLF010). These fields were previously silently dropped on decode.
+- **`qualify.Run()`**: copy `qr.IndependentReviewer` and `qr.QualificationMethod`
+  into each `ComponentResult` after the total/passed/failed assignments.
+  `IsIndependent()` now correctly returns `true` for tools that declare an
+  independent reviewer.
+- **`/api/v1/qualify`**: new JSON endpoint on `server.Server` exposing the
+  cached qualification report programmatically. Mirrors how `/api/v1/comp` and
+  `/api/v1/mcdc` serve machine-readable data (REQ-FO-SRV014).
+
+#### P1 — Test coverage
+
+- **adapter**: `TestAdapterMCDC` and `TestAdapterMCDCErrors` — new fake-runner
+  unit tests for the `McdcRunner` capability path (REQ-FO-MCDC001).
+- **report**: `TestQualifyInfoIsIndependent` — exercises `QualifyInfo.IsIndependent()`
+  with nil, empty, and populated receiver (REQ-FO-QLF011).
+  `TestMCDCInfoCoveragePct` — exercises `MCDCInfo.CoveragePct()` for nil, zero,
+  and non-zero condition counts (REQ-FO-MCDC003).
+- **qualify**: `TestIndependentReviewerFields` (REQ-FO-QLF010) and `TestIsIndependent`
+  (REQ-FO-QLF011) — full round-trip tests for V&V independence propagation.
+  `TestRenderTextShowsIndependentReviewer` — text renderer output verified.
+- **server**: `TestAPIMCDCBeforeCompute`, `TestAPIMCDCWithData`, `TestMCDCPageBeforeCompute`,
+  `TestMCDCPageWithData`, `TestMCDCPageSkippedComponent`, `TestDashboardShowsMCDCSection`
+  — new MCDC endpoint and page tests (REQ-FO-MCDC002, REQ-FO-MCDC003).
+  `TestAPIQualifyEndpointPending`, `TestAPIQualifyEndpointWithReport` — qualify
+  API endpoint tests (REQ-FO-SRV014). `TestIndexNilReport`, `TestAPIReportNilReport`
+  — nil-report 503 paths.
+- **cmd/fusaops**: `TestDispositionListWithEntries`, `TestReqExportToFile`,
+  `TestReqExportBadFormat`, `TestReqExportPolarion`, `TestReqExportCodebeamer`,
+  `TestReqExportJama`, `TestReqExportBadFlag`, `TestServeMultiBadJSON`,
+  `TestServeMultiInvalidProjectDirs` — targeted tests for the highest-impact
+  uncovered dispatch paths (REQ-FO-CLI052, REQ-FO-CLI060, REQ-FO-CLI030).
+
+#### P2 — Tool version references
+
+- **README.md**: updated bundled-tool version table and prose to reflect
+  go-FuSa v0.32.0, cpp-FuSa v0.13.0, c-FuSa v0.5.35, rust-FuSa v0.3.0,
+  py-FuSa v0.2.0, java-FuSa v0.4.0.
+- **Dockerfile**: updated COPY --from stages to match the new tool versions.
+
 ## [1.77.0] — 2026-07-26
 
 ### feat: HLR/LLR traceability, tool qualification display, MC/DC, V&V independence

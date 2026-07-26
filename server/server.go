@@ -275,6 +275,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/mcdc", s.handleAPIMCDC)
 	mux.HandleFunc("/mcdc", s.handleMCDC)
 	mux.HandleFunc("/api/v1/vv", s.handleAPIVandV)
+	mux.HandleFunc("/api/v1/qualify", s.handleAPIQualify)
 	mux.HandleFunc("/badge/vv.svg", s.handleVandVBadge)
 	mux.HandleFunc("/badge/qualify.svg", s.handleQualifyBadge)
 	mux.HandleFunc("/metrics", s.handleMetrics)
@@ -1250,6 +1251,54 @@ func (s *Server) handleAPIVandV(w http.ResponseWriter, _ *http.Request) {
 		IndependentTestExecutor: d.IndependentTestExecutor,
 		IndependenceLevel:       vv.IndependenceLevel(d),
 		AchievableASIL:          vv.AchievableASIL(d),
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(resp)
+}
+
+// handleAPIQualify serves the /api/v1/qualify JSON endpoint with the cached
+// cross-language qualification report. The report is loaded from the configured
+// qualifyPath (or auto-discovered from the project root), matching how the
+// dashboard badge and HTML section are populated.
+//
+//fusa:req REQ-FO-SRV014
+//fusa:req REQ-FO-QLF010
+func (s *Server) handleAPIQualify(w http.ResponseWriter, _ *http.Request) {
+	qi := loadQualifyInfo(s.root, s.qualifyPath)
+	if qi == nil {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, "{}\n")
+		return
+	}
+	type response struct {
+		Type                 string `json:"type"`
+		RecordUri            string `json:"recordUri,omitempty"`
+		AllPassed            bool   `json:"allPassed"`
+		Total                int    `json:"total"`
+		PassedCount          int    `json:"passedCount"`
+		Failed               int    `json:"failed"`
+		QualificationMethod  string `json:"qualificationMethod,omitempty"`
+		QualifierIdentity    string `json:"qualifierIdentity,omitempty"`
+		ImplementationAuthor string `json:"implementationAuthor,omitempty"`
+		IndependentReviewer  string `json:"independentReviewer,omitempty"`
+		AchievableASIL       string `json:"achievableAsil,omitempty"`
+		IsIndependent        bool   `json:"isIndependent"`
+	}
+	resp := response{
+		Type:                 qi.Type,
+		RecordUri:            qi.RecordUri,
+		AllPassed:            qi.AllPassed,
+		Total:                qi.Total,
+		PassedCount:          qi.PassedCount,
+		Failed:               qi.Failed,
+		QualificationMethod:  qi.QualificationMethod,
+		QualifierIdentity:    qi.QualifierIdentity,
+		ImplementationAuthor: qi.ImplementationAuthor,
+		IndependentReviewer:  qi.IndependentReviewer,
+		AchievableASIL:       qi.AchievableASIL,
+		IsIndependent:        qi.IsIndependent(),
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	enc := json.NewEncoder(w)

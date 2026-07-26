@@ -178,6 +178,8 @@ func Run(ctx context.Context, adapters []adapter.Adapter, root string, opts ...R
 			cr.Total = qr.Total
 			cr.Passed = qr.Passed
 			cr.Failed = qr.Failed
+			cr.IndependentReviewer = qr.IndependentReviewer
+			cr.QualificationMethod = qr.QualificationMethod
 			mu.Lock()
 			report.Components[i] = cr
 			report.Total += qr.Total
