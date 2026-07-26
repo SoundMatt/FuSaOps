@@ -353,3 +353,14 @@ func TestRenderManifestUnknownFormat(t *testing.T) {
 		t.Fatal("expected error for unknown format, got nil")
 	}
 }
+
+// TestSaveJSONWriteError verifies SaveJSON returns an error when the parent
+// directory does not exist.
+//
+//fusa:test REQ-FO-REL004
+func TestSaveJSONWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.json")
+	if err := release.SaveJSON(path, struct{}{}); err == nil {
+		t.Error("SaveJSON: expected error for non-existent parent directory")
+	}
+}

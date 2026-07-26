@@ -385,3 +385,14 @@ func TestRenderGapsSection(t *testing.T) {
 		t.Error("text output should contain Gaps section when validation finds issues")
 	}
 }
+
+// TestSaveWriteError verifies Save returns an error when the parent directory
+// does not exist.
+//
+//fusa:test REQ-FO-HARA003
+func TestSaveWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.json")
+	if err := hara.Save(path, &hara.HARA{}); err == nil {
+		t.Error("Save: expected error for non-existent parent directory")
+	}
+}

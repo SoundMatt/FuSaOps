@@ -533,3 +533,14 @@ func TestRenderTextShowsIndependentReviewer(t *testing.T) {
 		}
 	}
 }
+
+// TestSaveWriteError verifies Save returns an error when the parent directory
+// does not exist.
+//
+//fusa:test REQ-FO-QUAL003
+func TestSaveWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.json")
+	if err := qualify.Save(path, &qualify.Report{}); err == nil {
+		t.Error("Save: expected error for non-existent parent directory")
+	}
+}

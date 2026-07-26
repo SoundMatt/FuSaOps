@@ -61,8 +61,10 @@ func TestDiffUpdateBaselineFlag(t *testing.T) {
 	if code != 0 && code != 1 {
 		t.Errorf("diff --update-baseline: unexpected code=%d stderr=%q", code, stderr.String())
 	}
-	if _, err := os.Stat(bl); err != nil {
+	if st, err := os.Stat(bl); err != nil {
 		t.Errorf("baseline file missing after --update-baseline: %v", err)
+	} else if !st.Mode().IsRegular() {
+		t.Errorf("baseline is not a regular file: %v", st.Mode())
 	}
 }
 
@@ -282,8 +284,10 @@ func TestReleaseNoDirFlag(t *testing.T) {
 	if !strings.Contains(stdout.String(), "Provenance written") {
 		t.Errorf("expected provenance confirmation in stdout: %q", stdout.String())
 	}
-	if _, err := os.Stat(filepath.Join(outDir, "provenance.json")); err != nil {
+	if st, err := os.Stat(filepath.Join(outDir, "provenance.json")); err != nil {
 		t.Errorf("provenance.json not written: %v", err)
+	} else if !st.Mode().IsRegular() {
+		t.Errorf("provenance.json is not a regular file: %v", st.Mode())
 	}
 }
 
@@ -301,8 +305,10 @@ func TestHooksInstallHookPath(t *testing.T) {
 	if code != 0 {
 		t.Errorf("hooksInstall: want 0, got %d stderr=%q", code, stderr.String())
 	}
-	if _, err := os.Stat(hookPath); err != nil {
+	if st, err := os.Stat(hookPath); err != nil {
 		t.Errorf("pre-commit hook not created: %v", err)
+	} else if !st.Mode().IsRegular() {
+		t.Errorf("pre-commit hook is not a regular file: %v", st.Mode())
 	}
 	if !strings.Contains(stdout.String(), "pre-commit hook installed") {
 		t.Errorf("expected install confirmation in stdout: %q", stdout.String())

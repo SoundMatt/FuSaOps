@@ -230,3 +230,32 @@ func TestRenderUnknownFormat(t *testing.T) {
 		t.Fatal("expected error for unknown format")
 	}
 }
+
+// TestRenderTextLowRPN verifies the "LOW" priority label (RPN ≤ 50) is rendered.
+//
+//fusa:test REQ-FO-FMEA004
+func TestRenderTextLowRPN(t *testing.T) {
+	f := &fmea.FMEA{
+		FailureModes: []fmea.FailureMode{
+			{ID: "FM-LOW", Component: "comp", Mode: "test", RPN: 10},
+		},
+	}
+	var buf bytes.Buffer
+	if err := fmea.Render(&buf, f, "text"); err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if !strings.Contains(buf.String(), "LOW") {
+		t.Errorf("expected LOW priority label for RPN=10, got:\n%s", buf.String())
+	}
+}
+
+// TestSaveWriteError verifies Save returns an error when the parent directory
+// does not exist.
+//
+//fusa:test REQ-FO-FMEA003
+func TestSaveWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.json")
+	if err := fmea.Save(path, &fmea.FMEA{}); err == nil {
+		t.Error("Save: expected error for non-existent parent directory")
+	}
+}

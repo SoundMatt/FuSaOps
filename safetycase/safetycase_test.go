@@ -298,3 +298,42 @@ func TestRenderUnknownFormat(t *testing.T) {
 		t.Fatal("expected error for unknown format, got nil")
 	}
 }
+
+// TestSaveWriteError verifies Save returns an error when the parent directory
+// does not exist.
+//
+//fusa:test REQ-FO-SC003
+func TestSaveWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.json")
+	if err := safetycase.Save(path, &safetycase.SafetyCase{}); err == nil {
+		t.Error("Save: expected error for non-existent parent directory")
+	}
+}
+
+// TestRenderTextNonPrefixPath verifies the shortPath fallback when an evidence
+// path does not share the project root prefix (returns the path unchanged).
+//
+//fusa:test REQ-FO-SC004
+func TestRenderTextNonPrefixPath(t *testing.T) {
+	sc := &safetycase.SafetyCase{
+		ProjectRoot: "/project",
+		Standard:    safetycase.StandardISO26262,
+		Claims: []safetycase.Claim{
+			{
+				ID: "SC-001", Title: "test claim", Strategy: "direct",
+				Evidence: []safetycase.EvidenceRef{
+					{Title: "External evidence", Path: "/other/path.json", Status: safetycase.StatusPresent},
+				},
+				Passed: true,
+			},
+		},
+		PassedClaims: 1, TotalClaims: 1,
+	}
+	var buf bytes.Buffer
+	if err := safetycase.Render(&buf, sc, "text"); err != nil {
+		t.Fatalf("Render text: %v", err)
+	}
+	if !strings.Contains(buf.String(), "/other/path.json") {
+		t.Errorf("expected full path when not under project root:\n%s", buf.String())
+	}
+}

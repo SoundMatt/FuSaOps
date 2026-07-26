@@ -302,6 +302,18 @@ func TestDisplayName(t *testing.T) {
 	}
 }
 
+// TestDisplayNameExported verifies the exported DisplayName wrapper delegates correctly.
+//
+//fusa:test REQ-FO-STD009
+func TestDisplayNameExported(t *testing.T) {
+	if got := DisplayName("iso26262"); got != "ISO 26262" {
+		t.Errorf("DisplayName(iso26262) = %q, want ISO 26262", got)
+	}
+	if got := DisplayName("custom-standard"); got != "custom-standard" {
+		t.Errorf("DisplayName(custom-standard) = %q, want identity", got)
+	}
+}
+
 // TestRenderToFile verifies RenderToFile writes to a file.
 //
 //fusa:test REQ-FO-STD007
