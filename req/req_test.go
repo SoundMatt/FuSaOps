@@ -247,9 +247,9 @@ func TestExportPolarionRoundTrip(t *testing.T) {
 
 //fusa:test REQ-FO-REQ002
 func TestParseCodebeamerInvalidXML(t *testing.T) {
-	_, err := ParseCodebeamer([]byte("not xml"))
+	entries, err := ParseCodebeamer([]byte("not xml"))
 	if err == nil {
-		t.Error("expected error for invalid Codebeamer XML")
+		t.Errorf("expected error for invalid Codebeamer XML, got %d entries", len(entries))
 	}
 }
 
@@ -301,9 +301,9 @@ func TestParseCodebeamerWithLevelField(t *testing.T) {
 
 //fusa:test REQ-FO-REQ002
 func TestParseJamaInvalidXML(t *testing.T) {
-	_, err := ParseJama([]byte("not xml"))
+	entries, err := ParseJama([]byte("not xml"))
 	if err == nil {
-		t.Error("expected error for invalid Jama XML")
+		t.Errorf("expected error for invalid Jama XML, got %d entries", len(entries))
 	}
 }
 
@@ -355,9 +355,9 @@ func TestParseJamaWithLevelField(t *testing.T) {
 
 //fusa:test REQ-FO-REQ002
 func TestParsePolarionInvalidXML(t *testing.T) {
-	_, err := ParsePolarion([]byte("not xml"))
+	entries, err := ParsePolarion([]byte("not xml"))
 	if err == nil {
-		t.Error("expected error for invalid Polarion XML")
+		t.Errorf("expected error for invalid Polarion XML, got %d entries", len(entries))
 	}
 }
 

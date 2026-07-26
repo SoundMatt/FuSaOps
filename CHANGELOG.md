@@ -7,6 +7,35 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.83.0] — 2026-07-26
+
+### fix: resolve gofusa selfcheck findings; maximize coverage across 12 packages
+
+- **gofusa selfcheck fix** — resolved 5 blank-identifier-in-call-assignment findings
+  flagged by the SARIF upload after v1.82.0 merge:
+  - `req/req_test.go`: `TestParseCodebeamerInvalidXML`, `TestParseJamaInvalidXML`,
+    `TestParsePolarionInvalidXML` now use named variables (`entries, err :=`) rather
+    than `_, err :=` so the discard of the result is explicit.
+  - `cmd/fusaops/cmd_gap2_test.go`: `os.Stat` results assigned to named `st` and mode
+    validated (3 occurrences: baseline, provenance.json, hook file).
+- **Coverage improvements across 12 packages** (total **87.5%**, up from 87.3%):
+  - **`scan`** — `TestScanTraversesNonSkippedSubdir` exercises the `skipDir` false branch
+    (non-skipped subdirectory). scan: 92.1% → **92.9%**.
+  - **`standards`** — `TestDisplayNameExported` covers the exported `DisplayName` wrapper.
+    standards: 92.0% → **92.8%**.
+  - **`slsa`** — `TestRenderTextUnknownStatus` exercises `statusIcon` default branch.
+    slsa: 91.8% → **92.9%**.
+  - **`hara`** — `TestSaveWriteError` covers the `os.WriteFile` error path in `Save`.
+  - **`fmea`** — `TestSaveWriteError` + `TestRenderTextLowRPN` (RPN ≤ 50 → "LOW" label).
+  - **`sas`** — `TestSaveWriteError` covers the `os.WriteFile` error path in `Save`.
+  - **`qualify`** — `TestSaveWriteError` covers the `os.WriteFile` error path in `Save`.
+  - **`safetycase`** — `TestSaveWriteError` + `TestRenderTextNonPrefixPath` covers
+    the `shortPath` fallback (evidence path outside project root).
+  - **`sci`** — `TestRenderTextWithComponentItem` exercises `kindLabel(KindComponent)`;
+    `TestSaveWriteError` covers the `os.WriteFile` error path.
+  - **`vuln`** — `TestSaveWriteError` covers the `os.WriteFile` error path. vuln: 87.7% → **88.5%**.
+  - **`release`** — `TestSaveJSONWriteError` covers the `os.WriteFile` error path in `SaveJSON`.
+
 ## [1.82.0] — 2026-07-26
 
 ### feat: maximize test coverage in req, diff, report, cmd packages

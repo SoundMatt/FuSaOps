@@ -283,3 +283,37 @@ func TestRenderUnknownFormat(t *testing.T) {
 		t.Fatal("expected error for unknown format, got nil")
 	}
 }
+
+// TestRenderTextWithComponentItem verifies kindLabel(KindComponent) is exercised
+// when an SCI contains a Component-kind item.
+//
+//fusa:test REQ-FO-SCI004
+func TestRenderTextWithComponentItem(t *testing.T) {
+	s := &sci.SCI{
+		ProjectRoot: "/root",
+		Tool:        "fusaops",
+		ToolVersion: "1.0.0",
+		GoVersion:   "go1.22",
+		Items: []sci.ConfigItem{
+			{ID: "COMP-001", Name: "mycomponent", Kind: sci.KindComponent, Present: true},
+		},
+	}
+	var buf bytes.Buffer
+	if err := sci.Render(&buf, s, "text"); err != nil {
+		t.Fatalf("Render text: %v", err)
+	}
+	if !strings.Contains(buf.String(), "Component Items:") {
+		t.Errorf("expected Component Items section in output:\n%s", buf.String())
+	}
+}
+
+// TestSaveWriteError verifies Save returns an error when the parent directory
+// does not exist.
+//
+//fusa:test REQ-FO-SCI003
+func TestSaveWriteError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing", "out.json")
+	if err := sci.Save(path, &sci.SCI{}); err == nil {
+		t.Error("Save: expected error for non-existent parent directory")
+	}
+}

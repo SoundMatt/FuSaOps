@@ -214,3 +214,24 @@ func TestAssessSBOMHashesNoPackages(t *testing.T) {
 		}
 	}
 }
+
+// TestRenderTextUnknownStatus verifies statusIcon default branch ("!") is reached
+// when an objective has a status outside the known set.
+//
+//fusa:test REQ-FO-SLSA003
+func TestRenderTextUnknownStatus(t *testing.T) {
+	rep := &Report{
+		Project: "test",
+		Level:   LevelL1,
+		Objectives: []Objective{
+			{ID: "SLSA-X.1", Status: "PENDING", Title: "unknown status"},
+		},
+	}
+	var buf bytes.Buffer
+	if err := Render(&buf, rep, "text"); err != nil {
+		t.Fatalf("Render text: %v", err)
+	}
+	if !strings.Contains(buf.String(), "! [SLSA-X.1]") {
+		t.Errorf("expected '!' icon for unknown status, got:\n%s", buf.String())
+	}
+}

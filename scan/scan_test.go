@@ -66,3 +66,16 @@ func TestScanEmpty(t *testing.T) {
 		t.Errorf("expected no stats, got %+v", res.Stats)
 	}
 }
+
+//fusa:test REQ-FO-SCAN003
+func TestScanTraversesNonSkippedSubdir(t *testing.T) {
+	dir := t.TempDir()
+	writeFiles(t, dir, "src/main.go") // "src" is not in the skip list → skipDir returns false
+	res, err := Scan(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Stats) != 1 || res.Stats[0].Files != 1 {
+		t.Errorf("expected 1 go file in src/ subdir, got %+v", res.Stats)
+	}
+}
