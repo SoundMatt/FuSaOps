@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -394,8 +395,10 @@ func TestParsePolarionWithLevelField(t *testing.T) {
 
 //fusa:test REQ-FO-REQ001
 func TestSaveRegistryReadOnlyDir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("os.Chmod read-only semantics not enforced on Windows")
+	}
 	dir := t.TempDir()
-	// Make the dir read-only so WriteFile fails.
 	if err := os.Chmod(dir, 0o555); err != nil {
 		t.Skip("cannot chmod dir:", err)
 	}
