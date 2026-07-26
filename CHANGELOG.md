@@ -7,6 +7,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.81.0] — 2026-07-26
+
+### docs: spec v1.10.12 snapshot — rust-FuSa v0.3.4 Dockerfile fix
+
+- **`SpecVersion` bumped to `"1.10.12"`** — captures rust-FuSa v0.3.4 (Dockerfile
+  multi-platform musl fix; no behavior change).
+- **`docs/x-fusa-spec.md` §11 snapshot updated**: rust-FuSa v0.3.3 → v0.3.4.
+- **`docs/x-fusa-spec.md` §14 changelog entry 1.10.12 added**.
+- **`README.md` bundled tool version updated**: rust-FuSa v0.3.4 in prose and table.
+
 ## [1.80.0] — 2026-07-26
 
 ### feat: maximize test coverage across orchestrator, slsa, trace, server, verify, cmd
