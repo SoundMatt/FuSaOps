@@ -6,6 +6,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,6 +15,12 @@ import (
 	"github.com/SoundMatt/FuSaOps/config"
 	"github.com/SoundMatt/FuSaOps/report"
 )
+
+// errWriter is an io.Writer that always returns an error; used to exercise
+// template/writer error paths in internal tests.
+type errWriter struct{}
+
+func (errWriter) Write([]byte) (int, error) { return 0, errors.New("write error") }
 
 // ── fusaops capabilities ──────────────────────────────────────────────────────
 
@@ -1668,5 +1675,128 @@ func TestSuppressVerifyLoadError(t *testing.T) {
 	code := runSuppressVerify([]string{"--file", f}, &stdout, &stderr)
 	if code != 1 {
 		t.Errorf("suppress verify load error: want 1, got %d", code)
+	}
+}
+
+// ── runTARA / runFMEA / runVuln render + save error paths ────────────────────
+
+// TestTARARenderError verifies runTARA returns 2 when an unsupported format
+// is requested (exercises the Render error branch).
+//
+//fusa:test REQ-FO-CLI069
+func TestTARARenderError(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runTARA([]string{"--dir", t.TempDir(), "--format", "xml"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("tara render error: want 2, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestTARASaveError verifies runTARA returns 1 when the output file cannot
+// be created (file used as path component).
+//
+//fusa:test REQ-FO-CLI069
+func TestTARASaveError(t *testing.T) {
+	f, err := os.CreateTemp(t.TempDir(), "blockfile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	var stdout, stderr bytes.Buffer
+	code := runTARA([]string{"--dir", t.TempDir(), "--output", filepath.Join(f.Name(), "sub")}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("tara save error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestFMEARenderError verifies runFMEA returns 2 when an unsupported format
+// is requested (exercises the Render error branch).
+//
+//fusa:test REQ-FO-CLI070
+func TestFMEARenderError(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runFMEA([]string{"--dir", t.TempDir(), "--format", "xml"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("fmea render error: want 2, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestFMEASaveError verifies runFMEA returns 1 when the output file cannot
+// be created (file used as path component).
+//
+//fusa:test REQ-FO-CLI070
+func TestFMEASaveError(t *testing.T) {
+	f, err := os.CreateTemp(t.TempDir(), "blockfile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	var stdout, stderr bytes.Buffer
+	code := runFMEA([]string{"--dir", t.TempDir(), "--output", filepath.Join(f.Name(), "sub")}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("fmea save error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestVulnRenderError verifies runVuln returns 2 when an unsupported format
+// is requested (exercises the Render error branch).
+//
+//fusa:test REQ-FO-CLI071
+func TestVulnRenderError(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runVuln([]string{"--dir", t.TempDir(), "--format", "xml"}, &stdout, &stderr)
+	if code != 2 {
+		t.Errorf("vuln render error: want 2, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestVulnSaveError verifies runVuln returns 1 when the output file cannot
+// be created (file used as path component).
+//
+//fusa:test REQ-FO-CLI071
+func TestVulnSaveError(t *testing.T) {
+	f, err := os.CreateTemp(t.TempDir(), "blockfile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	var stdout, stderr bytes.Buffer
+	code := runVuln([]string{"--dir", t.TempDir(), "--output", filepath.Join(f.Name(), "sub")}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("vuln save error: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// ── runFleet additional branches ─────────────────────────────────────────────
+
+// TestFleetEmptyRepos verifies runFleet returns 1 when the fleet config has
+// no repos defined.
+//
+//fusa:test REQ-FO-CLI023
+func TestFleetEmptyRepos(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "fleet.json")
+	if err := os.WriteFile(f, []byte(`{"repos":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runFleet([]string{"--config", f}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("fleet empty repos: want 1, got %d stderr=%q", code, stderr.String())
+	}
+}
+
+// TestFleetBadFormat verifies runFleet returns 1 when an unsupported output
+// format is requested (exercises the RenderToFile error branch).
+//
+//fusa:test REQ-FO-CLI023
+func TestFleetBadFormat(t *testing.T) {
+	f := filepath.Join(t.TempDir(), "fleet.json")
+	if err := os.WriteFile(f, []byte(`{"repos":[{"name":"r","path":"/tmp"}]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := runFleet([]string{"--config", f, "--format", "xml"}, &stdout, &stderr)
+	if code != 1 {
+		t.Errorf("fleet bad format: want 1, got %d stderr=%q", code, stderr.String())
 	}
 }

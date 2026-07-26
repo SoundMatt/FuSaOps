@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.95.0] — 2026-07-26
+
+### feat: coverage expansion — TARA/FMEA/Vuln render+save errors, Fleet empty/bad-format
+
+- **`cmd/fusaops`** — `TestTARARenderError`/`TestFMEARenderError`/`TestVulnRenderError` cover the
+  `--format xml` Render error path (return 2) in `runTARA`, `runFMEA`, `runVuln`;
+  `TestTARASaveError`/`TestFMEASaveError`/`TestVulnSaveError` cover the file-create Save error
+  path (return 1) in each; `TestFleetEmptyRepos` covers the `cfg.Repos == 0` guard; 
+  `TestFleetBadFormat` covers the `fleet.RenderToFile` unsupported-format error path.
+
+Total coverage: 89.3% (↑ from 89.2%).
+
 ## [1.94.0] — 2026-07-26
 
 ### feat: coverage expansion — runBadge, prClose, runSuppressVerify error paths
