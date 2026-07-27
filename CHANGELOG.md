@@ -7,6 +7,32 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.115.0] — 2026-07-26
+
+### feat: coverage expansion — check/comp/version/hooks/config/suppress cmd gap branches
+
+- **`cmd/fusaops`** — `TestCheckBadFlag` covers the `fs.Parse` error return in
+  `runCheck` (cmd_check.go:48.39,50.3).
+- **`cmd/fusaops`** — `TestCheckLoadOptionsError` covers the `loadOptions` error
+  in `runCheck` (cmd_check.go:53.16,56.3) via malformed `.fusaops.json`.
+- **`cmd/fusaops`** — `TestCompLoadOptionsError` covers the `loadOptions` error
+  in `runComp` (cmd_comp.go:58.16,61.3) via malformed `.fusaops.json`.
+- **`cmd/fusaops`** — `TestCompTimeoutParsed` covers `opts.Timeout = d` in
+  `runComp` (cmd_comp.go:71.3,71.19) by passing a valid `--timeout 30s`.
+- **`cmd/fusaops`** — `TestVersionJSONEncodeError` covers the `json.Encode` error
+  path in `runVersion` (cmd_version.go:38.39,41.4) via a broken stdout writer.
+- **`cmd/fusaops`** — `TestHooksBadFlag` covers the `fs.Parse` error return in
+  `runHooks` (cmd_hooks.go:39.39,41.3).
+- **`cmd/fusaops`** — `TestConfigShowEncodeError` covers the `json.Encode` error
+  in `runConfigShow` (cmd_config.go:106.40,109.3) via a broken stdout writer.
+- **`cmd/fusaops`** — `TestSuppressImportBadFlag` covers the `fs.Parse` error
+  return in `runSuppressImport` (cmd_suppress.go:238.39,240.3).
+- **`cmd/fusaops`** — `TestSuppressImportFromNotFound` covers the `os.ReadFile`
+  error in `runSuppressImport` (cmd_suppress.go:247.16,250.3) for a missing file.
+- **`cmd/fusaops`** — `TestSuppressVerifyLoadOptionsError` covers the `loadOptions`
+  error in `runSuppressVerify` (cmd_suppress.go:190.16,193.3) via `--file ""`
+  (suppression LoadConfig fast-path) plus malformed `.fusaops.json`.
+
 ## [1.114.0] — 2026-07-26
 
 ### feat: coverage expansion — auditpack/report/scan/pr/metrics/badge cmd gap branches
