@@ -39,6 +39,7 @@ func TestCheckDecompositionNoLevels(t *testing.T) {
 // produce a passing report.
 //
 //fusa:test REQ-FO-TRC021
+//fusa:test REQ-FO-TRC019
 func TestCheckDecompositionValid(t *testing.T) {
 	agg := aggWith([]Requirement{
 		{ID: "HLR-001", Level: LevelHLR},

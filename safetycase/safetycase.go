@@ -88,6 +88,8 @@ type SafetyCase struct {
 }
 
 // HasGaps returns true when at least one claim failed due to missing evidence.
+//
+//fusa:req REQ-FO-SC005
 func (s *SafetyCase) HasGaps() bool { return s.PassedClaims < s.TotalClaims }
 
 // evidenceSpec defines one expected evidence file.

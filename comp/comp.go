@@ -71,11 +71,15 @@ func New(root, project string, components []ComponentComp) *Aggregate {
 
 // HasViolations returns true when any component has at least one function that
 // exceeds the configured complexity threshold.
+//
+//fusa:req REQ-FO-COMP002
 func (a *Aggregate) HasViolations() bool { return a.Violations > 0 }
 
 // DALThreshold returns the McCabe V(G) threshold for the given DAL string
 // (DAL-A → 4, DAL-B → 10, DAL-C → 15, DAL-D → 20) per DO-178C §6.3.4.
 // Returns 0 (no threshold) for an unrecognised or empty DAL.
+//
+//fusa:req REQ-FO-COMP001
 func DALThreshold(dal string) int {
 	switch dal {
 	case "DAL-A":
@@ -92,6 +96,8 @@ func DALThreshold(dal string) int {
 }
 
 // ValidateDAL returns an error for an unrecognised DAL level (empty is allowed).
+//
+//fusa:req REQ-FO-COMP001
 func ValidateDAL(dal string) error {
 	switch dal {
 	case "", "DAL-A", "DAL-B", "DAL-C", "DAL-D":

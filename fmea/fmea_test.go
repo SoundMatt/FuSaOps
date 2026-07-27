@@ -120,6 +120,7 @@ func TestBuildHashChanges(t *testing.T) {
 }
 
 //fusa:test REQ-FO-FMEA002
+//fusa:test REQ-FO-FMEA005
 func TestHasHighRPN(t *testing.T) {
 	f, err := fmea.Build(t.TempDir())
 	if err != nil {

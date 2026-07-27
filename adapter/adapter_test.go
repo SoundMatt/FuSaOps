@@ -122,6 +122,7 @@ func TestCheckWithFakeRunner(t *testing.T) {
 }
 
 //fusa:test REQ-FO-ADP007
+//fusa:test REQ-FO-ADP030
 func TestRegistryRegisterDuplicate(t *testing.T) {
 	r := NewRegistry()
 	if err := r.Register(newGoFuSa()); err != nil {

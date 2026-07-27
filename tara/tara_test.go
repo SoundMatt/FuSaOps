@@ -171,6 +171,7 @@ func TestBuildHashChanges(t *testing.T) {
 }
 
 //fusa:test REQ-FO-TARA002
+//fusa:test REQ-FO-TARA005
 func TestHasCritical(t *testing.T) {
 	tr, err := tara.Build(t.TempDir())
 	if err != nil {

@@ -114,6 +114,7 @@ func TestRenderText(t *testing.T) {
 
 //fusa:test REQ-FO-RPT012
 //fusa:test REQ-FO-RPT016
+//fusa:test REQ-FO-RPT022
 func TestRenderHTML(t *testing.T) {
 	r := New("/root", "demo", sampleComponents())
 	var buf bytes.Buffer

@@ -47,6 +47,7 @@ func (q *qualifyFake) Qualify(_ context.Context, _ string) (*trace.Qualification
 }
 
 //fusa:test REQ-FO-QUAL001
+//fusa:test REQ-FO-QUAL008
 func TestTypes(t *testing.T) {
 	cr := qualify.ComponentResult{
 		Language:  "go",

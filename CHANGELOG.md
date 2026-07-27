@@ -7,6 +7,30 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.134.0] — 2026-07-27
+
+### fix: close traceability gaps in FuSaOps's own annotation coverage (#73)
+
+- Closed all 7 pre-existing untested requirements: REQ-FO-CLI078, REQ-FO-CORE007,
+  REQ-FO-COV004, REQ-FO-IMG001, REQ-FO-IMG002, REQ-FO-SPEC001, REQ-FO-TRC019 —
+  all now have a genuine `//fusa:test` tag, most on existing tests that already
+  exercised the behavior but weren't tagged; two new tests written where none
+  existed (`TestSpecVersionIsSemver`, `TestCheckOutputFlagLeavesStdoutClean`),
+  plus a new `TestDockerfileBundlesPyFuSaAndJavaFuSa` that asserts the actual
+  Dockerfile content matches REQ-FO-IMG001/002's bundling claims (these two
+  requirements describe Dockerfile behavior with no natural Go call site).
+- Tagged all 29 orphan functions found by the 2026-07-27 audit with 13 new
+  requirement IDs (REQ-FO-ADP030, DIF007, QUAL008, SAS005, FMEA005, VULN005,
+  MCDC004, RPT022, SC005, ORC014, TARA005, CNF020, STD013), grouping tightly
+  related functions (e.g. the whole `adapter.Registry` lifecycle) under one ID
+  rather than one-per-method. All 13 new requirements are backed by existing
+  tests, just newly tagged — one net-new test (`TestHasNewFindings`) for
+  `diff.Result.HasNewFindings`, which had no test at all.
+- Function-tag coverage: 89% → 99% (248/249). The one remaining untagged
+  function, `server.WriteHeader`, is an `http.ResponseWriter` interface shim —
+  exempt per the same convention applied to trivial interface shims elsewhere.
+- Requirement→test coverage: 413/420 → 426/426 (100%).
+
 ## [1.133.0] — 2026-07-27
 
 ### fix: audit findings — stale docs, tool-count inconsistency, undocumented commands (#74, #75)

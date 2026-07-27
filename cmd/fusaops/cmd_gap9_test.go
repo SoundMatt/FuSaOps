@@ -26,6 +26,27 @@ func TestCheckBadFlag(t *testing.T) {
 	}
 }
 
+// TestCheckOutputFlagLeavesStdoutClean verifies that when --output is given,
+// runCheck writes the report to the file only — stdout stays clean per x-FuSa
+// spec §2.2 (a document written to a file must not also be echoed to stdout).
+//
+//fusa:test REQ-FO-SPEC001
+func TestCheckOutputFlagLeavesStdoutClean(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(dir, "report.json")
+	var stdout, stderr bytes.Buffer
+	runCheck([]string{"--dir", dir, "--format", "json", "--output", out}, &stdout, &stderr)
+	if stdout.Len() != 0 {
+		t.Errorf("runCheck with --output: stdout must be empty, got %q", stdout.String())
+	}
+	if _, err := os.Stat(out); err != nil {
+		t.Errorf("runCheck with --output: report file not written: %v", err)
+	}
+}
+
 // TestCheckLoadOptionsError verifies runCheck returns 1 when loadOptions fails
 // due to malformed .fusaops.json, covering cmd_check.go:53.16,56.3.
 //

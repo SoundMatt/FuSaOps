@@ -7,6 +7,7 @@ import (
 )
 
 //fusa:test REQ-FO-MCDC001
+//fusa:test REQ-FO-MCDC004
 func TestReportCoveragePct(t *testing.T) {
 	r := &mcdc.Report{TotalConditions: 10, CoveredConditions: 7}
 	if got := r.CoveragePct(); got != 70 {
@@ -83,6 +84,7 @@ func TestNewAggregateGateFailsOnComponent(t *testing.T) {
 }
 
 //fusa:test REQ-FO-MCDC002
+//fusa:test REQ-FO-MCDC004
 func TestAggregateCoveragePct(t *testing.T) {
 	comps := []mcdc.MCDCComponent{
 		{Language: "go", Tool: "gofusa", Report: &mcdc.Report{

@@ -94,6 +94,18 @@ func TestHasNewErrors(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-DIF007
+func TestHasNewFindings(t *testing.T) {
+	res := &Result{}
+	if res.HasNewFindings() {
+		t.Error("empty Added should not set HasNewFindings")
+	}
+	res.Added = append(res.Added, fusaops.Finding{Severity: fusaops.SeverityInfo})
+	if !res.HasNewFindings() {
+		t.Error("any added finding, even INFO, should set HasNewFindings")
+	}
+}
+
 // TestLoadBaselineAggregateFormat verifies decoding a FuSaOps aggregate JSON.
 //
 //fusa:test REQ-FO-DIF001

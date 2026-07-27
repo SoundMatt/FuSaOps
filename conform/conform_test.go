@@ -230,6 +230,7 @@ func TestHasFailures(t *testing.T) {
 // TestSummaryCount verifies PASS/FAIL/SKIP totals.
 //
 //fusa:test REQ-FO-CNF003
+//fusa:test REQ-FO-CNF020
 func TestSummaryCount(t *testing.T) {
 	rep := &Report{Results: []Result{
 		{Status: StatusPass}, {Status: StatusPass},

@@ -28,6 +28,7 @@ func TestActivityStatuses(t *testing.T) {
 }
 
 //fusa:test REQ-FO-SAS001
+//fusa:test REQ-FO-SAS005
 func TestTypes(t *testing.T) {
 	a := sas.Activity{ID: "A-001", Title: "Planning", Status: sas.StatusComplete, Evidence: "evidence.json"}
 	if a.ID != "A-001" || a.Status != sas.StatusComplete {

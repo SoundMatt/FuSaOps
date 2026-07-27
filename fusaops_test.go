@@ -2,9 +2,59 @@ package fusaops
 
 import (
 	"errors"
+	"os"
+	"regexp"
 	"strings"
 	"testing"
 )
+
+// TestDockerfileBundlesPyFuSaAndJavaFuSa verifies the all-in-one image's
+// Dockerfile actually bundles py-FuSa and java-FuSa per REQ-FO-IMG001/002 —
+// this can't be exercised by running the built image in a unit test, so it
+// asserts the specific COPY/RUN lines the requirements describe are present
+// in source, which is what actually determines what ships in the image.
+//
+//fusa:test REQ-FO-IMG001
+//fusa:test REQ-FO-IMG002
+func TestDockerfileBundlesPyFuSaAndJavaFuSa(t *testing.T) {
+	data, err := os.ReadFile("Dockerfile")
+	if err != nil {
+		t.Fatalf("read Dockerfile: %v", err)
+	}
+	content := string(data)
+
+	// REQ-FO-IMG001: py-FuSa binary + site-packages copied in; python base image.
+	if !strings.Contains(content, "FROM python:3.12-alpine") {
+		t.Error("Dockerfile must use python:3.12-alpine as its runtime base for pyfusa")
+	}
+	if !strings.Contains(content, "COPY --from=pyfusa") || !strings.Contains(content, "/usr/local/bin/pyfusa") {
+		t.Error("Dockerfile must COPY --from=pyfusa the pyfusa binary")
+	}
+	if !strings.Contains(content, "site-packages") {
+		t.Error("Dockerfile must COPY --from=pyfusa the Python site-packages")
+	}
+
+	// REQ-FO-IMG002: java-FuSa wrapper + JAR copied in; JRE installed.
+	if !strings.Contains(content, "openjdk21-jre-headless") {
+		t.Error("Dockerfile must install openjdk21-jre-headless for jfusa")
+	}
+	if !strings.Contains(content, "COPY --from=jfusa") || !strings.Contains(content, "jfusa.jar") {
+		t.Error("Dockerfile must COPY --from=jfusa the jfusa.jar")
+	}
+	if !strings.Contains(content, "/usr/local/bin/jfusa") {
+		t.Error("Dockerfile must COPY --from=jfusa the jfusa wrapper script")
+	}
+}
+
+//fusa:test REQ-FO-CORE007
+func TestSpecVersionIsSemver(t *testing.T) {
+	if SpecVersion == "" {
+		t.Fatal("SpecVersion must not be empty")
+	}
+	if !regexp.MustCompile(`^\d+\.\d+\.\d+$`).MatchString(SpecVersion) {
+		t.Errorf("SpecVersion %q must be a MAJOR.MINOR.PATCH semver string", SpecVersion)
+	}
+}
 
 //fusa:test REQ-FO-CORE002
 func TestSeverityRank(t *testing.T) {

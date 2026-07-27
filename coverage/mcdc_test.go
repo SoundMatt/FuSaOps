@@ -423,6 +423,7 @@ func TestRenderMCDCText(t *testing.T) {
 }
 
 //fusa:test REQ-FO-COV008
+//fusa:test REQ-FO-COV004
 func TestRenderMCDCJSON(t *testing.T) {
 	rep := makeTestReport(true)
 	var buf bytes.Buffer

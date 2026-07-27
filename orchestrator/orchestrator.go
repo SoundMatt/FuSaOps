@@ -80,6 +80,8 @@ type Runner struct {
 
 // New returns a Runner backed by the given registry, defaulting to the
 // package-level adapter.Default when reg is nil.
+//
+//fusa:req REQ-FO-ORC014
 func New(reg *adapter.Registry) *Runner {
 	if reg == nil {
 		reg = adapter.Default

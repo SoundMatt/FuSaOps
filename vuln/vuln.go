@@ -103,6 +103,8 @@ type VulnReport struct {
 }
 
 // HasFindings returns true when at least one vulnerability was found.
+//
+//fusa:req REQ-FO-VULN005
 func (r *VulnReport) HasFindings() bool { return r.TotalFindings > 0 }
 
 // RunnerFunc is a function signature for invoking an external binary.

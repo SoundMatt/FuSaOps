@@ -81,6 +81,8 @@ type Result struct {
 }
 
 // HasNewErrors reports whether any added findings carry ERROR severity.
+//
+//fusa:req REQ-FO-DIF002
 func (r *Result) HasNewErrors() bool {
 	for _, f := range r.Added {
 		if f.Severity == fusaops.SeverityError {
@@ -91,6 +93,8 @@ func (r *Result) HasNewErrors() bool {
 }
 
 // HasNewFindings reports whether any findings were added.
+//
+//fusa:req REQ-FO-DIF007
 func (r *Result) HasNewFindings() bool { return len(r.Added) > 0 }
 
 // FindingSummary holds per-severity counts for added and removed findings.

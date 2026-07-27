@@ -77,6 +77,8 @@ type ComponentResult struct {
 }
 
 // AllPassed reports whether the component qualification passed (no failures).
+//
+//fusa:req REQ-FO-QUAL008
 func (c ComponentResult) AllPassed() bool { return c.Skipped == "" && c.Failed == 0 }
 
 // IsIndependent reports whether this component used an independent reviewer,
@@ -115,6 +117,8 @@ type Report struct {
 func (r *Report) IsIndependent() bool { return r.IndependentReviewer != "" }
 
 // HasFailures reports whether any component failed qualification.
+//
+//fusa:req REQ-FO-QUAL008
 func (r *Report) HasFailures() bool { return r.Failed > 0 }
 
 // Run collects qualification results from all applicable adapters under root.
