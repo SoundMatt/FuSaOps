@@ -7,6 +7,30 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.116.0] — 2026-07-26
+
+### feat: coverage expansion — coverage/vv cmd gap branches + config validate gap
+
+- **`cmd/fusaops`** — `TestCoverageOutputCreateError` covers the `os.Create`
+  output-file error in `runCoverage` (cmd_coverage.go:61.17,64.4).
+- **`cmd/fusaops`** — `TestCoverageStatFallback` covers the `os.Stat` fallback to
+  cwd/coverage.out in `runCoverage` (cmd_coverage.go:80.8,80.55 and 80.55,83.3).
+- **`cmd/fusaops`** — `TestCoverageRenderError` covers the `coverage.Render` error
+  path in `runCoverage` (cmd_coverage.go:92.57,95.3) via `--format xml`.
+- **`cmd/fusaops`** — `TestVVShowConfigLoadError` covers the non-`ErrNoConfig`
+  config load error in `runVVShow` (cmd_vv.go:85.56,88.3) via empty-version config.
+- **`cmd/fusaops`** — `TestVVShowOutputCreateError` covers the `os.Create` output
+  error in `runVVShow` (cmd_vv.go:109.17,112.4).
+- **`cmd/fusaops`** — `TestVVShowRenderError` covers the `vv.Render` error path in
+  `runVVShow` (cmd_vv.go:117.52,120.3) via `--format xml`.
+- **`cmd/fusaops`** — `TestVVSetLoadNonErrNoConfig` covers the else branch in
+  `runVVSet` when `config.Load` returns a non-`ErrNoConfig` error
+  (cmd_vv.go:150.9,152.4) via an empty-version `.fusaops.json`.
+- **`config`** — `TestValidateEmptyVersion` covers the empty-`Version` check in
+  `Validate` (config.go:219.23,221.3).
+- **`config`** — `TestLoadValidationFailure` covers the `Validate` error return in
+  `Load` (config.go:191.39,193.3) via a valid-JSON but empty-version config file.
+
 ## [1.115.0] — 2026-07-26
 
 ### feat: coverage expansion — check/comp/version/hooks/config/suppress cmd gap branches
