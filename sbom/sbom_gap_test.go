@@ -69,8 +69,8 @@ func TestRenderSPDXWriteError(t *testing.T) {
 func TestNewSortSameNameDifferentVersion(t *testing.T) {
 	comps := []ComponentSBOM{
 		{
-			Language: "go",
-			Tool:     "gofusa",
+			Language:  "go",
+			Tool:      "gofusa",
 			Available: true,
 			Packages: []Package{
 				{Name: "pkg-a", Version: "v2.0.0"},

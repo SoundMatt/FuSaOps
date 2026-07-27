@@ -20,8 +20,8 @@ import (
 func TestRenderTextWithDALAndViolation(t *testing.T) {
 	agg := comp.New("/root", "testproj", []comp.ComponentComp{
 		{
-			Language: "go",
-			Tool:     "gofusa",
+			Language:  "go",
+			Tool:      "gofusa",
 			Available: true,
 			Report: &comp.Report{
 				DAL:            "DAL-A",

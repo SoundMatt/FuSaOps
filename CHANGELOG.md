@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.130.0] — 2026-07-27
+
+### fix: Windows CI — gofmt and unix-permission skips in five more gap tests
+
+- `comp/comp_gap_test.go`: fix gofmt struct-field alignment.
+- `fleet/fleet_gap_test.go`: fix gofmt method-receiver alignment.
+- `sbom/sbom_gap_test.go`: fix gofmt struct-field alignment.
+- `cmd/fusaops/cmd_gap14_test.go`: add `t.Skip` on Windows for
+  `TestPRAddSaveError` (0o555 dir permissions do not deny file creation on
+  Windows).
+- `doctemplate/doctemplate_gap_test.go`: add `t.Skip` on Windows for
+  `TestGenerateWriteError` (same reason).
+
 ## [1.129.0] — 2026-07-27
 
 ### fix: Windows CI — gofmt and unix-permission skips in adapter/scan gap tests

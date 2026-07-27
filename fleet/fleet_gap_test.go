@@ -16,11 +16,13 @@ import (
 // errDetectAdapter always returns an error from Detect so runner.Run fails.
 type errDetectAdapter struct{}
 
-func (e *errDetectAdapter) Name() string                                            { return "errdetect" }
-func (e *errDetectAdapter) Language() fusaops.Language                             { return fusaops.LangGo }
-func (e *errDetectAdapter) Tool() string                                            { return "errdetect" }
-func (e *errDetectAdapter) Detect(string) (bool, error)                            { return false, fmt.Errorf("errdetect: simulated failure") }
-func (e *errDetectAdapter) Available() bool                                         { return true }
+func (e *errDetectAdapter) Name() string               { return "errdetect" }
+func (e *errDetectAdapter) Language() fusaops.Language { return fusaops.LangGo }
+func (e *errDetectAdapter) Tool() string               { return "errdetect" }
+func (e *errDetectAdapter) Detect(string) (bool, error) {
+	return false, fmt.Errorf("errdetect: simulated failure")
+}
+func (e *errDetectAdapter) Available() bool { return true }
 func (e *errDetectAdapter) Check(_ context.Context, _ string) ([]fusaops.Finding, error) {
 	return nil, nil
 }

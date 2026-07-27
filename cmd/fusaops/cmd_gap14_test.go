@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -18,6 +19,9 @@ import (
 //
 //fusa:test REQ-FO-CLI061
 func TestPRAddSaveError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unix permission semantics (0o555) not available on Windows")
+	}
 	dir := t.TempDir()
 	// Make the directory read-only so Save cannot create .fusaops-problems.json.
 	if err := os.Chmod(dir, 0o555); err != nil {

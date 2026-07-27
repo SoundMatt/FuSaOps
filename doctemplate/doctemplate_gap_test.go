@@ -5,6 +5,7 @@ package doctemplate_test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/SoundMatt/FuSaOps/doctemplate"
@@ -36,6 +37,9 @@ func TestGenerateMkdirError(t *testing.T) {
 //
 //fusa:test REQ-FO-TMPL002
 func TestGenerateWriteError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unix permission semantics (0o555) not available on Windows")
+	}
 	root := t.TempDir()
 	outputDir := filepath.Join(t.TempDir(), "out")
 	if err := os.MkdirAll(outputDir, 0o755); err != nil {
