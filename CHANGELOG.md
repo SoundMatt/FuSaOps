@@ -7,6 +7,29 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.113.0] — 2026-07-26
+
+### feat: coverage expansion — coverage/comp/metrics/disposition/pr gap branches
+
+- **`coverage`** — `TestBuildFromFileParseError` covers the scanner buffer-overflow
+  error path in `BuildFromFile` (coverage.go:185.16,187.3) via a 65 KiB line.
+- **`coverage`** — `TestRenderTextMCDCRequired` covers the `MCDCRequired` block in
+  `renderText` (coverage.go:218.22,221.3) using a DAL-A report.
+- **`coverage`** — `TestRenderMarkdownYellowBadge` covers the yellow-badge branch
+  (`80 ≤ StmtPct < 100`) in `renderMarkdown` (coverage.go:239.40,241.4).
+- **`coverage`** — `TestRenderMarkdownMCDCRequired` covers the `MCDCRequired` cell
+  in `renderMarkdown` (coverage.go:250.22,253.4) using a DAL-A report.
+- **`comp`** — `TestRenderTextWithDALAndViolation` covers the non-empty DAL string
+  suffix (render.go:44-45) and `ExceedsThreshold` loop body (render.go:53-55).
+- **`metrics`** — `TestLoadBadJSONGap` covers the JSON parse error path in `Load`
+  (metrics.go:60.50,62.3) via a malformed metrics file.
+- **`disposition`** — `TestLoadBadJSONGap` covers the JSON parse error path in
+  `Load` (disposition.go:74.51,76.3) via a malformed dispositions file.
+- **`disposition`** — `TestRenderEntriesWithReference` covers the `Reference` field
+  branch in `RenderEntries` (disposition.go:136.24,138.4).
+- **`pr`** — `TestLoadReadErrorGap` covers the non-ENOENT read error path in
+  `Load` (pr.go:99.3,99.63) by making the problems file a directory (EISDIR).
+
 ## [1.112.0] — 2026-07-26
 
 ### feat: coverage expansion — cmd adapters/init/diff/trace/impact/slsa/hara gap branches
