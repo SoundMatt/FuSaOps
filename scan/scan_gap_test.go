@@ -5,6 +5,7 @@ package scan
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -14,6 +15,9 @@ import (
 //
 //fusa:test REQ-FO-SCAN003
 func TestScanUnreadableSubdir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unix permission semantics (0o000) not available on Windows")
+	}
 	root := t.TempDir()
 	// Create a subdirectory that cannot be entered on the walk.
 	unreadable := filepath.Join(root, "restricted")

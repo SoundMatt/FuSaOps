@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
@@ -28,6 +29,9 @@ func extractOutputArg(args []string) string {
 //
 //fusa:test REQ-FO-ADP004
 func TestDetectUnreadableSubdir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unix permission semantics (0o000) not available on Windows")
+	}
 	root := t.TempDir()
 	unreadable := filepath.Join(root, "restricted")
 	if err := os.Mkdir(unreadable, 0o000); err != nil {
@@ -38,7 +42,7 @@ func TestDetectUnreadableSubdir(t *testing.T) {
 	a := &cmdAdapter{
 		name: "go-FuSa", language: fusaops.LangGo, tool: "gofusa",
 		extensions: []string{".go"},
-		run: func(context.Context, string, string, ...string) ([]byte, error) { return nil, nil },
+		run:        func(context.Context, string, string, ...string) ([]byte, error) { return nil, nil },
 	}
 	_, err := a.Detect(root)
 	if err == nil {
@@ -72,6 +76,9 @@ func TestCheckReadFileError(t *testing.T) {
 //
 //fusa:test REQ-FO-ADP008
 func TestApplicableDetectError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unix permission semantics (0o000) not available on Windows")
+	}
 	root := t.TempDir()
 	unreadable := filepath.Join(root, "restricted")
 	if err := os.Mkdir(unreadable, 0o000); err != nil {
@@ -82,7 +89,7 @@ func TestApplicableDetectError(t *testing.T) {
 	a := &cmdAdapter{
 		name: "test-adapter", language: fusaops.LangGo, tool: "gofusa",
 		extensions: []string{".go"},
-		run: func(context.Context, string, string, ...string) ([]byte, error) { return nil, nil },
+		run:        func(context.Context, string, string, ...string) ([]byte, error) { return nil, nil },
 	}
 	r := NewRegistry()
 	r.MustRegister(a)

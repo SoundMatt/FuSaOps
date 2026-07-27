@@ -7,6 +7,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.129.0] — 2026-07-27
+
+### fix: Windows CI — gofmt and unix-permission skips in adapter/scan gap tests
+
+- `adapter/adapter_gap_test.go`: fix gofmt alignment; add `t.Skip` on Windows
+  for `TestDetectUnreadableSubdir` and `TestApplicableDetectError` (0o000 dir
+  permissions do not deny access on Windows).
+- `scan/scan_gap_test.go`: add `t.Skip` on Windows for `TestScanUnreadableSubdir`
+  (same reason).
+
 ## [1.128.0] — 2026-07-26
 
 ### feat: coverage expansion — scan (94.7%→100%), sbom (94.8%→100%), adapter (94.2%→97.9%), sci (+2 branches)
