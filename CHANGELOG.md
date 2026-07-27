@@ -7,6 +7,33 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.118.0] — 2026-07-26
+
+### feat: coverage expansion — fleet/sbom/policy/sign/common/main dispatch branches
+
+- **`cmd/fusaops`** — `TestFleetBadFlag` covers `fs.Parse` error return in
+  `runFleet` (cmd_fleet.go:25.39,27.3).
+- **`cmd/fusaops`** — `TestSBOMLoadOptionsError` covers the `loadOptions` error
+  in `runSBOM` (cmd_sbom.go:37.16,40.3) via malformed `.fusaops.json`.
+- **`cmd/fusaops`** — `TestSBOMTimeoutParsed` covers `opts.Timeout = d` in
+  `runSBOM` (cmd_sbom.go:50.3,50.19) via a valid `--timeout 30s`.
+- **`cmd/fusaops`** — `TestPolicyScanError` covers the `orchestrator.Run` error
+  in `runPolicy` (cmd_policy.go:42.16,45.3) by scanning an empty directory
+  (ErrNoAdapters).
+- **`cmd/fusaops`** — `TestSignKeygenError` covers the `sign.Keygen` write
+  error in `runSign` (cmd_sign.go:37.46,40.4) via a non-existent parent path.
+- **`cmd/fusaops`** — `TestSignSignError` covers the `sign.Sign` error in
+  `runSign` (cmd_sign.go:72.20,75.3) by supplying a valid key but a non-existent
+  target file.
+- **`cmd/fusaops`** — `TestLoadOptionsComponentTimeout` covers all three
+  component-timeout code paths in `loadOptions` (common.go:48.23,50.20;
+  50.20,52.6; 52.11,54.6) via a `.fusaops.json` with one invalid and one valid
+  component timeout.
+- **`cmd/fusaops`** — `TestRunDispatchConform` covers the `"conform"` dispatch
+  branch in `run()` (main.go:102.17,103.46).
+- **`cmd/fusaops`** — `TestRunDispatchStandards` covers the standards-subcommand
+  dispatch branch in `run()` (main.go:104.72,105.57).
+
 ## [1.117.0] — 2026-07-26
 
 ### feat: coverage expansion — fleet package 91% → 100%
