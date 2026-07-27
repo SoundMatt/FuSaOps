@@ -7,6 +7,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.122.0] — 2026-07-26
+
+### feat: coverage expansion — vv-set config save error and vuln scan error (cmd/fusaops 93.3% → 93.4%)
+
+- **`cmd/fusaops`** — `TestVVSetConfigSaveError` covers `config.Save` error in
+  `runVVSet` (cmd_vv.go:178.50,181.3) by making the `.fusaops.json` file read-only
+  after writing a valid config, so `os.WriteFile` fails.
+- **`cmd/fusaops`** — `TestVulnScanError` covers the `vuln.Scan` error path in
+  `runVuln` (cmd_vuln.go:51.16,54.3) by passing `--dir` to a non-existent
+  directory so `discoverManifests → filepath.WalkDir` fails.
+
 ## [1.121.0] — 2026-07-26
 
 ### feat: coverage expansion — pr (add/close save errors), report (flag/timeout), req import (jama) (cmd/fusaops 93.0% → 93.3%)
