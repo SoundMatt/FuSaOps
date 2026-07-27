@@ -7,6 +7,28 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.117.0] — 2026-07-26
+
+### feat: coverage expansion — fleet package 91% → 100%
+
+- **`fleet`** — `TestFleetAdapterFilter` covers `opts.Only` assignment when
+  `Repo.Adapter` is non-empty (fleet.go:110.26,112.5).
+- **`fleet`** — `TestFleetRunError` covers `rr.Status="ERROR"` / `rr.ScanErr`
+  when `runner.Run` returns an error via an error-injecting adapter
+  (fleet.go:115.18,118.5).
+- **`fleet`** — `TestRenderTextLongName` covers the `maxName` update branch
+  for names longer than 4 chars in `renderText` (fleet.go:175.28,177.4).
+- **`fleet`** — `TestRenderTextScanError` covers the scan-error row in
+  `renderText` (fleet.go:182.22,184.4).
+- **`fleet`** — `TestRenderHTMLWarnBadge` covers `return "badge-warn"` in the
+  HTML template `badgeClass` function for WARN status (fleet.go:198.15,199.23).
+- **`fleet`** — `TestRenderHTMLSkipBadge` covers `return "badge-skip"` in the
+  HTML template `badgeClass` default branch (fleet.go:202.11,203.23).
+- **`fleet`** — `TestRenderMarkdownWarn` covers the 🟡 badge assignment for
+  WARN fleet status in `renderMarkdown` (fleet.go:278.14,279.17).
+- **`fleet`** — `TestRenderToFilePassthrough` covers the `path == ""` delegate
+  branch in `RenderToFile` (fleet.go:304.16,306.3).
+
 ## [1.116.0] — 2026-07-26
 
 ### feat: coverage expansion — coverage/vv cmd gap branches + config validate gap
