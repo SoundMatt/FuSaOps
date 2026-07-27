@@ -7,6 +7,38 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.119.0] — 2026-07-26
+
+### feat: coverage expansion — capabilities/history/suppress/conform branches (cmd/fusaops 91.7% → 92.4%)
+
+- **`cmd/fusaops`** — `TestCapabilitiesEncodeError` covers the JSON encode error
+  in `runCapabilities` (cmd_capabilities.go:111.40,114.3) via brokenWriter stdout.
+- **`cmd/fusaops`** — `TestHistoryListJSONEncodeError` covers the JSON encode error
+  in `runHistoryList` (cmd_history.go:62.43,65.4) via brokenWriter stdout with
+  `--format json`; `history.Load` returns nil for an empty dir.
+- **`cmd/fusaops`** — `TestSuppressAddLoadConfigError` covers the non-ErrNotExist
+  load error in `runSuppressAdd` (cmd_suppress.go:79.51,82.3) via malformed JSON
+  in the suppress file.
+- **`cmd/fusaops`** — `TestSuppressAddSaveConfigError` covers the `SaveConfig`
+  error in `runSuppressAdd` (cmd_suppress.go:88.59,91.3) via a non-existent
+  parent directory.
+- **`cmd/fusaops`** — `TestSuppressVerifyOrchestratorError` covers the
+  `orchestrator.Run` error in `runSuppressVerify` (cmd_suppress.go:195.16,198.3)
+  using `--file ""` (LoadConfig fast-path) and an empty directory (ErrNoAdapters).
+- **`cmd/fusaops`** — `TestSuppressImportLoadConfigError` covers the non-ErrNotExist
+  load error in `runSuppressImport` (cmd_suppress.go:258.47,261.3).
+- **`cmd/fusaops`** — `TestSuppressImportEmptyFingerprint` covers the
+  `f.Fingerprint == ""` skip in `runSuppressImport` (cmd_suppress.go:271.27,272.13)
+  via a report containing a finding with no fingerprint.
+- **`cmd/fusaops`** — `TestSuppressImportSaveConfigError` covers the `SaveConfig`
+  error in `runSuppressImport` (cmd_suppress.go:288.59,291.3) via a bad output
+  path.
+- **`cmd/fusaops`** — `TestConformOutputCreateError` covers the `os.Create` error
+  in `runConform` (cmd_conform.go:60.17,63.4) using `/bin/sh` as the binary and a
+  non-existent output directory.
+- **`cmd/fusaops`** — `TestConformRenderError` covers the `conform.Render` error
+  in `runConform` (cmd_conform.go:68.56,71.3) via brokenWriter stdout.
+
 ## [1.118.0] — 2026-07-26
 
 ### feat: coverage expansion — fleet/sbom/policy/sign/common/main dispatch branches
