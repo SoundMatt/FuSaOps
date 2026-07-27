@@ -7,6 +7,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.130.1] — 2026-07-27
+
+### fix: coverage expansion — server/multi.go ListenAndServe/Serve/runScheduler and cmd_release SaveJSON manifest error
+
+- `server/multi_gap2_test.go`: new gap tests covering `MultiServer.ListenAndServe`
+  (error + success paths), `MultiServer.Serve` (full compute+serve lifecycle), and
+  `MultiServer.runScheduler` (timed refresh with `WithRefreshInterval`). All three
+  functions move from 0% to 100% coverage.
+- `cmd/fusaops/cmd_gap16_test.go`: `TestReleaseSaveManifestError` covers the
+  `release.SaveJSON` manifest error branch in `runRelease` (line 113–116) by
+  pre-creating `artifact-manifest.json` as a directory so the write fails.
+  `runRelease` coverage moves from 76.5% to 79.4%.
+- Overall statement coverage: 95.3% → 95.5%.
+
 ## [1.130.0] — 2026-07-27
 
 ### fix: Windows CI — gofmt and unix-permission skips in five more gap tests
