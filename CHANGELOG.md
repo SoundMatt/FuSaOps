@@ -7,6 +7,33 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.126.0] — 2026-07-26
+
+### feat: coverage expansion — report package (93.8% → ~97%)
+
+- **`report/text`** — `TestTextFindingCategory` covers the `Category != ""` label
+  branch in `printTextFindingOpts` (text.go:73.22,75.3).
+- **`report/text`** — `TestTextFindingRemediation` covers the `Remediation != ""`
+  hint branch (text.go:85.25,87.3).
+- **`report/markdown`** — `TestMarkdownRendererSIL` covers the `r.SIL != ""`
+  level branch (markdown.go:31.18,33.4).
+- **`report/markdown`** — `TestMarkdownRendererDAL` covers the `r.DAL != ""`
+  level branch (markdown.go:33.25,35.4).
+- **`report/markdown`** — `TestMarkdownRendererStandardNoLevel` covers the else
+  branch when Standard is set but no level (markdown.go:38.9,40.4).
+- **`report/markdown`** — `TestMarkdownEscapePipe` covers the pipe-escape branch
+  in `markdownEscape` (markdown.go:148.18,150.4).
+- **`report/html`** — `TestHTMLCompThresholdLabel` covers `compThresholdLabel`
+  with threshold>0 (html.go:45.20,47.4) and threshold==0 (html.go:48.3,48.15).
+- **`report/html`** — `TestHTMLSevClassInfo` covers the default `sev-info` branch
+  in `sevClass` (html.go:56.11,57.21) via a SeverityInfo finding.
+- **`report/junit`** — `TestJUnitCaseNameFileNoLine` covers the file-only case
+  name format (junit.go:59.9,61.4).
+- **`report/junit`** — `TestJUnitHeaderWriteError` covers the header write error
+  path (junit.go:134.62,136.3).
+- **`report/sarif`** — `TestSARIFEncodeError` covers the JSON encode error path
+  (sarif.go:112.40,114.3).
+
 ## [1.125.0] — 2026-07-26
 
 ### feat: coverage expansion — policy (93.3% → ~97%) and doctemplate (93.2% → ~96%)
