@@ -7,6 +7,39 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.133.0] — 2026-07-27
+
+### fix: audit findings — stale docs, tool-count inconsistency, undocumented commands (#74, #75)
+
+- `docs/tool-safety-manual.md`: corrected the false "the web dashboard has no
+  authentication" claim — `fusaops serve --auth user:pass` (HTTP Basic Auth,
+  with an optional `--auth-ro` read-only role) genuinely exists; the
+  constraint now accurately states auth is opt-in, not absent (#74).
+- README.md: Install section now lists all six adapter tools (`gofusa`,
+  `cfusa`, `cpfusa`, `rsfusa`, `pyfusa`, `jfusa`) and says "bundles all six,"
+  resolving the internal five-vs-six contradiction (#74).
+- README.md: both "Bundled tools" version tables updated to the actual
+  current tags — go-FuSa v0.33.4, cpp-FuSa v0.14.3, c-FuSa v0.5.42,
+  rust-FuSa v0.3.8, py-FuSa v0.2.6, java-FuSa v0.4.5, spec v1.11 (#74).
+- CLAUDE.md: architecture table expanded from 11 to all ~38 packages
+  (grouped into core pipeline vs. compliance/evidence/workflow packages);
+  "future tools" language replaced with the current six-language reality.
+  `fusaops.go`'s package doc comment updated to match (#74).
+- `cmd/fusaops/main.go`: package doc comment now lists `comp`, matching the
+  dispatch switch and runtime `usage()` text (#75).
+- `docs/commands/`: added 24 new command reference pages (comp, hooks,
+  impact, disposition, pr, verify, sign, qualify, release, safety-case, sci,
+  sas, tara, fmea, vuln, template, hara, vv, metrics, badge, slsa,
+  capabilities, req, coverage), bringing documented commands from 9 to 33.
+  Standards roll-ups (`iso26262`/`iec61508`/`do178`/`iso21434`/`unece`/
+  `iec62443`) and `policy`/`fleet`/`config`/`history`/`suppress`/`init`/
+  `adapters`/`version` were left for a follow-up pass — they already had a
+  README mention, so were lower priority than the 24 with zero mention
+  anywhere (#75).
+- README.md: added a "Compliance, evidence, and workflow commands" section
+  with a one-line description and example for every previously-unmentioned
+  subcommand (#75).
+
 ## [1.132.0] — 2026-07-27
 
 ### docs: getting-started guide — how to apply FuSaOps to a project

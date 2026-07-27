@@ -29,6 +29,7 @@
 //	policy      Evaluate org-wide safety rules over the aggregated report
 //	fleet       Run check across all repos in a fleet config file
 //	coverage      DO-178C structural coverage report from a Go coverage profile
+//	comp          Roll up McCabe cyclomatic complexity (V(G)) across all languages
 //	req           Show, import, or export requirements from .fusa-reqs.json
 //	capabilities  Report FuSaOps's supported commands, formats, and standards
 //	metrics       Track project safety metrics over time

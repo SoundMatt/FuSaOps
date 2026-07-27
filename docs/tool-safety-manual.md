@@ -63,8 +63,10 @@ See `.fusa-hara.json` for the full HARA. Summary:
 
 - Output fidelity is bounded by the underlying tools (§4 AoU-5).
 - The all-in-one image is `linux/amd64` (tool images are amd64).
-- The web dashboard has no authentication — bind to localhost or place behind an
-  authenticating proxy (see `SECURITY.md`).
+- The web dashboard has no authentication by default — `fusaops serve --auth
+  user:pass` enables HTTP Basic Auth (with an optional `--auth-ro` read-only
+  role), but until a deployment sets one of those flags, bind to localhost or
+  place behind an authenticating proxy (see `SECURITY.md`).
 
 ## 7. Operating instructions
 
