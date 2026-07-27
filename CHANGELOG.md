@@ -7,6 +7,24 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.121.0] — 2026-07-26
+
+### feat: coverage expansion — pr (add/close save errors), report (flag/timeout), req import (jama) (cmd/fusaops 93.0% → 93.3%)
+
+- **`cmd/fusaops`** — `TestPRAddSaveError` covers `pr.Save` error in `prAdd`
+  (cmd_pr.go:113.42,116.3) by making the project directory read-only so the new
+  problems file cannot be created.
+- **`cmd/fusaops`** — `TestPRCloseSaveErrorReadOnly` covers `pr.Save` error in
+  `prClose` (cmd_pr.go:165.42,168.3) by making the problems file read-only after
+  writing it, so Save fails after `pr.Close` succeeds.
+- **`cmd/fusaops`** — `TestReportBadFlag` covers the `fs.Parse` error return in
+  `runReport` (cmd_report.go:40.39,42.3) via an unknown flag.
+- **`cmd/fusaops`** — `TestReportTimeoutAssigned` covers `opts.Timeout = d` in
+  `runReport` (cmd_report.go:59.3,59.19) via a valid `--timeout 30s`.
+- **`cmd/fusaops`** — `TestReqImportJama` covers the `req.ParseJama` call in
+  `runReqImport` via minimal `<items/>` XML (Jama format, the last of four
+  DOORS/Polarion/Codebeamer/Jama paths).
+
 ## [1.120.0] — 2026-07-26
 
 ### feat: coverage expansion — suppress-prune/req (show, import, export) branches (cmd/fusaops 92.4% → 93.0%)
