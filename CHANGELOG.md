@@ -7,6 +7,36 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.128.0] — 2026-07-26
+
+### feat: coverage expansion — scan (94.7%→100%), sbom (94.8%→100%), adapter (94.2%→97.9%), sci (+2 branches)
+
+- **`scan`** — `TestScanUnreadableSubdir` covers the walk-error propagation
+  paths (scan.go:78.17,80.4 and scan.go:97.16,99.3) via an unreadable 0o000
+  subdirectory; `Scan`'s walk function returns errors (unlike `discoverManifests`).
+- **`sbom`** — `TestRenderToFileEmptyPath` covers the stdout fallback
+  (render.go:41.16,43.3).  `TestRenderJSONWriteError` covers `enc.Encode` failure
+  (render.go:56.38,58.3) via errWriter.  `TestRenderMarkdownEmptyVersion` covers
+  the em-dash for version-less packages (render.go:208.16,210.4).
+  `TestRenderSPDXWriteError` covers `enc.Encode` failure in renderSPDX
+  (render.go:254.40,256.3).  `TestNewSortSameNameDifferentVersion` covers the
+  sort fallthrough when two packages share a name but have different versions
+  (sbom.go:88.3,88.47).
+- **`sci`** — `TestRenderTextLanguageField` covers the `[lang]` suffix path
+  (sci.go:243.27,245.5) and `TestRenderTextSHA256Field` covers the SHA256 line
+  (sci.go:247.25,249.5).
+- **`adapter`** — `TestDetectUnreadableSubdir` covers the walk-error paths in
+  `Detect` (adapter.go:79.17,81.4 and 97.16,99.3).  `TestCheckReadFileError`
+  covers the ReadFile error in `Check` (adapter.go:125.16,127.3) via a runner
+  that deletes the output file.  `TestApplicableDetectError` covers the Detect
+  error propagation in `Applicable` (adapter.go:268.17,270.4).
+  `TestQualifyReadFileError` covers the ReadFile error in `Qualify`
+  (capabilities.go:106.16,108.3).  `TestSBOMBadJSON` covers the json.Unmarshal
+  error in `SBOM` (capabilities.go:136.64,138.3) via a runner that writes bad
+  JSON to sbom.json.  `TestCppFuSaStandardsReadFileError` covers the ReadFile
+  error in `cppFuSaAdapter.Standards` (cpfusa.go:40.16,42.3) via a runner that
+  deletes the output file.
+
 ## [1.127.0] — 2026-07-26
 
 ### feat: coverage expansion — req (93.8% → ~97%) and vuln (93.4% → ~97%)
