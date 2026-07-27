@@ -7,6 +7,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.124.0] — 2026-07-26
+
+### feat: coverage expansion — req package (ParseCSV malformed input and SaveRegistry write error)
+
+- **`req`** — `TestParseCSVBadFormat` covers the `csv.Reader.ReadAll` error path
+  in `ParseCSV` (req.go:82.16,84.3) by passing a CSV with an unclosed quoted field.
+- **`req`** — `TestSaveRegistryWriteError` covers the `os.WriteFile` error path
+  in `SaveRegistry` (req.go:67) by targeting a non-existent directory.
+
 ## [1.123.0] — 2026-07-26
 
 ### feat: coverage expansion — history (91.9% → 95.2%) and suppression (95.0% → 97.5%)
