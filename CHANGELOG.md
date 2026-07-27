@@ -7,6 +7,33 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.114.0] — 2026-07-26
+
+### feat: coverage expansion — auditpack/report/scan/pr/metrics/badge cmd gap branches
+
+- **`cmd/fusaops`** — `TestAuditPackLoadOptionsError` covers loadOptions error in
+  `runAuditPack` (cmd_auditpack.go:33.16,36.3) via malformed `.fusaops.json`.
+- **`cmd/fusaops`** — `TestReportLoadOptionsError` covers loadOptions error in
+  `runReport` (cmd_report.go:45.16,48.3) via malformed `.fusaops.json`.
+- **`cmd/fusaops`** — `TestScanNonExistentDir` covers `scan.Scan` error in
+  `runScan` (cmd_scan.go:30.16,33.3) by passing a non-existent directory root.
+- **`cmd/fusaops`** — `TestPRBadFlag` covers the `fs.Parse` error return in
+  `runPR` (cmd_pr.go:31.39,33.3).
+- **`cmd/fusaops`** — `TestPRAddBadFlag` covers the `fs.Parse` error return in
+  `prAdd` (cmd_pr.go:85.39,87.3) via `runPR add --bogus-flag-xyz`.
+- **`cmd/fusaops`** — `TestPRAddLoadError` covers the `pr.Load` EISDIR error in
+  `prAdd` (cmd_pr.go:98.16,101.3) by making the problems file a directory.
+- **`cmd/fusaops`** — `TestPRCloseBadFlag` covers the `fs.Parse` error return in
+  `prClose` (cmd_pr.go:148.39,150.3) via `runPR close --bogus-flag-xyz`.
+- **`cmd/fusaops`** — `TestMetricsBadFlag` covers the `fs.Parse` error return in
+  `runMetrics` (cmd_metrics.go:29.39,31.3).
+- **`cmd/fusaops`** — `TestMetricsShowLoadError` covers the `metrics.Load` error
+  in `runMetricsShow` (cmd_metrics.go:94.16,97.3) via malformed metrics JSON.
+- **`cmd/fusaops`** — `TestMetricsShowRenderError` covers the `metrics.Render`
+  error in `runMetricsShow` (cmd_metrics.go:110.55,113.3) via unsupported format.
+- **`cmd/fusaops`** — `TestBadgeRenderError` covers the `badge.Render` error in
+  `runBadge` (cmd_badge.go:67.43,70.3) by passing a broken io.Writer as stdout.
+
 ## [1.113.0] — 2026-07-26
 
 ### feat: coverage expansion — coverage/comp/metrics/disposition/pr gap branches
