@@ -7,6 +7,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.123.0] — 2026-07-26
+
+### feat: coverage expansion — history (91.9% → 95.2%) and suppression (95.0% → 97.5%)
+
+- **`history`** — `TestLoadAllOpenError` covers the non-ErrNotExist open error
+  path in `loadAll` (history.go:123.16,125.3) by creating a directory at the
+  history file path (EISDIR on `os.Open`).
+- **`history`** — `TestPruneLoadAllError` covers the `loadAll` error path in
+  `Prune` (history.go:149.15,151.3) by the same EISDIR trick.
+- **`history`** — `TestLoadEmptyLine` covers the empty-line skip in `loadAll`
+  (history.go:132.21,133.12) via a JSONL file with a blank line between entries.
+- **`suppression`** — `TestLoadConfigBadJSON` covers the `json.Unmarshal` error
+  in `LoadConfig` (suppression.go:47.51,49.3) by writing a malformed JSON
+  suppress file.
+
 ## [1.122.0] — 2026-07-26
 
 ### feat: coverage expansion — vv-set config save error and vuln scan error (cmd/fusaops 93.3% → 93.4%)
