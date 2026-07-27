@@ -7,6 +7,29 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.127.0] — 2026-07-26
+
+### feat: coverage expansion — req (93.8% → ~97%) and vuln (93.4% → ~97%)
+
+- **`req`** — `TestExportCodebeamerDescriptionAndLevel` covers the text→description
+  fallback (req.go:316.17,318.4) and Level field path (req.go:320.20,322.4) in
+  `ExportCodebeamer`.
+- **`req`** — `TestExportJamaDescriptionAndLevel` covers the same two paths in
+  `ExportJama` (req.go:397.17,399.4 and req.go:401.20,403.4).
+- **`req`** — `TestExportPolarionLevel` covers the Level field path in
+  `ExportPolarion` (req.go:478.20,480.4).
+- **`vuln`** — `TestScanNilRunner` covers the nil-runner default assignment
+  (vuln.go:141.19,143.3) via calling `Scan` with a nil runner.
+- **`vuln`** — `TestScanUnreadableSubdir` covers the walk error `return nil`
+  path (vuln.go:190.17,192.4) via an unreadable subdirectory (0o000).
+- **`vuln`** — `TestScanOSVRunnerError` covers the empty-output error branch
+  in `runOSVScanner` (vuln.go:253.33,255.3) — scanner errors are non-fatal.
+- **`vuln`** — `TestScanOSVBadJSON` covers the JSON decode error branch
+  (vuln.go:261.44,263.3) via bad JSON output.
+- **`vuln`** — `TestRenderTextScannerPresentNoFindings` covers the "No
+  vulnerabilities found" branch (vuln.go:378.29,380.3) when ScannerPresent is
+  true but no findings exist.
+
 ## [1.126.0] — 2026-07-26
 
 ### feat: coverage expansion — report package (93.8% → ~97%)
