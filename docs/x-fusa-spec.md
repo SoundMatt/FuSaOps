@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.10.11 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.11.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -193,6 +193,43 @@ silently dropped.
 **Tool-defined annotations** such as `//fusa:unsafe`, `//fusa:nolint`, and
 `//fusa:file-suppress <RULE>` are *not* part of this contract; they remain
 tool-specific. FuSaOps does not consume rule suppressions in spec v1.
+
+#### 1.4.1 Tag placement & completeness (SHOULD — phased target)
+
+A 2026-07-27 cross-tool traceability audit found every tool's annotation
+coverage has real gaps once measured precisely, and that tag *placement*
+granularity differs (file-level, class-level, and function-level are all in
+use today). This subsection defines the target convention tools should work
+toward; it is **not yet a MUST** because most tools currently tag coarser than
+function level and would need real retrofit work to comply (see each tool's
+tracking issue).
+
+1. **Function-level placement (SHOULD).** A `//fusa:req <ID>` tag SHOULD be
+   placed directly above (or in the doc comment of) the specific function or
+   method it covers, not merely anywhere in the containing file or class.
+   File- or class-level tagging is permitted as an interim state but SHOULD
+   NOT be treated as equivalent evidence — it only proves co-location, not
+   that the specific function implements the specific requirement.
+2. **Every public function has a requirement (SHOULD).** Every exported/public
+   function or method that is part of a tool's safety-relevant behaviour
+   (i.e. not a trivial accessor, `String()`/`Error()`-style interface shim, or
+   generated boilerplate) SHOULD carry a req tag. A tool's `trace` command
+   SHOULD support `--func-coverage N` (§5), mirroring `--req-coverage`, to
+   gate on this.
+3. **Every test maps to a requirement, and vice versa (SHOULD / already-MUST).**
+   The requirement→test direction is already covered by `--gaps` /
+   `--req-coverage` (§5). The test→req direction is new: a `//fusa:test <ID>`
+   tag whose `<ID>` does not exist in `.fusa-reqs.json` (a **dangling
+   reference**) SHOULD be treated the same as a malformed annotation (§1.4) —
+   a `check` WARNING, never silently accepted.
+
+**Scan-path completeness (MUST).** A tool's requirement/test scan MUST cover
+its entire test source tree. A tool that scopes annotation scanning to a
+`sourceDirs`-style config key MUST include test directories in that scope, or
+scan tests unconditionally regardless of `sourceDirs`. This is a MUST
+immediately (not phased) because a mis-scoped scan doesn't just under-report —
+it produces an actively wrong number (e.g. reporting 0% tested when the true
+figure is materially higher).
 
 ### 1.5 Identifier naming (rules & requirements)
 
@@ -586,13 +623,19 @@ fingerprints for identical `(ruleId, file, normalised message)`, so
 
 ## 5. `trace` — requirement traceability matrix
 
-`<lang>fusa trace [--dir <path>] [--format text|json|html|md] [--output <file>] [--gaps] [--req-coverage N] [--sec-tested N]`
+`<lang>fusa trace [--dir <path>] [--format text|json|html|md] [--output <file>] [--gaps] [--req-coverage N] [--sec-tested N] [--func-coverage N]`
 
 `--req-coverage N` / `--sec-tested N` take **N as a percentage 0–100** and exit
 `1` when the respective coverage is below N. `N = 0` **disables** that gate (it
 always passes). On `trace`, `--strict` with no explicit threshold is equivalent
 to `--req-coverage 100 --sec-tested 100` (any gap → exit `1`); an explicit
 `--req-coverage N` / `--sec-tested N` overrides the implied 100.
+
+**`--func-coverage N` (SHOULD — target convention, §1.4.1).** Percentage 0–100
+of public/exported functions carrying at least one `impl`-kind tag directly
+above them. Exit `1` when below N; `N = 0` disables the gate. Not yet required
+for conformance — see §1.4.1 for the phased-rollout rationale and each tool's
+tracking issue for current status.
 
 `--gaps` selects only requirements with **no tag of kind `test` OR `sec-test`**.
 In `--format json` it filters the `requirements[]` and `tags[]` arrays to those
@@ -971,7 +1014,7 @@ payload decoders; keep this spec and those structs in lock-step.
 
 ## 11. Current conformance & change-set
 
-Snapshot 2026-07-26 (go-FuSa v0.33.0 · cpp-FuSa v0.14.0 · c-FuSa v0.5.38 · rust-FuSa v0.3.4 · py-FuSa v0.2.1 · java-FuSa v0.4.1). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
+Snapshot 2026-07-27 (go-FuSa v0.33.2 · cpp-FuSa v0.14.1 · c-FuSa v0.5.40 · rust-FuSa v0.3.6 · py-FuSa v0.2.3 · java-FuSa v0.4.2). **All tools fully conformant.** ✅ conforms · ⚠️ gap (MUST) · ▫️ nice-to-have (SHOULD/MAY).
 
 | Item | go-FuSa | c-FuSa | cpp-FuSa | rust-FuSa | py-FuSa | java-FuSa |
 |---|---|---|---|---|---|---|
@@ -1073,6 +1116,28 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.11.0 — 2026-07-27 (requirement annotation completeness — new §1.4.1 + `--func-coverage`)
+
+- **New §1.4.1 "Tag placement & completeness":** codifies the target
+  convention found missing by a 2026-07-27 cross-tool traceability audit —
+  function-level tag placement (SHOULD), every public function carrying a req
+  tag (SHOULD), dangling test-tag requirement IDs treated as malformed
+  (SHOULD), and requirement/test scan-path completeness (**MUST** — a tool
+  MUST NOT exclude test directories from its annotation scan via a
+  `sourceDirs`-style allowlist). The MUST is immediate because a mis-scoped
+  scan produces an actively wrong number, not just an incomplete one — found
+  in practice as a live bug in py-FuSa's `trace` command (reported 0% tested
+  when the true figure was 43%).
+- **§5 `trace`:** adds `--func-coverage N`, mirroring `--req-coverage`, to gate
+  on the SHOULD-level function-annotation completeness metric. Not required
+  for conformance yet.
+- **Version snapshot updated (§11):** go-FuSa v0.33.2 · cpp-FuSa v0.14.1 ·
+  c-FuSa v0.5.40 · rust-FuSa v0.3.6 · py-FuSa v0.2.3 · java-FuSa v0.4.2. All
+  tools fully conformant against existing MUSTs; none yet implement
+  `--func-coverage` or the phased §1.4.1 items (tracked in each tool's own
+  traceability-gap issue, filed the same day as this spec change).
+- No existing MUST changed shape; this is a pure additive MINOR bump.
 
 ### 1.10.12 — 2026-07-26 (rust-FuSa v0.3.4 Dockerfile fix; version snapshot updated)
 

@@ -19,12 +19,12 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "1.130.1"
+const Version = "1.131.0"
 
 // SpecVersion is the x-FuSa specification version this release targets.
 //
 //fusa:req REQ-FO-CORE007
-const SpecVersion = "1.10.12"
+const SpecVersion = "1.11.0"
 
 // Sentinel errors. Callers should use errors.Is for comparison.
 //

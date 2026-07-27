@@ -7,6 +7,27 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.131.0] — 2026-07-27
+
+### feat: x-FuSa spec v1.11.0 — requirement annotation completeness (§1.4.1)
+
+- `docs/x-fusa-spec.md`: new §1.4.1 "Tag placement & completeness," codifying
+  the target convention found missing by a same-day cross-tool traceability
+  audit — function-level tag placement (SHOULD), every public function
+  carrying a req tag (SHOULD), dangling test-tag requirement IDs treated as
+  malformed (SHOULD), and requirement/test scan-path completeness (**MUST**
+  — a tool's annotation scan must not exclude test directories via a
+  `sourceDirs`-style allowlist). The scan-path rule is an immediate MUST: a
+  live bug found during the audit (py-FuSa's `trace` reporting 0% tested
+  against a true figure of 43%) shows a mis-scoped scan produces an actively
+  wrong number, not just an incomplete one.
+- §5 `trace`: adds `--func-coverage N`, mirroring `--req-coverage`, to gate on
+  the new SHOULD-level function-annotation completeness metric.
+- SpecVersion bumped to `1.11.0` in `fusaops.go`. No existing MUST changed
+  shape; purely additive.
+- Version snapshot (§11) refreshed: go-FuSa v0.33.2 · cpp-FuSa v0.14.1 ·
+  c-FuSa v0.5.40 · rust-FuSa v0.3.6 · py-FuSa v0.2.3 · java-FuSa v0.4.2.
+
 ## [1.130.1] — 2026-07-27
 
 ### fix: coverage expansion — server/multi.go ListenAndServe/Serve/runScheduler and cmd_release SaveJSON manifest error
