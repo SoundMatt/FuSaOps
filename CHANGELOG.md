@@ -7,6 +7,29 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.125.0] — 2026-07-26
+
+### feat: coverage expansion — policy (93.3% → ~97%) and doctemplate (93.2% → ~96%)
+
+- **`policy`** — `TestLoadPolicyBadJSON` covers the `json.Unmarshal` error path
+  in `LoadPolicy` (policy.go:98.49,100.3).
+- **`policy`** — `TestEvalRuleToolScopeContinue` covers the tool-filter `continue`
+  branch in `evalRule` (policy.go:127.45,128.12).
+- **`policy`** — `TestEvalRuleEmptyID` covers the `id = "rule"` substitution
+  when rule ID is empty (policy.go:142.14,144.3).
+- **`policy`** — `TestScopeLabelBoth` covers the combined language+tool label
+  in `scopeLabel` (policy.go:176.44,178.3).
+- **`policy`** — `TestRenderTextFail` covers the `status = "FAIL"` branch
+  in `renderText` (policy.go:215.16,217.4).
+- **`policy`** — `TestRenderMarkdownEmptyPolicyName` covers the `name = "Policy"`
+  substitution in `renderMarkdown` (policy.go:249.16,251.3).
+- **`policy`** — `TestRenderToFileEmptyPath` covers the `path == ""` fast path
+  in `RenderToFile` (policy.go:312.16,314.3).
+- **`doctemplate`** — `TestGenerateMkdirError` covers the `os.MkdirAll` error
+  path in `Generate` (doctemplate.go:439.54,441.3) via file-at-dir-path.
+- **`doctemplate`** — `TestGenerateWriteError` covers the `os.WriteFile` error
+  path in `Generate` (doctemplate.go:446.73,448.4) via read-only outputDir.
+
 ## [1.124.0] — 2026-07-26
 
 ### feat: coverage expansion — req package (ParseCSV malformed input and SaveRegistry write error)
