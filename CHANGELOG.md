@@ -7,6 +7,41 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.112.0] — 2026-07-26
+
+### feat: coverage expansion — cmd adapters/init/diff/trace/impact/slsa/hara gap branches
+
+- **`cmd/fusaops`** — `TestAdaptersBadFlag` covers the `fs.Parse` error return in
+  `runAdapters` (cmd_adapters.go:20.39,22.3).
+- **`cmd/fusaops`** — `TestInitBadFlagGap` covers the `fs.Parse` error return in
+  `runInit` (cmd_init.go:22.39,24.3).
+- **`cmd/fusaops`** — `TestDiffBadFlagNonHelp` covers the non-`flag.ErrHelp` parse
+  error path (`return 1`) in `runDiff` (cmd_diff.go:41.3,41.11).
+- **`cmd/fusaops`** — `TestDiffLoadOptionsErrorGap` covers the `loadOptions` error
+  return in `runDiff` (cmd_diff.go:45.16,48.3) via a malformed `.fusaops.json`.
+- **`cmd/fusaops`** — `TestTraceLoadOptionsErrorGap` covers the `loadOptions` error
+  return in `runTrace` (cmd_trace.go:44.16,47.3) via a malformed `.fusaops.json`.
+- **`cmd/fusaops`** — `TestImpactOutputCreateError` covers the `os.Create` error
+  return in `runImpact` (cmd_impact.go:45.18,48.4) by using an invalid output path.
+- **`cmd/fusaops`** — `TestSLSAOutputCreateError` covers the `os.Create` error
+  return in `runSLSA` (cmd_slsa.go:50.18,53.4) by using an invalid output path.
+- **`cmd/fusaops`** — `TestHaraInitBadFlag` covers the `fs.Parse` error return in
+  `runHaraInit` (cmd_hara.go:108.39,110.3).
+- **`cmd/fusaops`** — `TestHaraASILBadFlag` covers the `fs.Parse` error return in
+  `runHaraASIL` (cmd_hara.go:178.39,180.3).
+- **`hara`** — `TestLoadReadError` covers the non-ENOENT read error path in `Load`
+  (hara.go:245.3,245.61) by making the HARA file a directory.
+- **`hara`** — `TestDetermineASILUnknownCombo` covers the `return ASILQM` fallback
+  in `DetermineASIL` (hara.go:197.2,197.15) with a non-standard Severity string.
+- **`hara`** — `TestMaxASILWithC` covers `asilRank(ASILC) == 3`
+  (hara.go:209.13,210.11) by supplying a hazard with explicit ASIL C.
+- **`hara`** — `TestRenderTextWithSituationsAndHazards` covers the Situations
+  iteration (hara.go:332.33,334.3) and the multi-goal separator branch
+  (hara.go:346.13,348.5) in `renderText`.
+- **`impact`** — fixed `errcheck` lint: remaining `cmd.CombinedOutput()` call
+  in `TestAnalyseAnnotatedChanged` changed to `_, _ = cmd.CombinedOutput()`.
+- Coverage: 92.8% → 93.1%
+
 ## [1.111.0] — 2026-07-26
 
 ### feat: coverage expansion — cmd config/fmea/history/scan/policy gap branches
