@@ -29,6 +29,12 @@ IEC 61508, ISO 21434, DO-178C and related safety cases.
 > reduces the cost of producing functional safety evidence across a polyglot
 > codebase.
 
+> **New to FuSaOps?** [`docs/getting-started.md`](docs/getting-started.md) is
+> a step-by-step guide to applying it to a real project — zero-config first
+> scan, config file, CI gate, regression-only gating, dashboard, and deeper
+> safety evidence. Everything below this point is the full reference; start
+> there if you just want to get it running.
+
 ---
 
 ## How it works

@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.132.0] — 2026-07-27
+
+### docs: getting-started guide — how to apply FuSaOps to a project
+
+- New `docs/getting-started.md`: a step-by-step onboarding path (zero-config
+  Docker scan → config file → CI gate → regression-only gating via
+  `diff --baseline` → dashboard → deeper safety evidence via `trace`/`sbom`/
+  `audit-pack`/standards roll-ups), plus a troubleshooting section for the
+  three most common "why don't I see findings for X" questions.
+- README: added a callout linking to the new guide immediately after the
+  intro, ahead of the full command reference, so first-time readers land on
+  the guided path instead of the flat command dump.
+- Fills a real gap: the README was reference-style (complete once you know
+  what you want) and `docs/extending.md` covers adding a *new tool* to
+  FuSaOps, not adopting FuSaOps *in* a project — there was no single ordered
+  walkthrough for the latter.
+
 ## [1.131.0] — 2026-07-27
 
 ### feat: x-FuSa spec v1.11.0 — requirement annotation completeness (§1.4.1)
