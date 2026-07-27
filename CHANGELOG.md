@@ -7,6 +7,35 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.120.0] — 2026-07-26
+
+### feat: coverage expansion — suppress-prune/req (show, import, export) branches (cmd/fusaops 92.4% → 93.0%)
+
+- **`cmd/fusaops`** — `TestSuppressPruneSaveConfigError` covers `SaveConfig` error
+  in `runSuppressPrune` (cmd_suppress.go:163.62,166.3) via an expired suppression
+  and a read-only file.
+- **`cmd/fusaops`** — `TestReqShowLoadError` covers `LoadRegistry` error in
+  `runReqShow` (cmd_req.go:47.16,50.3) by pointing at a dir without `.fusa-reqs.json`.
+- **`cmd/fusaops`** — `TestReqShowTextAndLevel` covers `e.Text` (cmd_req.go:64.33,66.4)
+  and `e.Level` (cmd_req.go:69.21,71.5) output paths in `runReqShow` via a registry
+  entry with both fields set.
+- **`cmd/fusaops`** — `TestReqImportReadErrorNonCSV` covers the read-error body
+  for non-csv formats (cmd_req.go:107.29,109.3) by importing from a non-existent file.
+- **`cmd/fusaops`** — `TestReqImportDOORS` covers `req.ParseDOORS` call
+  (cmd_req.go:129.18,130.42) via minimal `<REQ-IF/>` XML.
+- **`cmd/fusaops`** — `TestReqImportPolarion` covers `req.ParsePolarion` call
+  (cmd_req.go:131.20,132.44) via minimal `<workitems/>` XML.
+- **`cmd/fusaops`** — `TestReqImportCodebeamer` covers `req.ParseCodebeamer` call
+  (cmd_req.go:133.14,134.38) via minimal `<tracker/>` XML.
+- **`cmd/fusaops`** — `TestReqImportDuplicateSkip` covers the duplicate-ID skip
+  (cmd_req.go:146.24,148.12) by importing a CSV containing an already-registered ID.
+- **`cmd/fusaops`** — `TestReqImportSaveRegistryError` covers `SaveRegistry` error
+  (cmd_req.go:155.56,158.3) by targeting a non-existent directory.
+- **`cmd/fusaops`** — `TestReqExportCSVRenderError` covers `RenderCSV` error
+  (cmd_req.go:192.51,195.4) via brokenWriter stdout.
+- **`cmd/fusaops`** — `TestReqExportDOORSWriteError` covers `w.Write` error in
+  non-csv export (cmd_req.go:218.44,221.4) via brokenWriter stdout with `--format doors`.
+
 ## [1.119.0] — 2026-07-26
 
 ### feat: coverage expansion — capabilities/history/suppress/conform branches (cmd/fusaops 91.7% → 92.4%)
