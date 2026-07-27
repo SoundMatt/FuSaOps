@@ -2,9 +2,10 @@
 // functional safety orchestration layer.
 //
 // FuSaOps does not implement language-specific safety rules itself. Instead it
-// orchestrates the per-language x-FuSa toolchain (go-FuSa, c-FuSa, cpp-FuSa and
-// future tools), aggregates their machine-readable reports into a single
-// multi-language evidence view, and serves an intuitive web reporting UI.
+// orchestrates the per-language x-FuSa toolchain (go-FuSa, c-FuSa, cpp-FuSa,
+// rust-FuSa, py-FuSa, java-FuSa, and any future tools), aggregates their
+// machine-readable reports into a single multi-language evidence view, and
+// serves an intuitive web reporting UI.
 //
 // This root package exports the value types and sentinel errors shared across
 // all sub-packages (config, adapter, scan, orchestrator, report, server).
@@ -19,7 +20,7 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "1.132.0"
+const Version = "1.133.0"
 
 // SpecVersion is the x-FuSa specification version this release targets.
 //

@@ -5,7 +5,8 @@ Guidance for Claude Code (and contributors) working in this repository.
 ## What FuSaOps is
 
 FuSaOps is the **multi-language orchestration layer** over the x-FuSa toolchain
-(go-FuSa, c-FuSa, cpp-FuSa, future tools). It does **not** implement
+(go-FuSa, c-FuSa, cpp-FuSa, rust-FuSa, py-FuSa, java-FuSa — six languages today,
+with more addable via the adapter interface). It does **not** implement
 language-specific safety rules. It detects the languages in a repo, runs each
 language's x-FuSa tool, normalises the machine-readable output, and aggregates
 everything into one report and one web dashboard.
@@ -26,11 +27,13 @@ the tool is wrong, not FuSaOps.
 
 ## Architecture
 
+Core orchestration pipeline:
+
 | Package | Responsibility |
 |---|---|
 | `.` (`fusaops`) | Core types: `Severity`, `Language`, `Finding`, sentinel errors, `Version` |
 | `config/` | `.fusaops.json` (optional; zero-config by default) |
-| `adapter/` | `Adapter` interface, registry, generic `cmdAdapter`, go/c/cpp adapters |
+| `adapter/` | `Adapter` interface, registry, generic `cmdAdapter`, per-language adapters (go/c/cpp/rust/py/java) |
 | `scan/` | Language detection with file counts |
 | `orchestrator/` | Runs applicable+installed adapters, records skipped components, aggregates; `RunTrace`/`RunSBOM`/`RunAuditPack` roll-ups |
 | `report/` | `AggregateReport` + text/json/html/sarif renderers |
@@ -39,6 +42,41 @@ the tool is wrong, not FuSaOps.
 | `auditpack/` | Unified evidence ZIP bundler with hashed manifest |
 | `server/` | Web dashboard + JSON API (`fusaops serve`) |
 | `cmd/fusaops/` | CLI dispatch + subcommands |
+
+Compliance, evidence, and workflow packages layered on top of the pipeline:
+
+| Package | Responsibility |
+|---|---|
+| `badge/` | Shields.io-compatible SVG status badges from an aggregate report |
+| `comp/` | McCabe cyclomatic complexity (V(G)) decode + aggregate |
+| `conform/` | x-FuSa spec conformance checks against a tool binary |
+| `coverage/` | Go coverage profiles → DO-178C-style structural coverage report |
+| `diff/` | Compares two `fusaops check` runs to detect new/resolved findings |
+| `disposition/` | Finding disposition entries (accept/defer/waive) per project |
+| `doctemplate/` | Safety documentation template generation |
+| `fleet/` | Multi-repository safety analysis orchestration |
+| `fmea/` | Design Failure Mode and Effects Analysis (dFMEA) generation |
+| `hara/` | Hazard Analysis and Risk Assessment (HARA) data management |
+| `history/` | Persists/retrieves run snapshots so the dashboard can show trends |
+| `impact/` | Change-impact analysis of source edits on requirements/tests |
+| `mcdc/` | Modified Condition/Decision Coverage (MC/DC) decode + aggregate |
+| `metrics/` | Project safety metrics tracked over time |
+| `policy/` | Org-wide safety rule evaluation over an aggregated report |
+| `pr/` | DO-178C §11.17 Software Problem Report workflow |
+| `qualify/` | Per-tool qualification report aggregation |
+| `release/` | Build provenance and artifact manifest generation |
+| `req/` | Requirement registry (`.fusa-reqs.json`) |
+| `safetycase/` | Structured safety argument assembly |
+| `sas/` | Software Accomplishment Summary (DO-178C §11.20) |
+| `sci/` | Software Configuration Index (DO-178C §11.16) |
+| `sign/` | HMAC-SHA256 file signing for FuSaOps artifacts |
+| `slsa/` | SLSA (Supply-chain Levels for Software Artifacts) provenance |
+| `standards/` | §9.3 gap-report roll-up across standards (ISO 26262, IEC 61508, ISO 21434, DO-178C) |
+| `suppression/` | Filters findings acknowledged in a project's suppression list |
+| `tara/` | Threat Analysis and Risk Assessment (TARA) per ISO 21434 |
+| `verify/` | Test evidence collection |
+| `vuln/` | Dependency manifest discovery + vulnerability findings across languages |
+| `vv/` | V&V (verification and validation) independence declarations |
 
 Adapter **capability interfaces** (`adapter/capabilities.go`): `Tracer`,
 `Qualifier`, `SBOMer`, `Packer` are optional — the orchestrator type-asserts for

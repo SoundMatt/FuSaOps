@@ -63,7 +63,7 @@ go install github.com/SoundMatt/FuSaOps/cmd/fusaops@latest
 ```
 
 The adapter tools must be on `PATH` for the languages you want scanned
-(`gofusa`, `cfusa`, `cpfusa`, `rsfusa`, `pyfusa`). The Docker image bundles all five.
+(`gofusa`, `cfusa`, `cpfusa`, `rsfusa`, `pyfusa`, `jfusa`). The Docker image bundles all six.
 
 ## Usage
 
@@ -99,6 +99,46 @@ fusaops config validate      # validate .fusaops.json; exit 1 on error
 fusaops config show          # print effective config as formatted JSON
 fusaops history list         # list check-run history (text or json)
 fusaops history prune --keep 50  # trim history to 50 most-recent entries
+```
+
+### Compliance, evidence, and workflow commands
+
+Beyond the core scan/check/report loop, FuSaOps has a full set of DO-178C,
+ISO 26262, and ISO 21434 evidence-generation and project-workflow commands.
+See [`docs/commands/`](docs/commands) for full flag references.
+
+```bash
+fusaops comp --dal DAL-B                 # cross-language McCabe cyclomatic complexity (V(G))
+fusaops coverage --dal DAL-C coverage.out # DO-178C structural coverage from a Go profile
+fusaops coverage --mcdc --mcdc-file mcdc.json --dal DAL-A  # LLVM source-based MC/DC gate
+fusaops req                              # show requirements from .fusa-reqs.json
+fusaops req import --file reqs.csv       # import requirements (csv/doors/polarion/codebeamer/jama)
+fusaops req export --format doors        # export requirements to an external RM tool format
+fusaops policy --policy policy.json      # evaluate org-wide safety rules over the scan
+fusaops fleet --config fleet.json        # run check across every repo in a fleet
+fusaops metrics record                   # snapshot project safety metrics over time
+fusaops metrics show --format json       # show the recorded metrics time series
+fusaops badge --output badge.svg check-report.json  # SVG status badge for a README
+fusaops slsa --level L3                  # SLSA v1.0 supply-chain integrity gap report
+fusaops capabilities                     # report supported commands/formats/standards as JSON
+fusaops hooks install                    # install a pre-commit hook running check --strict
+fusaops impact --from main --to HEAD     # requirements/evidence impacted by a code change
+fusaops disposition add --rule SAFETY017 --reviewer "J. Rivera" --rationale "false positive"
+fusaops pr add --id PR-001 --title "Race in aggregation" --severity major  # DO-178C §11.17 problem reports
+fusaops verify                           # run go test and save a test evidence bundle
+fusaops sign --key release.key audit-pack.zip  # HMAC-SHA256 sign a release artefact
+fusaops qualify                          # tool qualification report for installed adapters
+fusaops release --output-dir dist/       # cross-language SBOM + provenance + artifact manifest
+fusaops safety-case --standard "DO-178C" # assemble a structured safety argument from evidence
+fusaops sci                              # Software Configuration Index (DO-178C §11.16)
+fusaops sas --level DAL-B                # Software Accomplishment Summary (DO-178C §11.20)
+fusaops tara                             # Threat Analysis and Risk Assessment (ISO 21434 Ch. 9)
+fusaops fmea                             # Design FMEA of the orchestration pipeline
+fusaops vuln                             # scan dependency manifests for known vulnerabilities
+fusaops template --standards "ISO 26262" # generate safety documentation templates
+fusaops hara init                        # create a starter Hazard Analysis / Risk Assessment
+fusaops hara asil -s S2 -e E3 -c C2      # derive ASIL from S/E/C (ISO 26262-3 Table 4)
+fusaops vv show                          # V&V independence declarations + achievable ASIL
 ```
 
 ### Evidence aggregation (v0.2)
@@ -505,9 +545,9 @@ tool — **no manual rebuild, and FuSaOps itself does not need a new release**. 
 weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
-**Bundled tools.** The all-in-one image bundles all six x-FuSa tools: go-FuSa v0.33.0,
-cpp-FuSa v0.14.0, c-FuSa v0.5.38, rust-FuSa v0.3.4, py-FuSa v0.2.1, java-FuSa v0.4.1.
-All are spec v1.10 aligned and published to GHCR.
+**Bundled tools.** The all-in-one image bundles all six x-FuSa tools: go-FuSa v0.33.4,
+cpp-FuSa v0.14.3, c-FuSa v0.5.42, rust-FuSa v0.3.8, py-FuSa v0.2.6, java-FuSa v0.4.5.
+All are spec v1.11 aligned and published to GHCR.
 
 > The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
 > runs under emulation; add `--platform linux/amd64` if your client needs it.
@@ -596,12 +636,12 @@ orchestrates also gates FuSaOps itself.
 
 | Language | Adapter    | Tool     | Bundled in image |
 |----------|------------|----------|------------------|
-| Go       | go-FuSa    | `gofusa` | ✅ (v0.33.0, spec v1.10) |
-| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.14.0, spec v1.10) |
-| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.38, spec v1.10) |
-| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.3.4, spec v1.10) |
-| Python   | py-FuSa    | `pyfusa` | ✅ (v0.2.1, spec v1.10, alpha) |
-| Java     | java-FuSa  | `jfusa`  | ✅ (v0.4.1, spec v1.10, alpha) |
+| Go       | go-FuSa    | `gofusa` | ✅ (v0.33.4, spec v1.11) |
+| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.14.3, spec v1.11) |
+| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.42, spec v1.11) |
+| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.3.8, spec v1.11) |
+| Python   | py-FuSa    | `pyfusa` | ✅ (v0.2.6, spec v1.11, alpha) |
+| Java     | java-FuSa  | `jfusa`  | ✅ (v0.4.5, spec v1.11, alpha) |
 
 All six adapters exist; an un-bundled tool reports as *not installed* until its
 image publishes. New languages are added by implementing the `adapter.Adapter`
