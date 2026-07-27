@@ -1009,6 +1009,13 @@
       "rationale": "Markdown output lets CI pipelines post conformance check summaries directly into pull request comments and GitHub Actions job summaries."
     },
     {
+      "id": "REQ-FO-CNF020",
+      "title": "Report.Summary returns PASS/FAIL/SKIP counts",
+      "description": "conform.Report.Summary() shall tally each Result's Status field and return (pass, fail, skip int) counts, used by both the CLI exit-code decision and the render templates' summary line.",
+      "priority": "MUST",
+      "rationale": "The pass/fail/skip tri-state count is the single source of truth for whether a conformance run should exit non-zero."
+    },
+    {
       "id": "REQ-FO-CLI014",
       "title": "Conform command",
       "text": "fusaops conform shall run x-FuSa spec conformance checks against a named binary, render the report in text or json, and exit non-zero when any MUST check fails.",
@@ -1098,6 +1105,13 @@
       "description": "standards.Render shall accept format 'markdown' (and alias 'md') and produce a GFM markdown report: a project/standard header, a status badge (\ud83d\udfe2 PASS / \ud83d\udd34 GAP), per-component sections (tool/language heading, satisfied/partial/gap counts, objective GFM table with ID/Status/Title+Clause/Evidence columns), skipped-component fallback, and nil-report fallback. Pipe characters in titles are escaped. The fusaops iso26262/iec61508/do178/iso21434/unece/iec62443 CLIs shall accept --format markdown.",
       "priority": "MUST",
       "rationale": "Markdown output lets CI pipelines post standards gap-report summaries directly into pull request comments and GitHub Actions job summaries."
+    },
+    {
+      "id": "REQ-FO-STD013",
+      "title": "Aggregate.TotalGaps sums gap-status objectives across reporting components",
+      "description": "Aggregate.TotalGaps() shall sum Report.Summary.Gaps across every component whose Report is non-nil, skipping components with no report (unavailable/skipped tools contribute zero).",
+      "priority": "MUST",
+      "rationale": "Backs the fusaops standards-family CLIs' overall gap count shown in text/JSON/HTML/markdown output."
     },
     {
       "id": "REQ-FO-ADP018",
@@ -1245,6 +1259,13 @@
       "description": "diff.Render must support 'html' and 'markdown'/'md' format strings in addition to 'text' and 'json'. The HTML renderer shall produce a self-contained dashboard with added/removed tables and a gate verdict badge. The Markdown renderer shall produce a GFM report with shield badge, summary table, and per-section finding tables.",
       "priority": "MUST",
       "rationale": "CI pipelines and PR comments benefit from richer diff output beyond plain text or raw JSON."
+    },
+    {
+      "id": "REQ-FO-DIF007",
+      "title": "Result.HasNewFindings convenience predicate",
+      "description": "Result.HasNewFindings() shall return true when len(Added) > 0, regardless of severity — a lighter-weight check than HasNewErrors for callers that want to gate on any new finding, not just ERROR-severity ones.",
+      "priority": "SHOULD",
+      "rationale": "Backs the --strict diff gate, which widens the gate to any new finding rather than only errors."
     },
     {
       "id": "REQ-FO-ADP025",
@@ -2251,6 +2272,12 @@
       "standard": "ISO 26262, DO-178C, IEC 61508, ISO 21434"
     },
     {
+      "id": "REQ-FO-SC005",
+      "title": "SafetyCase.HasGaps returns true when any claim lacks passing evidence",
+      "priority": "MUST",
+      "standard": "ISO 26262, DO-178C, IEC 61508, ISO 21434"
+    },
+    {
       "id": "REQ-FO-CLI066",
       "title": "fusaops safety-case subcommand",
       "priority": "MUST",
@@ -2311,6 +2338,12 @@
       "standard": "DO-178C \u00a711.20"
     },
     {
+      "id": "REQ-FO-SAS005",
+      "title": "SAS.HasGaps returns true when any required activity is incomplete",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.20"
+    },
+    {
       "id": "REQ-FO-CLI068",
       "title": "fusaops sas subcommand",
       "priority": "MUST",
@@ -2337,6 +2370,12 @@
     {
       "id": "REQ-FO-TARA004",
       "title": "TARA rendering",
+      "priority": "MUST",
+      "standard": "ISO 21434:2021 Ch. 9"
+    },
+    {
+      "id": "REQ-FO-TARA005",
+      "title": "TARA.HasCritical returns true when any scenario carries a critical risk level",
       "priority": "MUST",
       "standard": "ISO 21434:2021 Ch. 9"
     },
@@ -2371,6 +2410,12 @@
       "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
     },
     {
+      "id": "REQ-FO-FMEA005",
+      "title": "FMEA.HasHighRPN returns true when any failure mode exceeds HighRPNThreshold",
+      "priority": "MUST",
+      "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
+    },
+    {
       "id": "REQ-FO-CLI070",
       "title": "fusaops fmea subcommand",
       "priority": "MUST",
@@ -2397,6 +2442,12 @@
     {
       "id": "REQ-FO-VULN004",
       "title": "Vuln rendering",
+      "priority": "MUST",
+      "standard": "FuSaOps CLI"
+    },
+    {
+      "id": "REQ-FO-VULN005",
+      "title": "VulnReport.HasFindings returns true when TotalFindings > 0",
       "priority": "MUST",
       "standard": "FuSaOps CLI"
     },
@@ -2477,6 +2528,13 @@
       "title": "HTML dashboard cyclomatic complexity section",
       "description": "When the server has a cached comp.Aggregate, the HTML dashboard shall render a Cyclomatic Complexity section showing per-component function counts, violation counts, and thresholds. The section is omitted when no comp data is available.",
       "priority": "MUST",
+      "standard": "DO-178C"
+    },
+    {
+      "id": "REQ-FO-RPT022",
+      "title": "AggregateReport.Version exposes the FuSaOps version to the HTML template",
+      "description": "AggregateReport.Version() shall return the fusaops.Version constant so the HTML report template can render the tool version in its footer without importing the root package directly.",
+      "priority": "SHOULD",
       "standard": "DO-178C"
     },
     {
@@ -2617,6 +2675,13 @@
       "description": "Human-readable output surfaces the assurance level without requiring JSON parsing.",
       "priority": "MUST",
       "rationale": "CI log readers and auditors should be able to identify qualification type and certificate URI from plain-text output."
+    },
+    {
+      "id": "REQ-FO-QUAL008",
+      "title": "ComponentResult.AllPassed and Report.HasFailures predicates",
+      "description": "ComponentResult.AllPassed() shall return true only when the component was not skipped and Failed == 0. Report.HasFailures() shall return true when any component's Failed count is greater than 0.",
+      "priority": "MUST",
+      "rationale": "These predicates back the CLI's PASS/FAIL exit-code decision for fusaops qualify."
     },
     {
       "id": "REQ-FO-CFG012",
@@ -2763,11 +2828,25 @@
       "rationale": "Extends the adapter capability model to cover the §9.2 comp command, enabling RunComp to call each tool's comp analysis."
     },
     {
+      "id": "REQ-FO-ADP030",
+      "title": "Registry lifecycle: NewRegistry, Register, MustRegister, All",
+      "description": "FuSaOps shall provide a Registry type with NewRegistry() constructing an empty registry, Register(a) adding an adapter and erroring on nil or duplicate tool name, MustRegister(a) panicking on Register error (for init-time use), and All() returning every registered adapter sorted by tool name.",
+      "priority": "MUST",
+      "rationale": "The Registry is the core adapter bookkeeping structure the orchestrator and CLI depend on; its lifecycle methods must be traced like any other exported behavior."
+    },
+    {
       "id": "REQ-FO-ORC013",
       "title": "orchestrator.RunComp cross-language cyclomatic complexity aggregation",
       "description": "Runner.RunComp(ctx, root, opts, threshold, dal) shall invoke Comp on all applicable adapters in parallel, recording non-Compler adapters and unavailable binaries as skipped, and return a comp.Aggregate. Returns ErrNoAdapters when no applicable adapters exist.",
       "priority": "MUST",
       "rationale": "Provides the orchestration layer for cross-language V(G) analysis, matching the RunTrace/RunSBOM/RunStandards pattern."
+    },
+    {
+      "id": "REQ-FO-ORC014",
+      "title": "New constructs a Runner, defaulting to adapter.Default when reg is nil",
+      "description": "orchestrator.New(reg) shall return a *Runner wrapping reg, or adapter.Default when reg is nil, so callers may omit an explicit registry to get the full built-in adapter set.",
+      "priority": "MUST",
+      "rationale": "Every CLI entry point and test constructs a Runner via New; the nil-defaulting behavior is load-bearing and must be traced."
     },
     {
       "id": "REQ-FO-CLI082",
@@ -2857,6 +2936,13 @@
       "description": "The FuSaOps web server shall expose a /api/v1/mcdc JSON endpoint and a /mcdc HTML page showing per-component MC/DC condition coverage and gate status. The dashboard shall include an MC/DC section with gate badge and condition coverage percentage when data is available. MCDCInfo in the report package shall carry aggregated MC/DC data to the HTML renderer without a report→mcdc import cycle.",
       "priority": "MUST",
       "rationale": "MC/DC data must be visible to developers and auditors alongside the findings dashboard; the /mcdc page follows the /comp page pattern for consistency."
+    },
+    {
+      "id": "REQ-FO-MCDC004",
+      "title": "Report.CoveragePct and MCDCAggregate.CoveragePct return whole-number percentage, 100 when zero conditions",
+      "description": "Both the per-component Report.CoveragePct() and the cross-language MCDCAggregate.CoveragePct() shall return CoveredConditions*100/TotalConditions rounded down, and shall return 100 (not divide by zero) when TotalConditions is 0.",
+      "priority": "MUST",
+      "rationale": "A component with zero MC/DC conditions has vacuously complete coverage and must not fail the gate or divide by zero."
     }
   ]
 }

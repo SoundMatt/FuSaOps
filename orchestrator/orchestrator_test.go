@@ -111,6 +111,7 @@ func TestRunRequireAvailable(t *testing.T) {
 }
 
 //fusa:test REQ-FO-ORC002
+//fusa:test REQ-FO-ORC014
 func TestNewNilRegistryUsesDefault(t *testing.T) {
 	if New(nil).Registry != adapter.Default {
 		t.Error("nil registry should default to adapter.Default")

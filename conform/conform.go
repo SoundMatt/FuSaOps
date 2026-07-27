@@ -67,6 +67,8 @@ type Report struct {
 }
 
 // Summary returns counts of PASS/FAIL/SKIP results.
+//
+//fusa:req REQ-FO-CNF020
 func (r *Report) Summary() (pass, fail, skip int) {
 	for _, res := range r.Results {
 		switch res.Status {

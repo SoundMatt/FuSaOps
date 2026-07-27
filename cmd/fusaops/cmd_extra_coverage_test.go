@@ -446,6 +446,7 @@ func TestApplyIntegrityLevelNilCfg(t *testing.T) {
 // TestQualifyTypeFlag verifies qualify accepts --type independent without error.
 //
 //fusa:test REQ-FO-CLI064
+//fusa:test REQ-FO-CLI078
 func TestQualifyTypeFlag(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	// Empty dir → no adapters → exit 1 but flag parsed
@@ -2032,6 +2033,7 @@ func TestQualifySaveError(t *testing.T) {
 // --record-uri is set (covers the QualificationRecordUri conditional print).
 //
 //fusa:test REQ-FO-CLI064
+//fusa:test REQ-FO-CLI078
 func TestQualifyRecordURI(t *testing.T) {
 	dir := goProject(t)
 	outPath := filepath.Join(t.TempDir(), "qualify-report.json")

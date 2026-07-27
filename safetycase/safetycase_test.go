@@ -37,6 +37,7 @@ func TestStandards(t *testing.T) {
 }
 
 //fusa:test REQ-FO-SC001
+//fusa:test REQ-FO-SC005
 func TestTypes(t *testing.T) {
 	e := safetycase.EvidenceRef{
 		Title:  "Test evidence",

@@ -225,11 +225,15 @@ type Registry struct {
 }
 
 // NewRegistry returns an empty Registry.
+//
+//fusa:req REQ-FO-ADP030
 func NewRegistry() *Registry {
 	return &Registry{adapters: make(map[string]Adapter)}
 }
 
 // Register adds a to the registry, returning an error on nil or duplicate tool.
+//
+//fusa:req REQ-FO-ADP030
 func (r *Registry) Register(a Adapter) error {
 	if a == nil {
 		return fmt.Errorf("adapter: cannot register nil adapter")
@@ -242,6 +246,8 @@ func (r *Registry) Register(a Adapter) error {
 }
 
 // MustRegister calls Register and panics on error. For use in init functions.
+//
+//fusa:req REQ-FO-ADP030
 func (r *Registry) MustRegister(a Adapter) {
 	if err := r.Register(a); err != nil {
 		panic(err)
@@ -249,6 +255,8 @@ func (r *Registry) MustRegister(a Adapter) {
 }
 
 // All returns every registered adapter sorted by tool name.
+//
+//fusa:req REQ-FO-ADP030
 func (r *Registry) All() []Adapter {
 	out := make([]Adapter, 0, len(r.adapters))
 	for _, a := range r.adapters {

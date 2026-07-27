@@ -189,6 +189,8 @@ type MCDCComponent struct {
 }
 
 // CoveragePct returns the whole-number MC/DC coverage percentage.
+//
+//fusa:req REQ-FO-MCDC003
 func (m *MCDCInfo) CoveragePct() int {
 	if m == nil || m.TotalConditions == 0 {
 		return 100

@@ -49,6 +49,8 @@ type Report struct {
 }
 
 // CoveragePct returns the whole-number MC/DC condition-coverage percentage.
+//
+//fusa:req REQ-FO-MCDC004
 func (r *Report) CoveragePct() int {
 	if r.TotalConditions == 0 {
 		return 100
@@ -109,6 +111,8 @@ func New(root, project string, components []MCDCComponent) *MCDCAggregate {
 }
 
 // CoveragePct returns the whole-number cross-language MC/DC coverage percentage.
+//
+//fusa:req REQ-FO-MCDC004
 func (a *MCDCAggregate) CoveragePct() int {
 	if a.TotalConditions == 0 {
 		return 100

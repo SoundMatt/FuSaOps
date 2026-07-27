@@ -128,6 +128,8 @@ func (a *Aggregate) HasGaps() bool {
 }
 
 // TotalGaps sums gap-status objectives across all reporting components.
+//
+//fusa:req REQ-FO-STD013
 func (a *Aggregate) TotalGaps() int {
 	total := 0
 	for _, c := range a.Components {
@@ -139,6 +141,8 @@ func (a *Aggregate) TotalGaps() int {
 }
 
 // TotalSkipped returns the count of components that could not contribute a report.
+//
+//fusa:req REQ-FO-STD003
 func (a *Aggregate) TotalSkipped() int {
 	n := 0
 	for _, c := range a.Components {
@@ -285,6 +289,8 @@ var standardsTemplate = template.Must(template.New("standards").Funcs(template.F
 `))
 
 // RenderToFile writes agg to path in format, or stdout if path is empty.
+//
+//fusa:req REQ-FO-STD007
 func RenderToFile(agg *Aggregate, format, path string) error {
 	if path == "" {
 		return Render(os.Stdout, agg, format)

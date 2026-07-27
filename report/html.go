@@ -321,4 +321,6 @@ function applyFilters() {
 // Version is exposed to the template via the report struct method below.
 
 // Version returns the FuSaOps version for footer rendering in the template.
+//
+//fusa:req REQ-FO-RPT022
 func (r *AggregateReport) Version() string { return fusaops.Version }

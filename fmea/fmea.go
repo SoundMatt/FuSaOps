@@ -66,6 +66,8 @@ type FMEA struct {
 }
 
 // HasHighRPN returns true when any failure mode exceeds HighRPNThreshold.
+//
+//fusa:req REQ-FO-FMEA005
 func (f *FMEA) HasHighRPN() bool { return f.HighRPNItems > 0 }
 
 // modeSpec holds the static definition of one failure mode; RPN is computed.

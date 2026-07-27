@@ -60,6 +60,8 @@ type SAS struct {
 }
 
 // HasGaps returns true when at least one required activity is incomplete.
+//
+//fusa:req REQ-FO-SAS005
 func (s *SAS) HasGaps() bool { return s.CompleteActivities < s.TotalActivities }
 
 // activitySpec defines one lifecycle activity and the evidence file that

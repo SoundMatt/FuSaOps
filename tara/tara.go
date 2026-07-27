@@ -107,6 +107,8 @@ type TARA struct {
 }
 
 // HasCritical returns true when any scenario carries a critical risk level.
+//
+//fusa:req REQ-FO-TARA005
 func (t *TARA) HasCritical() bool { return t.CriticalScenarios > 0 }
 
 // riskMatrix maps Impact × Feasibility to a RiskLevel per ISO 21434 Table 1.

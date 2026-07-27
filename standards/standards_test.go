@@ -41,6 +41,7 @@ func itoa(n int) string {
 //fusa:test REQ-FO-STD001
 //fusa:test REQ-FO-STD002
 //fusa:test REQ-FO-STD005
+//fusa:test REQ-FO-STD013
 func TestHasGaps(t *testing.T) {
 	agg := &Aggregate{
 		Standard: "iso26262",

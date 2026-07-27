@@ -206,6 +206,7 @@ func TestScanMetadata(t *testing.T) {
 }
 
 //fusa:test REQ-FO-VULN002
+//fusa:test REQ-FO-VULN005
 func TestHasFindings(t *testing.T) {
 	r, _ := vuln.Scan(t.TempDir(), fakeRunnerAbsent)
 	if r.HasFindings() {
