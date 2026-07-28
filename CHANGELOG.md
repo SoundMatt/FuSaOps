@@ -7,6 +7,33 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.139.0] — 2026-07-28
+
+### docs: x-FuSa spec v1.14.0 — detection heuristics, attestation, traceability MUSTs, coverage metrics
+
+- Closes the enforcement gap left by v1.13.0: that release defined evidence
+  artifact schemas and a content-quality baseline but left the rules
+  unenforceable (no detection algorithm, no accountability, no
+  completeness metric).
+- New §1.6.1 "Detection heuristics": placeholder-text (`FUSA-STUB001`,
+  always ERROR, disposition-suppressible only) and blanket-qualitative-
+  fallback (`FUSA-STUB002`, a distinct-value-ratio threshold, advisory
+  WARNING by default) detection rules, both flowing through the existing
+  §4 `Finding`/fingerprint/disposition machinery.
+- New §1.6.2 "Attestation": a DCO-style mechanism — an artifact carries an
+  optional `attestation` object (independent-reviewer model reused from
+  FuSaOps' own `vv` package) whose non-stale, hash-pinned "reviewed"
+  status suppresses the `FUSA-STUB002` WARNING, avoiding false-positive
+  gates from an imperfect similarity heuristic. `--strict`/
+  `--require-attestation` escalates an unsuppressed WARNING to exit 1.
+- `.fusa-hara.json`: `safetyGoals[].fssrRef` promoted SHOULD → `fssrRefs`
+  **MUST (≥1 entry)** — closes a real ISO 26262-8 Clause 6
+  traceability gap.
+- `fmea`/`tara`: new `summary.coveragePct` + `--min-coverage N`, mirroring
+  `trace --func-coverage`, so these artifacts can't quietly analyze only
+  the easy cases.
+- `SpecVersion` bumped `1.13.0` → `1.14.0` (`fusaops.go`).
+
 ## [1.138.0] — 2026-07-28
 
 ### docs: x-FuSa spec v1.13.0 — evidence-artifact schema formalization + content-quality baseline

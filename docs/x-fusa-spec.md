@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.13.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.14.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -233,9 +233,10 @@ derived from several hazards, so a flat per-hazard list cannot represent it):
       "hazards":     ["H-001"],           // MUST. references back into hazards[]
       "asil":        "ASIL-B",            // MUST
       "safeState":   "…",                 // SHOULD
-      "fssrRef":     "REQ-…"              // SHOULD. links a Functional Safety Requirement into .fusa-reqs.json (§1.2.2)
+      "fssrRefs":    ["REQ-…"]            // MUST, ≥1 entry. links the Functional Safety Requirement(s) into .fusa-reqs.json (§1.2.2) that decompose this goal
     }
-  ]
+  ],
+  "attestation": { /* §1.6.2 — MAY */ }
 }
 ```
 
@@ -247,7 +248,14 @@ derived from several hazards, so a flat per-hazard list cannot represent it):
   hazard that can actually arise from *this* tool/system, not generic domain
   boilerplate copied from an unrelated example (e.g. "undetected sensor
   fault" text is invalid for a static-analysis CLI that has no sensors). See
-  §1.6 rule 3.
+  §1.6.1 rule B.
+- **`safetyGoals[].fssrRefs` (MUST, ≥1 entry).** A safety goal with no
+  decomposing requirement is exactly the traceability gap ISO 26262-8
+  Clause 6 exists to prevent — unlike `hazards[].situations`/`safetyGoals`
+  (structural cross-references within the file), this one MUST resolve into
+  the project's actual `.fusa-reqs.json` (§1.2.2); a dangling `REQ-…` id here
+  is a `check` finding (category `requirement`), same as any other dangling
+  requirement reference (§1.4.1).
 - **Referential integrity (MUST).** Every id in `hazards[].situations`/
   `hazards[].safetyGoals`/`safetyGoals[].hazards` MUST resolve to a real
   entry in the referenced collection; a dangling reference is a validation
@@ -416,7 +424,9 @@ section requires.
    project-specific hazard"`, or any bracketed/instructional placeholder. A
    tool that has not yet analyzed a required section MUST emit an **empty**
    array/object for it, never a dummy row — an empty section is honestly
-   incomplete; placeholder text asserts a false completeness.
+   incomplete; placeholder text asserts a false completeness. **Detection
+   (MUST, §1.6.1 rule A) is always-on and never attestation-suppressible** —
+   see below for why.
 2. **Structural validity (MUST).** Every artifact MUST be well-formed JSON
    conforming to its schema. (This closes a real gap found in the audit: a
    tool shipped an FMEA report with an unescaped quote that made the file
@@ -430,23 +440,112 @@ section requires.
    (e.g. keyed off return type, parameter count, exception paths, asset
    class) as long as the output measurably differs across distinct input
    shapes — see each artifact's own §9.2/§9.3 subsection for the minimum
-   differentiation expected.
+   differentiation expected. **Detection (SHOULD, §1.6.1 rule B) is
+   attestation-suppressible** — see below for why.
 4. **Real referents only (MUST).** Any entry naming a `file`/`function`/
    `component`/`item` MUST refer to an actual file or symbol in the analyzed
    project — not a language keyword, a standard-library call, or a test
    fixture mistaken for project code.
-5. **Provenance (SHOULD).** An artifact SHOULD carry an
-   `"analysis": "heuristic" | "reviewed"` field (document-level or per-entry)
-   so a consumer can distinguish auto-scaffolded content from human-reviewed
-   content. Absent the field, a consumer MUST treat the content as
-   `"heuristic"` (fail-safe — never assume unreviewed content has been
-   reviewed).
-6. **Freshness (SHOULD).** An artifact SHOULD be regenerated whenever
+5. **Freshness (SHOULD).** An artifact SHOULD be regenerated whenever
    `.fusa-reqs.json`'s requirement set changes. A tool's `check`/CI gate
    SHOULD flag (not necessarily fail) an artifact whose `generatedAt`
    predates the requirements file's last-modified time, so a stale snapshot
    (e.g. a safety-case still citing a requirement count from months earlier)
    is visible rather than silently trusted.
+
+#### 1.6.1 Detection heuristics (concrete, checkable — MUST/SHOULD as marked)
+
+Rule 1 and rule 3 above are unenforceable as written unless a tool defines
+*how* to check them mechanically. This subsection gives that definition, so
+"MUST" here means something a `check`-style command can actually gate on
+rather than a purely aspirational statement.
+
+- **Rule A — placeholder text (MUST, always an ERROR finding).** A tool
+  scanning an artifact's qualitative fields MUST flag a match against a
+  canonical deny-list — bracket-wrapped instructional text (`\[[A-Za-z
+  ][^\]]*\]`), or the case-insensitive substrings `"replace with"`,
+  `"example hazard"`, `"TBD"`, `"lorem ipsum"`, `"fill in"` — as an `ERROR`
+  finding (§4 `Finding` shape, category `safety`, `ruleId: "FUSA-STUB001"`),
+  which therefore participates in `check`'s exit code (§4.1) like any other
+  finding. It is suppressible **only** via a per-finding disposition
+  (§1.2.3/§4.1) — **never** via §1.6.2's artifact-level attestation, because
+  no attestation can make literal placeholder text real; a legitimate
+  hazard/failure-mode description that happens to contain a deny-listed
+  string is rare enough to warrant an explicit, individually-justified
+  waiver rather than a blanket pass.
+- **Rule B — blanket qualitative fallback (SHOULD, a WARNING by default).**
+  For an artifact with **≥10 entries**, a tool SHOULD compute each
+  qualitative field's **distinct-value ratio** (count of distinct values ÷
+  total entries). A ratio **below 0.1** (fewer than 1 distinct value per 10
+  entries) SHOULD surface as a `WARNING` finding (category `safety`,
+  `ruleId: "FUSA-STUB002"`). Unlike Rule A, this heuristic is deliberately
+  loose — near-duplicate qualitative text is not always wrong (a project MAY
+  genuinely have many structurally-similar low-risk functions) — so it stays
+  **advisory** by default rather than gating `check`'s exit code on its own.
+
+Both rules use the **§4.2 fingerprint algorithm** for the underlying
+`Finding` so they compose with disposition/suppression exactly like any
+other `check` finding — this section does not invent a second finding
+mechanism, it defines two new `ruleId`s that flow through the existing one.
+
+#### 1.6.2 Attestation — avoiding false-positive gates (SHOULD)
+
+Rule B's heuristic will occasionally be wrong (structurally-similar-but-real
+content misread as templated boilerplate), and a mechanical similarity score
+can never *prove* content is genuine — so gating `check`'s exit code on it
+outright would trade one failure mode (silent stub content) for another
+(noisy false positives blocking real work). The resolution mirrors how DCO
+handles commit provenance: **the tool doesn't try to verify the content
+is good — it requires a named, independent human to assert that they did**,
+with an accountability trail attached, and treats Rule B's `WARNING` as
+suppressed once that assertion exists. This reuses the same independence
+concept as FuSaOps' own `vv` package (`implementationAuthor` /
+`independentReviewer`, ISO 26262-2:2018 §6.4) rather than inventing a
+parallel one.
+
+An artifact carrying §1.6.1's qualitative fields MAY include a document-level
+`attestation` object:
+
+```jsonc
+"attestation": {
+  "status":               "reviewed",   // MUST. "heuristic" | "reviewed" — absent MUST be treated as "heuristic" (fail-safe)
+  "implementationAuthor":  "…",         // SHOULD. who/what produced the content (a person, or "auto" for a heuristic generator)
+  "independentReviewer":   "Jane Doe <jane@example.com>",  // MUST when status="reviewed"
+  "reviewedAt":            "2026-07-28T00:00:00Z",          // MUST when status="reviewed". RFC 3339
+  "contentHash":           "sha256:…"                        // MUST when status="reviewed" — see below
+}
+```
+
+- **Independence (MUST when `status: "reviewed"`).** `independentReviewer`
+  MUST differ from `implementationAuthor` — a self-attestation ("I generated
+  it and I also reviewed it") does not satisfy `"reviewed"`; a consumer MUST
+  downgrade a same-identity attestation to `"heuristic"`.
+- **Hash pinning (MUST when `status: "reviewed"`).** `contentHash` MUST be
+  computed via the same RFC 8785 canonicalization procedure as §6 `qualify`'s
+  `hash`, over the artifact's substantive content (its entries/hazards/nodes)
+  **excluding** the `attestation` object itself and `generatedAt`. A consumer
+  MUST recompute this hash and treat the attestation as **stale** (i.e. fall
+  back to `"heuristic"`) when it doesn't match the artifact's current
+  content — this is what stops one real review from silently covering a
+  later, unreviewed edit.
+- **Effect on Rule B (MUST).** A Rule B `WARNING` on an artifact carrying a
+  non-stale `attestation.status: "reviewed"` MUST be suppressed. Rule A is
+  unaffected — see above.
+- **`--strict` / `--require-attestation` (SHOULD).** A tool's artifact
+  command (`fmea`, `hara`, `tara`, `safety-case`, `sas`) SHOULD support a
+  `--require-attestation` flag (and `--strict` SHOULD imply it) that
+  escalates any **unsuppressed** Rule B `WARNING` to exit `1`. Absent the
+  flag, Rule B stays advisory. This is the "DCO checkbox" for an evidence
+  artifact: nothing blocks merge by default, but a project that wants a hard
+  gate turns it on, and the gate is satisfied by an honest attestation, not
+  by gaming the similarity score.
+- **CI integration note (SHOULD).** For a project that commits these
+  artifacts to git (not all do — several tools in the 2026-07-28 audit
+  generate them on demand instead), the natural CI shape is to run the
+  relevant artifact command with `--require-attestation` in the same job
+  that already runs `check` — no separate git-trailer bot is needed, because
+  the attestation lives inside the artifact's own JSON and is checked at
+  validation time regardless of whether the file is tracked.
 
 ---
 
@@ -1177,19 +1276,23 @@ document with the §3 envelope plus the `.fusa-hara.json` content **verbatim**
   "safetyGoals":           [ /* §1.2.5, verbatim */ ],
   "completeness": {
     "totalHazards": 5, "hazardsWithAsil": 5, "hazardsWithSafetyGoal": 5,
-    "safetyGoalsWithFssrRef": 3, "danglingReferences": 0
-  }
+    "safetyGoalsWithFssrRefs": 5, "danglingReferences": 0
+  },
+  "attestation": { /* §1.6.2 passthrough from .fusa-hara.json, if present */ }
 }
 ```
 
 `completeness` counts hazards/safety-goals missing a MUST/SHOULD field from
-§1.2.5, and `danglingReferences` counts any cross-reference (§1.2.5
-referential-integrity rule) that doesn't resolve — so a gap is visible
-without hand-auditing the file. This is **draft** — no tool implements the
-`completeness` block yet; the passthrough content and `--init` behaviour
-already exist across the family and are promoted to SHOULD now.
+§1.2.5 (`safetyGoalsWithFssrRefs` MUST equal `totalSafetyGoals` for a fully
+conformant file, since `fssrRefs` is MUST there), and `danglingReferences`
+counts any cross-reference (§1.2.5 referential-integrity rule, including a
+`fssrRefs` id absent from `.fusa-reqs.json`) that doesn't resolve — so a gap
+is visible without hand-auditing the file. This is **draft** — no tool
+implements the `completeness` block yet; the passthrough content and
+`--init` behaviour already exist across the family and are promoted to
+SHOULD now.
 
-**`fmea` (SHOULD).** `fmea [--dir <path>] [--format text|json|csv|html] [--output <file>]`
+**`fmea` (SHOULD).** `fmea [--dir <path>] [--format text|json|csv|html] [--output <file>] [--min-coverage N]`
 
 Design FMEA (Failure Mode and Effects Analysis) over the project's public
 functions/components, per **IEC 60812:2018** (generic) or the
@@ -1205,7 +1308,7 @@ functions/components, per **IEC 60812:2018** (generic) or the
       "id":            "FMEA-001",
       "item":          "Registry.Register",  // MUST. component/function under analysis
       "file":          "src/rules.go",        // MUST. project-relative (§4 rule)
-      "failureMode":   "…",                   // MUST. see §1.6 rule 3 — must vary with item's actual signature/behaviour
+      "failureMode":   "…",                   // MUST. see §1.6/§1.6.1 rule B — must vary with item's actual signature/behaviour
       "effect":        "…",                   // MUST
       "cause":         "…",                   // SHOULD
       "severity":      1,                     // MUST. 1-10 per `ratingScale`, or "high"|"medium"|"low" when no numeric scale is used
@@ -1216,20 +1319,34 @@ functions/components, per **IEC 60812:2018** (generic) or the
       "requirementIds":["REQ-…"]              // SHOULD. links the finding back to its originating requirement
     }
   ],
-  "summary": { "total": 84, "highPriority": 3 }
+  "summary": {
+    "total": 84, "highPriority": 3,
+    "componentsAnalyzed": 84, "componentsInProject": 96, "coveragePct": 87.5
+  },
+  "attestation": { /* §1.6.2 — MAY */ }
 }
 ```
 
-- `failureMode`/`effect`/`cause` are the fields §1.6 rule 3 targets directly:
-  a tool MAY derive them heuristically from a function's real signature
-  (return type, error/exception paths, parameter shapes) but MUST NOT emit
-  one fixed string for every entry regardless of shape.
+- `failureMode`/`effect`/`cause` are the fields §1.6.1 rule B targets
+  directly: a tool MAY derive them heuristically from a function's real
+  signature (return type, error/exception paths, parameter shapes) but MUST
+  NOT emit one fixed string for every entry regardless of shape.
 - **`actionPriority` (SHOULD) supersedes raw RPN** (`severity × occurrence ×
   detection`) per the AIAG-VDA Handbook's move away from a single numeric
   threshold — a tool MAY still emit `rpn` (MAY) alongside it for tools that
   prefer the legacy metric.
+- **`summary.coveragePct` (SHOULD).** `componentsInProject` is the same
+  denominator as `trace --func-coverage` (§5, §1.4.1) — public/exported
+  functions/methods that are part of the tool's safety-relevant behaviour.
+  `coveragePct = 100 * componentsAnalyzed / componentsInProject`. **This is
+  what stops an FMEA from covering only 5 convenient functions while
+  claiming to be thorough** — a 100-row FMEA over a 2,000-function project
+  is not the same claim as one over a 100-function project, and only
+  `coveragePct` makes that visible. `--min-coverage N` (SHOULD, mirrors
+  `trace --req-coverage`) exits `1` when `coveragePct < N`; `N = 0` disables
+  the gate.
 
-**`tara` (SHOULD).** `tara [--dir <path>] [--format text|json|md] [--output <file>]`
+**`tara` (SHOULD).** `tara [--dir <path>] [--format text|json|md] [--output <file>] [--min-coverage N]`
 
 Threat Analysis and Risk Assessment per **ISO/SAE 21434:2021 Clause 15**.
 `--format json` writes `tara.json`:
@@ -1241,7 +1358,7 @@ Threat Analysis and Risk Assessment per **ISO/SAE 21434:2021 Clause 15**.
     {
       "id":            "TARA-001",
       "asset":         "…",              // MUST
-      "threat":        "…",              // MUST. specific attack scenario, not a bare category name — see §1.6 rule 3
+      "threat":        "…",              // MUST. specific attack scenario, not a bare category name — see §1.6.1 rule B
       "cwe":           "CWE-78",          // SHOULD when applicable
       "attackVector":  "…",              // MUST
       "attackFeasibility": "high",       // MUST. high|medium|low|very-low (ISO 21434 attack-potential rating)
@@ -1253,7 +1370,12 @@ Threat Analysis and Risk Assessment per **ISO/SAE 21434:2021 Clause 15**.
       "location":      { "file": "…", "line": 42 },  // SHOULD when code-derived
       "cyberRuleId":   "CYBER005"        // SHOULD. links to the triggering cyber finding (§9.2 `cyber`)
     }
-  ]
+  ],
+  "summary": {
+    "assetsAnalyzed": 12, "assetsInProject": 14, "coveragePct": 85.7,
+    "assetInventoryMethod": "…"   // SHOULD. names how assetsInProject was enumerated (asset methodology varies by tool)
+  },
+  "attestation": { /* §1.6.2 — MAY */ }
 }
 ```
 
@@ -1261,6 +1383,13 @@ Threat Analysis and Risk Assessment per **ISO/SAE 21434:2021 Clause 15**.
 impact-category framework, rather than a single generic severity — a threat
 against an asset can rate differently on each axis (e.g. high safety impact,
 low privacy impact).
+
+**`summary.coveragePct` (SHOULD)**, same rationale as `fmea`'s: without a
+stated denominator, "12 threats analyzed" doesn't distinguish a
+near-complete asset inventory from a small sample of the easy cases. Asset
+discovery methodology varies more than function enumeration does, so
+`assetInventoryMethod` (SHOULD) is required alongside the count for
+auditability. `--min-coverage N` gates the same way as `fmea`'s.
 
 **`safety-case` (SHOULD).** `safety-case [--dir <path>] [--format text|json|md|mermaid] [--output <file>]`
 
@@ -1272,7 +1401,7 @@ A GSN (Goal Structuring Notation) argument, per the **GSN Community Standard**
 {
   "...header": "...",     // §3.1 common header, kind: "safety-case"
   "nodes": [
-    { "id": "G1",  "type": "goal",       "text": "…" },   // MUST specific — see §1.6 rule 3
+    { "id": "G1",  "type": "goal",       "text": "…" },   // MUST specific — see §1.6.1 rule B
     { "id": "St1", "type": "strategy",   "text": "…" },
     { "id": "C1",  "type": "context",    "text": "…" },      // SHOULD when a goal needs scoping context
     { "id": "A1",  "type": "assumption", "text": "…" },      // SHOULD when a strategy relies on one
@@ -1284,7 +1413,8 @@ A GSN (Goal Structuring Notation) argument, per the **GSN Community Standard**
     { "from": "St1", "to": "Sn1", "type": "supportedBy" },
     { "from": "G1", "to": "C1",  "type": "inContextOf" }
   ],
-  "completeness": { "totalGoals": 8, "goalsWithEvidence": 8, "undeveloped": 0 }
+  "completeness": { "totalGoals": 8, "goalsWithEvidence": 8, "undeveloped": 0 },
+  "attestation": { /* §1.6.2 — MAY */ }
 }
 ```
 
@@ -1299,9 +1429,9 @@ A GSN (Goal Structuring Notation) argument, per the **GSN Community Standard**
 - Every `solution` node SHOULD set `evidence` to a real, existing artifact
   filename (§1.3) — a claim of evidence that names a file the project
   doesn't actually contain is worse than an honestly-missing solution.
-- `nodes[].text` MUST be specific to this tool's actual claims (§1.6 rule 3) —
-  a generic goal like *"the system is acceptably safe for its intended use"*
-  with no tool-specific detail does not satisfy this.
+- `nodes[].text` MUST be specific to this tool's actual claims (§1.6.1 rule
+  B) — a generic goal like *"the system is acceptably safe for its intended
+  use"* with no tool-specific detail does not satisfy this.
 
 **`coverage --proof` (SHOULD — draft, formal-verification evidence).** A new
 canonical evidence type modeled directly on the existing MC/DC pattern
@@ -1384,7 +1514,8 @@ Software Accomplishment Summary per **DO-178C §11.20**. `--format json` writes
   "checklist": [
     { "item": "PSAC availability", "clause": "11.1", "present": true, "evidence": "psac.md" }
   ],
-  "summary": { "total": 17, "present": 13 }
+  "summary": { "total": 17, "present": 13 },
+  "attestation": { /* §1.6.2 — MAY */ }
 }
 ```
 
@@ -1557,9 +1688,10 @@ tool-defined row.
 
 | Command / file | Status in v1 | Canonical direction (future) |
 |---|---|---|
-| `tara` → `tara.json` | **canonical — schema formalized** (§9.2 SHOULD), per ISO/SAE 21434 Clause 15; not yet implemented by any tool against the new shape (was: **conflict**, go `entries` vs cpp `scenarios`) | `{ …header(kind:"tara-report"), threats:[{id,asset,threat,cwe?,attackVector,attackFeasibility,impact:{safety,financial,operational,privacy},risk,treatment,mitigations[],location?,cyberRuleId?}] }` |
-| `fmea` → `fmea.json` | **canonical — schema formalized** (§9.2 SHOULD), per IEC 60812 / AIAG-VDA Handbook; not yet implemented against the new shape (was: **conflict**, cpp has `rpn/occurrence/detectability`) | `{ …header(kind:"fmea-report"), ratingScale, entries:[{id,item,file,failureMode,effect,cause,severity,occurrence?,detection?,actionPriority?,rpn?,mitigations[],requirementIds[]}], summary }` — §1.6 rule 3 bans a single fallback `failureMode`/`effect` across all entries |
-| `safety-case` → `safety-case.json` | **canonical — schema formalized** (§9.2 SHOULD), per the GSN Community Standard v3; not yet implemented against the new shape (was: **conflict**, go `{clauses,gaps}` vs cpp `{nodes,edges}`) | `{ …header(kind:"safety-case"), nodes:[{id,type:goal\|strategy\|solution\|context\|assumption\|justification,text,evidence?}], edges:[{from,to,type:supportedBy\|inContextOf}], completeness }` |
+| `tara` → `tara.json` | **canonical — schema formalized** (§9.2 SHOULD), per ISO/SAE 21434 Clause 15; not yet implemented by any tool against the new shape (was: **conflict**, go `entries` vs cpp `scenarios`) | `{ …header(kind:"tara-report"), threats:[{id,asset,threat,cwe?,attackVector,attackFeasibility,impact:{safety,financial,operational,privacy},risk,treatment,mitigations[],location?,cyberRuleId?}], summary:{assetsAnalyzed,assetsInProject,coveragePct,assetInventoryMethod?}, attestation? }` |
+| `fmea` → `fmea.json` | **canonical — schema formalized** (§9.2 SHOULD), per IEC 60812 / AIAG-VDA Handbook; not yet implemented against the new shape (was: **conflict**, cpp has `rpn/occurrence/detectability`) | `{ …header(kind:"fmea-report"), ratingScale, entries:[{id,item,file,failureMode,effect,cause,severity,occurrence?,detection?,actionPriority?,rpn?,mitigations[],requirementIds[]}], summary:{total,highPriority,componentsAnalyzed,componentsInProject,coveragePct}, attestation? }` — §1.6.1 rule B (advisory) / rule A (always-on) target `failureMode`/`effect`/placeholder text respectively |
+| `safety-case` → `safety-case.json` | **canonical — schema formalized** (§9.2 SHOULD), per the GSN Community Standard v3; not yet implemented against the new shape (was: **conflict**, go `{clauses,gaps}` vs cpp `{nodes,edges}`) | `{ …header(kind:"safety-case"), nodes:[{id,type:goal\|strategy\|solution\|context\|assumption\|justification,text,evidence?}], edges:[{from,to,type:supportedBy\|inContextOf}], completeness, attestation? }` |
+| `check` §1.6.1 detection (`FUSA-STUB001`/`FUSA-STUB002`) | **draft — no tool implements it yet** (§1.6.1) | reuses §4 `Finding` shape; `FUSA-STUB001` (placeholder text) always ERROR, disposition-suppressible only; `FUSA-STUB002` (blanket qualitative fallback) WARNING by default, suppressed by a non-stale §1.6.2 `attestation`, escalates to exit 1 under `--strict`/`--require-attestation` |
 | `vuln` → `vuln.json` | tool-defined | finding-list reusing §4 `Finding` shape |
 | `cyber` → `cyber-report.json` | tool-defined | finding-list reusing §4 `Finding` shape |
 | `coupling` → `coupling-report.json` | tool-defined; **c-FuSa ships a finding-list today** | graph `{ modules:[…], edges:[{from,to,weight}], metrics:{…} }` — ⚠️ a change from the finding-list; do not deepen investment in the list shape |
@@ -1568,8 +1700,8 @@ tool-defined row.
 | `check --import` (qualified external tool bridge) | **draft — no tool implements it yet** (§4.3) | imported findings reuse §4 `Finding` shape verbatim; `tool` = the external tool's name, not the x-FuSa tool's |
 | `trace --model-trace` / `.fusa-model-trace.json` | **draft — no tool implements it yet, schema not yet validated against a real Simulink export** (§1.2.4, §5) | `{ modelFile, links:[{requirementId,modelBlock,generatedFile,generatedLine}] }`; merges as `tags[].kind == "model"` |
 | `diff` | tool-defined; fingerprint is **MUST** from v1.9 — cross-tool diff is now enabled for conformant tools | `{ added:[fingerprint], removed:[fingerprint], unchanged:N }`; baseline is a prior `check --format json`, given via `--baseline <file>`. **Exit `1`** when `added[]` contains any open ERROR (or any severity under `--strict`), else `0` |
-| `hara` → `.fusa-hara.json` | **canonical — schema formalized, MUST read/validate** (§1.2.5), per ISO 26262-3 Clause 6 | `{ project, standard, createdAt?, operationalSituations:[{id,description}], hazards:[{id,description,source?,situations:[id],risk:{severity,exposure,controllability,asil},safetyGoals:[id]}], safetyGoals:[{id,description,hazards:[id],asil,safeState?,fssrRef?}] }`; `risk.asil` MUST derive from S×E×C (ISO 26262-3 Table 4) |
-| `sas` → `sas.json`/`sas.md` | **canonical — schema formalized** (§9.3 MAY), per DO-178C §11.20 (was: **conflict**, go md-only vs cpp `sas.json`+`md`) | `{ …header(kind:"sas"), checklist:[{item,clause,present,evidence?}], summary }` plus `sas.md` (both MUST) |
+| `hara` → `.fusa-hara.json` | **canonical — schema formalized, MUST read/validate** (§1.2.5), per ISO 26262-3 Clause 6 | `{ project, standard, createdAt?, operationalSituations:[{id,description}], hazards:[{id,description,source?,situations:[id],risk:{severity,exposure,controllability,asil},safetyGoals:[id]}], safetyGoals:[{id,description,hazards:[id],asil,safeState?,fssrRefs:[id] (MUST, ≥1)}], attestation? }`; `risk.asil` MUST derive from S×E×C (ISO 26262-3 Table 4); `fssrRefs` MUST resolve into `.fusa-reqs.json` |
+| `sas` → `sas.json`/`sas.md` | **canonical — schema formalized** (§9.3 MAY), per DO-178C §11.20 (was: **conflict**, go md-only vs cpp `sas.json`+`md`) | `{ …header(kind:"sas"), checklist:[{item,clause,present,evidence?}], summary, attestation? }` plus `sas.md` (both MUST) |
 | `sci` → `sci.json` | **canonical — schema formalized** (§9.3 MAY), per DO-178C §11.16 (was: **conflict**, go stdout-only vs cpp `sci.json`) | `{ …header(kind:"sci"), artifacts:[{file,hash,version?}] }`; `hash` MUST be a real current SHA-256 |
 | `boundary` → `.dot`/`.mermaid` | tool-defined graph text | no JSON contract in v1 |
 | `verify` → `.fusa-evidence.json` | tool-defined | `{ passed, failed, suites:[ {name, passed, failed, tests:[{name, result}]} ] }` (`result` per §6) |
@@ -1578,6 +1710,51 @@ tool-defined row.
 ---
 
 ## 14. Changelog
+
+### 1.14.0 — 2026-07-28 (detection heuristics, attestation, traceability MUSTs, coverage metrics — closing the v1.13.0 enforcement gap)
+
+v1.13.0 defined *what* good evidence-artifact content looks like but left it
+unenforceable: no concrete detection algorithm, no required traceability
+linkage, no completeness metric, and a provenance field with no
+accountability behind it. This entry closes those four gaps.
+
+- **New §1.6.1 "Detection heuristics":** gives §1.6 rules 1 and 3 a concrete,
+  checkable definition. Rule A (placeholder text) is a deny-list match,
+  always an `ERROR` (`FUSA-STUB001`), disposition-suppressible only — never
+  attestation-suppressible, since no review can make literal placeholder
+  text real. Rule B (blanket qualitative fallback) is a distinct-value-ratio
+  threshold (<0.1 across ≥10 entries), a `WARNING` (`FUSA-STUB002`) by
+  default — deliberately advisory, not gating, because a similarity score
+  can produce false positives on genuinely repetitive-but-real content.
+- **New §1.6.2 "Attestation":** the resolution for Rule B's false-positive
+  risk, modeled on DCO — an artifact carries an optional `attestation`
+  object (`status`, `implementationAuthor`, `independentReviewer`,
+  `reviewedAt`, `contentHash`) reusing the same independence concept as
+  FuSaOps' own `vv` package (ISO 26262-2:2018 §6.4). A non-stale
+  (hash-matched) `"reviewed"` attestation from a genuinely independent
+  reviewer suppresses Rule B; `--strict`/`--require-attestation` escalates
+  an unsuppressed Rule B finding to exit `1`. This is the "DCO checkbox" for
+  an evidence artifact: nothing blocks by default, a project that wants a
+  hard gate turns it on, and the gate is satisfied by an honest
+  attestation, not by gaming the heuristic.
+- **§1.2.5 `.fusa-hara.json`:** `safetyGoals[].fssrRef` (SHOULD, singular)
+  promoted to `fssrRefs` (**MUST, ≥1 entry**) — a safety goal with no
+  decomposing functional safety requirement is exactly the gap ISO 26262-8
+  Clause 6 traceability exists to prevent, unlike the artifact's internal
+  cross-references (which stay structural, not requirement-linked).
+- **§9.2 `fmea`/`tara`:** new `summary.coveragePct` (+ `--min-coverage N`,
+  mirroring `trace --req-coverage`) against a stated denominator
+  (`componentsInProject` / `assetsInProject`) — mirrors `trace`'s existing
+  `--func-coverage` gate so an FMEA/TARA can't quietly analyze only the
+  easy cases while still looking complete by entry count alone.
+- **§9.2/§9.3 `hara`/`fmea`/`tara`/`safety-case`/`sas`:** all five schemas
+  gain the optional `attestation` field.
+- **§13 updated** with a new row for the `FUSA-STUB001`/`FUSA-STUB002`
+  detection findings and refreshed schema summaries for the affected
+  commands.
+- `SpecVersion` bumped `1.13.0` → `1.14.0` (`fusaops.go`).
+- **Scope note (unchanged):** still the spec-design step only — none of
+  this is implemented by any tool yet, and none is consumed by FuSaOps.
 
 ### 1.13.0 — 2026-07-28 (evidence-artifact schema formalization + content-quality baseline)
 
