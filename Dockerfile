@@ -44,7 +44,9 @@ FROM python:3.12-alpine
 # git + ca-certificates back the tools' provenance / vulnerability features.
 # libstdc++ is pre-staged so cpp-FuSa drops in without a base change.
 # openjdk21-jre-headless provides the `java` binary required by jfusa.
-RUN apk add --no-cache git ca-certificates libstdc++ openjdk21-jre-headless
+# zip is required by cfusa's `audit-pack` command, which shells out to the
+# external `zip` binary rather than using a Go/native zip library.
+RUN apk add --no-cache git ca-certificates libstdc++ openjdk21-jre-headless zip
 
 COPY --from=build  /bin/fusaops          /usr/local/bin/fusaops
 COPY --from=gofusa /usr/local/bin/gofusa /usr/local/bin/gofusa

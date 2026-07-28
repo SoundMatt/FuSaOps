@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.135.0] — 2026-07-27
+
+### fix: bundled image missing `zip` breaks cfusa's audit-pack
+
+- A full `fusaops conform` sweep of every bundled tool (run against the
+  published `ghcr.io/soundmatt/fusaops:latest` image) found `cfusa audit-pack`
+  failing with exit 3 inside the container even though it works standalone.
+  Root cause: c-FuSa's `audit-pack` shells out to the external `zip` binary
+  (see c-FuSa#67/#68), which the FuSaOps runtime image never installed —
+  `apk add` only pulled `git ca-certificates libstdc++ openjdk21-jre-headless`.
+  Added `zip` to the runtime `apk add` line.
+
 ## [1.134.0] — 2026-07-27
 
 ### fix: close traceability gaps in FuSaOps's own annotation coverage (#73)
