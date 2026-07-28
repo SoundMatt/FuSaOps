@@ -137,18 +137,19 @@ type Completeness struct {
 //
 //fusa:req REQ-FO-SC001
 type SafetyCase struct {
-	GeneratedAt  time.Time    `json:"generatedAt"`
-	ProjectRoot  string       `json:"projectRoot"`
-	Tool         string       `json:"tool"`
-	ToolVersion  string       `json:"toolVersion"`
-	Standard     Standard     `json:"standard"`
-	Claims       []Claim      `json:"claims"`
-	TotalClaims  int          `json:"totalClaims"`
-	PassedClaims int          `json:"passedClaims"`
-	Nodes        []GSNNode    `json:"nodes"`
-	Edges        []GSNEdge    `json:"edges"`
-	Completeness Completeness `json:"completeness"`
-	Hash         string       `json:"hash"`
+	GeneratedAt  time.Time            `json:"generatedAt"`
+	ProjectRoot  string               `json:"projectRoot"`
+	Tool         string               `json:"tool"`
+	ToolVersion  string               `json:"toolVersion"`
+	Standard     Standard             `json:"standard"`
+	Claims       []Claim              `json:"claims"`
+	TotalClaims  int                  `json:"totalClaims"`
+	PassedClaims int                  `json:"passedClaims"`
+	Nodes        []GSNNode            `json:"nodes"`
+	Edges        []GSNEdge            `json:"edges"`
+	Completeness Completeness         `json:"completeness"`
+	Attestation  *fusaops.Attestation `json:"attestation,omitempty"`
+	Hash         string               `json:"hash"`
 }
 
 // HasGaps returns true when at least one claim failed due to missing evidence.
@@ -358,6 +359,23 @@ func computeHash(sc *SafetyCase) string {
 	}
 	sum := sha256.Sum256(canon)
 	return fmt.Sprintf("sha256:%x", sum)
+}
+
+// AttestationContentHash computes the hash a §1.6.2 attestation must match
+// to be considered non-stale: sc's substantive content, excluding Hash,
+// Attestation, and GeneratedAt — the fields an attestation is not about.
+//
+//fusa:req REQ-FO-SC007
+func AttestationContentHash(sc *SafetyCase) string {
+	tmp := *sc
+	tmp.Hash = ""
+	tmp.Attestation = nil
+	tmp.GeneratedAt = time.Time{}
+	data, err := json.Marshal(tmp)
+	if err != nil {
+		return ""
+	}
+	return fusaops.ContentHash(data)
 }
 
 // Save writes the safety case to path as indented JSON.

@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	fusaops "github.com/SoundMatt/FuSaOps"
 )
 
 // HARAFile is the standard filename for the HARA data store.
@@ -120,6 +122,24 @@ type HARA struct {
 	Situations  []OperationalSituation `json:"operationalSituations"`
 	Hazards     []Hazard               `json:"hazards"`
 	SafetyGoals []SafetyGoal           `json:"safetyGoals"`
+	Attestation *fusaops.Attestation   `json:"attestation,omitempty"`
+}
+
+// AttestationContentHash computes the hash a §1.6.2 attestation must match
+// to be considered non-stale: h's substantive content, excluding Attestation
+// itself (CreatedAt is included — unlike the generated-evidence packages,
+// .fusa-hara.json is a human-authored input file whose CreatedAt is stable
+// content, not a volatile regeneration timestamp).
+//
+//fusa:req REQ-FO-HARA006
+func AttestationContentHash(h *HARA) string {
+	tmp := *h
+	tmp.Attestation = nil
+	data, err := json.Marshal(tmp)
+	if err != nil {
+		return ""
+	}
+	return fusaops.ContentHash(data)
 }
 
 // ValidationFinding is a gap identified by Validate.

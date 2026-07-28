@@ -132,6 +132,31 @@ func TestBuildHashHasAlgoPrefix(t *testing.T) {
 	}
 }
 
+// TestAttestationContentHashStableAcrossRebuild verifies
+// AttestationContentHash is deterministic across two Build calls against the
+// same project root (excludes GeneratedAt).
+//
+//fusa:test REQ-FO-SAS007
+func TestAttestationContentHashStableAcrossRebuild(t *testing.T) {
+	dir := t.TempDir()
+	s1, err := sas.Build(dir, "DAL-C")
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	s2, err := sas.Build(dir, "DAL-C")
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	h1 := sas.AttestationContentHash(s1)
+	h2 := sas.AttestationContentHash(s2)
+	if h1 == "" {
+		t.Error("AttestationContentHash must not be empty")
+	}
+	if h1 != h2 {
+		t.Errorf("AttestationContentHash differs across identical builds: %q != %q", h1, h2)
+	}
+}
+
 // TestBuildChecklistProjection verifies Checklist/Summary mirror
 // Activities/TotalActivities/CompleteActivities per x-FuSa spec §9.3.
 //

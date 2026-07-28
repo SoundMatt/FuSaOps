@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	fusaops "github.com/SoundMatt/FuSaOps"
+	"github.com/SoundMatt/FuSaOps/qualitybar"
 	"github.com/SoundMatt/FuSaOps/sas"
 )
 
@@ -27,13 +29,18 @@ func runSAS(args []string, stdout, stderr io.Writer) int {
 	}
 
 	var (
-		dir    = fs.String("dir", "", "project root directory (default: current directory)")
-		output = fs.String("output", "", "path for the SAS report (default: <dir>/.fusaops-sas.json)")
-		format = fs.String("format", "text", "output format: text, json")
-		level  = fs.String("level", "DAL-C", "software level: DAL-A through DAL-E")
+		dir                = fs.String("dir", "", "project root directory (default: current directory)")
+		output             = fs.String("output", "", "path for the SAS report (default: <dir>/.fusaops-sas.json)")
+		format             = fs.String("format", "text", "output format: text, json")
+		level              = fs.String("level", "DAL-C", "software level: DAL-A through DAL-E")
+		strict             = fs.Bool("strict", false, "implies --require-attestation")
+		requireAttestation = fs.Bool("require-attestation", false, "gate exit code on an unsuppressed FUSA-STUB002 finding")
 	)
 	if err := fs.Parse(args); err != nil {
 		return 2
+	}
+	if *strict {
+		*requireAttestation = true
 	}
 
 	projectRoot := *dir
@@ -46,21 +53,28 @@ func runSAS(args []string, stdout, stderr io.Writer) int {
 		}
 	}
 
+	outPath := *output
+	if outPath == "" {
+		outPath = filepath.Join(projectRoot, sas.ReportFile)
+	}
+
+	var priorAttestation *fusaops.Attestation
+	if prior, loadErr := sas.Load(outPath); loadErr == nil {
+		priorAttestation = prior.Attestation
+	}
+
 	s, err := sas.Build(projectRoot, *level)
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops sas: build: %v\n", err)
 		return 1
 	}
+	s.Attestation = priorAttestation
 
 	if renderErr := sas.Render(stdout, s, *format); renderErr != nil {
 		fmt.Fprintf(stderr, "fusaops sas: render: %v\n", renderErr)
 		return 2
 	}
 
-	outPath := *output
-	if outPath == "" {
-		outPath = filepath.Join(projectRoot, sas.ReportFile)
-	}
 	if saveErr := sas.Save(outPath, s); saveErr != nil {
 		fmt.Fprintf(stderr, "fusaops sas: save: %v\n", saveErr)
 		return 1
@@ -68,8 +82,27 @@ func runSAS(args []string, stdout, stderr io.Writer) int {
 	fmt.Fprintf(stdout, "\nSAS written to %s\n", outPath)
 	fmt.Fprintf(stdout, "Integrity hash: %s\n", s.Hash)
 
+	exit := 0
 	if s.HasGaps() {
-		return 1
+		exit = 1
 	}
-	return 0
+
+	attestOK := attestationValid(s.Attestation, sas.AttestationContentHash(s))
+	if code := runQualityGate(stderr, sas.ReportFile, sasQualFields(s), attestOK, *requireAttestation); code != 0 {
+		exit = code
+	}
+
+	return exit
+}
+
+// sasQualFields extracts s's qualitative text fields (each checklist item's
+// Item text) for §1.6.1 detection.
+//
+//fusa:req REQ-FO-CLI084
+func sasQualFields(s *sas.SAS) []qualitybar.QualField {
+	var out []qualitybar.QualField
+	for _, c := range s.Checklist {
+		out = append(out, qualitybar.QualField{EntryID: c.Clause, Field: "item", Value: c.Item})
+	}
+	return out
 }

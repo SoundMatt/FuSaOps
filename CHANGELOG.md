@@ -7,6 +7,47 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.141.0] — 2026-07-28
+
+### feat: attestation, FUSA-STUB001/002 detection heuristics, and coverage-gate wiring (x-FuSa spec §1.6.1/§1.6.2)
+
+Closes out the enforcement mechanism from spec v1.14.0 against FuSaOps' own
+artifacts — the schema conformance work landed in v1.140.0; this is the
+detection/attestation/gating layer on top of it.
+
+- New root-package `Attestation` type + `AttestationValid`/`ContentHash`
+  helpers (`attestation.go`) — a DCO-style provenance record (independent
+  reviewer distinct from implementation author, hash-pinned to the exact
+  content reviewed) reusing the same independence concept as the `vv`
+  package.
+- New `qualitybar` package implementing both §1.6.1 detection rules:
+  `DetectPlaceholder` (`FUSA-STUB001`, always `ERROR`, disposition-
+  suppressible only) and `DetectBlankFallback` (`FUSA-STUB002`, a
+  distinct-value-ratio `WARNING` across ≥10 entries, advisory by default,
+  suppressible only by a valid attestation). Both reuse `fusaops.Finding`
+  and `fusaops.ComputeFingerprint` — no new finding shape.
+- `fmea`/`tara`/`safetycase`/`sas`/`hara` each gain an `Attestation` field
+  (nil by default — FuSaOps never fabricates a "reviewed" status for its
+  own auto-generated content) and an `AttestationContentHash` function.
+- `cmd_{fmea,tara,safety_case,sas,hara}.go` now: run both detection rules
+  after building/loading, gate the exit code (`FUSA-STUB001` always;
+  `FUSA-STUB002` only under the new `--require-attestation`/`--strict`
+  flags), and — since `Build` always assembles a fresh document — carry a
+  prior run's attestation forward across regeneration rather than silently
+  discarding it. Staleness is automatic: a carried-forward attestation
+  whose hash no longer matches the regenerated content is correctly
+  treated as invalid.
+- `fmea`/`tara` `Summary` gains `coveragePct` + a stated
+  `component`/`assetInventoryMethod` denominator methodology, plus
+  `--min-coverage N` on `cmd_fmea.go`/`cmd_tara.go`. FMEA's own coverage is
+  an honest 19.5% (8 of 41 tracked packages); TARA's is 80% (8 of its own
+  10 known evidence artefacts) — surfaced plainly, not inflated.
+- Regenerated `fmea.json`/`tara.json`/`safety-case.json` against the new
+  code.
+- 11 new requirements registered (`REQ-FO-CORE009`, `REQ-QB001`,
+  `REQ-QB002`, `REQ-FO-FMEA007/008`, `REQ-FO-TARA007/008`, `REQ-FO-SC007`,
+  `REQ-FO-SAS007`, `REQ-FO-HARA006`, `REQ-FO-CLI084`).
+
 ## [1.140.0] — 2026-07-28
 
 ### feat: bring FuSaOps' own hara/fmea/tara/safetycase/sas/sci into x-FuSa spec v1.14.0 conformance

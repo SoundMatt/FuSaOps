@@ -70,17 +70,18 @@ type Summary struct {
 //
 //fusa:req REQ-FO-SAS001
 type SAS struct {
-	GeneratedAt        time.Time       `json:"generatedAt"`
-	ProjectRoot        string          `json:"projectRoot"`
-	Tool               string          `json:"tool"`
-	ToolVersion        string          `json:"toolVersion"`
-	SoftwareLevel      string          `json:"softwareLevel"` // DAL-A through DAL-E
-	Activities         []Activity      `json:"activities"`
-	TotalActivities    int             `json:"totalActivities"`
-	CompleteActivities int             `json:"completeActivities"`
-	Checklist          []ChecklistItem `json:"checklist"`
-	Summary            Summary         `json:"summary"`
-	Hash               string          `json:"hash"`
+	GeneratedAt        time.Time            `json:"generatedAt"`
+	ProjectRoot        string               `json:"projectRoot"`
+	Tool               string               `json:"tool"`
+	ToolVersion        string               `json:"toolVersion"`
+	SoftwareLevel      string               `json:"softwareLevel"` // DAL-A through DAL-E
+	Activities         []Activity           `json:"activities"`
+	TotalActivities    int                  `json:"totalActivities"`
+	CompleteActivities int                  `json:"completeActivities"`
+	Checklist          []ChecklistItem      `json:"checklist"`
+	Summary            Summary              `json:"summary"`
+	Attestation        *fusaops.Attestation `json:"attestation,omitempty"`
+	Hash               string               `json:"hash"`
 }
 
 // HasGaps returns true when at least one required activity is incomplete.
@@ -199,6 +200,23 @@ func computeHash(s *SAS) string {
 	}
 	sum := sha256.Sum256(canon)
 	return fmt.Sprintf("sha256:%x", sum)
+}
+
+// AttestationContentHash computes the hash a §1.6.2 attestation must match
+// to be considered non-stale: s's substantive content, excluding Hash,
+// Attestation, and GeneratedAt — the fields an attestation is not about.
+//
+//fusa:req REQ-FO-SAS007
+func AttestationContentHash(s *SAS) string {
+	tmp := *s
+	tmp.Hash = ""
+	tmp.Attestation = nil
+	tmp.GeneratedAt = time.Time{}
+	data, err := json.Marshal(tmp)
+	if err != nil {
+		return ""
+	}
+	return fusaops.ContentHash(data)
 }
 
 // Save writes the SAS to path as indented JSON.

@@ -145,6 +145,31 @@ func TestBuildHashHasAlgoPrefix(t *testing.T) {
 	}
 }
 
+// TestAttestationContentHashStableAcrossRebuild verifies
+// AttestationContentHash is deterministic across two Build calls against the
+// same project root (excludes GeneratedAt).
+//
+//fusa:test REQ-FO-SC007
+func TestAttestationContentHashStableAcrossRebuild(t *testing.T) {
+	dir := t.TempDir()
+	sc1, err := safetycase.Build(dir, safetycase.StandardISO26262)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	sc2, err := safetycase.Build(dir, safetycase.StandardISO26262)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	h1 := safetycase.AttestationContentHash(sc1)
+	h2 := safetycase.AttestationContentHash(sc2)
+	if h1 == "" {
+		t.Error("AttestationContentHash must not be empty")
+	}
+	if h1 != h2 {
+		t.Errorf("AttestationContentHash differs across identical builds: %q != %q", h1, h2)
+	}
+}
+
 // TestBuildGSNProjection verifies each Claim becomes a goal+strategy node
 // pair, present evidence becomes solution nodes, and a claim with no
 // evidence at all counts toward Completeness.Undeveloped rather than

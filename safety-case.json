@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-07-28T18:47:06.907424Z",
+  "generatedAt": "2026-07-28T19:19:37.863874Z",
   "projectRoot": ".",
   "tool": "fusaops",
-  "toolVersion": "1.140.0",
+  "toolVersion": "1.141.0",
   "standard": "ISO 26262",
   "claims": [
     {
@@ -270,5 +270,5 @@
     "goalsWithEvidence": 3,
     "undeveloped": 4
   },
-  "hash": "sha256:8a624d3327d600e5625d8f8a17c6308f417808b98a8140ba27f70ed6107bf7c7"
+  "hash": "sha256:19a5ac0d36c85571d8e44cdad29426e35ccba524e3eac8a6fe512960ecb03235"
 }

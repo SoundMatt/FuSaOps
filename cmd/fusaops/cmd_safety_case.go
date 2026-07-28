@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	fusaops "github.com/SoundMatt/FuSaOps"
+	"github.com/SoundMatt/FuSaOps/qualitybar"
 	"github.com/SoundMatt/FuSaOps/safetycase"
 )
 
@@ -28,13 +30,18 @@ func runSafetyCase(args []string, stdout, stderr io.Writer) int {
 	}
 
 	var (
-		dir      = fs.String("dir", "", "project root directory (default: current directory)")
-		output   = fs.String("output", "", "path for the safety case report (default: <dir>/.fusaops-safety-case.json)")
-		format   = fs.String("format", "text", "output format: text, json")
-		standard = fs.String("standard", "ISO 26262", "target standard: ISO 26262, DO-178C, IEC 61508, ISO 21434")
+		dir                = fs.String("dir", "", "project root directory (default: current directory)")
+		output             = fs.String("output", "", "path for the safety case report (default: <dir>/.fusaops-safety-case.json)")
+		format             = fs.String("format", "text", "output format: text, json")
+		standard           = fs.String("standard", "ISO 26262", "target standard: ISO 26262, DO-178C, IEC 61508, ISO 21434")
+		strict             = fs.Bool("strict", false, "implies --require-attestation")
+		requireAttestation = fs.Bool("require-attestation", false, "gate exit code on an unsuppressed FUSA-STUB002 finding")
 	)
 	if err := fs.Parse(args); err != nil {
 		return 2
+	}
+	if *strict {
+		*requireAttestation = true
 	}
 
 	std := safetycase.Standard(*standard)
@@ -61,21 +68,28 @@ func runSafetyCase(args []string, stdout, stderr io.Writer) int {
 		}
 	}
 
+	outPath := *output
+	if outPath == "" {
+		outPath = filepath.Join(projectRoot, safetycase.ReportFile)
+	}
+
+	var priorAttestation *fusaops.Attestation
+	if prior, loadErr := safetycase.Load(outPath); loadErr == nil {
+		priorAttestation = prior.Attestation
+	}
+
 	sc, err := safetycase.Build(projectRoot, std)
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops safety-case: build: %v\n", err)
 		return 1
 	}
+	sc.Attestation = priorAttestation
 
 	if renderErr := safetycase.Render(stdout, sc, *format); renderErr != nil {
 		fmt.Fprintf(stderr, "fusaops safety-case: render: %v\n", renderErr)
 		return 2
 	}
 
-	outPath := *output
-	if outPath == "" {
-		outPath = filepath.Join(projectRoot, safetycase.ReportFile)
-	}
 	if saveErr := safetycase.Save(outPath, sc); saveErr != nil {
 		fmt.Fprintf(stderr, "fusaops safety-case: save: %v\n", saveErr)
 		return 1
@@ -83,8 +97,27 @@ func runSafetyCase(args []string, stdout, stderr io.Writer) int {
 	fmt.Fprintf(stdout, "\nSafety case written to %s\n", outPath)
 	fmt.Fprintf(stdout, "Integrity hash: %s\n", sc.Hash)
 
+	exit := 0
 	if sc.HasGaps() {
-		return 1
+		exit = 1
 	}
-	return 0
+
+	attestOK := attestationValid(sc.Attestation, safetycase.AttestationContentHash(sc))
+	if code := runQualityGate(stderr, safetycase.ReportFile, safetyCaseQualFields(sc), attestOK, *requireAttestation); code != 0 {
+		exit = code
+	}
+
+	return exit
+}
+
+// safetyCaseQualFields extracts sc's qualitative text fields (each GSN
+// node's Text) for §1.6.1 detection.
+//
+//fusa:req REQ-FO-CLI084
+func safetyCaseQualFields(sc *safetycase.SafetyCase) []qualitybar.QualField {
+	var out []qualitybar.QualField
+	for _, n := range sc.Nodes {
+		out = append(out, qualitybar.QualField{EntryID: n.ID, Field: string(n.Type), Value: n.Text})
+	}
+	return out
 }

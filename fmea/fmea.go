@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"time"
 
@@ -30,6 +31,21 @@ const ReportFile = ".fusaops-fmea.json"
 //
 //fusa:req REQ-FO-FMEA001
 const HighRPNThreshold = 100
+
+// ComponentsInProject is the total count of FuSaOps packages (the core
+// orchestration-pipeline table plus the layered compliance/evidence/workflow
+// table in CLAUDE.md) — the denominator behind Summary.CoveragePct. Update
+// this alongside CLAUDE.md's package tables if either grows.
+//
+//fusa:req REQ-FO-FMEA008
+const ComponentsInProject = 41
+
+// ComponentInventoryMethod documents how ComponentsInProject was counted, so
+// Summary.CoveragePct is auditable rather than an unexplained number (x-FuSa
+// spec §9.2's coveragePct rationale).
+//
+//fusa:req REQ-FO-FMEA008
+const ComponentInventoryMethod = "count of all packages in CLAUDE.md's core orchestration-pipeline table (11) and layered compliance/evidence/workflow table (30), 41 total; componentsAnalyzed counts distinct FMEA entries, not distinct packages named (some entries span multiple packages, e.g. \"auditpack / sign packages\")"
 
 // RatingScale identifies the severity/occurrence/detection rating table in
 // use. FuSaOps predates AIAG-VDA 2019 adoption and uses its own 1-10 scale,
@@ -68,24 +84,34 @@ type FailureMode struct {
 // Summary rolls up the FMEA's totals and analysis-coverage metrics.
 //
 //fusa:req REQ-FO-FMEA006
+//fusa:req REQ-FO-FMEA008
 type Summary struct {
 	Total        int `json:"total"`
 	HighPriority int `json:"highPriority"`
+	// ComponentsInProject is the stated denominator behind CoveragePct — see
+	// ComponentInventoryMethod for how it's counted. This is what stops an
+	// FMEA from covering only a few convenient functions while looking
+	// thorough by entry count alone (x-FuSa spec §9.2).
+	ComponentsAnalyzed       int     `json:"componentsAnalyzed"`
+	ComponentsInProject      int     `json:"componentsInProject"`
+	CoveragePct              float64 `json:"coveragePct"`
+	ComponentInventoryMethod string  `json:"componentInventoryMethod"`
 }
 
 // FMEA is the top-level dFMEA document.
 //
 //fusa:req REQ-FO-FMEA001
 type FMEA struct {
-	GeneratedAt time.Time     `json:"generatedAt"`
-	ProjectRoot string        `json:"projectRoot"`
-	Tool        string        `json:"tool"`
-	ToolVersion string        `json:"toolVersion"`
-	Standard    string        `json:"standard"`
-	RatingScale string        `json:"ratingScale"`
-	Entries     []FailureMode `json:"entries"`
-	Summary     Summary       `json:"summary"`
-	Hash        string        `json:"hash"`
+	GeneratedAt time.Time            `json:"generatedAt"`
+	ProjectRoot string               `json:"projectRoot"`
+	Tool        string               `json:"tool"`
+	ToolVersion string               `json:"toolVersion"`
+	Standard    string               `json:"standard"`
+	RatingScale string               `json:"ratingScale"`
+	Entries     []FailureMode        `json:"entries"`
+	Summary     Summary              `json:"summary"`
+	Attestation *fusaops.Attestation `json:"attestation,omitempty"`
+	Hash        string               `json:"hash"`
 }
 
 // HasHighRPN returns true when any failure mode exceeds HighRPNThreshold.
@@ -316,8 +342,23 @@ func Build(root string) (*FMEA, error) {
 		}
 	}
 
+	f.Summary.ComponentsAnalyzed = f.Summary.Total
+	f.Summary.ComponentsInProject = ComponentsInProject
+	f.Summary.CoveragePct = coveragePct(f.Summary.ComponentsAnalyzed, f.Summary.ComponentsInProject)
+	f.Summary.ComponentInventoryMethod = ComponentInventoryMethod
+
 	f.Hash = computeHash(f)
 	return f, nil
+}
+
+// coveragePct returns 100*analyzed/total rounded to one decimal, or 100 when
+// total is 0 (no denominator means nothing is uncovered).
+func coveragePct(analyzed, total int) float64 {
+	if total == 0 {
+		return 100
+	}
+	pct := 100 * float64(analyzed) / float64(total)
+	return math.Round(pct*10) / 10
 }
 
 func computeHash(f *FMEA) string {
@@ -333,6 +374,23 @@ func computeHash(f *FMEA) string {
 	}
 	sum := sha256.Sum256(canon)
 	return fmt.Sprintf("sha256:%x", sum)
+}
+
+// AttestationContentHash computes the hash a §1.6.2 attestation must match
+// to be considered non-stale: f's substantive content, excluding Hash,
+// Attestation, and GeneratedAt — the fields an attestation is not about.
+//
+//fusa:req REQ-FO-FMEA007
+func AttestationContentHash(f *FMEA) string {
+	tmp := *f
+	tmp.Hash = ""
+	tmp.Attestation = nil
+	tmp.GeneratedAt = time.Time{}
+	data, err := json.Marshal(tmp)
+	if err != nil {
+		return ""
+	}
+	return fusaops.ContentHash(data)
 }
 
 // Save writes the FMEA to path as indented JSON.

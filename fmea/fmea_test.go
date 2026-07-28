@@ -134,6 +134,55 @@ func TestBuildHashHasAlgoPrefix(t *testing.T) {
 	}
 }
 
+// TestAttestationContentHashStableAcrossRebuild verifies
+// AttestationContentHash is deterministic across two Build calls (same
+// content should hash the same, since it excludes GeneratedAt).
+//
+//fusa:test REQ-FO-FMEA007
+func TestAttestationContentHashStableAcrossRebuild(t *testing.T) {
+	dir := t.TempDir()
+	f1, err := fmea.Build(dir)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	f2, err := fmea.Build(dir)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	h1 := fmea.AttestationContentHash(f1)
+	h2 := fmea.AttestationContentHash(f2)
+	if h1 == "" {
+		t.Error("AttestationContentHash must not be empty")
+	}
+	if h1 != h2 {
+		t.Errorf("AttestationContentHash differs across identical builds (GeneratedAt not excluded?): %q != %q", h1, h2)
+	}
+}
+
+// TestSummaryCoverageMetrics verifies Summary's coverage fields are
+// populated and internally consistent.
+//
+//fusa:test REQ-FO-FMEA008
+func TestSummaryCoverageMetrics(t *testing.T) {
+	f, err := fmea.Build(t.TempDir())
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if f.Summary.ComponentsInProject != fmea.ComponentsInProject {
+		t.Errorf("ComponentsInProject = %d, want %d", f.Summary.ComponentsInProject, fmea.ComponentsInProject)
+	}
+	if f.Summary.ComponentsAnalyzed != f.Summary.Total {
+		t.Errorf("ComponentsAnalyzed = %d, want %d (Summary.Total)", f.Summary.ComponentsAnalyzed, f.Summary.Total)
+	}
+	want := 100 * float64(f.Summary.ComponentsAnalyzed) / float64(f.Summary.ComponentsInProject)
+	if diff := f.Summary.CoveragePct - want; diff > 0.05 || diff < -0.05 {
+		t.Errorf("CoveragePct = %v, want ~%v", f.Summary.CoveragePct, want)
+	}
+	if f.Summary.ComponentInventoryMethod == "" {
+		t.Error("ComponentInventoryMethod must be documented, not empty")
+	}
+}
+
 //fusa:test REQ-FO-FMEA002
 func TestBuildHashChanges(t *testing.T) {
 	f1, _ := fmea.Build(t.TempDir())
