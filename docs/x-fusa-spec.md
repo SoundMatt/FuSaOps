@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.14.1 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.15.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -445,7 +445,16 @@ section requires.
 4. **Real referents only (MUST).** Any entry naming a `file`/`function`/
    `component`/`item` MUST refer to an actual file or symbol in the analyzed
    project — not a language keyword, a standard-library call, or a test
-   fixture mistaken for project code.
+   fixture mistaken for project code. **Implementation note (SHOULD):** a
+   post-v1.14.0 rollout audit found this MUST violated independently by
+   multiple tools' own scanners — the same test-source-tree exclusion a
+   tool already applies for `trace`'s function-coverage denominator
+   (§1.4.1) SHOULD be reused for every other scanner that walks source to
+   build `fmea`/`tara`/`comp`-style entries, and any standard-library/
+   language-builtin call table used elsewhere in the same tool (e.g. for
+   suppressing a lint finding) SHOULD be consulted here too, rather than
+   each command re-implementing its own narrower exclusion list that
+   drifts out of sync with the others.
 5. **Freshness (SHOULD).** An artifact SHOULD be regenerated whenever
    `.fusa-reqs.json`'s requirement set changes. A tool's `check`/CI gate
    SHOULD flag (not necessarily fail) an artifact whose `generatedAt`
@@ -550,6 +559,22 @@ An artifact carrying §1.6.1's qualitative fields MAY include a document-level
   back to `"heuristic"`) when it doesn't match the artifact's current
   content — this is what stops one real review from silently covering a
   later, unreviewed edit.
+- **Carry-forward across regeneration (MUST — new, closes a gap found
+  during rollout).** An artifact-producing command MUST NOT silently
+  discard an existing `attestation` object when it regenerates the
+  artifact. Before rebuilding, the command MUST load any prior saved copy
+  of the artifact and carry its `attestation` (if present) onto the
+  freshly-built document, unchanged. Staleness is then automatic and
+  requires no extra logic: the carried-forward `contentHash` simply won't
+  match the newly-generated content's hash, so the attestation reads as
+  invalid (falls back to `"heuristic"`) exactly per the hash-pinning rule
+  above — a real prior review is *preserved and re-evaluated*, never
+  *erased*. Without this MUST, a tool whose artifact command always
+  rebuilds from scratch (the common, otherwise-correct implementation
+  pattern for these commands) will wipe every human attestation on the
+  very next run, making §1.6.2 unusable in practice — this is exactly what
+  happened in one tool during the same-day rollout audit this MUST is
+  written in response to.
 - **Effect on Rule B (MUST).** A Rule B `WARNING` on an artifact carrying a
   non-stale `attestation.status: "reviewed"` MUST be suppressed. Rule A is
   unaffected — see above.
@@ -1366,7 +1391,13 @@ functions/components, per **IEC 60812:2018** (generic) or the
   is not the same claim as one over a 100-function project, and only
   `coveragePct` makes that visible. `--min-coverage N` (SHOULD, mirrors
   `trace --req-coverage`) exits `1` when `coveragePct < N`; `N = 0` disables
-  the gate.
+  the gate. **`coveragePct` MUST NOT exceed `100`.** A value above 100 means
+  `componentsAnalyzed` counted something `componentsInProject` didn't — in
+  every case found during rollout, this was rule 4 above being silently
+  violated (a test fixture or excluded file scanned as if it were a real
+  project component). A tool's own test suite SHOULD include a fixture with
+  a non-trivial test-source tree specifically to catch this, since a
+  fixture with no `src/test`-equivalent directory cannot exercise the bug.
 
 **`tara` (SHOULD).** `tara [--dir <path>] [--format text|json|md] [--output <file>] [--min-coverage N]`
 
@@ -1450,6 +1481,8 @@ near-complete asset inventory from a small sample of the easy cases. Asset
 discovery methodology varies more than function enumeration does, so
 `assetInventoryMethod` (SHOULD) is required alongside the count for
 auditability. `--min-coverage N` gates the same way as `fmea`'s.
+`coveragePct` **MUST NOT exceed `100`**, for the same reason and with the
+same fix as `fmea`'s equivalent rule above.
 
 **`safety-case` (SHOULD).** `safety-case [--dir <path>] [--format text|json|md|mermaid] [--output <file>]`
 
@@ -1770,6 +1803,44 @@ tool-defined row.
 ---
 
 ## 14. Changelog
+
+### 1.15.0 — 2026-07-28 (attestation carry-forward MUST + two implementer-guidance additions, from a same-day 4-tool deep audit)
+
+A deep audit of the four tools that had already shipped v1.13.0/v1.14.0/
+v1.14.1 conformance found 23 real defects (filed as issues against each
+tool). Most were implementation bugs against already-clear MUSTs (no spec
+action needed — see each tool's own issues). Three findings recurred across
+independent implementations often enough to indicate the spec itself
+should say more:
+
+- **§1.6.2 new MUST: attestation carry-forward.** The spec defined the
+  attestation *data model* and staleness-via-hash-mismatch logic, but never
+  actually required a regenerating command to *preserve* an existing
+  attestation. One tool's otherwise-correct "always rebuild from scratch"
+  implementation silently wiped every human attestation on the very next
+  run — a real gap, not a bug in that tool, since nothing made carry-forward
+  mandatory. Fixed: a producing command MUST load any prior artifact and
+  carry its `attestation` forward before rebuilding; staleness still falls
+  out automatically from the existing hash-pinning rule.
+- **§1.6 rule 4 (SHOULD): reuse existing exclusion logic.** Three of four
+  audited tools' scanners independently counted test fixtures or
+  standard-library/language-builtin calls as real project components,
+  violating an already-explicit MUST. Added implementer guidance: reuse
+  the same test-tree exclusion §1.4.1's function-coverage denominator
+  already needs, and any stdlib/builtin call table already used elsewhere
+  in the tool, rather than each command maintaining its own drifting
+  exclusion list.
+- **§9.2 `fmea`/`tara` (MUST): `coveragePct` MUST NOT exceed 100.** Two
+  tools independently produced impossible values (111.9%, and a
+  reproduction case of 500%) from exactly the rule-4 violation above.
+  Made explicit as a checkable invariant, with a note that a tool's own
+  test suite needs a fixture containing a non-trivial test-source tree to
+  even exercise the failure path — several tools' passing test suites
+  never did.
+- `SpecVersion` bumped `1.14.1` → `1.15.0` (`fusaops.go`). FuSaOps' own
+  `fmea`/`tara`/`hara`/`safetycase`/`sas` packages already implement
+  carry-forward correctly (from PR2 earlier this session) — no FuSaOps
+  code changes needed, only the spec catching up.
 
 ### 1.14.1 — 2026-07-28 (two clarifications filed by sibling-tool implementers during v1.13.0/v1.14.0 rollout)
 
