@@ -131,6 +131,86 @@ func TestBuildWithEvidence(t *testing.T) {
 	}
 }
 
+// TestBuildHashHasAlgoPrefix verifies Hash carries the "sha256:" prefix
+// required by x-FuSa spec §2.7 for a field named "hash".
+//
+//fusa:test REQ-FO-SC006
+func TestBuildHashHasAlgoPrefix(t *testing.T) {
+	sc, err := safetycase.Build(t.TempDir(), safetycase.StandardISO26262)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if !strings.HasPrefix(sc.Hash, "sha256:") {
+		t.Errorf("Hash = %q, want sha256: prefix", sc.Hash)
+	}
+}
+
+// TestBuildGSNProjection verifies each Claim becomes a goal+strategy node
+// pair, present evidence becomes solution nodes, and a claim with no
+// evidence at all counts toward Completeness.Undeveloped rather than
+// fabricating a solution node.
+//
+//fusa:test REQ-FO-SC006
+func TestBuildGSNProjection(t *testing.T) {
+	dir := t.TempDir()
+	// Give C-001 (qualify report) real evidence so it has >=1 solution node.
+	if err := os.WriteFile(filepath.Join(dir, ".fusaops-qualify-report.json"),
+		[]byte(`{"components":[]}`), 0o640); err != nil {
+		t.Fatal(err)
+	}
+	sc, err := safetycase.Build(dir, safetycase.StandardISO26262)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+
+	if sc.Completeness.TotalGoals != sc.TotalClaims {
+		t.Errorf("Completeness.TotalGoals=%d, want %d", sc.Completeness.TotalGoals, sc.TotalClaims)
+	}
+	if sc.Completeness.GoalsWithEvidence == 0 {
+		t.Error("expected at least one goal with evidence (C-001)")
+	}
+	if sc.Completeness.Undeveloped == 0 {
+		t.Error("expected at least one undeveloped goal (no other evidence present)")
+	}
+
+	var goals, strategies, solutions int
+	for _, n := range sc.Nodes {
+		switch n.Type {
+		case safetycase.GSNGoal:
+			goals++
+		case safetycase.GSNStrategy:
+			strategies++
+		case safetycase.GSNSolution:
+			solutions++
+			if n.Evidence == "" {
+				t.Errorf("solution node %s missing evidence path", n.ID)
+			}
+		}
+	}
+	if goals != sc.TotalClaims {
+		t.Errorf("goal node count=%d, want %d", goals, sc.TotalClaims)
+	}
+	if strategies != sc.TotalClaims {
+		t.Errorf("strategy node count=%d, want %d", strategies, sc.TotalClaims)
+	}
+	if solutions == 0 {
+		t.Error("expected at least one solution node for present evidence")
+	}
+
+	var supportedBy int
+	for _, e := range sc.Edges {
+		if e.Type != safetycase.GSNSupportedBy && e.Type != safetycase.GSNInContextOf {
+			t.Errorf("unexpected edge type %q", e.Type)
+		}
+		if e.Type == safetycase.GSNSupportedBy {
+			supportedBy++
+		}
+	}
+	if supportedBy != strategies+solutions {
+		t.Errorf("supportedBy edges=%d, want %d (one goal->strategy plus one strategy->solution)", supportedBy, strategies+solutions)
+	}
+}
+
 //fusa:test REQ-FO-SC002
 func TestBuildEvidenceHash(t *testing.T) {
 	dir := t.TempDir()

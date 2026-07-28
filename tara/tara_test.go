@@ -75,11 +75,11 @@ func TestBuildReturnsScenarios(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Build: %v", err)
 	}
-	if tr.TotalScenarios == 0 {
+	if tr.Summary.Total == 0 {
 		t.Error("Build must return at least one scenario")
 	}
-	if len(tr.Scenarios) != tr.TotalScenarios {
-		t.Errorf("len(Scenarios)=%d, TotalScenarios=%d", len(tr.Scenarios), tr.TotalScenarios)
+	if len(tr.Threats) != tr.Summary.Total {
+		t.Errorf("len(Threats)=%d, Summary.Total=%d", len(tr.Threats), tr.Summary.Total)
 	}
 }
 
@@ -90,7 +90,7 @@ func TestBuildScenarioIDs(t *testing.T) {
 		t.Fatalf("Build: %v", err)
 	}
 	seen := map[string]bool{}
-	for _, s := range tr.Scenarios {
+	for _, s := range tr.Threats {
 		if s.ID == "" {
 			t.Error("scenario has empty ID")
 		}
@@ -107,6 +107,9 @@ func TestBuildScenarioIDs(t *testing.T) {
 		if len(s.Controls) == 0 {
 			t.Errorf("%s: controls must not be empty", s.ID)
 		}
+		if s.Impact.Safety == "" || s.Impact.Financial == "" || s.Impact.Operational == "" || s.Impact.Privacy == "" {
+			t.Errorf("%s: all four SFOP impact axes must be set", s.ID)
+		}
 	}
 }
 
@@ -117,7 +120,7 @@ func TestBuildCounters(t *testing.T) {
 		t.Fatalf("Build: %v", err)
 	}
 	var critCount, highCount int
-	for _, s := range tr.Scenarios {
+	for _, s := range tr.Threats {
 		switch s.RiskLevel {
 		case tara.RiskCritical:
 			critCount++
@@ -125,11 +128,11 @@ func TestBuildCounters(t *testing.T) {
 			highCount++
 		}
 	}
-	if tr.CriticalScenarios != critCount {
-		t.Errorf("CriticalScenarios=%d, counted %d", tr.CriticalScenarios, critCount)
+	if tr.Summary.Critical != critCount {
+		t.Errorf("Summary.Critical=%d, counted %d", tr.Summary.Critical, critCount)
 	}
-	if tr.HighScenarios != highCount {
-		t.Errorf("HighScenarios=%d, counted %d", tr.HighScenarios, highCount)
+	if tr.Summary.High != highCount {
+		t.Errorf("Summary.High=%d, counted %d", tr.Summary.High, highCount)
 	}
 }
 
@@ -160,6 +163,20 @@ func TestBuildMetadata(t *testing.T) {
 	}
 }
 
+// TestBuildHashHasAlgoPrefix verifies Hash carries the "sha256:" prefix
+// required by x-FuSa spec §2.7 for a field named "hash".
+//
+//fusa:test REQ-FO-TARA006
+func TestBuildHashHasAlgoPrefix(t *testing.T) {
+	tr, err := tara.Build(t.TempDir())
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if !strings.HasPrefix(tr.Hash, "sha256:") {
+		t.Errorf("Hash = %q, want sha256: prefix", tr.Hash)
+	}
+}
+
 //fusa:test REQ-FO-TARA002
 func TestBuildHashChanges(t *testing.T) {
 	tr1, _ := tara.Build(t.TempDir())
@@ -177,10 +194,10 @@ func TestHasCritical(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Build: %v", err)
 	}
-	want := tr.CriticalScenarios > 0
+	want := tr.Summary.Critical > 0
 	if tr.HasCritical() != want {
-		t.Errorf("HasCritical()=%v, want %v (CriticalScenarios=%d)",
-			tr.HasCritical(), want, tr.CriticalScenarios)
+		t.Errorf("HasCritical()=%v, want %v (Summary.Critical=%d)",
+			tr.HasCritical(), want, tr.Summary.Critical)
 	}
 }
 
@@ -202,8 +219,8 @@ func TestSaveLoad(t *testing.T) {
 	if loaded.Hash != tr.Hash {
 		t.Errorf("Hash mismatch after round-trip: got %q, want %q", loaded.Hash, tr.Hash)
 	}
-	if loaded.TotalScenarios != tr.TotalScenarios {
-		t.Errorf("TotalScenarios mismatch: got %d, want %d", loaded.TotalScenarios, tr.TotalScenarios)
+	if loaded.Summary.Total != tr.Summary.Total {
+		t.Errorf("Summary.Total mismatch: got %d, want %d", loaded.Summary.Total, tr.Summary.Total)
 	}
 }
 
@@ -265,8 +282,8 @@ func TestRenderJSON(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
 		t.Fatalf("JSON unmarshal: %v", err)
 	}
-	if got.TotalScenarios != tr.TotalScenarios {
-		t.Errorf("TotalScenarios=%d, want %d", got.TotalScenarios, tr.TotalScenarios)
+	if got.Summary.Total != tr.Summary.Total {
+		t.Errorf("Summary.Total=%d, want %d", got.Summary.Total, tr.Summary.Total)
 	}
 }
 

@@ -129,7 +129,7 @@ func TestValidateComplete(t *testing.T) {
 			},
 		},
 		SafetyGoals: []hara.SafetyGoal{
-			{ID: "SG-001", Description: "test goal", ASIL: hara.ASILB},
+			{ID: "SG-001", Description: "test goal", ASIL: hara.ASILB, FssrRefs: []string{"REQ-FO-HARA001"}},
 		},
 	}
 	findings := hara.Validate(h)
@@ -226,6 +226,25 @@ func TestValidateNoASILOnGoal(t *testing.T) {
 	}
 	if !found {
 		t.Error("expected no-ASIL finding on safety goal")
+	}
+}
+
+//fusa:test REQ-FO-HARA005
+func TestValidateNoFssrRefsOnGoal(t *testing.T) {
+	h := &hara.HARA{
+		SafetyGoals: []hara.SafetyGoal{
+			{ID: "SG-001", Description: "no fssrRefs", ASIL: hara.ASILB},
+		},
+	}
+	findings := hara.Validate(h)
+	found := false
+	for _, f := range findings {
+		if strings.Contains(f.Message, "no fssrRefs") {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected no-fssrRefs finding on safety goal")
 	}
 }
 

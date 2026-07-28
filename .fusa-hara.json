@@ -65,7 +65,7 @@
       "hazards": ["H-001"],
       "asil": "ASIL-C",
       "safeState": "Surface a decode error as a failed/skipped component rather than an empty pass",
-      "fssrRef": "REQ-FO-ADP006 REQ-FO-ADP005"
+      "fssrRefs": ["REQ-FO-ADP006", "REQ-FO-ADP005"]
     },
     {
       "id": "SG-002",
@@ -73,7 +73,7 @@
       "hazards": ["H-002"],
       "asil": "ASIL-C",
       "safeState": "Emit a skipped component with reason; never omit an applicable language silently",
-      "fssrRef": "REQ-FO-ORC003 REQ-FO-RPT003"
+      "fssrRefs": ["REQ-FO-ORC003", "REQ-FO-RPT003"]
     },
     {
       "id": "SG-003",
@@ -81,7 +81,7 @@
       "hazards": ["H-003"],
       "asil": "ASIL-A",
       "safeState": "Exit code 1",
-      "fssrRef": "REQ-FO-CLI008 REQ-FO-RPT006 REQ-FO-ERR005"
+      "fssrRefs": ["REQ-FO-CLI008", "REQ-FO-RPT006", "REQ-FO-ERR005"]
     },
     {
       "id": "SG-004",
@@ -89,7 +89,7 @@
       "hazards": ["H-004"],
       "asil": "QM",
       "safeState": "Findings carry language+tool from the producing adapter",
-      "fssrRef": "REQ-FO-CORE004 REQ-FO-ADP006"
+      "fssrRefs": ["REQ-FO-CORE004", "REQ-FO-ADP006"]
     },
     {
       "id": "SG-005",
@@ -97,7 +97,7 @@
       "hazards": ["H-005"],
       "asil": "ASIL-B",
       "safeState": "Provide an explicit refresh that recomputes before serving",
-      "fssrRef": "REQ-FO-SRV003 REQ-FO-SRV004"
+      "fssrRefs": ["REQ-FO-SRV003", "REQ-FO-SRV004"]
     }
   ]
 }

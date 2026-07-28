@@ -11,7 +11,6 @@ package fmea
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -32,57 +31,101 @@ const ReportFile = ".fusaops-fmea.json"
 //fusa:req REQ-FO-FMEA001
 const HighRPNThreshold = 100
 
+// RatingScale identifies the severity/occurrence/detection rating table in
+// use. FuSaOps predates AIAG-VDA 2019 adoption and uses its own 1-10 scale,
+// so it is named rather than claiming a standard it does not implement.
+//
+//fusa:req REQ-FO-FMEA006
+const RatingScale = "custom-1-10"
+
 // FailureMode is one row in the FMEA worksheet.
 //
 //fusa:req REQ-FO-FMEA001
 type FailureMode struct {
-	ID         string   `json:"id"`
-	Component  string   `json:"component"`
-	Function   string   `json:"function"`
-	Mode       string   `json:"mode"`
-	Effect     string   `json:"effect"`
-	Cause      string   `json:"cause"`
-	Severity   int      `json:"severity"`   // 1 (negligible) – 10 (catastrophic)
-	Occurrence int      `json:"occurrence"` // 1 (improbable) – 10 (frequent)
-	Detection  int      `json:"detection"`  // 1 (certain)    – 10 (undetectable)
-	RPN        int      `json:"rpn"`        // Severity × Occurrence × Detection
-	Controls   []string `json:"controls"`
-	Action     string   `json:"action"`
+	ID         string `json:"id"`
+	Component  string `json:"component"`
+	Function   string `json:"function"`
+	Item       string `json:"item"` // x-FuSa spec §9.2 single-field identity: "Component.Function"
+	Mode       string `json:"failureMode"`
+	Effect     string `json:"effect"`
+	Cause      string `json:"cause"`
+	Severity   int    `json:"severity"`   // 1 (negligible) – 10 (catastrophic)
+	Occurrence int    `json:"occurrence"` // 1 (improbable) – 10 (frequent)
+	Detection  int    `json:"detection"`  // 1 (certain)    – 10 (undetectable)
+	RPN        int    `json:"rpn"`        // Severity × Occurrence × Detection
+	// ActionPriority approximates the AIAG-VDA Handbook's Action Priority
+	// method (high|medium|low) — see actionPriority() for the (deliberately
+	// coarse, severity-dominant) bucketing used in place of the full S×O×D
+	// lookup table that method defines.
+	ActionPriority string   `json:"actionPriority"`
+	Controls       []string `json:"mitigations"`
+	Action         string   `json:"action"`
+	// RequirementIDs links this failure mode back to the FuSaOps requirement(s)
+	// (in .fusa-reqs.json) whose behaviour the corrective action lives in.
+	RequirementIDs []string `json:"requirementIds"`
+}
+
+// Summary rolls up the FMEA's totals and analysis-coverage metrics.
+//
+//fusa:req REQ-FO-FMEA006
+type Summary struct {
+	Total        int `json:"total"`
+	HighPriority int `json:"highPriority"`
 }
 
 // FMEA is the top-level dFMEA document.
 //
 //fusa:req REQ-FO-FMEA001
 type FMEA struct {
-	GeneratedAt  time.Time     `json:"generatedAt"`
-	ProjectRoot  string        `json:"projectRoot"`
-	Tool         string        `json:"tool"`
-	ToolVersion  string        `json:"toolVersion"`
-	Standard     string        `json:"standard"`
-	FailureModes []FailureMode `json:"failureModes"`
-	TotalItems   int           `json:"totalItems"`
-	HighRPNItems int           `json:"highRpnItems"`
-	Hash         string        `json:"hash"`
+	GeneratedAt time.Time     `json:"generatedAt"`
+	ProjectRoot string        `json:"projectRoot"`
+	Tool        string        `json:"tool"`
+	ToolVersion string        `json:"toolVersion"`
+	Standard    string        `json:"standard"`
+	RatingScale string        `json:"ratingScale"`
+	Entries     []FailureMode `json:"entries"`
+	Summary     Summary       `json:"summary"`
+	Hash        string        `json:"hash"`
 }
 
 // HasHighRPN returns true when any failure mode exceeds HighRPNThreshold.
 //
 //fusa:req REQ-FO-FMEA005
-func (f *FMEA) HasHighRPN() bool { return f.HighRPNItems > 0 }
+func (f *FMEA) HasHighRPN() bool { return f.Summary.HighPriority > 0 }
+
+// actionPriority approximates the AIAG-VDA Handbook's Action Priority method
+// (high|medium|low), which in the real handbook derives from a full S×O×D
+// lookup table. FuSaOps uses a deliberately coarser, severity-dominant
+// bucketing — severity ≥8 is always "high" regardless of occurrence/
+// detection, matching AIAG-VDA's own philosophy that a severe failure
+// warrants urgent attention even when rare or well-detected.
+//
+//fusa:req REQ-FO-FMEA006
+func actionPriority(severity int) string {
+	switch {
+	case severity >= 8:
+		return "high"
+	case severity >= 5:
+		return "medium"
+	default:
+		return "low"
+	}
+}
 
 // modeSpec holds the static definition of one failure mode; RPN is computed.
 type modeSpec struct {
-	id         string
-	component  string
-	function   string
-	mode       string
-	effect     string
-	cause      string
-	severity   int
-	occurrence int
-	detection  int
-	controls   []string
-	action     string
+	id             string
+	component      string
+	function       string
+	mode           string
+	effect         string
+	cause          string
+	severity       int
+	occurrence     int
+	detection      int
+	controls       []string
+	action         string
+	requirementIDs []string
 }
 
 // standardModes covers failure modes in the FuSaOps orchestration pipeline
@@ -103,7 +146,8 @@ var standardModes = []modeSpec{
 			"CI gate fails when a required adapter is absent",
 			"fusaops sci — inventories tool presence with version and hash",
 		},
-		action: "Add adapter availability check to the CI gate; fail the build on missing required adapters.",
+		action:         "Add adapter availability check to the CI gate; fail the build on missing required adapters.",
+		requirementIDs: []string{"REQ-FO-ADP007"},
 	},
 	{
 		id:         "FM-002",
@@ -120,7 +164,8 @@ var standardModes = []modeSpec{
 			"Orchestrator records skipped and failed adapters in the aggregate report",
 			"fusaops qualify — validates adapter health against each subcommand",
 		},
-		action: "Surface adapter error prominently in aggregate report; treat adapter failure as a gate failure.",
+		action:         "Surface adapter error prominently in aggregate report; treat adapter failure as a gate failure.",
+		requirementIDs: []string{"REQ-FO-ORC002"},
 	},
 	{
 		id:         "FM-003",
@@ -137,7 +182,8 @@ var standardModes = []modeSpec{
 			"fusaops qualify — validates adapter output against each spec section",
 			"SpecVersion pinning in capabilities response",
 		},
-		action: "Run fusaops conform in CI after every tool version update; pin tool versions in Dockerfile.",
+		action:         "Run fusaops conform in CI after every tool version update; pin tool versions in Dockerfile.",
+		requirementIDs: []string{"REQ-FO-CNF003"},
 	},
 	{
 		id:         "FM-004",
@@ -154,7 +200,8 @@ var standardModes = []modeSpec{
 			"CI gate fails on untraced requirements",
 			"fusaops trace report flags coverage gaps",
 		},
-		action: "Install fusaops hooks pre-commit hook to validate annotation format before every commit.",
+		action:         "Install fusaops hooks pre-commit hook to validate annotation format before every commit.",
+		requirementIDs: []string{"REQ-FO-TRC002"},
 	},
 	{
 		id:         "FM-005",
@@ -171,7 +218,8 @@ var standardModes = []modeSpec{
 			"fusaops sci checks SBOM artefact presence with file hash",
 			"Audit pack includes all SBOM artefacts for reviewer verification",
 		},
-		action: "Add SBOM completeness check to the release gate; fail release if any language SBOM is absent.",
+		action:         "Add SBOM completeness check to the release gate; fail release if any language SBOM is absent.",
+		requirementIDs: []string{"REQ-FO-SBM004"},
 	},
 	{
 		id:         "FM-006",
@@ -188,7 +236,8 @@ var standardModes = []modeSpec{
 			"fusaops audit-pack — includes hash manifest with all artefact digests",
 			"Release gate re-verifies all signatures before generating provenance",
 		},
-		action: "Mandate fusaops sign --verify as the final step of the release pipeline before submission.",
+		action:         "Mandate fusaops sign --verify as the final step of the release pipeline before submission.",
+		requirementIDs: []string{"REQ-FO-SIGN004"},
 	},
 	{
 		id:         "FM-007",
@@ -205,7 +254,8 @@ var standardModes = []modeSpec{
 			"Orchestrator records the skipped component with reason in the aggregate report",
 			"CI wall-clock timeout surfaces the failure as a build error",
 		},
-		action: "Set per-adapter timeout in .fusaops.json; raise alert in report when timeout fires.",
+		action:         "Set per-adapter timeout in .fusaops.json; raise alert in report when timeout fires.",
+		requirementIDs: []string{"REQ-FO-ORC009"},
 	},
 	{
 		id:         "FM-008",
@@ -222,7 +272,8 @@ var standardModes = []modeSpec{
 			"PR review required for all changes to .fusaops-suppress.json",
 			"fusaops qualify audits active suppressions for expiry compliance",
 		},
-		action: "Enforce suppression expiry dates; alert in CI when expired suppressions are still active.",
+		action:         "Enforce suppression expiry dates; alert in CI when expired suppressions are still active.",
+		requirementIDs: []string{"REQ-FO-SUP001"},
 	},
 }
 
@@ -236,28 +287,32 @@ func Build(root string) (*FMEA, error) {
 		Tool:        "fusaops",
 		ToolVersion: fusaops.Version,
 		Standard:    "IEC 61508:2010 / ISO 26262:2018 Part 8-7",
+		RatingScale: RatingScale,
 	}
 
 	for _, spec := range standardModes {
 		rpn := spec.severity * spec.occurrence * spec.detection
 		fm := FailureMode{
-			ID:         spec.id,
-			Component:  spec.component,
-			Function:   spec.function,
-			Mode:       spec.mode,
-			Effect:     spec.effect,
-			Cause:      spec.cause,
-			Severity:   spec.severity,
-			Occurrence: spec.occurrence,
-			Detection:  spec.detection,
-			RPN:        rpn,
-			Controls:   spec.controls,
-			Action:     spec.action,
+			ID:             spec.id,
+			Component:      spec.component,
+			Function:       spec.function,
+			Item:           spec.component + "." + spec.function,
+			Mode:           spec.mode,
+			Effect:         spec.effect,
+			Cause:          spec.cause,
+			Severity:       spec.severity,
+			Occurrence:     spec.occurrence,
+			Detection:      spec.detection,
+			RPN:            rpn,
+			ActionPriority: actionPriority(spec.severity),
+			Controls:       spec.controls,
+			Action:         spec.action,
+			RequirementIDs: spec.requirementIDs,
 		}
-		f.FailureModes = append(f.FailureModes, fm)
-		f.TotalItems++
+		f.Entries = append(f.Entries, fm)
+		f.Summary.Total++
 		if rpn > HighRPNThreshold {
-			f.HighRPNItems++
+			f.Summary.HighPriority++
 		}
 	}
 
@@ -272,8 +327,12 @@ func computeHash(f *FMEA) string {
 	if err != nil {
 		return ""
 	}
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:])
+	canon, err := fusaops.Canonicalize(data)
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(canon)
+	return fmt.Sprintf("sha256:%x", sum)
 }
 
 // Save writes the FMEA to path as indented JSON.
@@ -333,9 +392,9 @@ func renderText(w io.Writer, f *FMEA) error {
 	fmt.Fprintf(w, "Tool:      %s v%s\n", f.Tool, f.ToolVersion)
 	fmt.Fprintf(w, "Generated: %s\n", f.GeneratedAt.Format("2006-01-02T15:04:05Z"))
 	fmt.Fprintf(w, "Items:     %d total, %d high-RPN (>%d)\n\n",
-		f.TotalItems, f.HighRPNItems, HighRPNThreshold)
+		f.Summary.Total, f.Summary.HighPriority, HighRPNThreshold)
 
-	for _, fm := range f.FailureModes {
+	for _, fm := range f.Entries {
 		priority := "  "
 		if fm.RPN > HighRPNThreshold {
 			priority = "!"
@@ -361,7 +420,7 @@ func renderText(w io.Writer, f *FMEA) error {
 	}
 	if f.HasHighRPN() {
 		fmt.Fprintf(w, "\nHIGH-RPN ITEMS: %d failure mode(s) require corrective action (RPN > %d).\n",
-			f.HighRPNItems, HighRPNThreshold)
+			f.Summary.HighPriority, HighRPNThreshold)
 	}
 	return nil
 }

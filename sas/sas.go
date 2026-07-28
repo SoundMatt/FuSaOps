@@ -8,7 +8,6 @@ package sas
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -44,25 +43,75 @@ type Activity struct {
 	Evidence string         `json:"evidence,omitempty"` // path of supporting evidence file
 }
 
-// SAS is the Software Accomplishment Summary document.
+// ChecklistItem is x-FuSa spec §9.3's promoted-schema view of one Activity:
+// `item`/`clause`/`present`/`evidence` rather than this package's richer
+// three-state Activity/ActivityStatus.
+//
+//fusa:req REQ-FO-SAS006
+type ChecklistItem struct {
+	Item     string `json:"item"`
+	Clause   string `json:"clause"`
+	Present  bool   `json:"present"`
+	Evidence string `json:"evidence,omitempty"`
+}
+
+// Summary rolls up the SAS's checklist totals.
+//
+//fusa:req REQ-FO-SAS006
+type Summary struct {
+	Total   int `json:"total"`
+	Present int `json:"present"`
+}
+
+// SAS is the Software Accomplishment Summary document. Activities/
+// ActivityStatus remain the primary three-state (complete/incomplete/N-A)
+// model; Checklist/Summary are the boolean-`present` projection required by
+// x-FuSa spec §9.3, derived from the same Activities at Build time.
 //
 //fusa:req REQ-FO-SAS001
 type SAS struct {
-	GeneratedAt        time.Time  `json:"generatedAt"`
-	ProjectRoot        string     `json:"projectRoot"`
-	Tool               string     `json:"tool"`
-	ToolVersion        string     `json:"toolVersion"`
-	SoftwareLevel      string     `json:"softwareLevel"` // DAL-A through DAL-E
-	Activities         []Activity `json:"activities"`
-	TotalActivities    int        `json:"totalActivities"`
-	CompleteActivities int        `json:"completeActivities"`
-	Hash               string     `json:"hash"`
+	GeneratedAt        time.Time       `json:"generatedAt"`
+	ProjectRoot        string          `json:"projectRoot"`
+	Tool               string          `json:"tool"`
+	ToolVersion        string          `json:"toolVersion"`
+	SoftwareLevel      string          `json:"softwareLevel"` // DAL-A through DAL-E
+	Activities         []Activity      `json:"activities"`
+	TotalActivities    int             `json:"totalActivities"`
+	CompleteActivities int             `json:"completeActivities"`
+	Checklist          []ChecklistItem `json:"checklist"`
+	Summary            Summary         `json:"summary"`
+	Hash               string          `json:"hash"`
 }
 
 // HasGaps returns true when at least one required activity is incomplete.
 //
 //fusa:req REQ-FO-SAS005
 func (s *SAS) HasGaps() bool { return s.CompleteActivities < s.TotalActivities }
+
+// buildChecklist projects activities into the x-FuSa spec §9.3 checklist
+// shape: `present` is true for both StatusComplete and StatusNA (an N/A
+// activity is not a gap — same semantics Build already uses for
+// CompleteActivities), false only for StatusIncomplete.
+//
+//fusa:req REQ-FO-SAS006
+func buildChecklist(activities []Activity) ([]ChecklistItem, Summary) {
+	items := make([]ChecklistItem, 0, len(activities))
+	var summary Summary
+	for _, a := range activities {
+		present := a.Status == StatusComplete || a.Status == StatusNA
+		items = append(items, ChecklistItem{
+			Item:     a.Title,
+			Clause:   a.ID,
+			Present:  present,
+			Evidence: a.Evidence,
+		})
+		summary.Total++
+		if present {
+			summary.Present++
+		}
+	}
+	return items, summary
+}
 
 // activitySpec defines one lifecycle activity and the evidence file that
 // demonstrates its completion.
@@ -131,6 +180,8 @@ func Build(root, softwareLevel string) (*SAS, error) {
 		}
 	}
 
+	s.Checklist, s.Summary = buildChecklist(s.Activities)
+
 	s.Hash = computeHash(s)
 	return s, nil
 }
@@ -142,8 +193,12 @@ func computeHash(s *SAS) string {
 	if err != nil {
 		return ""
 	}
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:])
+	canon, err := fusaops.Canonicalize(data)
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(canon)
+	return fmt.Sprintf("sha256:%x", sum)
 }
 
 // Save writes the SAS to path as indented JSON.

@@ -120,36 +120,16 @@ func runHaraInit(args []string, projectRoot string, stdout, stderr io.Writer) in
 		name = filepath.Base(projectRoot)
 	}
 
+	// Per x-FuSa spec §1.2.5/§1.6 rule 1: a scaffold MUST emit empty
+	// collections, never a dummy row — placeholder text asserts a false
+	// completeness that a real "empty, honestly incomplete" state does not.
 	h := &hara.HARA{
-		Project:   name,
-		Standard:  *standard,
-		CreatedAt: time.Now().UTC(),
-		Situations: []hara.OperationalSituation{
-			{ID: "OS-001", Description: "Normal operation"},
-		},
-		Hazards: []hara.Hazard{
-			{
-				ID:          "H-001",
-				Description: "Example hazard — replace with project-specific hazard",
-				Situations:  []string{"OS-001"},
-				Risk: hara.RiskRating{
-					Severity:        hara.SeverityS2,
-					Exposure:        hara.ExposureE3,
-					Controllability: hara.ControllabilityC2,
-					ASIL:            hara.DetermineASIL(hara.SeverityS2, hara.ExposureE3, hara.ControllabilityC2),
-				},
-				SafetyGoals: []string{"SG-001"},
-			},
-		},
-		SafetyGoals: []hara.SafetyGoal{
-			{
-				ID:          "SG-001",
-				Description: "Example safety goal — replace with project-specific goal",
-				HazardIDs:   []string{"H-001"},
-				ASIL:        hara.DetermineASIL(hara.SeverityS2, hara.ExposureE3, hara.ControllabilityC2),
-				SafeState:   "safe state description",
-			},
-		},
+		Project:     name,
+		Standard:    *standard,
+		CreatedAt:   time.Now().UTC(),
+		Situations:  []hara.OperationalSituation{},
+		Hazards:     []hara.Hazard{},
+		SafetyGoals: []hara.SafetyGoal{},
 	}
 
 	if err := hara.Save(path, h); err != nil {

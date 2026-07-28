@@ -118,6 +118,51 @@ func TestBuildWithEvidence(t *testing.T) {
 	}
 }
 
+// TestBuildHashHasAlgoPrefix verifies Hash carries the "sha256:" prefix
+// required by x-FuSa spec §2.7 for a field named "hash".
+//
+//fusa:test REQ-FO-SAS006
+func TestBuildHashHasAlgoPrefix(t *testing.T) {
+	s, err := sas.Build(t.TempDir(), "DAL-C")
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if !strings.HasPrefix(s.Hash, "sha256:") {
+		t.Errorf("Hash = %q, want sha256: prefix", s.Hash)
+	}
+}
+
+// TestBuildChecklistProjection verifies Checklist/Summary mirror
+// Activities/TotalActivities/CompleteActivities per x-FuSa spec §9.3.
+//
+//fusa:test REQ-FO-SAS006
+func TestBuildChecklistProjection(t *testing.T) {
+	dir := t.TempDir()
+	s, err := sas.Build(dir, "DAL-C")
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if len(s.Checklist) != len(s.Activities) {
+		t.Errorf("len(Checklist)=%d, want %d", len(s.Checklist), len(s.Activities))
+	}
+	if s.Summary.Total != s.TotalActivities {
+		t.Errorf("Summary.Total=%d, want %d", s.Summary.Total, s.TotalActivities)
+	}
+	if s.Summary.Present != s.CompleteActivities {
+		t.Errorf("Summary.Present=%d, want %d", s.Summary.Present, s.CompleteActivities)
+	}
+	for i, item := range s.Checklist {
+		a := s.Activities[i]
+		if item.Item != a.Title || item.Clause != a.ID || item.Evidence != a.Evidence {
+			t.Errorf("Checklist[%d] = %+v, want item/clause/evidence from %+v", i, item, a)
+		}
+		wantPresent := a.Status == sas.StatusComplete || a.Status == sas.StatusNA
+		if item.Present != wantPresent {
+			t.Errorf("Checklist[%d].Present=%v, want %v (status=%s)", i, item.Present, wantPresent, a.Status)
+		}
+	}
+}
+
 //fusa:test REQ-FO-SAS002
 func TestBuildHashChanges(t *testing.T) {
 	dir := t.TempDir()

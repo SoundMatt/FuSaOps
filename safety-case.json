@@ -1,94 +1,274 @@
 {
-  "format": "go-FuSa Safety Case v1",
-  "generatedAt": "2026-06-10T14:31:49.528893Z",
-  "module": "github.com/SoundMatt/FuSaOps",
-  "standard": "generic",
-  "evidence": [
+  "generatedAt": "2026-07-28T18:47:06.907424Z",
+  "projectRoot": ".",
+  "tool": "fusaops",
+  "toolVersion": "1.140.0",
+  "standard": "ISO 26262",
+  "claims": [
     {
-      "id": "check",
-      "description": "Coding standard and static analysis checks",
-      "file": "check-report.json",
-      "status": "absent",
-      "detail": "run 'gofusa check --output check-report.json' to generate"
+      "id": "C-001",
+      "title": "Tool qualification evidence is available",
+      "strategy": "Argument by inspection of tool qualification report",
+      "evidence": [
+        {
+          "title": "Tool qualification report",
+          "path": "./.fusaops-qualify-report.json",
+          "status": "missing"
+        }
+      ],
+      "passed": false
     },
     {
-      "id": "trace",
-      "description": "Requirements traceability matrix",
-      "file": ".fusa-reqs.json",
-      "status": "present",
-      "detail": "101 requirements"
+      "id": "C-002",
+      "title": "Requirements are traced to tests across all language components",
+      "strategy": "Argument by inspection of cross-language traceability matrix",
+      "evidence": [
+        {
+          "title": "Traceability matrix (JSON)",
+          "path": "./.fusaops-trace.json",
+          "status": "missing"
+        }
+      ],
+      "passed": false
     },
     {
-      "id": "verify",
-      "description": "Test evidence bundle",
-      "file": ".fusa-evidence.json",
-      "status": "present",
-      "detail": "105/105 tests passed"
+      "id": "C-003",
+      "title": "Test execution evidence is captured",
+      "strategy": "Argument by inspection of structured test evidence bundle",
+      "evidence": [
+        {
+          "title": "Test evidence bundle",
+          "path": "./.fusaops-evidence.json",
+          "status": "missing"
+        }
+      ],
+      "passed": false
     },
     {
-      "id": "qualify",
-      "description": "Tool qualification report",
-      "file": "qualify-report.json",
-      "status": "present",
-      "detail": "44/44 cases passed"
+      "id": "C-004",
+      "title": "Software Bill of Materials is complete",
+      "strategy": "Argument by inspection of cross-language SBOM",
+      "evidence": [
+        {
+          "title": "Cross-language SBOM",
+          "path": "./sbom.json",
+          "status": "present",
+          "sha256": "17e9172e968bc17d813e3c7960eb40fe89d3327c102da83365258bc2fc7d9388",
+          "size": 623
+        }
+      ],
+      "passed": true
     },
     {
-      "id": "sbom",
-      "description": "SBOM (SPDX 3.0.1)",
-      "file": "sbom.json",
-      "status": "present"
+      "id": "C-005",
+      "title": "Build integrity is established",
+      "strategy": "Argument by inspection of build provenance and artifact manifest",
+      "evidence": [
+        {
+          "title": "Build provenance",
+          "path": "./provenance.json",
+          "status": "present",
+          "sha256": "b599f32f336abb4f473dbb4bb7a426af815de3c0004ccf345dc70a6cb538c14b",
+          "size": 283
+        },
+        {
+          "title": "Artifact manifest (SHA-256)",
+          "path": "./artifact-manifest.json",
+          "status": "present",
+          "sha256": "bff8d3d64849cecec8173e4f117649b483c2b7d5f2ab3be571e1ab4fea46f6bf",
+          "size": 453
+        }
+      ],
+      "passed": true
     },
     {
-      "id": "provenance",
-      "description": "Build provenance",
-      "file": "provenance.json",
-      "status": "present"
+      "id": "C-006",
+      "title": "Problem reports are tracked and resolved",
+      "strategy": "Argument by inspection of problem report log",
+      "evidence": [
+        {
+          "title": "Problem report log",
+          "path": "./.fusaops-problems.json",
+          "status": "missing"
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "C-007",
+      "title": "Audit evidence pack is available for review",
+      "strategy": "Argument by inspection of bundled audit evidence",
+      "evidence": [
+        {
+          "title": "Audit pack archive",
+          "path": "./audit-pack.zip",
+          "status": "present",
+          "sha256": "490f4b5c57c02ce6c835df93be110e5ce123e0537995ad2b5d8b768abee743e9",
+          "size": 17730
+        }
+      ],
+      "passed": true
     }
   ],
-  "clauses": [
+  "totalClaims": 7,
+  "passedClaims": 3,
+  "nodes": [
     {
-      "standard": "Generic",
-      "clause": "CS-1",
-      "title": "Coding standard compliance",
-      "evidenceIds": [
-        "check"
-      ]
+      "id": "C-001",
+      "type": "goal",
+      "text": "Tool qualification evidence is available"
     },
     {
-      "standard": "Generic",
-      "clause": "CS-2",
-      "title": "Requirements traceability",
-      "evidenceIds": [
-        "trace"
-      ]
+      "id": "C-001-St",
+      "type": "strategy",
+      "text": "Argument by inspection of tool qualification report"
     },
     {
-      "standard": "Generic",
-      "clause": "CS-3",
-      "title": "Test evidence",
-      "evidenceIds": [
-        "verify"
-      ]
+      "id": "C-002",
+      "type": "goal",
+      "text": "Requirements are traced to tests across all language components"
     },
     {
-      "standard": "Generic",
-      "clause": "CS-4",
-      "title": "Tool qualification",
-      "evidenceIds": [
-        "qualify"
-      ]
+      "id": "C-002-St",
+      "type": "strategy",
+      "text": "Argument by inspection of cross-language traceability matrix"
     },
     {
-      "standard": "Generic",
-      "clause": "CS-5",
-      "title": "Release inventory",
-      "evidenceIds": [
-        "sbom",
-        "provenance"
-      ]
+      "id": "C-003",
+      "type": "goal",
+      "text": "Test execution evidence is captured"
+    },
+    {
+      "id": "C-003-St",
+      "type": "strategy",
+      "text": "Argument by inspection of structured test evidence bundle"
+    },
+    {
+      "id": "C-004",
+      "type": "goal",
+      "text": "Software Bill of Materials is complete"
+    },
+    {
+      "id": "C-004-St",
+      "type": "strategy",
+      "text": "Argument by inspection of cross-language SBOM"
+    },
+    {
+      "id": "C-004-Sn1",
+      "type": "solution",
+      "text": "Cross-language SBOM",
+      "evidence": "./sbom.json"
+    },
+    {
+      "id": "C-005",
+      "type": "goal",
+      "text": "Build integrity is established"
+    },
+    {
+      "id": "C-005-St",
+      "type": "strategy",
+      "text": "Argument by inspection of build provenance and artifact manifest"
+    },
+    {
+      "id": "C-005-Sn1",
+      "type": "solution",
+      "text": "Build provenance",
+      "evidence": "./provenance.json"
+    },
+    {
+      "id": "C-005-Sn2",
+      "type": "solution",
+      "text": "Artifact manifest (SHA-256)",
+      "evidence": "./artifact-manifest.json"
+    },
+    {
+      "id": "C-006",
+      "type": "goal",
+      "text": "Problem reports are tracked and resolved"
+    },
+    {
+      "id": "C-006-St",
+      "type": "strategy",
+      "text": "Argument by inspection of problem report log"
+    },
+    {
+      "id": "C-007",
+      "type": "goal",
+      "text": "Audit evidence pack is available for review"
+    },
+    {
+      "id": "C-007-St",
+      "type": "strategy",
+      "text": "Argument by inspection of bundled audit evidence"
+    },
+    {
+      "id": "C-007-Sn1",
+      "type": "solution",
+      "text": "Audit pack archive",
+      "evidence": "./audit-pack.zip"
     }
   ],
-  "gaps": [
-    "check"
-  ]
+  "edges": [
+    {
+      "from": "C-001",
+      "to": "C-001-St",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-002",
+      "to": "C-002-St",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-003",
+      "to": "C-003-St",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-004",
+      "to": "C-004-St",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-004-St",
+      "to": "C-004-Sn1",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-005",
+      "to": "C-005-St",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-005-St",
+      "to": "C-005-Sn1",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-005-St",
+      "to": "C-005-Sn2",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-006",
+      "to": "C-006-St",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-007",
+      "to": "C-007-St",
+      "type": "supportedBy"
+    },
+    {
+      "from": "C-007-St",
+      "to": "C-007-Sn1",
+      "type": "supportedBy"
+    }
+  ],
+  "completeness": {
+    "totalGoals": 7,
+    "goalsWithEvidence": 3,
+    "undeveloped": 4
+  },
+  "hash": "sha256:8a624d3327d600e5625d8f8a17c6308f417808b98a8140ba27f70ed6107bf7c7"
 }

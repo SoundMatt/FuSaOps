@@ -32,3 +32,11 @@ fusaops sas [--dir <path>] [--output <file>] [--format text|json]
 ```bash
 fusaops sas --level DAL-B --format json --output sas.json
 ```
+
+## x-FuSa spec conformance
+
+Alongside `activities`/`totalActivities`/`completeActivities` (this package's
+three-state complete/incomplete/N-A model), the JSON also carries a
+`checklist`/`summary` projection per x-FuSa spec §9.3 — `checklist[].present`
+is `true` for both `complete` and `N/A` activities, matching the existing
+"counts as done" semantics.

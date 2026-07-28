@@ -33,3 +33,11 @@ fusaops tara --format json --output tara.json
 
 Serves ISO 21434 threat analysis objectives across the FuSaOps orchestration
 pipeline and the tools it invokes.
+
+## x-FuSa spec conformance
+
+The JSON shape follows x-FuSa spec §9.2's `tara` schema: threat scenarios are
+under `threats[]` (each carrying `threat`/`attackFeasibility`/`mitigations`),
+and `impact` is an SFOP object (`safety`/`financial`/`operational`/`privacy`)
+per ISO 21434 Clause 15.7 rather than a single generic severity, since a
+threat can rate differently on each axis.

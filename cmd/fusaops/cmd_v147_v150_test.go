@@ -532,7 +532,7 @@ func TestTARAJSON(t *testing.T) {
 	if code > 1 {
 		t.Fatalf("tara json: unexpected exit code %d", code)
 	}
-	if !strings.Contains(out, `"scenarios"`) || !strings.Contains(out, `"riskLevel"`) {
+	if !strings.Contains(out, `"threats"`) || !strings.Contains(out, `"riskLevel"`) {
 		t.Errorf("tara json missing expected fields: %q", out[:min(len(out), 200)])
 	}
 }
@@ -589,7 +589,7 @@ func TestFMEAJSON(t *testing.T) {
 	if code > 1 {
 		t.Fatalf("fmea json: unexpected exit code %d", code)
 	}
-	if !strings.Contains(out, `"failureModes"`) || !strings.Contains(out, `"rpn"`) {
+	if !strings.Contains(out, `"entries"`) || !strings.Contains(out, `"rpn"`) {
 		t.Errorf("fmea json missing expected fields: %q", out[:min(len(out), 200)])
 	}
 }

@@ -1,800 +1,199 @@
 {
-  "format": "go-FuSa dFMEA v1",
-  "generated_at": "2026-06-10T14:32:27.912521Z",
-  "module": "github.com/SoundMatt/FuSaOps",
+  "generatedAt": "2026-07-28T18:47:06.891193Z",
+  "projectRoot": ".",
+  "tool": "fusaops",
+  "toolVersion": "1.140.0",
+  "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7",
+  "ratingScale": "custom-1-10",
   "entries": [
     {
-      "component": "FuSaOps (fusaops)",
-      "function": "Rank",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
-      "failure_modes": [
-        "Incorrect output"
+      "id": "FM-001",
+      "component": "Adapter Registry",
+      "function": "Execute language-specific safety analysis",
+      "item": "Adapter Registry.Execute language-specific safety analysis",
+      "failureMode": "Adapter binary not found on PATH",
+      "effect": "Language component analysis silently skipped; safety defects in that language undetected.",
+      "cause": "Missing tool installation or PATH misconfiguration in CI environment.",
+      "severity": 9,
+      "occurrence": 4,
+      "detection": 3,
+      "rpn": 108,
+      "actionPriority": "high",
+      "mitigations": [
+        "fusaops adapters — lists adapter availability before analysis",
+        "CI gate fails when a required adapter is absent",
+        "fusaops sci — inventories tool presence with version and hash"
       ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-CORE002"
+      "action": "Add adapter availability check to the CI gate; fail the build on missing required adapters.",
+      "requirementIds": [
+        "REQ-FO-ADP007"
       ]
     },
     {
-      "component": "FuSaOps (fusaops)",
-      "function": "String",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
-      "failure_modes": [
-        "Incorrect output"
+      "id": "FM-002",
+      "component": "cmdAdapter",
+      "function": "Run x-FuSa tool and collect findings",
+      "item": "cmdAdapter.Run x-FuSa tool and collect findings",
+      "failureMode": "Adapter process exits with non-zero code",
+      "effect": "Findings from that language component dropped from the aggregate report.",
+      "cause": "Tool bug, memory exhaustion, or malformed source input.",
+      "severity": 8,
+      "occurrence": 3,
+      "detection": 5,
+      "rpn": 120,
+      "actionPriority": "high",
+      "mitigations": [
+        "Adapter exit code propagated as orchestrator error",
+        "Orchestrator records skipped and failed adapters in the aggregate report",
+        "fusaops qualify — validates adapter health against each subcommand"
       ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "FuSaOps (fusaops)",
-      "function": "String",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/fusaops.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "adapter",
-      "function": "All",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "adapter",
-      "function": "Applicable",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ADP008"
+      "action": "Surface adapter error prominently in aggregate report; treat adapter failure as a gate failure.",
+      "requirementIds": [
+        "REQ-FO-ORC002"
       ]
     },
     {
-      "component": "adapter",
-      "function": "AuditPack",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/capabilities.go",
-      "failure_modes": [
-        "Returns unexpected error"
+      "id": "FM-003",
+      "component": "Report decoder",
+      "function": "Parse adapter JSON output per x-FuSa spec",
+      "item": "Report decoder.Parse adapter JSON output per x-FuSa spec",
+      "failureMode": "Adapter output schema does not conform to x-FuSa spec",
+      "effect": "Findings silently dropped or aggregate report mis-renders.",
+      "cause": "Tool version skew between adapter binary and FuSaOps decoder expectations.",
+      "severity": 9,
+      "occurrence": 3,
+      "detection": 4,
+      "rpn": 108,
+      "actionPriority": "high",
+      "mitigations": [
+        "fusaops conform — schema conformance checks against the x-FuSa spec",
+        "fusaops qualify — validates adapter output against each spec section",
+        "SpecVersion pinning in capabilities response"
       ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ADP017"
+      "action": "Run fusaops conform in CI after every tool version update; pin tool versions in Dockerfile.",
+      "requirementIds": [
+        "REQ-FO-CNF003"
       ]
     },
     {
-      "component": "adapter",
-      "function": "Available",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Incorrect output"
+      "id": "FM-004",
+      "component": "trace package",
+      "function": "Cross-language requirement traceability",
+      "item": "trace package.Cross-language requirement traceability",
+      "failureMode": "Source annotation removed or misspelled",
+      "effect": "Requirement appears untraceable; false coverage gap reported.",
+      "cause": "Developer removes or typos a //fusa:req annotation during refactoring.",
+      "severity": 7,
+      "occurrence": 5,
+      "detection": 5,
+      "rpn": 175,
+      "actionPriority": "medium",
+      "mitigations": [
+        "go-FuSa selfcheck catches annotation errors in Go source",
+        "CI gate fails on untraced requirements",
+        "fusaops trace report flags coverage gaps"
       ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ADP003"
+      "action": "Install fusaops hooks pre-commit hook to validate annotation format before every commit.",
+      "requirementIds": [
+        "REQ-FO-TRC002"
       ]
     },
     {
-      "component": "adapter",
-      "function": "Check",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Returns unexpected error"
+      "id": "FM-005",
+      "component": "sbom package",
+      "function": "Merge per-language SBOMs into cross-language SBOM",
+      "item": "sbom package.Merge per-language SBOMs into cross-language SBOM",
+      "failureMode": "Language SBOM file missing from merge input",
+      "effect": "Component not included in final SBOM; unknown dependency risk reaches certification.",
+      "cause": "Adapter SBOM generation failed silently or output file not written.",
+      "severity": 6,
+      "occurrence": 3,
+      "detection": 4,
+      "rpn": 72,
+      "actionPriority": "medium",
+      "mitigations": [
+        "fusaops sbom warns on missing per-language SBOM inputs",
+        "fusaops sci checks SBOM artefact presence with file hash",
+        "Audit pack includes all SBOM artefacts for reviewer verification"
       ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ADP005"
+      "action": "Add SBOM completeness check to the release gate; fail release if any language SBOM is absent.",
+      "requirementIds": [
+        "REQ-FO-SBM004"
       ]
     },
     {
-      "component": "adapter",
-      "function": "Detect",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Returns unexpected error"
+      "id": "FM-006",
+      "component": "auditpack / sign packages",
+      "function": "Verify integrity of evidence artefacts",
+      "item": "auditpack / sign packages.Verify integrity of evidence artefacts",
+      "failureMode": "Artefact file modified after signing",
+      "effect": "Tampered evidence passes a manual inspection that does not re-verify the HMAC.",
+      "cause": "Post-sign file modification (intentional or accidental) or disk corruption.",
+      "severity": 9,
+      "occurrence": 2,
+      "detection": 3,
+      "rpn": 54,
+      "actionPriority": "high",
+      "mitigations": [
+        "fusaops sign — HMAC-SHA256 verification step re-verifies before submission",
+        "fusaops audit-pack — includes hash manifest with all artefact digests",
+        "Release gate re-verifies all signatures before generating provenance"
       ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ADP004"
+      "action": "Mandate fusaops sign --verify as the final step of the release pipeline before submission.",
+      "requirementIds": [
+        "REQ-FO-SIGN004"
       ]
     },
     {
-      "component": "adapter",
-      "function": "Language",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Incorrect output"
+      "id": "FM-007",
+      "component": "cmdAdapter / orchestrator",
+      "function": "Execute adapter within configured timeout",
+      "item": "cmdAdapter / orchestrator.Execute adapter within configured timeout",
+      "failureMode": "Adapter process hangs indefinitely",
+      "effect": "Analysis pipeline blocked; no findings produced; release delayed or silently skipped.",
+      "cause": "Deadlock in adapter tool, infinite loop, or unavailable external resource.",
+      "severity": 7,
+      "occurrence": 3,
+      "detection": 6,
+      "rpn": 126,
+      "actionPriority": "medium",
+      "mitigations": [
+        "Adapter process killed after configurable per-adapter timeout",
+        "Orchestrator records the skipped component with reason in the aggregate report",
+        "CI wall-clock timeout surfaces the failure as a build error"
       ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "adapter",
-      "function": "MustRegister",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "adapter",
-      "function": "Name",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "adapter",
-      "function": "NewRegistry",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "adapter",
-      "function": "Qualify",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/capabilities.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ADP015"
+      "action": "Set per-adapter timeout in .fusaops.json; raise alert in report when timeout fires.",
+      "requirementIds": [
+        "REQ-FO-ORC009"
       ]
     },
     {
-      "component": "adapter",
-      "function": "Register",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "medium",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "adapter",
-      "function": "SBOM",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/capabilities.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ADP016"
-      ]
-    },
-    {
-      "component": "adapter",
-      "function": "Tool",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "adapter",
-      "function": "Trace",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/capabilities.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ADP014"
-      ]
-    },
-    {
-      "component": "auditpack",
-      "function": "JSONSource",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/auditpack/auditpack.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-PCK005"
-      ]
-    },
-    {
-      "component": "auditpack",
-      "function": "Pack",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/auditpack/auditpack.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-PCK004"
-      ]
-    },
-    {
-      "component": "config",
-      "function": "Default",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/config/config.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-CFG003"
-      ]
-    },
-    {
-      "component": "config",
-      "function": "Load",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/config/config.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-CFG004"
-      ]
-    },
-    {
-      "component": "config",
-      "function": "Save",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/config/config.go",
-      "failure_modes": [
-        "Returns unexpected error",
-        "Partial write / data corruption"
-      ],
-      "effects": [
-        "Silent failure propagated to caller",
-        "Incorrect system state"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-CFG005"
-      ]
-    },
-    {
-      "component": "config",
-      "function": "Validate",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/config/config.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-CFG006"
-      ]
-    },
-    {
-      "component": "orchestrator",
-      "function": "New",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/orchestrator/orchestrator.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "orchestrator",
-      "function": "Run",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/orchestrator/orchestrator.go",
-      "failure_modes": [
-        "Returns unexpected error",
-        "Uncontrolled execution"
-      ],
-      "effects": [
-        "Silent failure propagated to caller",
-        "Resource exhaustion"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ORC003"
-      ]
-    },
-    {
-      "component": "orchestrator",
-      "function": "RunAuditPack",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/orchestrator/rollup.go",
-      "failure_modes": [
-        "Returns unexpected error",
-        "Uncontrolled execution"
-      ],
-      "effects": [
-        "Silent failure propagated to caller",
-        "Resource exhaustion"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ORC006"
-      ]
-    },
-    {
-      "component": "orchestrator",
-      "function": "RunSBOM",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/orchestrator/rollup.go",
-      "failure_modes": [
-        "Returns unexpected error",
-        "Uncontrolled execution"
-      ],
-      "effects": [
-        "Silent failure propagated to caller",
-        "Resource exhaustion"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ORC005"
-      ]
-    },
-    {
-      "component": "orchestrator",
-      "function": "RunTrace",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/orchestrator/rollup.go",
-      "failure_modes": [
-        "Returns unexpected error",
-        "Uncontrolled execution"
-      ],
-      "effects": [
-        "Silent failure propagated to caller",
-        "Resource exhaustion"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-ORC004"
-      ]
-    },
-    {
-      "component": "report",
-      "function": "HasErrors",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-RPT006"
-      ]
-    },
-    {
-      "component": "report",
-      "function": "New",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-RPT005"
-      ]
-    },
-    {
-      "component": "report",
-      "function": "Render",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-RPT007"
-      ]
-    },
-    {
-      "component": "report",
-      "function": "RenderToFile",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-RPT008"
-      ]
-    },
-    {
-      "component": "report",
-      "function": "Status",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/report.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-RPT002"
-      ]
-    },
-    {
-      "component": "report",
-      "function": "Version",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/report/html.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "low",
-      "detection_control": "unit tests"
-    },
-    {
-      "component": "sbom",
-      "function": "New",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/sbom/sbom.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SBM005"
-      ]
-    },
-    {
-      "component": "sbom",
-      "function": "Render",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/sbom/render.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SBM006"
-      ]
-    },
-    {
-      "component": "sbom",
-      "function": "RenderToFile",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/sbom/render.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SBM006"
-      ]
-    },
-    {
-      "component": "scan",
-      "function": "Languages",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/scan/scan.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SCAN002"
-      ]
-    },
-    {
-      "component": "scan",
-      "function": "Scan",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/scan/scan.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SCAN003"
-      ]
-    },
-    {
-      "component": "server",
-      "function": "Handler",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/server/server.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SRV004"
-      ]
-    },
-    {
-      "component": "server",
-      "function": "ListenAndServe",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/server/server.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SRV005"
-      ]
-    },
-    {
-      "component": "server",
-      "function": "New",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/server/server.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SRV002"
-      ]
-    },
-    {
-      "component": "server",
-      "function": "Serve",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/server/server.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-SRV005"
-      ]
-    },
-    {
-      "component": "trace",
-      "function": "HasGaps",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/trace/trace.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-TRC011"
-      ]
-    },
-    {
-      "component": "trace",
-      "function": "New",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/trace/trace.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-TRC010"
-      ]
-    },
-    {
-      "component": "trace",
-      "function": "Render",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/trace/render.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-TRC012"
-      ]
-    },
-    {
-      "component": "trace",
-      "function": "RenderToFile",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/trace/render.go",
-      "failure_modes": [
-        "Returns unexpected error"
-      ],
-      "effects": [
-        "Silent failure propagated to caller"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-TRC012"
-      ]
-    },
-    {
-      "component": "trace",
-      "function": "Status",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/trace/trace.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-TRC011"
-      ]
-    },
-    {
-      "component": "trace",
-      "function": "TestedPct",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/trace/trace.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-TRC007"
-      ]
-    },
-    {
-      "component": "trace",
-      "function": "TracedPct",
-      "file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/trace/trace.go",
-      "failure_modes": [
-        "Incorrect output"
-      ],
-      "effects": [
-        "Incorrect system behavior"
-      ],
-      "severity": "high",
-      "detection_control": "requirement testing + unit tests",
-      "requirement_ids": [
-        "REQ-FO-TRC007"
+      "id": "FM-008",
+      "component": "suppression package",
+      "function": "Filter findings against the suppression list",
+      "item": "suppression package.Filter findings against the suppression list",
+      "failureMode": "Overly broad suppression rule hides new violations",
+      "effect": "New safety violations match an existing suppression entry and are never reviewed.",
+      "cause": "Wildcard or unlimited-duration suppression entry in .fusaops-suppress.json.",
+      "severity": 8,
+      "occurrence": 4,
+      "detection": 4,
+      "rpn": 128,
+      "actionPriority": "high",
+      "mitigations": [
+        "fusaops suppress requires explicit rule IDs; no glob wildcards",
+        "PR review required for all changes to .fusaops-suppress.json",
+        "fusaops qualify audits active suppressions for expiry compliance"
+      ],
+      "action": "Enforce suppression expiry dates; alert in CI when expired suppressions are still active.",
+      "requirementIds": [
+        "REQ-FO-SUP001"
       ]
     }
-  ]
+  ],
+  "summary": {
+    "total": 8,
+    "highPriority": 6
+  },
+  "hash": "sha256:33fc5ca071aca851d874052cd2c68ebbe925be759aeb130ea85afa10ff52fac2"
 }

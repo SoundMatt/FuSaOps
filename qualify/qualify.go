@@ -294,6 +294,10 @@ func renderText(w io.Writer, r *Report) error {
 	return nil
 }
 
+// computeHash canonicalizes the same fields as before (everything except
+// Hash itself) via fusaops.Canonicalize, so the hash is genuine RFC 8785
+// sorted-key canonical JSON (§6) rather than relying on Go's fixed struct
+// field order to be deterministic.
 func computeHash(r *Report) string {
 	data, _ := json.Marshal(struct {
 		GeneratedAt            time.Time         `json:"generatedAt"`
@@ -314,6 +318,10 @@ func computeHash(r *Report) string {
 		r.ImplementationAuthor, r.IndependentReviewer, r.AchievableASIL,
 		r.Total, r.Passed, r.Failed, r.Components,
 	})
-	h := sha256.Sum256(data)
+	canon, err := fusaops.Canonicalize(data)
+	if err != nil {
+		canon = data
+	}
+	h := sha256.Sum256(canon)
 	return fmt.Sprintf("sha256:%x", h)
 }

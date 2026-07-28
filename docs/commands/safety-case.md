@@ -31,7 +31,13 @@ fusaops safety-case [--dir <path>] [--output <file>] [--format text|json]
 
 - Looks for each claim's required evidence file (e.g. `.fusaops-evidence.json`
   for `verify`, `sbom.json` for the SBOM claim) under the project root.
-- The generated report includes a SHA-256 integrity hash.
+- The generated report includes a SHA-256 integrity hash (`sha256:`-prefixed).
+- Alongside `claims`/`totalClaims`/`passedClaims`, the JSON also carries a GSN
+  (Goal Structuring Notation) projection of the same data — `nodes`/`edges`/
+  `completeness` — per x-FuSa spec §9.2: each claim becomes a `goal` node
+  supported by a `strategy` node, itself supported by one `solution` node per
+  present evidence file. A claim with no present evidence counts toward
+  `completeness.undeveloped` rather than fabricating a solution.
 
 ## Example
 
