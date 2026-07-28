@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.11.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.12.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -65,6 +65,7 @@ canonical spelling of each.
 | `.fusa-evidence.json` | Test-evidence bundle (`verify`) | tool-defined |
 | `.fusa-dispositions.json` | Finding dispositions | §1.2.3 (read by FuSaOps) |
 | `.fusa-problems.json` | Problem-report log | tool-defined |
+| `.fusa-model-trace.json` | Model-based-design (Simulink) trace links | §1.2.4 (MAY read — draft, §5) |
 
 Names are **un-prefixed** (`.fusa-…`, not `.cfusa-…`): one tool owns a repo, so
 prefixing is redundant and breaks cross-tool tooling.
@@ -159,6 +160,37 @@ duplicates.
 `file` (when used as a fallback key) MUST be **project-relative**, the same rule
 as §4 `location.file`, so it matches. See §4.1 for how `check` matches a finding
 to a disposition and how that affects the exit code.
+
+#### 1.2.4 `.fusa-model-trace.json` schema (draft — MAY read, see §5)
+
+> **Status: draft.** This schema is proposed, not yet implemented by any tool,
+> and not yet validated against a real Simulink Requirements Toolbox export. It
+> is published here so a first implementation has one canonical shape to build
+> rather than inventing its own; expect a MINOR revision once real-world export
+> data is available (§12).
+
+```jsonc
+{
+  "modelFile": "controller.slx",          // MUST. model-relative, informational
+  "links": [
+    {
+      "requirementId":  "REQ-CTRL-014",   // MUST. MUST exist in .fusa-reqs.json (§1.2.2)
+      "modelBlock":     "Controller/PID/Saturation",  // MUST. Simulink block path
+      "generatedFile":  "src/pid_saturate.c",         // MUST. project-relative (§4 rule)
+      "generatedLine":  82                            // SHOULD. 1-indexed
+    }
+  ]
+}
+```
+
+This file is produced by a documented, out-of-scope conversion step from
+Simulink Requirements Toolbox's own CSV/XML export — **a tool only ever
+consumes this JSON; it MUST NOT talk to MATLAB/Simulink directly.** A tool that
+supports it reads `.fusa-model-trace.json` when present and merges each link
+into the `trace` matrix (§5) as a new tag kind `"model"`. A `requirementId`
+with no matching entry in `.fusa-reqs.json` is a dangling reference, handled
+the same as §1.4.1's dangling test-tag case (a `check` WARNING, category
+`requirement`).
 
 ### 1.3 Generated evidence (lowercase kebab-case, at project root)
 
@@ -267,9 +299,20 @@ unambiguous and a new tool inherits a ready-made scheme.
   | `SBOM`, `SLSA`, `VULN` | `supply-chain` | dependency / supply-chain |
   | `CFG` | `config` | configuration |
   | `MISRA-*`, `AUTOSAR-*`, `CERT-*` | per the rule's nature (usually `safety`) | standard-defined rule (keep the standard's own numbering verbatim) |
+  | `ADA-*` | usually `safety` or `style` | Ada Quality and Style Guide-derived rule (see below) |
 
   Standard-defined rules keep their official id (`MISRA-15.5`, not a re-coding)
   and still set `category` + the relevant `standard`/`clause` fields (§4).
+
+  **`ADA-*` (SHOULD, for an Ada/SPARK tool).** No established "MISRA-Ada"
+  numbered rule set exists the way MISRA C/C++ does. An Ada-targeting tool
+  SHOULD draw its coding-standard rule pack from the **Ada Quality and Style
+  Guide** rather than inventing a parallel MISRA-style numbering, and SHOULD
+  prefix those rule ids `ADA-<n>` (e.g. `ADA-1` for a style-guide §1 violation)
+  rather than reusing `MISRA-*`/`AUTOSAR-*`, which name a different standard.
+  `ADA-*` rules still set `category` per their nature — most are `style`, but a
+  rule enforcing a safety-relevant restriction (e.g. no unchecked conversions)
+  SHOULD set `category: "safety"`.
 
 #### 1.5.2 Requirement ids (`id`)
 
@@ -619,11 +662,48 @@ canonical = ruleId + "\x1f" + location.file + "\x1f" + normalizedMessage
 fingerprints for identical `(ruleId, file, normalised message)`, so
 `diff`/baseline works cross-tool.
 
+### 4.3 Qualified external tool bridge — `--import` (SHOULD)
+
+```
+<lang>fusa check --import <path> --import-format ldra|vectorcast|polyspace|coverity|generic
+```
+
+Lets a project's existing LDRA/VectorCAST/Polyspace/Coverity investment feed
+into the same aggregated `Finding` stream (§4) as native findings, instead of
+being a second, disconnected source of truth. `check --import` reads `<path>`
+(the external tool's own report), decodes it into `Finding[]`, and merges the
+result into the normal `check` output — it does not replace native analysis.
+
+- **`--import-format generic`** (MUST, if `--import` is supported at all)
+  accepts a file already in the canonical `Finding[]` shape (§4) — the escape
+  hatch for any external tool without a named decoder.
+- **Named formats** (`ldra`, `vectorcast`, `polyspace`, `coverity`) are each a
+  decoder mapping that tool's native report into `Finding` objects. A tool MAY
+  implement any subset; implementing none but `generic` is conformant.
+  **`coverity` is the recommended first format to implement** (cleanest JSON
+  export of the four) — it exercises the flag plumbing and decoder-registry
+  pattern the others reuse.
+- **`tool` (MUST)** on an imported finding is the **external** tool's lowercase
+  name (e.g. `"coverity"`), never the x-FuSa tool's own name, so aggregated
+  output can distinguish native vs. imported findings while `severity` is still
+  normalised to the canonical `ERROR`/`WARNING`/`INFO` enum (§2.4) via a
+  per-format severity-mapping table (e.g. Coverity's Major/Moderate/Minor
+  impact → `ERROR`/`WARNING`/`INFO`).
+- **`ruleId` (MUST)** is the external tool's own rule/checker id, verbatim
+  (e.g. `"MISRA_CAST"`). Map it to the §1.5.1 prefix table where the checker
+  name matches a known prefix; otherwise `category: "other"`.
+- **`fingerprint` (MUST)** — an imported finding MUST still receive a §4.2
+  fingerprint computed the same way as a native one, so it participates in
+  `diff` (§13) and suppression (§4.1) identically to native findings.
+- `--import` MAY be combined with a normal `check` run in one invocation
+  (native findings + imported findings both appear in `findings[]`) or used
+  alone; either way the output is one `Finding[]` list, not two documents.
+
 ---
 
 ## 5. `trace` — requirement traceability matrix
 
-`<lang>fusa trace [--dir <path>] [--format text|json|html|md] [--output <file>] [--gaps] [--req-coverage N] [--sec-tested N] [--func-coverage N]`
+`<lang>fusa trace [--dir <path>] [--format text|json|html|md] [--output <file>] [--gaps] [--req-coverage N] [--sec-tested N] [--func-coverage N] [--model-trace <path>]`
 
 `--req-coverage N` / `--sec-tested N` take **N as a percentage 0–100** and exit
 `1` when the respective coverage is below N. `N = 0` **disables** that gate (it
@@ -676,12 +756,24 @@ flat `{total,traced,tested,matrix[]}` is NOT conformant.**
 }
 ```
 
-- `tags[].kind` MUST be one of `"impl"` · `"test"` · `"sec-test"`.
+- `tags[].kind` MUST be one of `"impl"` · `"test"` · `"sec-test"` · `"model"`
+  (draft — see below).
 - `requirements[].level`: free string; tools SHOULD use one of
   `"HLR"` · `"LLR"` · `"SYS"` · `"SW"`. It is the requirement *tier* and MUST NOT
   be overloaded with `SHALL`/`SHOULD` (that belongs in prose, not `level`).
 - A malformed annotation is handled per §1.4 (a `check` WARNING), and is simply
   not counted here.
+
+**`--model-trace <path>` (MAY — draft, model-based-design bridge).** Reads a
+`.fusa-model-trace.json` file (§1.2.4; `<path>` defaults to that name at
+`--dir` root) and merges each `links[]` entry into the matrix as a `tags[]`
+entry with `kind: "model"` and `file` set from `generatedFile`. A requirement
+with an `impl` + `test` + `model` tag renders as `[traced+tested+modeled]` in
+text/md output. This flag and the `"model"` tag kind are **draft** (§1.2.4) —
+not yet required for conformance, and not counted toward `tracedRequirements`/
+`testedRequirements` any differently than an `impl` tag would be (a `model`
+tag traces a requirement but does not by itself make it *tested*; that still
+requires a `test`/`sec-test` tag).
 
 ---
 
@@ -936,6 +1028,53 @@ thresholds: A ≤ 4, B ≤ 10 (default), C ≤ 15, D ≤ 20. `--dal` overrides
 
 All six tools implement `comp`. FuSaOps rolls up comp-reports into a cross-language aggregate via `fusaops comp` (v1.70.0+). See §10.
 
+**`coverage --proof` (SHOULD — draft, formal-verification evidence).** A new
+canonical evidence type modeled directly on the existing MC/DC pattern
+(`McdcReport`, `--mcdc`/`--mcdc-file`/`--mcdc-threshold`, §13) — same shape of
+problem (an external analysis tool produces structured coverage data, the
+x-FuSa tool ingests it, FuSaOps aggregates cross-language), different metric
+(formal proof obligations discharged, not test-exercised conditions).
+
+```
+<lang>fusa coverage --proof --proof-file <path> --proof-threshold N
+```
+
+- `--proof-file <path>` points at the underlying prover's own native output
+  (CBMC's `--xml-ui`, Frama-C's WP report, gnatprove's `.spark` summary). Each
+  tool parses its own prover's format but MUST emit the `proof-report.json`
+  shape below.
+- `--proof-threshold N` gates exactly like every other threshold flag in this
+  spec: **exit `1` when `proofPct < N`**; `N = 0` disables the gate.
+- `--format json` (or the default when `--proof-file` is given) writes
+  `proof-report.json`:
+
+```jsonc
+{
+  "...header": "...",          // §3.1 common header, kind: "proof-report"
+  "tool":               "cbmc",   // or "frama-c"; "gnatprove" for an Ada/SPARK tool
+  "totalObligations":   240,
+  "provedObligations":  231,
+  "proofPct":           96.3,     // percentage 0–100, NOT 0–1.0 (matches §13 coverage convention)
+  "gatePassed":         false,
+  "functions": [
+    { "name": "compute_checksum", "file": "src/checksum.c", "totalObligations": 4,
+      "provedObligations": 4, "proved": true },
+    { "name": "parse_header", "file": "src/parse.c", "totalObligations": 6,
+      "provedObligations": 3, "proved": false }
+  ]
+}
+```
+
+- `functions[].file` is project-relative (same rule as §4 `location.file`).
+- `proofPct` MUST satisfy `proofPct == 100 * provedObligations / totalObligations`
+  (rounded to one decimal); a tool with `totalObligations: 0` MUST report
+  `proofPct: 100` and `gatePassed: true` (no obligations means nothing is unproved).
+- This is **draft** — no tool implements it yet. It is published here so
+  c-FuSa/cpp-FuSa's CBMC/Frama-C support and a future Ada/SPARK tool's
+  gnatprove support build the identical wire format instead of three
+  slightly-different ones; see §13 for its schema-status entry once a first
+  implementation lands.
+
 ### 9.3 Optional (standards & workflow — MAY)
 
 `iso26262` · `iec61508` · `do178` · `iso21434` · `iec62443` · `misra` · `unece` ·
@@ -1105,6 +1244,9 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 | `cyber` → `cyber-report.json` | tool-defined | finding-list reusing §4 `Finding` shape |
 | `coupling` → `coupling-report.json` | tool-defined; **c-FuSa ships a finding-list today** | graph `{ modules:[…], edges:[{from,to,weight}], metrics:{…} }` — ⚠️ a change from the finding-list; do not deepen investment in the list shape |
 | `coverage` | tool-defined | `{ lines:{covered,total,pct}, mutation:{score}, dal? }` — `pct`/`score` are **percentages 0–100** (e.g. `75.3` = 75.3%, **not** 0–1.0); `dal` is the string form (e.g. `"DAL-A"`) |
+| `coverage --proof` → `proof-report.json` | **draft — no tool implements it yet** (§9.2) | `{ …header(kind:"proof-report"), tool, totalObligations, provedObligations, proofPct, gatePassed, functions:[{name,file,totalObligations,provedObligations,proved}] }` |
+| `check --import` (qualified external tool bridge) | **draft — no tool implements it yet** (§4.3) | imported findings reuse §4 `Finding` shape verbatim; `tool` = the external tool's name, not the x-FuSa tool's |
+| `trace --model-trace` / `.fusa-model-trace.json` | **draft — no tool implements it yet, schema not yet validated against a real Simulink export** (§1.2.4, §5) | `{ modelFile, links:[{requirementId,modelBlock,generatedFile,generatedLine}] }`; merges as `tags[].kind == "model"` |
 | `diff` | tool-defined; fingerprint is **MUST** from v1.9 — cross-tool diff is now enabled for conformant tools | `{ added:[fingerprint], removed:[fingerprint], unchanged:N }`; baseline is a prior `check --format json`, given via `--baseline <file>`. **Exit `1`** when `added[]` contains any open ERROR (or any severity under `--strict`), else `0` |
 | `hara` → `.fusa-hara.json` | **input** file; the `hara` command validates/normalises it (and scaffolds a template if absent), output tool-defined | `{ hazards:[{id, hazard, severity, exposure, controllability, asil, safetyGoal}] }` |
 | `sas` → `sas.json`/`sas.md` | tool-defined; **conflict**: go md-only vs cpp `sas.json`+`md` | `sas.json` (envelope + tool-defined body) plus `sas.md` |
@@ -1116,6 +1258,50 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.12.0 — 2026-07-28 (qualified-tool bridge, proof coverage, model-trace, Ada rule prefix — spec-design RFC)
+
+Formalizes FuSaOps#78, the spec-design RFC for the "depth" and "Ada/SPARK
+breadth" roadmap tracks discussed 2026-07-27. All four additions are additive
+and **draft/SHOULD** — none is implemented by any tool yet; this section
+defines one canonical wire format so the per-tool implementation issues
+(tracked separately against c-FuSa/cpp-FuSa, and against a future Ada/SPARK
+tool) build the same shape instead of three slightly-different ones, mirroring
+how §1.4.1 was landed the day before.
+
+- **New §4.3 `check --import`/`--import-format` (SHOULD):** a qualified
+  external tool bridge so an existing LDRA/VectorCAST/Polyspace/Coverity
+  investment feeds into the same `Finding[]` stream as native findings.
+  `--import-format generic` (canonical `Finding[]` shape) is the required
+  baseline; named decoders (`coverity` recommended first) are additive.
+  Imported findings still get a §4.2 fingerprint and use the external tool's
+  own name in `tool`.
+- **New `coverage --proof` (§9.2, SHOULD):** formal-verification (proof
+  obligation) coverage, modeled directly on the existing MC/DC pattern.
+  `proof-report.json` schema (`tool`, `totalObligations`, `provedObligations`,
+  `proofPct`, `gatePassed`, `functions[]`) and `--proof-file`/
+  `--proof-threshold` CLI convention. This is the schema a future Ada/SPARK
+  tool's `gnatprove` support is expected to match bit-for-bit, so it ships
+  first against CBMC/Frama-C rather than being invented under time pressure
+  later.
+- **New §1.2.4 `.fusa-model-trace.json` (draft) + §5 `--model-trace`/`"model"`
+  tag kind:** a model-based-design (Simulink) traceability bridge. Explicitly
+  marked **draft** — the schema is not yet validated against a real Simulink
+  Requirements Toolbox export, per the RFC's own caveat; expect a MINOR
+  revision once real export data is available. A tool only ever consumes this
+  JSON and MUST NOT talk to MATLAB/Simulink directly.
+- **§1.5.1 rule-id prefix registry:** adds `ADA-<n>` alongside `MISRA-*`/
+  `AUTOSAR-*`/`CERT-*`, recommending the Ada Quality and Style Guide as the
+  source for an Ada/SPARK tool's coding-standard rule pack rather than a
+  ported MISRA-style numbered list (no established "MISRA-Ada" set exists).
+- **§13 updated** with schema-status rows for all three new draft schemas
+  (`coverage --proof`, `check --import`, `trace --model-trace`), each flagged
+  "no tool implements it yet" until a first adopter lands.
+- **Out of scope (unchanged from the RFC):** this entry defines the contract
+  only. It does not implement Coverity/CBMC support in any tool (tracked
+  separately against c-FuSa/cpp-FuSa) and does not create a new Ada/SPARK
+  tool repository (a separate, more consequential action requiring its own
+  explicit confirmation — not bundled into a spec-only change).
 
 ### 1.11.0 — 2026-07-27 (requirement annotation completeness — new §1.4.1 + `--func-coverage`)
 
