@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.14.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.14.1 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -457,8 +457,29 @@ section requires.
 
 Rule 1 and rule 3 above are unenforceable as written unless a tool defines
 *how* to check them mechanically. This subsection gives that definition, so
-"MUST" here means something a `check`-style command can actually gate on
-rather than a purely aspirational statement.
+"MUST" here means something concrete a tool can actually gate on rather than
+a purely aspirational statement.
+
+**Who runs this (MUST — clarifies an ambiguity found during rollout).**
+Detection runs **inside each artifact-producing command** (`hara`, `fmea`,
+`tara`, `safety-case`, `sas`) over the content *that command itself just
+built or loaded*, gating **that command's own exit code** — not inside
+`check`. `check` analyzes source/config in every tool; it does not read
+sibling evidence artifacts (`fmea.json`, `.fusa-hara.json`, etc.) as part of
+this section. "Participates in the exit-code gate like any other finding"
+means: the finding uses the exact §4 `Finding` shape and the §4.2
+fingerprint/§4.1 disposition-matching *mechanism* `check` also uses — not
+that the finding is literally emitted *by* `check`. Two independent
+implementations (FuSaOps' own `cmd_fmea.go`/`cmd_hara.go`/etc., and
+java-FuSa) converged on this reading independently; this note makes it
+normative rather than leaving it to convergent guessing.
+
+This deliberately does **not** solve staleness (a `fmea.json` with
+undetected stub content sitting untouched after the code it describes
+changed) — that is what §1.6 rule 5 (Freshness) is for. A tool's `check`
+(or CI gate) MAY read a sibling artifact's `generatedAt` and flag it stale
+without re-running that artifact's own §1.6.1 scan; re-running the scan
+itself still belongs to the artifact's own command.
 
 - **Rule A — placeholder text (MUST, always an ERROR finding).** A tool
   scanning an artifact's qualitative fields MUST flag a match against a
@@ -466,13 +487,12 @@ rather than a purely aspirational statement.
   ][^\]]*\]`), or the case-insensitive substrings `"replace with"`,
   `"example hazard"`, `"TBD"`, `"lorem ipsum"`, `"fill in"` — as an `ERROR`
   finding (§4 `Finding` shape, category `safety`, `ruleId: "FUSA-STUB001"`),
-  which therefore participates in `check`'s exit code (§4.1) like any other
-  finding. It is suppressible **only** via a per-finding disposition
-  (§1.2.3/§4.1) — **never** via §1.6.2's artifact-level attestation, because
-  no attestation can make literal placeholder text real; a legitimate
-  hazard/failure-mode description that happens to contain a deny-listed
-  string is rare enough to warrant an explicit, individually-justified
-  waiver rather than a blanket pass.
+  gating the producing command's own exit code. It is suppressible **only**
+  via a per-finding disposition (§1.2.3/§4.1) — **never** via §1.6.2's
+  artifact-level attestation, because no attestation can make literal
+  placeholder text real; a legitimate hazard/failure-mode description that
+  happens to contain a deny-listed string is rare enough to warrant an
+  explicit, individually-justified waiver rather than a blanket pass.
 - **Rule B — blanket qualitative fallback (SHOULD, a WARNING by default).**
   For an artifact with **≥10 entries**, a tool SHOULD compute each
   qualitative field's **distinct-value ratio** (count of distinct values ÷
@@ -481,12 +501,14 @@ rather than a purely aspirational statement.
   `ruleId: "FUSA-STUB002"`). Unlike Rule A, this heuristic is deliberately
   loose — near-duplicate qualitative text is not always wrong (a project MAY
   genuinely have many structurally-similar low-risk functions) — so it stays
-  **advisory** by default rather than gating `check`'s exit code on its own.
+  **advisory** by default rather than gating the producing command's exit
+  code on its own.
 
 Both rules use the **§4.2 fingerprint algorithm** for the underlying
 `Finding` so they compose with disposition/suppression exactly like any
 other `check` finding — this section does not invent a second finding
-mechanism, it defines two new `ruleId`s that flow through the existing one.
+mechanism, it defines two new `ruleId`s that flow through the existing one,
+scoped to the command that generated the content.
 
 #### 1.6.2 Attestation — avoiding false-positive gates (SHOULD)
 
@@ -1362,9 +1384,9 @@ Threat Analysis and Risk Assessment per **ISO/SAE 21434:2021 Clause 15**.
       "cwe":           "CWE-78",          // SHOULD when applicable
       "attackVector":  "…",              // MUST
       "attackFeasibility": "high",       // MUST. high|medium|low|very-low (ISO 21434 attack-potential rating)
-      "impact":        { "safety": "medium", "financial": "low",
-                          "operational": "low", "privacy": "low" }, // MUST. SFOP categories (ISO 21434 Clause 15.7)
-      "risk":          "medium",         // MUST. derived from attackFeasibility × the highest SFOP impact
+      "impact":        { "safety": "moderate", "financial": "moderate",
+                          "operational": "moderate", "privacy": "negligible" }, // MUST. SFOP categories (ISO 21434 Clause 15.7) — see closed enum below
+      "risk":          "high",           // MUST. derived from attackFeasibility × the highest SFOP impact — see combination table below
       "treatment":     "mitigate",       // MUST. mitigate|accept|transfer|avoid
       "mitigations":   ["…"],            // SHOULD
       "location":      { "file": "…", "line": 42 },  // SHOULD when code-derived
@@ -1383,6 +1405,44 @@ Threat Analysis and Risk Assessment per **ISO/SAE 21434:2021 Clause 15**.
 impact-category framework, rather than a single generic severity — a threat
 against an asset can rate differently on each axis (e.g. high safety impact,
 low privacy impact).
+
+**Closed enums (MUST — clarifies a gap found during rollout).** Neither
+`impact`'s four axes nor `risk` had a stated value domain, unlike
+`attackFeasibility`/`treatment` above — leaving two independent
+implementations free to pick incompatible vocabularies for the same field,
+exactly what §9.2 exists to prevent. The canonical values:
+
+- **`impact.{safety,financial,operational,privacy}`**: `critical` |
+  `major` | `moderate` | `negligible`. This is the x-FuSa family's own
+  4-level vocabulary — informed by, but not verbatim-matching, ISO/SAE
+  21434 Clause 15.3's own Severe/Major/Moderate/Negligible impact scale
+  (the family already uses its own vocabulary for a standard-adjacent
+  closed enum elsewhere, e.g. §2.4's `ERROR`/`WARNING`/`INFO`). A tool MUST
+  NOT substitute a different vocabulary (e.g. `high|medium|low`) for these
+  four fields, even though that vocabulary is used for `attackFeasibility`
+  — the two are deliberately distinct scales for distinct questions
+  (likelihood vs. damage).
+- **`risk`**: `critical` | `high` | `medium` | `low` (the same `RiskLevel`
+  values used elsewhere in this document).
+
+**Risk combination table (SHOULD).** ISO/SAE 21434 deliberately leaves an
+organization free to define its own risk-determination method (Clause
+15.3), so there is no single normative external table the way ISO 26262-3
+Table 4 exists for HARA's ASIL. This is the x-FuSa family's own canonical
+convention instead — every tool SHOULD use it, so cross-tool `risk` values
+are comparable, and MAY document a locally-tailored method as a deviation:
+
+| Highest SFOP impact ↓ / `attackFeasibility` → | high | medium | low | very-low |
+|---|---|---|---|---|
+| `critical`  | critical | critical | high   | medium |
+| `major`     | high     | high     | medium | medium |
+| `moderate`  | medium   | medium   | low    | low    |
+| `negligible`| low      | low      | low    | low    |
+
+`risk` is looked up using the **highest-ranked** of the four SFOP axes
+(`critical` > `major` > `moderate` > `negligible`) against
+`attackFeasibility`. This is the same table already implemented (and
+tested) in FuSaOps' own `tara` package.
 
 **`summary.coveragePct` (SHOULD)**, same rationale as `fmea`'s: without a
 stated denominator, "12 threats analyzed" doesn't distinguish a
@@ -1688,7 +1748,7 @@ tool-defined row.
 
 | Command / file | Status in v1 | Canonical direction (future) |
 |---|---|---|
-| `tara` → `tara.json` | **canonical — schema formalized** (§9.2 SHOULD), per ISO/SAE 21434 Clause 15; not yet implemented by any tool against the new shape (was: **conflict**, go `entries` vs cpp `scenarios`) | `{ …header(kind:"tara-report"), threats:[{id,asset,threat,cwe?,attackVector,attackFeasibility,impact:{safety,financial,operational,privacy},risk,treatment,mitigations[],location?,cyberRuleId?}], summary:{assetsAnalyzed,assetsInProject,coveragePct,assetInventoryMethod?}, attestation? }` |
+| `tara` → `tara.json` | **canonical — schema formalized** (§9.2 SHOULD), per ISO/SAE 21434 Clause 15, with closed `impact`/`risk` enums and a stated combination table (v1.14.1); not yet implemented by any tool against the new shape (was: **conflict**, go `entries` vs cpp `scenarios`) | `{ …header(kind:"tara-report"), threats:[{id,asset,threat,cwe?,attackVector,attackFeasibility,impact:{safety,financial,operational,privacy}(each critical\|major\|moderate\|negligible),risk(critical\|high\|medium\|low),treatment,mitigations[],location?,cyberRuleId?}], summary:{assetsAnalyzed,assetsInProject,coveragePct,assetInventoryMethod?}, attestation? }` |
 | `fmea` → `fmea.json` | **canonical — schema formalized** (§9.2 SHOULD), per IEC 60812 / AIAG-VDA Handbook; not yet implemented against the new shape (was: **conflict**, cpp has `rpn/occurrence/detectability`) | `{ …header(kind:"fmea-report"), ratingScale, entries:[{id,item,file,failureMode,effect,cause,severity,occurrence?,detection?,actionPriority?,rpn?,mitigations[],requirementIds[]}], summary:{total,highPriority,componentsAnalyzed,componentsInProject,coveragePct}, attestation? }` — §1.6.1 rule B (advisory) / rule A (always-on) target `failureMode`/`effect`/placeholder text respectively |
 | `safety-case` → `safety-case.json` | **canonical — schema formalized** (§9.2 SHOULD), per the GSN Community Standard v3; not yet implemented against the new shape (was: **conflict**, go `{clauses,gaps}` vs cpp `{nodes,edges}`) | `{ …header(kind:"safety-case"), nodes:[{id,type:goal\|strategy\|solution\|context\|assumption\|justification,text,evidence?}], edges:[{from,to,type:supportedBy\|inContextOf}], completeness, attestation? }` |
 | `check` §1.6.1 detection (`FUSA-STUB001`/`FUSA-STUB002`) | **draft — no tool implements it yet** (§1.6.1) | reuses §4 `Finding` shape; `FUSA-STUB001` (placeholder text) always ERROR, disposition-suppressible only; `FUSA-STUB002` (blanket qualitative fallback) WARNING by default, suppressed by a non-stale §1.6.2 `attestation`, escalates to exit 1 under `--strict`/`--require-attestation` |
@@ -1710,6 +1770,41 @@ tool-defined row.
 ---
 
 ## 14. Changelog
+
+### 1.14.1 — 2026-07-28 (two clarifications filed by sibling-tool implementers during v1.13.0/v1.14.0 rollout)
+
+Both items below were filed as GitHub issues against this repo by agents
+implementing v1.13.0/v1.14.0 conformance in java-FuSa and rust-FuSa — real
+ambiguities found by independent implementation, not found in review.
+
+- **§1.6.1 "who runs detection" (clarifies an ambiguity, no behavior
+  change to the intended design).** The original text said a Rule A/B
+  finding "participates in `check`'s exit code," which reads two ways:
+  (a) each artifact-producing command (`hara`/`fmea`/`tara`/`safety-case`/
+  `sas`) scans its own content and gates its own exit code, reusing the
+  §4 `Finding`/§4.2 fingerprint/§4.1 disposition *mechanism*; or (b) `check`
+  itself ingests sibling evidence artifacts and folds their findings into
+  its own output. FuSaOps' own reference implementation and java-FuSa
+  independently converged on (a); this entry makes that the normative
+  reading and clarifies that `check`'s only role here is optionally
+  surfacing staleness (§1.6 rule 5, `generatedAt` vs `.fusa-reqs.json`),
+  not re-running another command's §1.6.1 scan.
+- **§9.2 `tara` `impact`/`risk` closed enums + combination table (new,
+  MUST/SHOULD).** `attackFeasibility` and `treatment` had stated closed
+  enums; `impact`'s four SFOP axes and `risk` did not, leaving two
+  implementations free to disagree on vocabulary for the same field —
+  exactly what this section exists to prevent (rust-FuSa's stopgap reused
+  `attackFeasibility`'s `high|medium|low|very-low` vocabulary rather than
+  a value domain of its own). New canonical values: `impact.*` is
+  `critical|major|moderate|negligible` (the family's own 4-level
+  vocabulary, informed by but not verbatim-matching ISO/SAE 21434 Clause
+  15.3's Severe/Major/Moderate/Negligible categories); `risk` is
+  `critical|high|medium|low`. New SHOULD-level feasibility × impact →
+  risk combination table (ISO 21434 leaves risk determination
+  organization-defined, so this is the x-FuSa family's own canonical
+  convention, not a claimed external standard table) — the same table
+  already implemented and tested in FuSaOps' own `tara` package.
+- `SpecVersion` bumped `1.14.0` → `1.14.1` (`fusaops.go`).
 
 ### 1.14.0 — 2026-07-28 (detection heuristics, attestation, traceability MUSTs, coverage metrics — closing the v1.13.0 enforcement gap)
 

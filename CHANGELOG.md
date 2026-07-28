@@ -7,6 +7,27 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.142.0] — 2026-07-28
+
+### docs: x-FuSa spec v1.14.1 — two clarifications found during sibling-tool rollout
+
+Filed as real GitHub issues by agents implementing v1.13.0/v1.14.0
+conformance in java-FuSa and rust-FuSa — genuine ambiguities found by
+independent implementation.
+
+- §1.6.1: clarifies that FUSA-STUB001/002 detection runs inside each
+  artifact-producing command (hara/fmea/tara/safety-case/sas) gating its
+  own exit code, not inside `check` reading sibling evidence artifacts.
+  `check` may separately surface staleness via §1.6 rule 5.
+- §9.2 `tara`: new closed enums for `impact.*`
+  (critical/major/moderate/negligible) and `risk`
+  (critical/high/medium/low), plus a SHOULD-level feasibility × impact →
+  risk combination table — matching FuSaOps' own already-shipped `tara`
+  package exactly, so no FuSaOps code changes were needed, only the spec
+  catching up to what was already correct.
+- `SpecVersion` bumped `1.14.0` → `1.14.1`.
+- Closes SoundMatt/FuSaOps#86 and #87.
+
 ## [1.141.0] — 2026-07-28
 
 ### feat: attestation, FUSA-STUB001/002 detection heuristics, and coverage-gate wiring (x-FuSa spec §1.6.1/§1.6.2)
