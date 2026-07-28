@@ -7,6 +7,29 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.143.0] — 2026-07-28
+
+### docs: x-FuSa spec v1.15.0 — attestation carry-forward MUST + implementer guidance, from a 4-tool deep audit
+
+A deep audit of go-FuSa/c-FuSa/py-FuSa/java-FuSa's own v1.13.0/v1.14.0/
+v1.14.1 conformance work found 23 real defects (filed against each tool).
+Three recurring patterns indicated the spec itself needed to say more:
+
+- New §1.6.2 MUST: an artifact-producing command must load and carry
+  forward any existing `attestation` before regenerating — one tool's
+  otherwise-correct "always rebuild" implementation was silently wiping
+  every human review on the next run, and nothing in the spec actually
+  forbade that.
+- New §1.6 rule 4 guidance: reuse existing test-tree/stdlib-call exclusion
+  logic in coverage-denominator scanners, rather than each command
+  maintaining its own list — three of four audited tools counted test
+  fixtures or stdlib calls as real project components.
+- New §9.2 MUST: `coveragePct` must not exceed 100 — two tools produced
+  impossible values from exactly the above.
+- `SpecVersion` bumped `1.14.1` → `1.15.0`. FuSaOps' own artifact packages
+  already implement carry-forward correctly; no FuSaOps code changes
+  needed.
+
 ## [1.142.0] — 2026-07-28
 
 ### docs: x-FuSa spec v1.14.1 — two clarifications found during sibling-tool rollout
