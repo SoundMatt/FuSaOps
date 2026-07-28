@@ -14,7 +14,7 @@
 FuSaOps sits on top of the x-FuSa toolchain — [go-FuSa](https://github.com/SoundMatt/go-FuSa),
 [c-FuSa](https://github.com/SoundMatt/c-FuSa), [cpp-FuSa](https://github.com/SoundMatt/cpp-FuSa),
 [rust-FuSa](https://github.com/SoundMatt/rust-FuSa), [py-FuSa](https://github.com/SoundMatt/py-FuSa),
-[java-FuSa](https://github.com/SoundMatt/java-FuSa)
+[java-FuSa](https://github.com/SoundMatt/java-FuSa), [ada-FuSa](https://github.com/SoundMatt/ada-FuSa)
 and future language tools — and gives mixed-language repositories a single,
 intuitive way to **scan**, **aggregate**, and **report** functional safety
 evidence. One command runs the right tool for every language present and merges
@@ -634,18 +634,19 @@ orchestrates also gates FuSaOps itself.
 
 ## Supported languages
 
-| Language | Adapter    | Tool     | Bundled in image |
-|----------|------------|----------|------------------|
-| Go       | go-FuSa    | `gofusa` | ✅ (v0.33.4, spec v1.11) |
-| C++      | cpp-FuSa   | `cpfusa` | ✅ (v0.14.3, spec v1.11) |
-| C        | c-FuSa     | `cfusa`  | ✅ (v0.5.42, spec v1.11) |
-| Rust     | rust-FuSa  | `rsfusa` | ✅ (v0.3.8, spec v1.11) |
-| Python   | py-FuSa    | `pyfusa` | ✅ (v0.2.6, spec v1.11, alpha) |
-| Java     | java-FuSa  | `jfusa`  | ✅ (v0.4.5, spec v1.11, alpha) |
+| Language | Adapter    | Tool      | Bundled in image |
+|----------|------------|-----------|------------------|
+| Go       | go-FuSa    | `gofusa`  | ✅ (v0.34.0, spec v1.10) |
+| C++      | cpp-FuSa   | `cpfusa`  | ✅ (v0.14.4, spec v1.10) |
+| C        | c-FuSa     | `cfusa`   | ✅ (v0.5.45, spec v1.11) |
+| Rust     | rust-FuSa  | `rsfusa`  | ✅ (v0.3.9, spec v1.10) |
+| Python   | py-FuSa    | `pyfusa`  | ✅ (v0.2.7, spec v1.10, alpha) |
+| Java     | java-FuSa  | `jfusa`   | ✅ (v0.4.6, spec v1.10, alpha) |
+| Ada/SPARK| ada-FuSa   | `adafusa` | ✅ (v0.1.0, spec v1.11, alpha) |
 
-All six adapters exist; an un-bundled tool reports as *not installed* until its
-image publishes. New languages are added by implementing the `adapter.Adapter`
-interface — see [docs/extending.md](docs/extending.md).
+All seven adapters exist; an un-bundled tool reports as *not installed* until
+its image publishes. New languages are added by implementing the
+`adapter.Adapter` interface — see [docs/extending.md](docs/extending.md).
 
 ## Safety & standards
 

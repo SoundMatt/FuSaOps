@@ -20,7 +20,7 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "1.135.0"
+const Version = "1.136.0"
 
 // SpecVersion is the x-FuSa specification version this release targets.
 //
@@ -93,6 +93,7 @@ const (
 	LangRust   Language = "rust"
 	LangPython Language = "python"
 	LangJava   Language = "java"
+	LangAda    Language = "ada"
 )
 
 // String implements fmt.Stringer.

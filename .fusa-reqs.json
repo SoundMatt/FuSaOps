@@ -1263,7 +1263,7 @@
     {
       "id": "REQ-FO-DIF007",
       "title": "Result.HasNewFindings convenience predicate",
-      "description": "Result.HasNewFindings() shall return true when len(Added) > 0, regardless of severity — a lighter-weight check than HasNewErrors for callers that want to gate on any new finding, not just ERROR-severity ones.",
+      "description": "Result.HasNewFindings() shall return true when len(Added) > 0, regardless of severity \u2014 a lighter-weight check than HasNewErrors for callers that want to gate on any new finding, not just ERROR-severity ones.",
       "priority": "SHOULD",
       "rationale": "Backs the --strict diff gate, which widens the gate to any new finding rather than only errors."
     },
@@ -2238,7 +2238,7 @@
       "title": "Provenance builder field with CI auto-detection",
       "description": "release.Provenance shall carry a Builder field (JSON 'builder'); release.DetectBuilder(override) auto-detects the CI/CD system from GITHUB_ACTIONS/GITHUB_WORKFLOW_REF, GITLAB_CI, JENKINS_URL, and CI env vars, returning the override verbatim when non-empty; release.BuildProvenance shall accept a builder parameter and call DetectBuilder.",
       "priority": "MUST",
-      "rationale": "Aligns FuSaOps provenance.json with the x-FuSa spec §7 schema and go-FuSa v0.31.0 builder field, enabling audit tooling to identify the CI/CD system that produced the release artefacts."
+      "rationale": "Aligns FuSaOps provenance.json with the x-FuSa spec \u00a77 schema and go-FuSa v0.31.0 builder field, enabling audit tooling to identify the CI/CD system that produced the release artefacts."
     },
     {
       "id": "REQ-FO-CLI065",
@@ -2539,29 +2539,29 @@
     },
     {
       "id": "REQ-FO-SPEC001",
-      "title": "stdout clean when --output given (§2.2 no-stdout invariant)",
+      "title": "stdout clean when --output given (\u00a72.2 no-stdout invariant)",
       "priority": "MUST",
-      "standard": "x-FuSa spec §2.2"
+      "standard": "x-FuSa spec \u00a72.2"
     },
     {
       "id": "REQ-FO-SPEC002",
-      "title": "capabilities Standards list includes canonical 'slsa' identifier (§2.4.1)",
+      "title": "capabilities Standards list includes canonical 'slsa' identifier (\u00a72.4.1)",
       "priority": "MUST",
-      "standard": "x-FuSa spec §2.4.1"
+      "standard": "x-FuSa spec \u00a72.4.1"
     },
     {
       "id": "REQ-FO-VV001",
       "title": "V&V independence declaration types",
       "description": "FuSaOps shall define a Declaration type holding implementationAuthor, independentReviewer, and independentTestExecutor fields, and a VandVFile constant for auditpack evidence references.",
       "priority": "MUST",
-      "rationale": "Provides the data model for per-repo V&V independence declarations required by ISO 26262-2:2018 §6.4."
+      "rationale": "Provides the data model for per-repo V&V independence declarations required by ISO 26262-2:2018 \u00a76.4."
     },
     {
       "id": "REQ-FO-VV002",
-      "title": "AchievableASIL computation per ISO 26262-2:2018 §6.4",
+      "title": "AchievableASIL computation per ISO 26262-2:2018 \u00a76.4",
       "description": "FuSaOps shall compute an independence level (0, 1, or 2) and a maximum achievable ASIL (ASIL-B, ASIL-C, ASIL-D) from a Declaration based on which independence roles are filled.",
       "priority": "MUST",
-      "rationale": "Enables projects to understand the ceiling on their achievable ASIL given their independence arrangements, per ISO 26262-2:2018 §6.4 Table 2."
+      "rationale": "Enables projects to understand the ceiling on their achievable ASIL given their independence arrangements, per ISO 26262-2:2018 \u00a76.4 Table 2."
     },
     {
       "id": "REQ-FO-VV003",
@@ -2593,14 +2593,14 @@
     },
     {
       "id": "REQ-FO-CLI075",
-      "title": "fusaops vv show — display declarations and achievable ASIL",
+      "title": "fusaops vv show \u2014 display declarations and achievable ASIL",
       "description": "fusaops vv show shall load the project config, display the V&V declarations and computed achievable ASIL in text or json format, and emit any validation warnings to stderr.",
       "priority": "MUST",
       "rationale": "Lets developers and auditors quickly inspect the V&V independence status of a project."
     },
     {
       "id": "REQ-FO-CLI076",
-      "title": "fusaops vv set — update independence declarations",
+      "title": "fusaops vv set \u2014 update independence declarations",
       "description": "fusaops vv set shall update one or more independence declaration fields in .fusaops.json using explicit flag values, validate the result, and report the updated achievable ASIL.",
       "priority": "MUST",
       "rationale": "Provides a CLI interface to record independence declarations without manually editing JSON."
@@ -2716,7 +2716,7 @@
       "title": "McdcReport structured MC/DC coverage type hierarchy",
       "description": "FuSaOps shall define McdcCondition, McdcDecision, McdcFunction, and McdcReport types capturing LLVM source-based condition/decision coverage data with hasReqTag, gatePassed, and uncoveredReqs fields for DAL-A compliance evidence.",
       "priority": "MUST",
-      "rationale": "DO-178C §6.4.4.b requires MC/DC evidence at DAL-A; structured types enable machine-readable report generation and downstream tooling.",
+      "rationale": "DO-178C \u00a76.4.4.b requires MC/DC evidence at DAL-A; structured types enable machine-readable report generation and downstream tooling.",
       "standard": "DO-178C"
     },
     {
@@ -2777,7 +2777,7 @@
     {
       "id": "REQ-FO-CFG013",
       "title": "CoverageConfig and McdcConfig: mcdc.enabled and mcdc.threshold in .fusaops.json",
-      "description": "FuSaOps shall support a 'coverage' section in .fusaops.json with a nested 'mcdc' object containing 'enabled' (bool) and 'threshold' (float64, range 0–100); Validate shall reject threshold values outside this range; Default config initialises mcdc.enabled=false.",
+      "description": "FuSaOps shall support a 'coverage' section in .fusaops.json with a nested 'mcdc' object containing 'enabled' (bool) and 'threshold' (float64, range 0\u2013100); Validate shall reject threshold values outside this range; Default config initialises mcdc.enabled=false.",
       "priority": "MUST",
       "rationale": "Allows project-wide MC/DC gate policy to be encoded in the config file rather than repeated on every CLI invocation.",
       "standard": "DO-178C"
@@ -2798,8 +2798,8 @@
     },
     {
       "id": "REQ-FO-COMP001",
-      "title": "comp.Report and comp.Function types (§9.2 / §13 canonical schema)",
-      "description": "FuSaOps shall define a comp.Report type matching the x-FuSa spec §13 canonical comp-report.json schema (threshold, dal, totalFunctions, violations, results[]) and a comp.Function type ({file, line, name, complexity, exceedsThreshold}). DALThreshold shall map DAL-A|B|C|D to V(G) limits 4|10|15|20 per DO-178C §6.3.4.",
+      "title": "comp.Report and comp.Function types (\u00a79.2 / \u00a713 canonical schema)",
+      "description": "FuSaOps shall define a comp.Report type matching the x-FuSa spec \u00a713 canonical comp-report.json schema (threshold, dal, totalFunctions, violations, results[]) and a comp.Function type ({file, line, name, complexity, exceedsThreshold}). DALThreshold shall map DAL-A|B|C|D to V(G) limits 4|10|15|20 per DO-178C \u00a76.3.4.",
       "priority": "MUST",
       "rationale": "Establishes the shared data model for decoding comp-reports from any x-FuSa tool; schema is canonical and identical across all six tools.",
       "standard": "DO-178C"
@@ -2825,7 +2825,7 @@
       "title": "Compler capability interface and cmdAdapter.Comp implementation",
       "description": "FuSaOps shall define a Compler interface with Comp(ctx, root, threshold, dal) returning (*comp.Report, error). cmdAdapter shall implement Compler by calling '<tool> comp --format json' with optional --threshold and --dal overrides and decoding the comp-report from stdout.",
       "priority": "MUST",
-      "rationale": "Extends the adapter capability model to cover the §9.2 comp command, enabling RunComp to call each tool's comp analysis."
+      "rationale": "Extends the adapter capability model to cover the \u00a79.2 comp command, enabling RunComp to call each tool's comp analysis."
     },
     {
       "id": "REQ-FO-ADP030",
@@ -2853,15 +2853,15 @@
       "title": "fusaops comp CLI command",
       "description": "The fusaops CLI shall provide a 'comp' subcommand accepting --dir, --only, --format (text|json), --output, --threshold, --dal (DAL-A|B|C|D), --workers, --timeout flags. It shall delegate to RunComp, render the cross-language aggregate, and exit 1 when any violations are found.",
       "priority": "MUST",
-      "rationale": "Exposes the cross-language cyclomatic complexity gate at the CLI level for CI integration; DO-178C §6.3.4 requires bounding V(G) by DAL.",
+      "rationale": "Exposes the cross-language cyclomatic complexity gate at the CLI level for CI integration; DO-178C \u00a76.3.4 requires bounding V(G) by DAL.",
       "standard": "DO-178C"
     },
     {
       "id": "REQ-FO-CLI083",
       "title": "comp registered in fusaops capabilities",
-      "description": "The fusaops capabilities document shall list 'comp' in its commands[] array and register 'comp' in its formats map with supported formats ['text','json'], so tooling and orchestrators can discover the command via standard §9.1 discovery.",
+      "description": "The fusaops capabilities document shall list 'comp' in its commands[] array and register 'comp' in its formats map with supported formats ['text','json'], so tooling and orchestrators can discover the command via standard \u00a79.1 discovery.",
       "priority": "MUST",
-      "rationale": "The capabilities document is the §9.1 discovery mechanism; every command must be listed there so downstream tools can determine whether fusaops supports comp without trial-and-error invocation."
+      "rationale": "The capabilities document is the \u00a79.1 discovery mechanism; every command must be listed there so downstream tools can determine whether fusaops supports comp without trial-and-error invocation."
     },
     {
       "id": "REQ-FO-CFG014",
@@ -2895,7 +2895,7 @@
     {
       "id": "REQ-FO-TRC030",
       "title": "HLR/LLR decomposition summary in trace matrix and aggregate",
-      "description": "FuSaOps shall define HLRLLRSummary with HLRCount, LLRCount, Orphaned, and Uncovered counts. The per-tool Matrix shall carry an optional HLRLLRSummary field decoded from the tool's trace JSON. ComponentTrace and Aggregate shall aggregate the summary across non-skipped components. Text and HTML renderers shall display the HLR→LLR hierarchy, orphan count, and uncovered HLR count.",
+      "description": "FuSaOps shall define HLRLLRSummary with HLRCount, LLRCount, Orphaned, and Uncovered counts. The per-tool Matrix shall carry an optional HLRLLRSummary field decoded from the tool's trace JSON. ComponentTrace and Aggregate shall aggregate the summary across non-skipped components. Text and HTML renderers shall display the HLR\u2192LLR hierarchy, orphan count, and uncovered HLR count.",
       "priority": "MUST",
       "rationale": "DO-178C and ISO 26262 both require that HLRs be decomposed into traceable LLRs; surfacing orphaned and childless requirements at the cross-language level allows teams to catch decomposition gaps before audit.",
       "standard": "DO-178C"
@@ -2905,7 +2905,7 @@
       "title": "V&V independence fields in ComponentResult and Report",
       "description": "FuSaOps shall add QualificationMethod, QualifierIdentity, QualificationRecordUri, ImplementationAuthor, IndependentReviewer, and AchievableASIL fields to qualify.ComponentResult and qualify.Report. The JSON encoder and hash shall include these fields. QualifyInfo in the report package shall carry the same fields into the HTML renderer.",
       "priority": "MUST",
-      "rationale": "ISO 26262 Part 8 §11 and DO-330 require evidence of independence between implementation and verification; capturing these fields in the qualification report makes that evidence machine-readable.",
+      "rationale": "ISO 26262 Part 8 \u00a711 and DO-330 require evidence of independence between implementation and verification; capturing these fields in the qualification report makes that evidence machine-readable.",
       "standard": "ISO 26262"
     },
     {
@@ -2933,7 +2933,7 @@
     {
       "id": "REQ-FO-MCDC003",
       "title": "/api/v1/mcdc, /mcdc page, and dashboard MC/DC section",
-      "description": "The FuSaOps web server shall expose a /api/v1/mcdc JSON endpoint and a /mcdc HTML page showing per-component MC/DC condition coverage and gate status. The dashboard shall include an MC/DC section with gate badge and condition coverage percentage when data is available. MCDCInfo in the report package shall carry aggregated MC/DC data to the HTML renderer without a report→mcdc import cycle.",
+      "description": "The FuSaOps web server shall expose a /api/v1/mcdc JSON endpoint and a /mcdc HTML page showing per-component MC/DC condition coverage and gate status. The dashboard shall include an MC/DC section with gate badge and condition coverage percentage when data is available. MCDCInfo in the report package shall carry aggregated MC/DC data to the HTML renderer without a report\u2192mcdc import cycle.",
       "priority": "MUST",
       "rationale": "MC/DC data must be visible to developers and auditors alongside the findings dashboard; the /mcdc page follows the /comp page pattern for consistency."
     },
@@ -2943,6 +2943,13 @@
       "description": "Both the per-component Report.CoveragePct() and the cross-language MCDCAggregate.CoveragePct() shall return CoveredConditions*100/TotalConditions rounded down, and shall return 100 (not divide by zero) when TotalConditions is 0.",
       "priority": "MUST",
       "rationale": "A component with zero MC/DC conditions has vacuously complete coverage and must not fail the gate or divide by zero."
+    },
+    {
+      "id": "REQ-FO-ADP031",
+      "title": "ada-FuSa adapter",
+      "description": "FuSaOps shall provide an ada-FuSa adapter (adafusa) that detects .ads/.adb files and delegates check/trace to adafusa via the generic cmdAdapter path. The adafusa binary produces spec v1.11 conformant JSON so no output normalisation is required.",
+      "priority": "MUST",
+      "rationale": "Extends FuSaOps multi-language orchestration to Ada/SPARK projects using ada-FuSa v0.1.0."
     }
   ]
 }
