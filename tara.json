@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-07-28T18:47:06.900168Z",
+  "generatedAt": "2026-07-28T19:19:37.857132Z",
   "projectRoot": ".",
   "tool": "fusaops",
-  "toolVersion": "1.140.0",
+  "toolVersion": "1.141.0",
   "standard": "ISO 21434:2021 Chapter 9",
   "threats": [
     {
@@ -185,7 +185,11 @@
   "summary": {
     "total": 8,
     "critical": 2,
-    "high": 5
+    "high": 5,
+    "assetsAnalyzed": 8,
+    "assetsInProject": 10,
+    "coveragePct": 80,
+    "assetInventoryMethod": "count of FuSaOps' own sci package's knownArtefacts evidence-artefact inventory (10 items, DOC-001..DOC-010); non-file assets (adapter tool binaries, the CI/CD pipeline itself, .fusaops.json config) are analyzed as threat scenarios here but excluded from this file-based denominator"
   },
-  "hash": "sha256:2f181b63e0a2dc6df3c80445d3fdac6d4a17f67429c19b6934c7089f709004d5"
+  "hash": "sha256:b65ed1d23bb83e0e9cbebd24f76d61e879de66db6944da5d45bf637bffbd228f"
 }

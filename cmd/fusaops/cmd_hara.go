@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/SoundMatt/FuSaOps/hara"
+	"github.com/SoundMatt/FuSaOps/qualitybar"
 )
 
 // runHara dispatches the hara subcommand (show|init|asil).
@@ -67,8 +68,13 @@ func runHaraShow(args []string, projectRoot string, stdout, stderr io.Writer) in
 	fs.SetOutput(stderr)
 	format := fs.String("format", "text", "output format: text, json, markdown")
 	output := fs.String("output", "", "write output to file (default: stdout)")
+	strict := fs.Bool("strict", false, "implies --require-attestation")
+	requireAttestation := fs.Bool("require-attestation", false, "gate exit code on an unsuppressed FUSA-STUB002 finding")
 	if err := fs.Parse(args); err != nil {
 		return 2
+	}
+	if *strict {
+		*requireAttestation = true
 	}
 
 	h, err := hara.Load(projectRoot)
@@ -93,11 +99,32 @@ func runHaraShow(args []string, projectRoot string, stdout, stderr io.Writer) in
 		return 2
 	}
 
+	exit := 0
 	findings := hara.Validate(h)
 	if len(findings) > 0 && *output != "" {
 		fmt.Fprintf(stderr, "fusaops hara: %d gap(s) found — run 'fusaops hara show' for details\n", len(findings))
 	}
-	return 0
+
+	valid := attestationValid(h.Attestation, hara.AttestationContentHash(h))
+	if code := runQualityGate(stderr, hara.HARAFile, haraQualFields(h), valid, *requireAttestation); code != 0 {
+		exit = code
+	}
+
+	return exit
+}
+
+// haraQualFields extracts h's qualitative text fields for §1.6.1 detection.
+//
+//fusa:req REQ-FO-CLI084
+func haraQualFields(h *hara.HARA) []qualitybar.QualField {
+	var out []qualitybar.QualField
+	for _, hz := range h.Hazards {
+		out = append(out, qualitybar.QualField{EntryID: hz.ID, Field: "hazard", Value: hz.Description})
+	}
+	for _, g := range h.SafetyGoals {
+		out = append(out, qualitybar.QualField{EntryID: g.ID, Field: "safetyGoal", Value: g.Description})
+	}
+	return out
 }
 
 func runHaraInit(args []string, projectRoot string, stdout, stderr io.Writer) int {

@@ -177,6 +177,55 @@ func TestBuildHashHasAlgoPrefix(t *testing.T) {
 	}
 }
 
+// TestAttestationContentHashStableAcrossRebuild verifies
+// AttestationContentHash is deterministic across two Build calls against the
+// same project root (excludes GeneratedAt).
+//
+//fusa:test REQ-FO-TARA007
+func TestAttestationContentHashStableAcrossRebuild(t *testing.T) {
+	dir := t.TempDir()
+	t1, err := tara.Build(dir)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	t2, err := tara.Build(dir)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	h1 := tara.AttestationContentHash(t1)
+	h2 := tara.AttestationContentHash(t2)
+	if h1 == "" {
+		t.Error("AttestationContentHash must not be empty")
+	}
+	if h1 != h2 {
+		t.Errorf("AttestationContentHash differs across identical builds: %q != %q", h1, h2)
+	}
+}
+
+// TestSummaryCoverageMetrics verifies Summary's coverage fields are
+// populated and internally consistent.
+//
+//fusa:test REQ-FO-TARA008
+func TestSummaryCoverageMetrics(t *testing.T) {
+	tr, err := tara.Build(t.TempDir())
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if tr.Summary.AssetsInProject != tara.AssetsInProject {
+		t.Errorf("AssetsInProject = %d, want %d", tr.Summary.AssetsInProject, tara.AssetsInProject)
+	}
+	if tr.Summary.AssetsAnalyzed != tr.Summary.Total {
+		t.Errorf("AssetsAnalyzed = %d, want %d (Summary.Total)", tr.Summary.AssetsAnalyzed, tr.Summary.Total)
+	}
+	want := 100 * float64(tr.Summary.AssetsAnalyzed) / float64(tr.Summary.AssetsInProject)
+	if diff := tr.Summary.CoveragePct - want; diff > 0.05 || diff < -0.05 {
+		t.Errorf("CoveragePct = %v, want ~%v", tr.Summary.CoveragePct, want)
+	}
+	if tr.Summary.AssetInventoryMethod == "" {
+		t.Error("AssetInventoryMethod must be documented, not empty")
+	}
+}
+
 //fusa:test REQ-FO-TARA002
 func TestBuildHashChanges(t *testing.T) {
 	tr1, _ := tara.Build(t.TempDir())

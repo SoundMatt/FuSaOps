@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"time"
 
@@ -113,20 +114,43 @@ type Summary struct {
 	Total    int `json:"total"`
 	Critical int `json:"critical"`
 	High     int `json:"high"`
+	// AssetsInProject is the stated denominator behind CoveragePct — see
+	// AssetInventoryMethod for how it's counted (x-FuSa spec §9.2).
+	AssetsAnalyzed       int     `json:"assetsAnalyzed"`
+	AssetsInProject      int     `json:"assetsInProject"`
+	CoveragePct          float64 `json:"coveragePct"`
+	AssetInventoryMethod string  `json:"assetInventoryMethod"`
 }
+
+// AssetsInProject is the count of FuSaOps' own known evidence-artefact
+// inventory (the sci package's knownArtefacts, DOC-001..DOC-010) — the
+// denominator behind Summary.CoveragePct. Non-file assets this TARA also
+// analyzes (adapter tool binaries, the CI/CD pipeline itself, the
+// .fusaops.json config file) are intentionally excluded from this
+// file-based denominator; see AssetInventoryMethod.
+//
+//fusa:req REQ-FO-TARA008
+const AssetsInProject = 10
+
+// AssetInventoryMethod documents how AssetsInProject was counted, so
+// Summary.CoveragePct is auditable rather than an unexplained number.
+//
+//fusa:req REQ-FO-TARA008
+const AssetInventoryMethod = "count of FuSaOps' own sci package's knownArtefacts evidence-artefact inventory (10 items, DOC-001..DOC-010); non-file assets (adapter tool binaries, the CI/CD pipeline itself, .fusaops.json config) are analyzed as threat scenarios here but excluded from this file-based denominator"
 
 // TARA is the top-level threat analysis document.
 //
 //fusa:req REQ-FO-TARA001
 type TARA struct {
-	GeneratedAt time.Time        `json:"generatedAt"`
-	ProjectRoot string           `json:"projectRoot"`
-	Tool        string           `json:"tool"`
-	ToolVersion string           `json:"toolVersion"`
-	Standard    string           `json:"standard"`
-	Threats     []ThreatScenario `json:"threats"`
-	Summary     Summary          `json:"summary"`
-	Hash        string           `json:"hash"`
+	GeneratedAt time.Time            `json:"generatedAt"`
+	ProjectRoot string               `json:"projectRoot"`
+	Tool        string               `json:"tool"`
+	ToolVersion string               `json:"toolVersion"`
+	Standard    string               `json:"standard"`
+	Threats     []ThreatScenario     `json:"threats"`
+	Summary     Summary              `json:"summary"`
+	Attestation *fusaops.Attestation `json:"attestation,omitempty"`
+	Hash        string               `json:"hash"`
 }
 
 // HasCritical returns true when any scenario carries a critical risk level.
@@ -349,8 +373,23 @@ func Build(root string) (*TARA, error) {
 		}
 	}
 
+	t.Summary.AssetsAnalyzed = t.Summary.Total
+	t.Summary.AssetsInProject = AssetsInProject
+	t.Summary.CoveragePct = coveragePct(t.Summary.AssetsAnalyzed, t.Summary.AssetsInProject)
+	t.Summary.AssetInventoryMethod = AssetInventoryMethod
+
 	t.Hash = computeHash(t)
 	return t, nil
+}
+
+// coveragePct returns 100*analyzed/total rounded to one decimal, or 100 when
+// total is 0 (no denominator means nothing is uncovered).
+func coveragePct(analyzed, total int) float64 {
+	if total == 0 {
+		return 100
+	}
+	pct := 100 * float64(analyzed) / float64(total)
+	return math.Round(pct*10) / 10
 }
 
 func computeHash(t *TARA) string {
@@ -366,6 +405,23 @@ func computeHash(t *TARA) string {
 	}
 	sum := sha256.Sum256(canon)
 	return fmt.Sprintf("sha256:%x", sum)
+}
+
+// AttestationContentHash computes the hash a §1.6.2 attestation must match
+// to be considered non-stale: t's substantive content, excluding Hash,
+// Attestation, and GeneratedAt — the fields an attestation is not about.
+//
+//fusa:req REQ-FO-TARA007
+func AttestationContentHash(t *TARA) string {
+	tmp := *t
+	tmp.Hash = ""
+	tmp.Attestation = nil
+	tmp.GeneratedAt = time.Time{}
+	data, err := json.Marshal(tmp)
+	if err != nil {
+		return ""
+	}
+	return fusaops.ContentHash(data)
 }
 
 // Save writes the TARA to path as indented JSON.

@@ -2993,6 +2993,73 @@
       "title": "SCI artifacts[] projection (file/hash/version) per x-FuSa spec 9.3",
       "priority": "MUST",
       "standard": "DO-178C \u00a711.16"
+    },
+    {
+      "id": "REQ-FO-CORE009",
+      "title": "Attestation struct + AttestationValid + ContentHash helper",
+      "description": "FuSaOps shall provide an Attestation type (status/implementationAuthor/independentReviewer/reviewedAt/contentHash) and an AttestationValid function checking non-staleness and independent-reviewer identity, per x-FuSa spec section 1.6.2.",
+      "priority": "MUST",
+      "rationale": "A DCO-style attestation mechanism lets an artifact-quality WARNING (FUSA-STUB002) stay advisory by default without opening a stub-content loophole -- a named independent reviewer can vouch for content a similarity heuristic is unsure about."
+    },
+    {
+      "id": "REQ-QB001",
+      "title": "qualitybar.DetectPlaceholder (FUSA-STUB001, x-FuSa spec section 1.6.1 Rule A)",
+      "priority": "MUST",
+      "standard": "x-FuSa spec 1.6.1"
+    },
+    {
+      "id": "REQ-QB002",
+      "title": "qualitybar.DetectBlankFallback (FUSA-STUB002, x-FuSa spec section 1.6.1 Rule B)",
+      "priority": "MUST",
+      "standard": "x-FuSa spec 1.6.1"
+    },
+    {
+      "id": "REQ-FO-FMEA007",
+      "title": "fmea.AttestationContentHash excludes Hash/Attestation/GeneratedAt per x-FuSa spec 1.6.2",
+      "priority": "MUST",
+      "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
+    },
+    {
+      "id": "REQ-FO-FMEA008",
+      "title": "FMEA Summary coverage metrics: componentsAnalyzed/componentsInProject/coveragePct/componentInventoryMethod per x-FuSa spec 9.2",
+      "priority": "MUST",
+      "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
+    },
+    {
+      "id": "REQ-FO-TARA007",
+      "title": "tara.AttestationContentHash excludes Hash/Attestation/GeneratedAt per x-FuSa spec 1.6.2",
+      "priority": "MUST",
+      "standard": "ISO 21434:2021 Clause 15"
+    },
+    {
+      "id": "REQ-FO-TARA008",
+      "title": "TARA Summary coverage metrics: assetsAnalyzed/assetsInProject/coveragePct/assetInventoryMethod per x-FuSa spec 9.2",
+      "priority": "MUST",
+      "standard": "ISO 21434:2021 Clause 15"
+    },
+    {
+      "id": "REQ-FO-SC007",
+      "title": "safetycase.AttestationContentHash excludes Hash/Attestation/GeneratedAt per x-FuSa spec 1.6.2",
+      "priority": "MUST",
+      "standard": "ISO 26262, DO-178C, IEC 61508, ISO 21434"
+    },
+    {
+      "id": "REQ-FO-SAS007",
+      "title": "sas.AttestationContentHash excludes Hash/Attestation/GeneratedAt per x-FuSa spec 1.6.2",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.20"
+    },
+    {
+      "id": "REQ-FO-HARA006",
+      "title": "hara.AttestationContentHash excludes only Attestation itself (CreatedAt is stable input content, not a regeneration timestamp)",
+      "priority": "MUST",
+      "standard": "ISO 26262-3 Clause 6"
+    },
+    {
+      "id": "REQ-FO-CLI084",
+      "title": "Quality-gate wiring: runQualityGate + attestationValid + per-command QualFields extraction and attestation carry-forward across fmea/hara/tara/safety-case/sas",
+      "priority": "MUST",
+      "standard": "x-FuSa spec 1.6.1/1.6.2"
     }
   ]
 }

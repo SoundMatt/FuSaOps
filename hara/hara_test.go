@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/hara"
 )
 
@@ -245,6 +246,31 @@ func TestValidateNoFssrRefsOnGoal(t *testing.T) {
 	}
 	if !found {
 		t.Error("expected no-fssrRefs finding on safety goal")
+	}
+}
+
+// TestAttestationContentHashStableAndExcludesAttestation verifies
+// AttestationContentHash is deterministic for identical content and does
+// not change when only the Attestation field itself is set (it must be
+// excluded from its own input, or a chicken-and-egg staleness loop would
+// result).
+//
+//fusa:test REQ-FO-HARA006
+func TestAttestationContentHashStableAndExcludesAttestation(t *testing.T) {
+	h := &hara.HARA{Project: "test", Standard: "ISO 26262"}
+	h1 := hara.AttestationContentHash(h)
+	h2 := hara.AttestationContentHash(h)
+	if h1 == "" {
+		t.Error("AttestationContentHash must not be empty")
+	}
+	if h1 != h2 {
+		t.Errorf("AttestationContentHash not deterministic: %q != %q", h1, h2)
+	}
+
+	h.Attestation = &fusaops.Attestation{Status: fusaops.AttestationReviewed, ContentHash: h1}
+	h3 := hara.AttestationContentHash(h)
+	if h3 != h1 {
+		t.Errorf("AttestationContentHash changed after setting Attestation: %q != %q", h3, h1)
 	}
 }
 
