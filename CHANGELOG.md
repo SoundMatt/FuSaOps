@@ -7,6 +7,26 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.136.0] — 2026-07-28
+
+### feat: register ada-FuSa as the 7th adapter
+
+- Adds `adapter/adafusa.go` (Ada/SPARK, `.ads`/`.adb`, tool `adafusa`),
+  `LangAda` constant, `scan/scan.go` extension mapping, and a fake-runner
+  test suite mirroring the `jfusa` adapter pattern.
+- `Dockerfile`: new `FROM ghcr.io/soundmatt/ada-fusa:latest AS adafusa` stage
+  + `COPY --from=adafusa`. The image is a statically-linked musl binary
+  (confirmed via `ldd`), so no extra runtime packages are needed.
+- `README.md`: adds ada-FuSa to the toolchain list and supported-languages
+  table (now 7 rows); refreshes the other six tools' version numbers to
+  current (go-FuSa 0.34.0, cpp-FuSa 0.14.4, c-FuSa 0.5.45, rust-FuSa 0.3.9,
+  py-FuSa 0.2.7, java-FuSa 0.4.6).
+- Registers `REQ-FO-ADP031` in `.fusa-reqs.json`; 0 orphan tags, 0 test
+  gaps confirmed via `gofusa trace` against FuSaOps' own source.
+- Closes ada-FuSa#34 (the tracking issue the ada-FuSa side left for this
+  work — everything on ada-FuSa's side, including the published
+  `ghcr.io/soundmatt/ada-fusa` image, was already in place).
+
 ## [1.135.0] — 2026-07-27
 
 ### fix: bundled image missing `zip` breaks cfusa's audit-pack

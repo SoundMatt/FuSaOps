@@ -26,6 +26,7 @@ FROM ghcr.io/soundmatt/c-fusa:latest    AS cfusa
 FROM ghcr.io/soundmatt/rust-fusa:latest AS rsfusa
 FROM ghcr.io/soundmatt/py-fusa:latest   AS pyfusa
 FROM ghcr.io/soundmatt/java-fusa:latest AS jfusa
+FROM ghcr.io/soundmatt/ada-fusa:latest  AS adafusa
 
 # ── Build fusaops ─────────────────────────────────────────────────────────────
 FROM golang:1.22-alpine AS build
@@ -61,6 +62,9 @@ COPY --from=pyfusa /usr/local/lib/python3.12/site-packages /usr/local/lib/python
 # java-FuSa: JAR + shell wrapper that calls `java -jar`
 COPY --from=jfusa /usr/local/lib/jfusa.jar /usr/local/lib/jfusa.jar
 COPY --from=jfusa /usr/local/bin/jfusa     /usr/local/bin/jfusa
+
+# ada-FuSa: statically-linked musl binary, no extra runtime packages needed
+COPY --from=adafusa /usr/local/bin/adafusa /usr/local/bin/adafusa
 
 WORKDIR /project
 EXPOSE 8080

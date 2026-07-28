@@ -176,9 +176,10 @@ func TestRegistryApplicable(t *testing.T) {
 //fusa:test REQ-FO-ADP026
 //fusa:test REQ-FO-ADP027
 //fusa:test REQ-FO-ADP028
-func TestDefaultRegistryHasSixAdapters(t *testing.T) {
-	if len(Default.All()) != 6 {
-		t.Errorf("default registry: got %d adapters, want 6", len(Default.All()))
+//fusa:test REQ-FO-ADP031
+func TestDefaultRegistryHasSevenAdapters(t *testing.T) {
+	if len(Default.All()) != 7 {
+		t.Errorf("default registry: got %d adapters, want 7", len(Default.All()))
 	}
 }
 

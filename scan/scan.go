@@ -21,6 +21,7 @@ var langExtensions = map[fusaops.Language][]string{
 	fusaops.LangRust:   {".rs"},
 	fusaops.LangPython: {".py"},
 	fusaops.LangJava:   {".java"},
+	fusaops.LangAda:    {".ads", ".adb"},
 }
 
 // LangStat records how many source files of a language were found.
