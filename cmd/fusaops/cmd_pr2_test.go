@@ -43,8 +43,8 @@ func TestFMEAAttestationCarriesForwardWhenValid(t *testing.T) {
 		ReviewedAt:           time.Now().UTC().Format(time.RFC3339),
 		ContentHash:          hash,
 	}
-	if err := fmea.Save(outPath, f); err != nil {
-		t.Fatalf("Save: %v", err)
+	if saveErr := fmea.Save(outPath, f); saveErr != nil {
+		t.Fatalf("Save: %v", saveErr)
 	}
 
 	stdout.Reset()
