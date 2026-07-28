@@ -62,6 +62,7 @@ type FailureMode struct {
 	Component  string `json:"component"`
 	Function   string `json:"function"`
 	Item       string `json:"item"` // x-FuSa spec §9.2 single-field identity: "Component.Function"
+	File       string `json:"file"` // x-FuSa spec §9.2 MUST: project-relative path to the component's source
 	Mode       string `json:"failureMode"`
 	Effect     string `json:"effect"`
 	Cause      string `json:"cause"`
@@ -102,16 +103,20 @@ type Summary struct {
 //
 //fusa:req REQ-FO-FMEA001
 type FMEA struct {
-	GeneratedAt time.Time            `json:"generatedAt"`
-	ProjectRoot string               `json:"projectRoot"`
-	Tool        string               `json:"tool"`
-	ToolVersion string               `json:"toolVersion"`
-	Standard    string               `json:"standard"`
-	RatingScale string               `json:"ratingScale"`
-	Entries     []FailureMode        `json:"entries"`
-	Summary     Summary              `json:"summary"`
-	Attestation *fusaops.Attestation `json:"attestation,omitempty"`
-	Hash        string               `json:"hash"`
+	// Common header, x-FuSa spec §3.1.
+	SchemaVersion string               `json:"schemaVersion"`
+	Kind          string               `json:"kind"`
+	Language      string               `json:"language"`
+	GeneratedAt   time.Time            `json:"generatedAt"`
+	ProjectRoot   string               `json:"projectRoot"`
+	Tool          string               `json:"tool"`
+	ToolVersion   string               `json:"toolVersion"`
+	Standard      string               `json:"standard"`
+	RatingScale   string               `json:"ratingScale"`
+	Entries       []FailureMode        `json:"entries"`
+	Summary       Summary              `json:"summary"`
+	Attestation   *fusaops.Attestation `json:"attestation,omitempty"`
+	Hash          string               `json:"hash"`
 }
 
 // HasHighRPN returns true when any failure mode exceeds HighRPNThreshold.
@@ -143,6 +148,7 @@ type modeSpec struct {
 	id             string
 	component      string
 	function       string
+	file           string
 	mode           string
 	effect         string
 	cause          string
@@ -161,6 +167,7 @@ var standardModes = []modeSpec{
 		id:         "FM-001",
 		component:  "Adapter Registry",
 		function:   "Execute language-specific safety analysis",
+		file:       "adapter/adapter.go",
 		mode:       "Adapter binary not found on PATH",
 		effect:     "Language component analysis silently skipped; safety defects in that language undetected.",
 		cause:      "Missing tool installation or PATH misconfiguration in CI environment.",
@@ -179,6 +186,7 @@ var standardModes = []modeSpec{
 		id:         "FM-002",
 		component:  "cmdAdapter",
 		function:   "Run x-FuSa tool and collect findings",
+		file:       "adapter/adapter.go",
 		mode:       "Adapter process exits with non-zero code",
 		effect:     "Findings from that language component dropped from the aggregate report.",
 		cause:      "Tool bug, memory exhaustion, or malformed source input.",
@@ -197,6 +205,7 @@ var standardModes = []modeSpec{
 		id:         "FM-003",
 		component:  "Report decoder",
 		function:   "Parse adapter JSON output per x-FuSa spec",
+		file:       "report/report.go",
 		mode:       "Adapter output schema does not conform to x-FuSa spec",
 		effect:     "Findings silently dropped or aggregate report mis-renders.",
 		cause:      "Tool version skew between adapter binary and FuSaOps decoder expectations.",
@@ -215,6 +224,7 @@ var standardModes = []modeSpec{
 		id:         "FM-004",
 		component:  "trace package",
 		function:   "Cross-language requirement traceability",
+		file:       "trace/trace.go",
 		mode:       "Source annotation removed or misspelled",
 		effect:     "Requirement appears untraceable; false coverage gap reported.",
 		cause:      "Developer removes or typos a //fusa:req annotation during refactoring.",
@@ -233,6 +243,7 @@ var standardModes = []modeSpec{
 		id:         "FM-005",
 		component:  "sbom package",
 		function:   "Merge per-language SBOMs into cross-language SBOM",
+		file:       "sbom/sbom.go",
 		mode:       "Language SBOM file missing from merge input",
 		effect:     "Component not included in final SBOM; unknown dependency risk reaches certification.",
 		cause:      "Adapter SBOM generation failed silently or output file not written.",
@@ -251,6 +262,7 @@ var standardModes = []modeSpec{
 		id:         "FM-006",
 		component:  "auditpack / sign packages",
 		function:   "Verify integrity of evidence artefacts",
+		file:       "sign/sign.go",
 		mode:       "Artefact file modified after signing",
 		effect:     "Tampered evidence passes a manual inspection that does not re-verify the HMAC.",
 		cause:      "Post-sign file modification (intentional or accidental) or disk corruption.",
@@ -269,6 +281,7 @@ var standardModes = []modeSpec{
 		id:         "FM-007",
 		component:  "cmdAdapter / orchestrator",
 		function:   "Execute adapter within configured timeout",
+		file:       "orchestrator/orchestrator.go",
 		mode:       "Adapter process hangs indefinitely",
 		effect:     "Analysis pipeline blocked; no findings produced; release delayed or silently skipped.",
 		cause:      "Deadlock in adapter tool, infinite loop, or unavailable external resource.",
@@ -287,6 +300,7 @@ var standardModes = []modeSpec{
 		id:         "FM-008",
 		component:  "suppression package",
 		function:   "Filter findings against the suppression list",
+		file:       "suppression/suppression.go",
 		mode:       "Overly broad suppression rule hides new violations",
 		effect:     "New safety violations match an existing suppression entry and are never reviewed.",
 		cause:      "Wildcard or unlimited-duration suppression entry in .fusaops-suppress.json.",
@@ -308,12 +322,15 @@ var standardModes = []modeSpec{
 //fusa:req REQ-FO-FMEA002
 func Build(root string) (*FMEA, error) {
 	f := &FMEA{
-		GeneratedAt: time.Now().UTC(),
-		ProjectRoot: root,
-		Tool:        "fusaops",
-		ToolVersion: fusaops.Version,
-		Standard:    "IEC 61508:2010 / ISO 26262:2018 Part 8-7",
-		RatingScale: RatingScale,
+		SchemaVersion: fusaops.SpecVersion,
+		Kind:          "fmea-report",
+		Language:      "go",
+		GeneratedAt:   time.Now().UTC(),
+		ProjectRoot:   root,
+		Tool:          "fusaops",
+		ToolVersion:   fusaops.Version,
+		Standard:      "IEC 61508:2010 / ISO 26262:2018 Part 8-7",
+		RatingScale:   RatingScale,
 	}
 
 	for _, spec := range standardModes {
@@ -323,6 +340,7 @@ func Build(root string) (*FMEA, error) {
 			Component:      spec.component,
 			Function:       spec.function,
 			Item:           spec.component + "." + spec.function,
+			File:           spec.file,
 			Mode:           spec.mode,
 			Effect:         spec.effect,
 			Cause:          spec.cause,
@@ -352,13 +370,19 @@ func Build(root string) (*FMEA, error) {
 }
 
 // coveragePct returns 100*analyzed/total rounded to one decimal, or 100 when
-// total is 0 (no denominator means nothing is uncovered).
+// total is 0 (no denominator means nothing is uncovered). x-FuSa spec §9.2:
+// coveragePct MUST NOT exceed 100 — clamped defensively even though analyzed
+// cannot currently exceed total by construction.
 func coveragePct(analyzed, total int) float64 {
 	if total == 0 {
 		return 100
 	}
 	pct := 100 * float64(analyzed) / float64(total)
-	return math.Round(pct*10) / 10
+	pct = math.Round(pct*10) / 10
+	if pct > 100 {
+		return 100
+	}
+	return pct
 }
 
 func computeHash(f *FMEA) string {

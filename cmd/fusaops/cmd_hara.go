@@ -8,8 +8,10 @@ import (
 	"path/filepath"
 	"time"
 
+	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/hara"
 	"github.com/SoundMatt/FuSaOps/qualitybar"
+	"github.com/SoundMatt/FuSaOps/req"
 )
 
 // runHara dispatches the hara subcommand (show|init|asil).
@@ -77,6 +79,13 @@ func runHaraShow(args []string, projectRoot string, stdout, stderr io.Writer) in
 		*requireAttestation = true
 	}
 
+	if *format == "json" {
+		if _, statErr := os.Stat(filepath.Join(projectRoot, hara.HARAFile)); os.IsNotExist(statErr) {
+			fmt.Fprintf(stderr, "fusaops hara show: %s not found — run 'fusaops hara init' first (x-FuSa spec §1.2.5: a hara command MUST NOT report zero hazards as if analysis were complete)\n", hara.HARAFile)
+			return 1
+		}
+	}
+
 	h, err := hara.Load(projectRoot)
 	if err != nil {
 		fmt.Fprintf(stderr, "fusaops hara show: %v\n", err)
@@ -101,6 +110,13 @@ func runHaraShow(args []string, projectRoot string, stdout, stderr io.Writer) in
 
 	exit := 0
 	findings := hara.Validate(h)
+	if entries, regErr := req.LoadRegistry(projectRoot); regErr == nil {
+		reqIDs := make(map[string]bool, len(entries))
+		for _, e := range entries {
+			reqIDs[e.ID] = true
+		}
+		findings = append(findings, hara.ValidateFssrRefs(h, reqIDs)...)
+	}
 	if len(findings) > 0 && *output != "" {
 		fmt.Fprintf(stderr, "fusaops hara: %d gap(s) found — run 'fusaops hara show' for details\n", len(findings))
 	}
@@ -152,7 +168,7 @@ func runHaraInit(args []string, projectRoot string, stdout, stderr io.Writer) in
 	// completeness that a real "empty, honestly incomplete" state does not.
 	h := &hara.HARA{
 		Project:     name,
-		Standard:    *standard,
+		Standard:    fusaops.CanonicalStandardID(*standard),
 		CreatedAt:   time.Now().UTC(),
 		Situations:  []hara.OperationalSituation{},
 		Hazards:     []hara.Hazard{},

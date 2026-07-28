@@ -1,9 +1,12 @@
 {
-  "generatedAt": "2026-07-28T19:19:37.863874Z",
+  "schemaVersion": "1.15.0",
+  "kind": "safety-case",
+  "language": "go",
+  "generatedAt": "2026-07-28T21:17:47.147449Z",
   "projectRoot": ".",
   "tool": "fusaops",
-  "toolVersion": "1.141.0",
-  "standard": "ISO 26262",
+  "toolVersion": "1.144.0",
+  "standard": "iso26262",
   "claims": [
     {
       "id": "C-001",
@@ -12,7 +15,7 @@
       "evidence": [
         {
           "title": "Tool qualification report",
-          "path": "./.fusaops-qualify-report.json",
+          "path": ".fusaops-qualify-report.json",
           "status": "missing"
         }
       ],
@@ -25,7 +28,7 @@
       "evidence": [
         {
           "title": "Traceability matrix (JSON)",
-          "path": "./.fusaops-trace.json",
+          "path": ".fusaops-trace.json",
           "status": "missing"
         }
       ],
@@ -38,7 +41,7 @@
       "evidence": [
         {
           "title": "Test evidence bundle",
-          "path": "./.fusaops-evidence.json",
+          "path": ".fusaops-evidence.json",
           "status": "missing"
         }
       ],
@@ -51,7 +54,7 @@
       "evidence": [
         {
           "title": "Cross-language SBOM",
-          "path": "./sbom.json",
+          "path": "sbom.json",
           "status": "present",
           "sha256": "17e9172e968bc17d813e3c7960eb40fe89d3327c102da83365258bc2fc7d9388",
           "size": 623
@@ -66,14 +69,14 @@
       "evidence": [
         {
           "title": "Build provenance",
-          "path": "./provenance.json",
+          "path": "provenance.json",
           "status": "present",
           "sha256": "b599f32f336abb4f473dbb4bb7a426af815de3c0004ccf345dc70a6cb538c14b",
           "size": 283
         },
         {
           "title": "Artifact manifest (SHA-256)",
-          "path": "./artifact-manifest.json",
+          "path": "artifact-manifest.json",
           "status": "present",
           "sha256": "bff8d3d64849cecec8173e4f117649b483c2b7d5f2ab3be571e1ab4fea46f6bf",
           "size": 453
@@ -88,7 +91,7 @@
       "evidence": [
         {
           "title": "Problem report log",
-          "path": "./.fusaops-problems.json",
+          "path": ".fusaops-problems.json",
           "status": "missing"
         }
       ],
@@ -101,7 +104,7 @@
       "evidence": [
         {
           "title": "Audit pack archive",
-          "path": "./audit-pack.zip",
+          "path": "audit-pack.zip",
           "status": "present",
           "sha256": "490f4b5c57c02ce6c835df93be110e5ce123e0537995ad2b5d8b768abee743e9",
           "size": 17730
@@ -157,7 +160,7 @@
       "id": "C-004-Sn1",
       "type": "solution",
       "text": "Cross-language SBOM",
-      "evidence": "./sbom.json"
+      "evidence": "sbom.json"
     },
     {
       "id": "C-005",
@@ -173,13 +176,13 @@
       "id": "C-005-Sn1",
       "type": "solution",
       "text": "Build provenance",
-      "evidence": "./provenance.json"
+      "evidence": "provenance.json"
     },
     {
       "id": "C-005-Sn2",
       "type": "solution",
       "text": "Artifact manifest (SHA-256)",
-      "evidence": "./artifact-manifest.json"
+      "evidence": "artifact-manifest.json"
     },
     {
       "id": "C-006",
@@ -205,7 +208,7 @@
       "id": "C-007-Sn1",
       "type": "solution",
       "text": "Audit pack archive",
-      "evidence": "./audit-pack.zip"
+      "evidence": "audit-pack.zip"
     }
   ],
   "edges": [
@@ -270,5 +273,5 @@
     "goalsWithEvidence": 3,
     "undeveloped": 4
   },
-  "hash": "sha256:19a5ac0d36c85571d8e44cdad29426e35ccba524e3eac8a6fe512960ecb03235"
+  "hash": "sha256:f9b9eb474c0711d4b726ab6863fe8e3183a90b175b00db3c517b84488a20a483"
 }

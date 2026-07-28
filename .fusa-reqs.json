@@ -15,6 +15,13 @@
       "rationale": "Enables tooling and CI to verify which spec version FuSaOps implements without parsing docs."
     },
     {
+      "id": "REQ-FO-CORE008",
+      "title": "CanonicalStandardID helper",
+      "description": "FuSaOps shall export a CanonicalStandardID function mapping a human-readable standard display string to its canonical lowercase id per x-FuSa spec §2.4.1, for use wherever an artifact emits a 'standard' field.",
+      "priority": "MUST",
+      "rationale": "x-FuSa spec §2.9: a 'standard' field's value must be identical (and canonical) across every output format; a single shared helper prevents each artifact package from re-deriving this inconsistently."
+    },
+    {
       "id": "REQ-FO-CLI053",
       "title": "fusaops version --format json",
       "description": "The fusaops version subcommand shall accept --format json and emit a JSON object with tool, version, and specVersion fields; default format remains text.",
@@ -3054,6 +3061,14 @@
       "title": "hara.AttestationContentHash excludes only Attestation itself (CreatedAt is stable input content, not a regeneration timestamp)",
       "priority": "MUST",
       "standard": "ISO 26262-3 Clause 6"
+    },
+    {
+      "id": "REQ-FO-HARA007",
+      "title": "hara.ValidateFssrRefs cross-checks safety goal fssrRefs against the requirement registry",
+      "description": "hara.ValidateFssrRefs shall flag any safetyGoals[].fssrRefs entry that does not resolve to an id in .fusa-reqs.json, catching a dangling reference that a non-empty check alone cannot see.",
+      "priority": "MUST",
+      "rationale": "x-FuSa spec §1.2.5: a safety goal's fssrRefs must be real, resolvable requirements, not just present.",
+      "standard": "ISO 26262-8 Clause 6"
     },
     {
       "id": "REQ-FO-CLI084",

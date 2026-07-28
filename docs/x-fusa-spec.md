@@ -752,8 +752,9 @@ header, so FuSaOps (or anything) can read attribution and route decoding off
 **`kind` (MUST — closed, extensible enum).** Identifies the document type so a
 consumer routes generically: `check-report` (also `report`) · `trace-matrix` ·
 `qualification` · `sbom` · `provenance` · `artifact-manifest` · `audit-manifest`
-· `gap-report` · `capabilities`. A consumer MUST treat an unknown `kind` as
-opaque (read the common header, skip the payload) — never reject it.
+· `gap-report` · `capabilities` · `fmea-report` · `tara-report` · `safety-case`
+· `sas` · `sci`. A consumer MUST treat an unknown `kind` as opaque (read the
+common header, skip the payload) — never reject it.
 
 The common header applies to **every** document, including the file-format
 artefacts (`sbom.json`, `provenance.json`, `artifact-manifest.json`, audit-pack

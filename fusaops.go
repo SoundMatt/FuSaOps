@@ -20,7 +20,7 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "1.143.0"
+const Version = "1.144.0"
 
 // SpecVersion is the x-FuSa specification version this release targets.
 //
@@ -118,6 +118,35 @@ type Finding struct {
 }
 
 var digitRunRE = regexp.MustCompile(`[0-9]+`)
+
+// canonicalStandardIDs maps a human-readable standard display string to its
+// canonical lowercase id per x-FuSa spec §2.4.1. Only standards FuSaOps
+// itself emits are covered; an unmapped input is returned unchanged by
+// CanonicalStandardID rather than guessed at.
+var canonicalStandardIDs = map[string]string{
+	"ISO 26262": "iso26262",
+	"DO-178C":   "do178c",
+	"IEC 61508": "iec61508",
+	"ISO 21434": "iso21434",
+	"iso26262":  "iso26262",
+	"do178c":    "do178c",
+	"iec61508":  "iec61508",
+	"iso21434":  "iso21434",
+}
+
+// CanonicalStandardID returns display's canonical lowercase standard id per
+// x-FuSa spec §2.4.1 (e.g. "ISO 26262" -> "iso26262"). Per §2.9, a "standard"
+// field MUST carry the same canonical value in every output format — display
+// remains distinct from the format string, unlike some strings. When display
+// is not a known standard, it is returned unchanged.
+//
+//fusa:req REQ-FO-CORE008
+func CanonicalStandardID(display string) string {
+	if id, ok := canonicalStandardIDs[display]; ok {
+		return id
+	}
+	return display
+}
 
 // ComputeFingerprint returns the canonical sha256:<64 hex> fingerprint for f
 // per §4.2 of the x-FuSa spec. Digit runs in Message are normalised to "#"

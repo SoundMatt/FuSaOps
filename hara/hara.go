@@ -336,6 +336,36 @@ func Validate(h *HARA) []ValidationFinding {
 			})
 		}
 	}
+	for _, hz := range h.Hazards {
+		stated := hz.Risk.ASIL
+		derived := DetermineASIL(hz.Risk.Severity, hz.Risk.Exposure, hz.Risk.Controllability)
+		if stated != "" && stated != derived {
+			out = append(out, ValidationFinding{
+				HazardID: hz.ID,
+				Message:  fmt.Sprintf("hazard %s states ASIL %s but S=%s E=%s C=%s derives %s (ISO 26262-3:2018 Table 4) — stated ASIL must match the derived value", hz.ID, stated, hz.Risk.Severity, hz.Risk.Exposure, hz.Risk.Controllability, derived),
+			})
+		}
+	}
+	return out
+}
+
+// ValidateFssrRefs cross-checks every safety goal's fssrRefs against the
+// project's real requirement registry (.fusa-reqs.json ids), catching a
+// dangling reference that a non-empty check alone cannot see.
+//
+//fusa:req REQ-FO-HARA007
+func ValidateFssrRefs(h *HARA, reqIDs map[string]bool) []ValidationFinding {
+	var out []ValidationFinding
+	for _, g := range h.SafetyGoals {
+		for _, ref := range g.FssrRefs {
+			if !reqIDs[ref] {
+				out = append(out, ValidationFinding{
+					SafetyGoalID: g.ID,
+					Message:      fmt.Sprintf("safety goal %s references unknown requirement %s in fssrRefs — not present in .fusa-reqs.json", g.ID, ref),
+				})
+			}
+		}
+	}
 	return out
 }
 
