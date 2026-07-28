@@ -7,6 +7,39 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.138.0] — 2026-07-28
+
+### docs: x-FuSa spec v1.13.0 — evidence-artifact schema formalization + content-quality baseline
+
+- Formalizes a cross-tool content audit's findings into `docs/x-fusa-spec.md`:
+  every tool's traceability/unit-test coverage was strong, but several
+  evidence artifacts were schema-shaped without being information-bearing
+  (templated FMEA boilerplate across hundreds of rows, an untouched HARA
+  template, an artifact with invalid JSON).
+- New §1.6 "Evidence artifact content-quality baseline" (MUST unless
+  noted): bans placeholder/template text, requires structural JSON
+  validity, bans a single hardcoded qualitative fallback regardless of the
+  item's actual signature, requires real (non-keyword) referents, and
+  recommends an `"analysis": "heuristic"|"reviewed"` provenance field plus
+  artifact freshness relative to `.fusa-reqs.json`.
+- New §1.2.5 `.fusa-hara.json` schema (MUST read/validate) per ISO 26262-3
+  Clause 6, matching the `operationalSituations[]`/`hazards[]`/
+  `safetyGoals[]` cross-referenced shape already used by FuSaOps' own
+  `hara` package and independently converged on across the family.
+- New §9.2 promoted-command schemas for `hara`/`fmea`/`tara`/`safety-case`
+  (mirroring how `comp` was formalized) grounded in IEC 60812/AIAG-VDA
+  (FMEA), ISO/SAE 21434 Clause 15 with SFOP impact categories (TARA), and
+  the GSN Community Standard v3 with all six real node types
+  (safety-case). New §9.3 schemas for `sas`/`sci` per DO-178C §11.20/11.16.
+- §1.5.2: new SHOULD requirement-text quality rule per ISO/IEC/IEEE
+  29148:2018 §5.2.5, recommending EARS sentence patterns for
+  auto-generated requirement text.
+- §13 updated: these six commands move from "tool-defined" to "canonical —
+  schema formalized"; none is yet implemented against the new shape and
+  none is yet consumed by FuSaOps (a future MINOR bump) — this is the
+  spec-design step only.
+- `SpecVersion` bumped `1.12.0` → `1.13.0` (`fusaops.go`).
+
 ## [1.137.0] — 2026-07-28
 
 ### docs: x-FuSa spec v1.12.0 — qualified-tool bridge, proof coverage, model-trace, Ada rule prefix (FuSaOps#78)

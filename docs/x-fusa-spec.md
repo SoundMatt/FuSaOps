@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.12.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.13.0 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -61,7 +61,7 @@ canonical spelling of each.
 |---|---|---|
 | `.fusa.json` | Project config | §1.2.1 (MUST read) |
 | `.fusa-reqs.json` | Requirements registry | §1.2.2 (MUST read) |
-| `.fusa-hara.json` | Hazard analysis & risk assessment | tool-defined (see §13) |
+| `.fusa-hara.json` | Hazard analysis & risk assessment | §1.2.5 (MUST read/validate when present) |
 | `.fusa-evidence.json` | Test-evidence bundle (`verify`) | tool-defined |
 | `.fusa-dispositions.json` | Finding dispositions | §1.2.3 (read by FuSaOps) |
 | `.fusa-problems.json` | Problem-report log | tool-defined |
@@ -192,6 +192,70 @@ with no matching entry in `.fusa-reqs.json` is a dangling reference, handled
 the same as §1.4.1's dangling test-tag case (a `check` WARNING, category
 `requirement`).
 
+#### 1.2.5 `.fusa-hara.json` schema (MUST read/validate when present)
+
+Hazard Analysis and Risk Assessment, per **ISO 26262-3:2018 Clause 6**. It is
+an **input** file (like `.fusa-reqs.json`): a project author writes/maintains
+it, and the `hara` command (§9.2) validates and normalises it, scaffolding a
+template (**empty** arrays, never dummy rows — see §1.6) if absent. This is
+the shape already independently converged on across the family (three
+top-level collections cross-referenced by id — a hazard can manifest in
+several situations and drive several safety goals, and a safety goal can be
+derived from several hazards, so a flat per-hazard list cannot represent it):
+
+```jsonc
+{
+  "project":  "…",                        // MUST
+  "standard": "iso26262",                 // MUST. canonical standard id (§2.4.1)
+  "createdAt": "2026-07-28T00:00:00Z",     // SHOULD. RFC 3339
+  "operationalSituations": [
+    { "id": "OS-001", "description": "…" } // MUST id; MUST description, item-specific — see §1.6
+  ],
+  "hazards": [
+    {
+      "id":          "H-001",             // MUST. unique within file
+      "description": "…",                 // MUST. specific to the item under analysis — see §1.6
+      "source":      "…",                 // SHOULD. which analysis/review surfaced it
+      "situations":  ["OS-001"],          // MUST. references into operationalSituations[]
+      "risk": {
+        "severity":        "S1",          // MUST. S0-S3 (ISO 26262-3 §6.4.3)
+        "exposure":        "E1",          // MUST. E0-E4 (§6.4.4)
+        "controllability": "C1",          // MUST. C0-C3 (§6.4.5)
+        "asil":            "ASIL-B"       // MUST when standard is iso26262 — derived S×E×C, ISO 26262-3 Table 4
+      },
+      "safetyGoals": ["SG-001"]           // MUST. references into safetyGoals[]
+    }
+  ],
+  "safetyGoals": [
+    {
+      "id":          "SG-001",
+      "description": "…",                 // MUST. one sentence — SHOULD follow the §1.6 requirement-language rule
+      "hazards":     ["H-001"],           // MUST. references back into hazards[]
+      "asil":        "ASIL-B",            // MUST
+      "safeState":   "…",                 // SHOULD
+      "fssrRef":     "REQ-…"              // SHOULD. links a Functional Safety Requirement into .fusa-reqs.json (§1.2.2)
+    }
+  ]
+}
+```
+
+- **ASIL determination (MUST when `standard: "iso26262"`).** A tool MUST
+  derive `risk.asil` from `severity` × `exposure` × `controllability` per the
+  standard table (ISO 26262-3:2018 Table 4) rather than accept an arbitrary
+  value — this keeps the field auditable, not just plausible-looking.
+- **`hazards[].description` (MUST) must be item-specific.** It MUST describe a
+  hazard that can actually arise from *this* tool/system, not generic domain
+  boilerplate copied from an unrelated example (e.g. "undetected sensor
+  fault" text is invalid for a static-analysis CLI that has no sensors). See
+  §1.6 rule 3.
+- **Referential integrity (MUST).** Every id in `hazards[].situations`/
+  `hazards[].safetyGoals`/`safetyGoals[].hazards` MUST resolve to a real
+  entry in the referenced collection; a dangling reference is a validation
+  finding (see below), not silently ignored.
+- A `hara` command run with `--format json` on an **absent** file (with no
+  `--init`/scaffold flag) MUST exit non-zero rather than silently report zero
+  hazards as if the analysis were complete.
+
 ### 1.3 Generated evidence (lowercase kebab-case, at project root)
 
 `sbom.json` · `provenance.json` · `artifact-manifest.json` ·
@@ -321,6 +385,68 @@ A requirement `id` SHOULD match `^REQ-[A-Z0-9]+(-[A-Z0-9]+)*$`
 `.fusa-reqs.json` (§1.2.2). References to it in `trace` tags, gap-reports, and
 markdown MUST use the id **verbatim** (no re-casing). Requirement ids are
 project-scoped, so they are **not** language-qualified.
+
+**Requirement text quality (SHOULD).** A requirement's `text` (§1.2.2) SHOULD
+be **unambiguous, verifiable, and singular** — one testable statement, not a
+paragraph bundling several — per **ISO/IEC/IEEE 29148:2018** §5.2.5's
+requirement-quality characteristics. A tool that auto-generates requirement
+text (rather than accepting author-written text) SHOULD emit it in an
+**EARS** (Easy Approach to Requirements Syntax) pattern: ubiquitous
+(*"The `<system>` shall `<response>`"*), event-driven (*"When `<trigger>`, the
+`<system>` shall `<response>`"*), state-driven (*"While `<state>`, the
+`<system>` shall …"*), or unwanted-behavior (*"If `<trigger>`, then the
+`<system>` shall …"*). Vague qualifiers ("as appropriate," "TBD," "and/or,"
+"etc.," "sufficient," "as needed") SHOULD NOT appear in `text`.
+
+### 1.6 Evidence artifact content-quality baseline (MUST unless noted)
+
+A 2026-07-28 cross-tool content audit found every tool's generated evidence
+technically **schema-shaped** but, in several artifacts, **not
+information-bearing** — hundreds of FMEA rows sharing identical boilerplate
+text, an untouched HARA template, an artifact with invalid JSON. A schema
+alone cannot catch this (the shape is fine; the content is fabricated-looking
+or empty). This section is a cross-cutting baseline that applies to **every**
+generated evidence artifact with free-text qualitative content — `fmea.json`
+(§9.2), `.fusa-hara.json` (§1.2.5), `tara.json` (§9.2), `safety-case.*`
+(§9.2), `sas.*` (§9.3) — in addition to whatever that artifact's own schema
+section requires.
+
+1. **No template placeholder text (MUST).** An artifact MUST NOT ship literal
+   scaffold text such as `"[describe asset]"`, `"Example hazard — replace with
+   project-specific hazard"`, or any bracketed/instructional placeholder. A
+   tool that has not yet analyzed a required section MUST emit an **empty**
+   array/object for it, never a dummy row — an empty section is honestly
+   incomplete; placeholder text asserts a false completeness.
+2. **Structural validity (MUST).** Every artifact MUST be well-formed JSON
+   conforming to its schema. (This closes a real gap found in the audit: a
+   tool shipped an FMEA report with an unescaped quote that made the file
+   invalid JSON.)
+3. **No blanket qualitative fallback (MUST).** A free-text qualitative field
+   (FMEA `failureMode`/`effect`/`cause`; HARA `hazard`; TARA `threat`; a
+   safety-case node's `text`) MUST vary with the actual signature/behaviour of
+   the item it describes. A single hardcoded string applied to every entry
+   regardless of the underlying function/hazard/asset is **non-conformant**,
+   even when `item`/`file`/`line` are real. A tool MAY use heuristic templates
+   (e.g. keyed off return type, parameter count, exception paths, asset
+   class) as long as the output measurably differs across distinct input
+   shapes — see each artifact's own §9.2/§9.3 subsection for the minimum
+   differentiation expected.
+4. **Real referents only (MUST).** Any entry naming a `file`/`function`/
+   `component`/`item` MUST refer to an actual file or symbol in the analyzed
+   project — not a language keyword, a standard-library call, or a test
+   fixture mistaken for project code.
+5. **Provenance (SHOULD).** An artifact SHOULD carry an
+   `"analysis": "heuristic" | "reviewed"` field (document-level or per-entry)
+   so a consumer can distinguish auto-scaffolded content from human-reviewed
+   content. Absent the field, a consumer MUST treat the content as
+   `"heuristic"` (fail-safe — never assume unreviewed content has been
+   reviewed).
+6. **Freshness (SHOULD).** An artifact SHOULD be regenerated whenever
+   `.fusa-reqs.json`'s requirement set changes. A tool's `check`/CI gate
+   SHOULD flag (not necessarily fail) an artifact whose `generatedAt`
+   predates the requirements file's last-modified time, so a stale snapshot
+   (e.g. a safety-case still citing a requirement count from months earlier)
+   is visible rather than silently trusted.
 
 ---
 
@@ -999,8 +1125,13 @@ not aggregate across runs. Because `report` never gate-fails, a tool SHOULD trea
 ### 9.2 Recommended (safety evidence — SHOULD)
 
 `verify` · `hara` · `tara` · `fmea` · `safety-case` · `coupling` · `cyber` ·
-`vuln` · `boundary` · `coverage` · `diff`. Their JSON is **tool-defined** — see §13.
-**`comp` is consumed by FuSaOps v1.70.0+** (see below and §10).
+`vuln` · `boundary` · `coverage` · `diff`. `coupling`/`cyber`/`vuln`/`boundary`/
+`coverage`/`diff`/`verify` remain **tool-defined** — see §13.
+**`comp`/`hara`/`fmea`/`tara`/`safety-case` have formalized canonical schemas**
+(below, plus §1.2.5 for `hara`'s input file and §1.6 for the content-quality
+baseline all five share). **`comp` is consumed by FuSaOps v1.70.0+** (see below
+and §10); `hara`/`fmea`/`tara`/`safety-case` are schema-formalized but **not
+yet consumed by FuSaOps** — that remains a future MINOR bump per §12.
 A command in this group MAY support `--format json`; if it does it
 **SHOULD carry the §3 envelope** so that future consumption — added per §12/§13 —
 does not force a breaking change to add the envelope later.
@@ -1027,6 +1158,150 @@ thresholds: A ≤ 4, B ≤ 10 (default), C ≤ 15, D ≤ 20. `--dal` overrides
 ```
 
 All six tools implement `comp`. FuSaOps rolls up comp-reports into a cross-language aggregate via `fusaops comp` (v1.70.0+). See §10.
+
+**`hara` (SHOULD).** `hara [--dir <path>] [--format text|json|html] [--output <file>] [--init]`
+
+Validates and reports on `.fusa-hara.json` (§1.2.5) — it is a report **over**
+that input file, not a fresh analysis. `--init` scaffolds an empty
+`{"operationalSituations": [], "hazards": [], "safetyGoals": []}` when the
+file is absent (never dummy rows — §1.6 rule 1). `--format json` writes a
+document with the §3 envelope plus the `.fusa-hara.json` content **verbatim**
+(so `hara`'s JSON output and the input file share one schema) plus a
+`completeness` block:
+
+```jsonc
+{
+  "...header": "...",           // §3.1 common header, kind: "hara-report"
+  "operationalSituations": [ /* §1.2.5, verbatim from .fusa-hara.json */ ],
+  "hazards":               [ /* §1.2.5, verbatim */ ],
+  "safetyGoals":           [ /* §1.2.5, verbatim */ ],
+  "completeness": {
+    "totalHazards": 5, "hazardsWithAsil": 5, "hazardsWithSafetyGoal": 5,
+    "safetyGoalsWithFssrRef": 3, "danglingReferences": 0
+  }
+}
+```
+
+`completeness` counts hazards/safety-goals missing a MUST/SHOULD field from
+§1.2.5, and `danglingReferences` counts any cross-reference (§1.2.5
+referential-integrity rule) that doesn't resolve — so a gap is visible
+without hand-auditing the file. This is **draft** — no tool implements the
+`completeness` block yet; the passthrough content and `--init` behaviour
+already exist across the family and are promoted to SHOULD now.
+
+**`fmea` (SHOULD).** `fmea [--dir <path>] [--format text|json|csv|html] [--output <file>]`
+
+Design FMEA (Failure Mode and Effects Analysis) over the project's public
+functions/components, per **IEC 60812:2018** (generic) or the
+**AIAG & VDA FMEA Handbook (2019)** (automotive). `--format json` writes
+`fmea.json`:
+
+```jsonc
+{
+  "...header": "...",              // §3.1 common header, kind: "fmea-report"
+  "ratingScale": "aiag-vda-2019",  // MUST when occurrence/detection are emitted — names the table in use
+  "entries": [
+    {
+      "id":            "FMEA-001",
+      "item":          "Registry.Register",  // MUST. component/function under analysis
+      "file":          "src/rules.go",        // MUST. project-relative (§4 rule)
+      "failureMode":   "…",                   // MUST. see §1.6 rule 3 — must vary with item's actual signature/behaviour
+      "effect":        "…",                   // MUST
+      "cause":         "…",                   // SHOULD
+      "severity":      1,                     // MUST. 1-10 per `ratingScale`, or "high"|"medium"|"low" when no numeric scale is used
+      "occurrence":    1,                     // MAY. 1-10 per `ratingScale`
+      "detection":     1,                     // MAY. 1-10 per `ratingScale`
+      "actionPriority":"low",                 // SHOULD (AIAG-VDA). "high"|"medium"|"low" — supersedes raw RPN thresholding
+      "mitigations":   ["…"],                 // SHOULD
+      "requirementIds":["REQ-…"]              // SHOULD. links the finding back to its originating requirement
+    }
+  ],
+  "summary": { "total": 84, "highPriority": 3 }
+}
+```
+
+- `failureMode`/`effect`/`cause` are the fields §1.6 rule 3 targets directly:
+  a tool MAY derive them heuristically from a function's real signature
+  (return type, error/exception paths, parameter shapes) but MUST NOT emit
+  one fixed string for every entry regardless of shape.
+- **`actionPriority` (SHOULD) supersedes raw RPN** (`severity × occurrence ×
+  detection`) per the AIAG-VDA Handbook's move away from a single numeric
+  threshold — a tool MAY still emit `rpn` (MAY) alongside it for tools that
+  prefer the legacy metric.
+
+**`tara` (SHOULD).** `tara [--dir <path>] [--format text|json|md] [--output <file>]`
+
+Threat Analysis and Risk Assessment per **ISO/SAE 21434:2021 Clause 15**.
+`--format json` writes `tara.json`:
+
+```jsonc
+{
+  "...header": "...",       // §3.1 common header, kind: "tara-report"
+  "threats": [               // canonical key — NOT "entries"/"scenarios"
+    {
+      "id":            "TARA-001",
+      "asset":         "…",              // MUST
+      "threat":        "…",              // MUST. specific attack scenario, not a bare category name — see §1.6 rule 3
+      "cwe":           "CWE-78",          // SHOULD when applicable
+      "attackVector":  "…",              // MUST
+      "attackFeasibility": "high",       // MUST. high|medium|low|very-low (ISO 21434 attack-potential rating)
+      "impact":        { "safety": "medium", "financial": "low",
+                          "operational": "low", "privacy": "low" }, // MUST. SFOP categories (ISO 21434 Clause 15.7)
+      "risk":          "medium",         // MUST. derived from attackFeasibility × the highest SFOP impact
+      "treatment":     "mitigate",       // MUST. mitigate|accept|transfer|avoid
+      "mitigations":   ["…"],            // SHOULD
+      "location":      { "file": "…", "line": 42 },  // SHOULD when code-derived
+      "cyberRuleId":   "CYBER005"        // SHOULD. links to the triggering cyber finding (§9.2 `cyber`)
+    }
+  ]
+}
+```
+
+`impact` uses **SFOP** (Safety/Financial/Operational/Privacy), ISO 21434's own
+impact-category framework, rather than a single generic severity — a threat
+against an asset can rate differently on each axis (e.g. high safety impact,
+low privacy impact).
+
+**`safety-case` (SHOULD).** `safety-case [--dir <path>] [--format text|json|md|mermaid] [--output <file>]`
+
+A GSN (Goal Structuring Notation) argument, per the **GSN Community Standard**
+(Assurance Case Working Group, v3, 2021). `--format json` writes
+`safety-case.json`:
+
+```jsonc
+{
+  "...header": "...",     // §3.1 common header, kind: "safety-case"
+  "nodes": [
+    { "id": "G1",  "type": "goal",       "text": "…" },   // MUST specific — see §1.6 rule 3
+    { "id": "St1", "type": "strategy",   "text": "…" },
+    { "id": "C1",  "type": "context",    "text": "…" },      // SHOULD when a goal needs scoping context
+    { "id": "A1",  "type": "assumption", "text": "…" },      // SHOULD when a strategy relies on one
+    { "id": "J1",  "type": "justification", "text": "…" },   // MAY
+    { "id": "Sn1", "type": "solution",   "text": "…", "evidence": "qualify-report.json" }
+  ],
+  "edges": [
+    { "from": "G1", "to": "St1", "type": "supportedBy" },
+    { "from": "St1", "to": "Sn1", "type": "supportedBy" },
+    { "from": "G1", "to": "C1",  "type": "inContextOf" }
+  ],
+  "completeness": { "totalGoals": 8, "goalsWithEvidence": 8, "undeveloped": 0 }
+}
+```
+
+- `nodes[].type` MUST be one of the six GSN node types: `goal` · `strategy` ·
+  `solution` · `context` · `assumption` · `justification`. A goal with no
+  supporting strategy/solution chain and no `undeveloped` marker in
+  `completeness` is a silent gap — a tool SHOULD count it there rather than
+  omit it from the graph.
+- `edges[].type` MUST be one of `supportedBy` (goal→strategy→solution
+  argument steps) or `inContextOf` (context/assumption/justification
+  attachment).
+- Every `solution` node SHOULD set `evidence` to a real, existing artifact
+  filename (§1.3) — a claim of evidence that names a file the project
+  doesn't actually contain is worse than an honestly-missing solution.
+- `nodes[].text` MUST be specific to this tool's actual claims (§1.6 rule 3) —
+  a generic goal like *"the system is acceptably safe for its intended use"*
+  with no tool-specific detail does not satisfy this.
 
 **`coverage --proof` (SHOULD — draft, formal-verification evidence).** A new
 canonical evidence type modeled directly on the existing MC/DC pattern
@@ -1094,6 +1369,47 @@ gap-report shape and are clarified here:
 - **`disposition`** manages `.fusa-dispositions.json` (§1.2.3) — it adds, lists,
   and shows waiver decisions (and MAY support remove/update for entries that
   change over time); it does not itself gate.
+
+Two more of these commands have a formalized schema (promoted from
+tool-defined, mirroring §9.2's `comp`/`hara`/`fmea`/`tara`/`safety-case`):
+
+**`sas` (MAY).** `sas [--dir <path>] [--format json|md] [--output <file>]`
+
+Software Accomplishment Summary per **DO-178C §11.20**. `--format json` writes
+`sas.json`:
+
+```jsonc
+{
+  "...header": "...",     // §3.1 common header, kind: "sas"
+  "checklist": [
+    { "item": "PSAC availability", "clause": "11.1", "present": true, "evidence": "psac.md" }
+  ],
+  "summary": { "total": 17, "present": 13 }
+}
+```
+
+`checklist[].item` SHOULD enumerate the §11 data items relevant to the
+project's DAL. A tool MUST **also** write the human-readable `sas.md`
+companion (§1.3) — `sas.json` is not a replacement for it, the two are
+complementary per the existing `sas.{json,md}` filename convention.
+
+**`sci` (MAY).** `sci [--dir <path>] [--format json] [--output <file>]`
+
+Software Configuration Index per **DO-178C §11.16**. `--format json` writes
+`sci.json`:
+
+```jsonc
+{
+  "...header": "...",     // §3.1 common header, kind: "sci"
+  "artifacts": [
+    { "file": "src/main.go", "hash": "sha256:…", "version": "0.35.0" }
+  ]
+}
+```
+
+`artifacts[].hash` MUST be a real SHA-256 of the file's current contents
+(§2.7 hash conventions) — a placeholder or stale hash defeats the point of a
+configuration index.
 
 A standards command (`iso26262`, `iec61508`, `do178`, …) that emits JSON MUST use
 the canonical **gap-report** schema:
@@ -1230,16 +1546,20 @@ bump.
 
 ## 13. SHOULD-command schema status
 
-FuSaOps does **not** consume these in spec v1; their JSON is **tool-defined**.
-This section records the known cross-tool conflicts and the *canonical
-direction* the schema will take **when** FuSaOps adds consumption (a future MINOR
-bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
+FuSaOps does **not consume** any of these in spec v1 (only `comp` is consumed,
+per §9.2/§10) — a row marked "canonical — schema formalized" has a defined
+wire format tools SHOULD converge on, but FuSaOps does not yet read it. Rows
+still marked tool-defined have no defined shape at all. This section records
+the known cross-tool conflicts and the *canonical direction* each schema
+takes; when FuSaOps adds consumption of a formalized one, that is a future
+MINOR bump (§12). Tools SHOULD NOT assume cross-tool compatibility for a
+tool-defined row.
 
 | Command / file | Status in v1 | Canonical direction (future) |
 |---|---|---|
-| `tara` → `tara.json` | tool-defined; **conflict**: go `entries` vs cpp `scenarios` | `"threats": [ {id, asset, threat, attackVector, impact, likelihood, risk, treatment, mitigations:[]} ]` |
-| `fmea` → `fmea.json` | tool-defined; **conflict**: cpp has `rpn/occurrence/detectability` | superset entry `{id, item, failureMode, effect, cause, severity, occurrence, detection, rpn, mitigations[]}` |
-| `safety-case` → `safety-case.json` | tool-defined; **conflict**: go `{clauses,gaps}` vs cpp `{nodes,edges}` | GSN graph `{ nodes:[{id,type,text}], edges:[{from,to,type}] }` (encodes clauses + gaps) |
+| `tara` → `tara.json` | **canonical — schema formalized** (§9.2 SHOULD), per ISO/SAE 21434 Clause 15; not yet implemented by any tool against the new shape (was: **conflict**, go `entries` vs cpp `scenarios`) | `{ …header(kind:"tara-report"), threats:[{id,asset,threat,cwe?,attackVector,attackFeasibility,impact:{safety,financial,operational,privacy},risk,treatment,mitigations[],location?,cyberRuleId?}] }` |
+| `fmea` → `fmea.json` | **canonical — schema formalized** (§9.2 SHOULD), per IEC 60812 / AIAG-VDA Handbook; not yet implemented against the new shape (was: **conflict**, cpp has `rpn/occurrence/detectability`) | `{ …header(kind:"fmea-report"), ratingScale, entries:[{id,item,file,failureMode,effect,cause,severity,occurrence?,detection?,actionPriority?,rpn?,mitigations[],requirementIds[]}], summary }` — §1.6 rule 3 bans a single fallback `failureMode`/`effect` across all entries |
+| `safety-case` → `safety-case.json` | **canonical — schema formalized** (§9.2 SHOULD), per the GSN Community Standard v3; not yet implemented against the new shape (was: **conflict**, go `{clauses,gaps}` vs cpp `{nodes,edges}`) | `{ …header(kind:"safety-case"), nodes:[{id,type:goal\|strategy\|solution\|context\|assumption\|justification,text,evidence?}], edges:[{from,to,type:supportedBy\|inContextOf}], completeness }` |
 | `vuln` → `vuln.json` | tool-defined | finding-list reusing §4 `Finding` shape |
 | `cyber` → `cyber-report.json` | tool-defined | finding-list reusing §4 `Finding` shape |
 | `coupling` → `coupling-report.json` | tool-defined; **c-FuSa ships a finding-list today** | graph `{ modules:[…], edges:[{from,to,weight}], metrics:{…} }` — ⚠️ a change from the finding-list; do not deepen investment in the list shape |
@@ -1248,9 +1568,9 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 | `check --import` (qualified external tool bridge) | **draft — no tool implements it yet** (§4.3) | imported findings reuse §4 `Finding` shape verbatim; `tool` = the external tool's name, not the x-FuSa tool's |
 | `trace --model-trace` / `.fusa-model-trace.json` | **draft — no tool implements it yet, schema not yet validated against a real Simulink export** (§1.2.4, §5) | `{ modelFile, links:[{requirementId,modelBlock,generatedFile,generatedLine}] }`; merges as `tags[].kind == "model"` |
 | `diff` | tool-defined; fingerprint is **MUST** from v1.9 — cross-tool diff is now enabled for conformant tools | `{ added:[fingerprint], removed:[fingerprint], unchanged:N }`; baseline is a prior `check --format json`, given via `--baseline <file>`. **Exit `1`** when `added[]` contains any open ERROR (or any severity under `--strict`), else `0` |
-| `hara` → `.fusa-hara.json` | **input** file; the `hara` command validates/normalises it (and scaffolds a template if absent), output tool-defined | `{ hazards:[{id, hazard, severity, exposure, controllability, asil, safetyGoal}] }` |
-| `sas` → `sas.json`/`sas.md` | tool-defined; **conflict**: go md-only vs cpp `sas.json`+`md` | `sas.json` (envelope + tool-defined body) plus `sas.md` |
-| `sci` → `sci.json` | tool-defined; **conflict**: go stdout-only vs cpp `sci.json` | `sci.json` (envelope + tool-defined body) |
+| `hara` → `.fusa-hara.json` | **canonical — schema formalized, MUST read/validate** (§1.2.5), per ISO 26262-3 Clause 6 | `{ project, standard, createdAt?, operationalSituations:[{id,description}], hazards:[{id,description,source?,situations:[id],risk:{severity,exposure,controllability,asil},safetyGoals:[id]}], safetyGoals:[{id,description,hazards:[id],asil,safeState?,fssrRef?}] }`; `risk.asil` MUST derive from S×E×C (ISO 26262-3 Table 4) |
+| `sas` → `sas.json`/`sas.md` | **canonical — schema formalized** (§9.3 MAY), per DO-178C §11.20 (was: **conflict**, go md-only vs cpp `sas.json`+`md`) | `{ …header(kind:"sas"), checklist:[{item,clause,present,evidence?}], summary }` plus `sas.md` (both MUST) |
+| `sci` → `sci.json` | **canonical — schema formalized** (§9.3 MAY), per DO-178C §11.16 (was: **conflict**, go stdout-only vs cpp `sci.json`) | `{ …header(kind:"sci"), artifacts:[{file,hash,version?}] }`; `hash` MUST be a real current SHA-256 |
 | `boundary` → `.dot`/`.mermaid` | tool-defined graph text | no JSON contract in v1 |
 | `verify` → `.fusa-evidence.json` | tool-defined | `{ passed, failed, suites:[ {name, passed, failed, tests:[{name, result}]} ] }` (`result` per §6) |
 | `comp` → `comp-report.json` | **canonical — all six tools** (§9.2 SHOULD); **consumed by FuSaOps v1.70.0+** | `{ …header(kind:"comp-report"), threshold:N, dal?:"DAL-B", totalFunctions:N, violations:N, results:[{file,line,name,complexity,exceedsThreshold}] }` |
@@ -1258,6 +1578,54 @@ bump). Tools SHOULD NOT assume cross-tool compatibility for these until then.
 ---
 
 ## 14. Changelog
+
+### 1.13.0 — 2026-07-28 (evidence-artifact schema formalization + content-quality baseline)
+
+A 2026-07-28 cross-tool content audit (all six tools) found traceability and
+unit-test coverage uniformly strong, but several evidence artifacts
+schema-shaped and **not information-bearing**: hundreds of near-identical
+FMEA rows, an untouched HARA template, an artifact with invalid JSON. This
+entry formalizes real schemas for the previously tool-defined evidence
+artifacts and adds a cross-cutting rule against fabricated-looking content
+that a schema alone can't catch.
+
+- **New §1.6 "Evidence artifact content-quality baseline" (MUST unless
+  noted):** bans literal template/placeholder text, requires structural JSON
+  validity, bans a single hardcoded qualitative fallback applied regardless
+  of the item's actual signature/behaviour, requires real (non-keyword,
+  non-fixture) file/function referents, and recommends an
+  `"analysis": "heuristic"|"reviewed"` provenance field plus freshness
+  relative to `.fusa-reqs.json`. Applies to `fmea.json`, `.fusa-hara.json`,
+  `tara.json`, `safety-case.*`, `sas.*`.
+- **New §1.2.5 `.fusa-hara.json` schema (MUST read/validate):** promotes HARA
+  from tool-defined to a formalized schema per **ISO 26262-3:2018 Clause 6** —
+  `operationalSituations[]`/`hazards[]`/`safetyGoals[]` as three
+  cross-referenced top-level collections (the shape already independently
+  converged on by go-FuSa/c-FuSa/rust-FuSa/py-FuSa and matching FuSaOps' own
+  `hara` package), with mandatory S×E×C→ASIL derivation (ISO 26262-3
+  Table 4) and referential-integrity checking across the id cross-references.
+- **New §9.2 `hara`/`fmea`/`tara`/`safety-case` promoted-command
+  subsections** (mirroring how `comp` was formalized): each gets a real
+  JSON schema, standards citation, and field-level MUST/SHOULD —
+  `fmea` per IEC 60812 / the AIAG-VDA FMEA Handbook (2019), with an
+  `actionPriority` field superseding raw RPN; `tara` per ISO/SAE 21434
+  Clause 15, using the standard's own SFOP (Safety/Financial/Operational/
+  Privacy) impact categories in place of a single generic severity;
+  `safety-case` per the GSN Community Standard v3, with all six real GSN
+  node types (goal/strategy/solution/context/assumption/justification), not
+  just goal/strategy/solution.
+- **New §9.3 `sas`/`sci` promoted-command subsections**, formalizing their
+  existing DO-178C §11.20/§11.16 grounding into real JSON schemas.
+- **§1.5.2 requirement-text quality (SHOULD, new):** requirement `text`
+  SHOULD be unambiguous/verifiable/singular per **ISO/IEC/IEEE 29148:2018**
+  §5.2.5, and an auto-generated requirement SHOULD use an **EARS** sentence
+  pattern (ubiquitous/event-driven/state-driven/unwanted-behavior).
+- **§13 updated:** `hara`/`fmea`/`tara`/`safety-case`/`sas`/`sci` move from
+  "tool-defined" to "canonical — schema formalized"; none is yet implemented
+  against the new shape and **none is yet consumed by FuSaOps** (that
+  remains a future MINOR bump, §12) — this entry is the spec-design step,
+  not an implementation or a FuSaOps roll-up feature.
+- `SpecVersion` bumped `1.12.0` → `1.13.0` (`fusaops.go`).
 
 ### 1.12.0 — 2026-07-28 (qualified-tool bridge, proof coverage, model-trace, Ada rule prefix — spec-design RFC)
 
