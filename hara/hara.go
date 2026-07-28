@@ -101,7 +101,13 @@ type SafetyGoal struct {
 	HazardIDs   []string `json:"hazards"`
 	ASIL        ASIL     `json:"asil"`
 	SafeState   string   `json:"safeState,omitempty"`
-	FSSRRef     string   `json:"fssrRef,omitempty"`
+	// FssrRefs lists the Functional Safety Requirement id(s), from
+	// .fusa-reqs.json, that decompose this safety goal. Per x-FuSa spec
+	// §1.2.5, a safety goal MUST have at least one — ISO 26262-8 Clause 6
+	// requires a safety goal to decompose into a traceable requirement.
+	//
+	//fusa:req REQ-FO-HARA005
+	FssrRefs []string `json:"fssrRefs"`
 }
 
 // HARA is the full hazard analysis and risk assessment for a project.
@@ -301,6 +307,12 @@ func Validate(h *HARA) []ValidationFinding {
 			out = append(out, ValidationFinding{
 				SafetyGoalID: g.ID,
 				Message:      fmt.Sprintf("safety goal %s has no ASIL assigned", g.ID),
+			})
+		}
+		if len(g.FssrRefs) == 0 {
+			out = append(out, ValidationFinding{
+				SafetyGoalID: g.ID,
+				Message:      fmt.Sprintf("safety goal %s has no fssrRefs — a safety goal MUST decompose into at least one functional safety requirement (x-FuSa spec §1.2.5, ISO 26262-8 Clause 6)", g.ID),
 			})
 		}
 	}

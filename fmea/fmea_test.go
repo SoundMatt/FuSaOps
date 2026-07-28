@@ -31,11 +31,11 @@ func TestBuildReturnsItems(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Build: %v", err)
 	}
-	if f.TotalItems == 0 {
+	if f.Summary.Total == 0 {
 		t.Error("Build must return at least one failure mode")
 	}
-	if len(f.FailureModes) != f.TotalItems {
-		t.Errorf("len(FailureModes)=%d, TotalItems=%d", len(f.FailureModes), f.TotalItems)
+	if len(f.Entries) != f.Summary.Total {
+		t.Errorf("len(Entries)=%d, Summary.Total=%d", len(f.Entries), f.Summary.Total)
 	}
 }
 
@@ -45,7 +45,7 @@ func TestBuildRPNComputed(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Build: %v", err)
 	}
-	for _, fm := range f.FailureModes {
+	for _, fm := range f.Entries {
 		if fm.ID == "" {
 			t.Error("failure mode has empty ID")
 		}
@@ -63,6 +63,15 @@ func TestBuildRPNComputed(t *testing.T) {
 		if fm.Action == "" {
 			t.Errorf("%s: action must not be empty", fm.ID)
 		}
+		if fm.Item == "" {
+			t.Errorf("%s: item must not be empty", fm.ID)
+		}
+		if fm.ActionPriority == "" {
+			t.Errorf("%s: actionPriority must not be empty", fm.ID)
+		}
+		if len(fm.RequirementIDs) == 0 {
+			t.Errorf("%s: requirementIds must not be empty", fm.ID)
+		}
 	}
 }
 
@@ -73,13 +82,13 @@ func TestBuildHighRPNCounter(t *testing.T) {
 		t.Fatalf("Build: %v", err)
 	}
 	var count int
-	for _, fm := range f.FailureModes {
+	for _, fm := range f.Entries {
 		if fm.RPN > fmea.HighRPNThreshold {
 			count++
 		}
 	}
-	if f.HighRPNItems != count {
-		t.Errorf("HighRPNItems=%d, counted %d", f.HighRPNItems, count)
+	if f.Summary.HighPriority != count {
+		t.Errorf("Summary.HighPriority=%d, counted %d", f.Summary.HighPriority, count)
 	}
 }
 
@@ -110,6 +119,21 @@ func TestBuildMetadata(t *testing.T) {
 	}
 }
 
+// TestBuildHashHasAlgoPrefix verifies Hash carries the "sha256:" prefix
+// required by x-FuSa spec §2.7 for a field named "hash" (as opposed to a
+// field named "sha256", which stays bare hex).
+//
+//fusa:test REQ-FO-FMEA006
+func TestBuildHashHasAlgoPrefix(t *testing.T) {
+	f, err := fmea.Build(t.TempDir())
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if !strings.HasPrefix(f.Hash, "sha256:") {
+		t.Errorf("Hash = %q, want sha256: prefix", f.Hash)
+	}
+}
+
 //fusa:test REQ-FO-FMEA002
 func TestBuildHashChanges(t *testing.T) {
 	f1, _ := fmea.Build(t.TempDir())
@@ -126,10 +150,10 @@ func TestHasHighRPN(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Build: %v", err)
 	}
-	want := f.HighRPNItems > 0
+	want := f.Summary.HighPriority > 0
 	if f.HasHighRPN() != want {
-		t.Errorf("HasHighRPN()=%v, want %v (HighRPNItems=%d)",
-			f.HasHighRPN(), want, f.HighRPNItems)
+		t.Errorf("HasHighRPN()=%v, want %v (Summary.HighPriority=%d)",
+			f.HasHighRPN(), want, f.Summary.HighPriority)
 	}
 }
 
@@ -151,8 +175,8 @@ func TestSaveLoad(t *testing.T) {
 	if loaded.Hash != f.Hash {
 		t.Errorf("Hash mismatch after round-trip: got %q, want %q", loaded.Hash, f.Hash)
 	}
-	if loaded.TotalItems != f.TotalItems {
-		t.Errorf("TotalItems mismatch: got %d, want %d", loaded.TotalItems, f.TotalItems)
+	if loaded.Summary.Total != f.Summary.Total {
+		t.Errorf("Summary.Total mismatch: got %d, want %d", loaded.Summary.Total, f.Summary.Total)
 	}
 }
 
@@ -217,8 +241,8 @@ func TestRenderJSON(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
 		t.Fatalf("JSON unmarshal: %v", err)
 	}
-	if got.TotalItems != f.TotalItems {
-		t.Errorf("TotalItems=%d, want %d", got.TotalItems, f.TotalItems)
+	if got.Summary.Total != f.Summary.Total {
+		t.Errorf("Summary.Total=%d, want %d", got.Summary.Total, f.Summary.Total)
 	}
 }
 
@@ -248,7 +272,7 @@ func TestRenderUnknownFormat(t *testing.T) {
 //fusa:test REQ-FO-FMEA004
 func TestRenderTextLowRPN(t *testing.T) {
 	f := &fmea.FMEA{
-		FailureModes: []fmea.FailureMode{
+		Entries: []fmea.FailureMode{
 			{ID: "FM-LOW", Component: "comp", Mode: "test", RPN: 10},
 		},
 	}

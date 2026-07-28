@@ -7,6 +7,57 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.140.0] — 2026-07-28
+
+### feat: bring FuSaOps' own hara/fmea/tara/safetycase/sas/sci into x-FuSa spec v1.14.0 conformance
+
+Dogfoods the schema work from spec v1.13.0/v1.14.0 against FuSaOps' own
+evidence artifacts (it develops itself as an ISO 26262 ASIL-C tool). Also
+fixes two real, pre-existing bugs found by reading the actual generated
+artifacts against the spec:
+
+- **`Hash` fields across `fmea`/`tara`/`safetycase`/`sas`/`sci`/`qualify`
+  now carry the `sha256:` prefix** required by spec §2.7 for a field named
+  `hash` — every one of them previously emitted bare hex.
+- **New shared `Canonicalize` (RFC 8785 JSON Canonicalization Scheme)**
+  in the root package, replacing each package's own fixed-struct-order
+  `computeHash`, so the hash is genuinely deterministic (not just
+  deterministic within one Go binary) — the same procedure now backs
+  `qualify`'s hash too.
+- **`hara/hara.go`**: `SafetyGoal.fssrRef` (a space-delimited string
+  cramming multiple ids into one field) promoted to `fssrRefs []string`
+  (MUST, ≥1 entry) per spec §1.2.5 — closes a real ISO 26262-8 Clause 6
+  traceability gap. `.fusa-hara.json`'s 5 safety goals migrated in place
+  (all 11 referenced ids already resolved correctly).
+- **`fmea/fmea.go`**: `entries[]`/`failureMode`/`item`/`actionPriority`/
+  `mitigations`/`requirementIds`/`ratingScale`/`summary` per spec §9.2.
+  Each of the 8 failure modes now links to the real FuSaOps requirement
+  its corrective action lives in.
+- **`tara/tara.go`**: `threats[]`/`threat`/`attackFeasibility`/
+  `mitigations` renamed; `impact` is now an SFOP object (safety/financial/
+  operational/privacy, ISO 21434 Clause 15.7) instead of one generic
+  severity — each of the 8 scenarios re-rated per-axis rather than
+  copy-pasted. `FeasibilityVeryLow` corrected `very_low` → `very-low`
+  (spec enum spelling).
+- **`safetycase/safetycase.go`**: adds a GSN (Goal Structuring Notation,
+  v3) `nodes`/`edges`/`completeness` projection alongside the existing
+  `claims`/evidence model — each claim becomes a goal+strategy node pair,
+  each present evidence file becomes a solution node; a claim with no
+  evidence counts toward `completeness.undeveloped` rather than
+  fabricating a solution.
+- **`sas/sas.go`**: adds `checklist`/`summary` (spec §9.3) alongside the
+  existing three-state `activities` model.
+- **`sci/sci.go`**: adds `artifacts[]` (`file`/`hash`/`version`, spec
+  §9.3) alongside the existing tool+artefact+component `items[]`.
+- Regenerated `fmea.json`, `tara.json`, `safety-case.json` against the
+  new code (all three were badly stale — pre-dating even the prior schema
+  by several tool generations). `fmea.csv`/`tara.md`/`safety-case.md`/
+  `.mermaid` are legacy static files with no current code path producing
+  them; left untouched.
+- 7 new requirements registered (`REQ-FO-CORE008`, `REQ-FO-HARA005`,
+  `REQ-FO-FMEA006`, `REQ-FO-TARA006`, `REQ-FO-SC006`, `REQ-FO-SAS006`,
+  `REQ-FO-SCI005`).
+
 ## [1.139.0] — 2026-07-28
 
 ### docs: x-FuSa spec v1.14.0 — detection heuristics, attestation, traceability MUSTs, coverage metrics

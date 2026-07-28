@@ -33,3 +33,12 @@ fusaops fmea --format json --output fmea.json
 
 Serves IEC 61508 / ISO 26262 Part 8 dFMEA objectives for the orchestration
 tool itself.
+
+## x-FuSa spec conformance
+
+The JSON shape follows x-FuSa spec §9.2's `fmea` schema: failure modes are
+under `entries[]` (each carrying `failureMode`/`item`/`actionPriority`/
+`requirementIds`), and `ratingScale`/`summary` are top-level fields. This
+package's 8 entries are a fixed, curated review of key architectural risk
+areas in the FuSaOps orchestration pipeline, not an exhaustive per-function
+scan.

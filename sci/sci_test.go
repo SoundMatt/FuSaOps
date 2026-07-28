@@ -161,6 +161,33 @@ func TestBuildWithArtefacts(t *testing.T) {
 	if presentCount < 2 {
 		t.Errorf("expected at least 2 present artefacts, got %d", presentCount)
 	}
+	if len(s.Artifacts) != presentCount {
+		t.Errorf("len(Artifacts)=%d, want %d (one per present artefact)", len(s.Artifacts), presentCount)
+	}
+	for _, a := range s.Artifacts {
+		if a.File == "" {
+			t.Error("Artifacts[].File must not be empty")
+		}
+		if !strings.HasPrefix(a.Hash, "sha256:") {
+			t.Errorf("Artifacts[].Hash = %q, want sha256: prefix", a.Hash)
+		}
+	}
+}
+
+// TestBuildHashHasAlgoPrefix verifies the document-level Hash carries the
+// "sha256:" prefix required by x-FuSa spec §2.7 for a field named "hash"
+// (Items[].sha256 is correctly bare hex — different field name, §2.7's other
+// rule).
+//
+//fusa:test REQ-FO-SCI005
+func TestBuildHashHasAlgoPrefix(t *testing.T) {
+	s, err := sci.Build(t.TempDir(), nil)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if !strings.HasPrefix(s.Hash, "sha256:") {
+		t.Errorf("Hash = %q, want sha256: prefix", s.Hash)
+	}
 }
 
 //fusa:test REQ-FO-SCI002

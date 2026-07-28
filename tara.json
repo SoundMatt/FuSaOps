@@ -1,26 +1,191 @@
 {
-  "format": "go-FuSa TARA v1",
-  "generated_at": "2026-06-10T14:32:27.98215Z",
-  "module": "github.com/SoundMatt/FuSaOps",
-  "entries": [
+  "generatedAt": "2026-07-28T18:47:06.900168Z",
+  "projectRoot": ".",
+  "tool": "fusaops",
+  "toolVersion": "1.140.0",
+  "standard": "ISO 21434:2021 Chapter 9",
+  "threats": [
     {
-      "id": "TARA-001",
-      "asset": "adapter.go",
-      "threat": "Command injection from variable input enables arbitrary command execution",
-      "stride": [
-        "E",
-        "R"
-      ],
-      "cwe": "CWE-78",
-      "attack_vector": "Network",
-      "likelihood": "Medium",
-      "impact": "High",
-      "security_level": 3,
-      "current_control": "Use exec.Command with fixed command and sanitised args",
-      "residual_risk": "Low after remediation",
-      "cyber_rule_id": "CYBER005",
-      "source_file": "/Users/matt/Documents/Coding/SoundMatt/FuSaOps/adapter/adapter.go",
-      "source_line": 138
+      "id": "TS-001",
+      "asset": "Software Bill of Materials (SBOM)",
+      "threatProperty": "Integrity",
+      "threat": "Attacker modifies the SBOM to hide malicious components or misrepresent software composition.",
+      "damageScenario": "False software composition evidence submitted to a certification authority.",
+      "impact": {
+        "safety": "critical",
+        "financial": "major",
+        "operational": "moderate",
+        "privacy": "negligible"
+      },
+      "attackPath": "Unauthorized write access to sbom.json or sbom-spdx.json in the release directory.",
+      "attackFeasibility": "low",
+      "riskLevel": "high",
+      "treatment": "mitigate",
+      "mitigations": [
+        "fusaops sign — HMAC artifact signing",
+        "Read-only CI output directories",
+        "Hash verification via artifact-manifest"
+      ]
+    },
+    {
+      "id": "TS-002",
+      "asset": "Test Evidence Bundle",
+      "threatProperty": "Authenticity",
+      "threat": "Insider substitutes passing test results to conceal known defects.",
+      "damageScenario": "Defective software approved for use in a safety-critical system.",
+      "impact": {
+        "safety": "critical",
+        "financial": "major",
+        "operational": "moderate",
+        "privacy": "negligible"
+      },
+      "attackPath": "Modification of .fusaops-evidence.json before certification review by a developer with repository write access.",
+      "attackFeasibility": "medium",
+      "riskLevel": "critical",
+      "treatment": "mitigate",
+      "mitigations": [
+        "HMAC signing (fusaops sign)",
+        "CI-only write access to evidence artefacts",
+        "Audit trail via fusaops audit-pack"
+      ]
+    },
+    {
+      "id": "TS-003",
+      "asset": "Language Adapter Tools (go-FuSa, c-FuSa, cpp-FuSa, etc.)",
+      "threatProperty": "Integrity",
+      "threat": "Supply-chain attacker replaces a language adapter binary with a trojaned version that suppresses findings.",
+      "damageScenario": "Safety defects not detected by the analysis pipeline; defective software ships.",
+      "impact": {
+        "safety": "critical",
+        "financial": "major",
+        "operational": "major",
+        "privacy": "negligible"
+      },
+      "attackPath": "Compromise of upstream tool registry, tampered container image, or PATH manipulation in CI.",
+      "attackFeasibility": "very-low",
+      "riskLevel": "medium",
+      "treatment": "mitigate",
+      "mitigations": [
+        "SLSA provenance verification (fusaops slsa)",
+        "Tool version pinning in Dockerfile",
+        "Hash verification in Software Configuration Index (fusaops sci)"
+      ]
+    },
+    {
+      "id": "TS-004",
+      "asset": "Aggregate Safety Report",
+      "threatProperty": "Integrity",
+      "threat": "Insider or attacker modifies the aggregate report to downgrade or remove findings.",
+      "damageScenario": "Safety defects concealed from engineering and certification review.",
+      "impact": {
+        "safety": "major",
+        "financial": "moderate",
+        "operational": "moderate",
+        "privacy": "negligible"
+      },
+      "attackPath": "Direct file modification of report artefacts before or during review by a developer with local file access.",
+      "attackFeasibility": "high",
+      "riskLevel": "high",
+      "treatment": "mitigate",
+      "mitigations": [
+        "Artifact signing (fusaops sign)",
+        "Immutable CI artefact storage",
+        "Hash manifest (artifact-manifest.json)"
+      ]
+    },
+    {
+      "id": "TS-005",
+      "asset": "Signed Release Artifacts",
+      "threatProperty": "Authenticity",
+      "threat": "Attacker gains access to the HMAC signing key and creates fraudulent signed artefacts.",
+      "damageScenario": "Fraudulent signed artefacts accepted as legitimate evidence by a certification body.",
+      "impact": {
+        "safety": "critical",
+        "financial": "major",
+        "operational": "moderate",
+        "privacy": "negligible"
+      },
+      "attackPath": "Compromise of signing key stored in CI/CD secrets, developer workstation, or key management system.",
+      "attackFeasibility": "low",
+      "riskLevel": "high",
+      "treatment": "mitigate",
+      "mitigations": [
+        "Hardware security modules for key storage",
+        "Periodic key rotation",
+        "Least-privilege access to signing secrets"
+      ]
+    },
+    {
+      "id": "TS-006",
+      "asset": "Requirement Traceability Matrix",
+      "threatProperty": "Integrity",
+      "threat": "Attacker modifies or deletes requirement trace links to conceal coverage gaps.",
+      "damageScenario": "Incomplete requirements coverage not detected; defective design reaches production.",
+      "impact": {
+        "safety": "major",
+        "financial": "moderate",
+        "operational": "moderate",
+        "privacy": "negligible"
+      },
+      "attackPath": "Unauthorized commit to the repository or direct modification of .fusaops-trace.json artefact.",
+      "attackFeasibility": "medium",
+      "riskLevel": "high",
+      "treatment": "mitigate",
+      "mitigations": [
+        "PR-gated branch protection with mandatory review",
+        "Signed commits (DCO)",
+        "Artefact hash in artifact-manifest.json"
+      ]
+    },
+    {
+      "id": "TS-007",
+      "asset": "FuSaOps Orchestration Pipeline",
+      "threatProperty": "Availability",
+      "threat": "Attacker disrupts the CI/CD pipeline preventing safety analysis from running before release.",
+      "damageScenario": "Release proceeds without required safety analysis; unreviewed defects ship.",
+      "impact": {
+        "safety": "moderate",
+        "financial": "moderate",
+        "operational": "major",
+        "privacy": "negligible"
+      },
+      "attackPath": "DoS against CI infrastructure, sabotage of build scripts, or removal of adapter tool binaries.",
+      "attackFeasibility": "medium",
+      "riskLevel": "high",
+      "treatment": "mitigate",
+      "mitigations": [
+        "Required status checks for all pull requests",
+        "Redundant CI runner configuration",
+        "Pipeline integrity monitoring"
+      ]
+    },
+    {
+      "id": "TS-008",
+      "asset": "FuSaOps Configuration (.fusaops.json)",
+      "threatProperty": "Integrity",
+      "threat": "Attacker modifies configuration to exclude safety-critical components from analysis.",
+      "damageScenario": "Known-dangerous code paths excluded from safety analysis; findings suppressed globally.",
+      "impact": {
+        "safety": "critical",
+        "financial": "moderate",
+        "operational": "moderate",
+        "privacy": "negligible"
+      },
+      "attackPath": "Unauthorized commit modifying .fusaops.json to add scan exclusions or disable adapters.",
+      "attackFeasibility": "medium",
+      "riskLevel": "critical",
+      "treatment": "mitigate",
+      "mitigations": [
+        "PR review gate with code-owner approval",
+        "Git commit signing",
+        "Configuration change alerting in CI"
+      ]
     }
-  ]
+  ],
+  "summary": {
+    "total": 8,
+    "critical": 2,
+    "high": 5
+  },
+  "hash": "sha256:2f181b63e0a2dc6df3c80445d3fdac6d4a17f67429c19b6934c7089f709004d5"
 }

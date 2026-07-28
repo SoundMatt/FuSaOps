@@ -51,18 +51,34 @@ type ConfigItem struct {
 	Present  bool     `json:"present"`
 }
 
-// SCI is the Software Configuration Index document.
+// ArtifactRef is x-FuSa spec §9.3's promoted-schema view of an evidence
+// artefact: `file`/`hash`/`version` — a project-relative subset of the
+// richer ConfigItem/Items model, covering only KindArtefact entries that
+// are actually present (a missing artefact has no hash to report).
+//
+//fusa:req REQ-FO-SCI005
+type ArtifactRef struct {
+	File    string `json:"file"`
+	Hash    string `json:"hash"`
+	Version string `json:"version,omitempty"`
+}
+
+// SCI is the Software Configuration Index document. Items/ConfigItem remain
+// the primary tool+artefact+component inventory; Artifacts is the
+// project-relative file/hash projection required by x-FuSa spec §9.3,
+// derived from the same artefact scan at Build time.
 //
 //fusa:req REQ-FO-SCI001
 type SCI struct {
-	GeneratedAt time.Time    `json:"generatedAt"`
-	ProjectRoot string       `json:"projectRoot"`
-	Tool        string       `json:"tool"`
-	ToolVersion string       `json:"toolVersion"`
-	GoVersion   string       `json:"goVersion"`
-	Items       []ConfigItem `json:"items"`
-	TotalItems  int          `json:"totalItems"`
-	Hash        string       `json:"hash"`
+	GeneratedAt time.Time     `json:"generatedAt"`
+	ProjectRoot string        `json:"projectRoot"`
+	Tool        string        `json:"tool"`
+	ToolVersion string        `json:"toolVersion"`
+	GoVersion   string        `json:"goVersion"`
+	Items       []ConfigItem  `json:"items"`
+	TotalItems  int           `json:"totalItems"`
+	Artifacts   []ArtifactRef `json:"artifacts"`
+	Hash        string        `json:"hash"`
 }
 
 // knownArtefacts lists the standard FuSaOps evidence artefacts.
@@ -145,6 +161,9 @@ func Build(root string, adapters []adapter.Adapter) (*SCI, error) {
 			Size:    size,
 		}
 		s.Items = append(s.Items, item)
+		if sum != "" {
+			s.Artifacts = append(s.Artifacts, ArtifactRef{File: art.file, Hash: "sha256:" + sum})
+		}
 	}
 
 	s.TotalItems = len(s.Items)
@@ -159,8 +178,12 @@ func computeHash(s *SCI) string {
 	if err != nil {
 		return ""
 	}
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:])
+	canon, err := fusaops.Canonicalize(data)
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(canon)
+	return fmt.Sprintf("sha256:%x", sum)
 }
 
 // Save writes the SCI to path as indented JSON.

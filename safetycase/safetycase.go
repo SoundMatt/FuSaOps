@@ -72,25 +72,128 @@ type Claim struct {
 	Passed   bool          `json:"passed"`
 }
 
-// SafetyCase is the top-level safety argument document.
+// GSNNodeType is one of the six node types defined by the GSN Community
+// Standard (Assurance Case Working Group, v3, 2021).
+//
+//fusa:req REQ-FO-SC006
+type GSNNodeType string
+
+const (
+	GSNGoal          GSNNodeType = "goal"
+	GSNStrategy      GSNNodeType = "strategy"
+	GSNSolution      GSNNodeType = "solution"
+	GSNContext       GSNNodeType = "context"
+	GSNAssumption    GSNNodeType = "assumption"
+	GSNJustification GSNNodeType = "justification"
+)
+
+// GSNNode is one node in the GSN argument graph.
+//
+//fusa:req REQ-FO-SC006
+type GSNNode struct {
+	ID       string      `json:"id"`
+	Type     GSNNodeType `json:"type"`
+	Text     string      `json:"text"`
+	Evidence string      `json:"evidence,omitempty"`
+}
+
+// GSNEdgeType is one of the two edge types defined by the GSN Community
+// Standard: an argument step (supportedBy) or a context/assumption/
+// justification attachment (inContextOf).
+//
+//fusa:req REQ-FO-SC006
+type GSNEdgeType string
+
+const (
+	GSNSupportedBy GSNEdgeType = "supportedBy"
+	GSNInContextOf GSNEdgeType = "inContextOf"
+)
+
+// GSNEdge is one edge in the GSN argument graph.
+//
+//fusa:req REQ-FO-SC006
+type GSNEdge struct {
+	From string      `json:"from"`
+	To   string      `json:"to"`
+	Type GSNEdgeType `json:"type"`
+}
+
+// Completeness rolls up the GSN graph's goal/evidence coverage.
+//
+//fusa:req REQ-FO-SC006
+type Completeness struct {
+	TotalGoals        int `json:"totalGoals"`
+	GoalsWithEvidence int `json:"goalsWithEvidence"`
+	Undeveloped       int `json:"undeveloped"`
+}
+
+// SafetyCase is the top-level safety argument document. Claims/EvidenceRef
+// remain the primary evidence-resolution model (file-existence + SHA-256);
+// Nodes/Edges/Completeness are a GSN (Goal Structuring Notation) projection
+// of that same data, per x-FuSa spec §9.2 — each Claim becomes a goal node
+// with its strategy text as a strategy node, and each present EvidenceRef
+// becomes a solution node, so the GSN graph and the claims are two views of
+// one underlying analysis rather than a second, disconnected model.
 //
 //fusa:req REQ-FO-SC001
 type SafetyCase struct {
-	GeneratedAt  time.Time `json:"generatedAt"`
-	ProjectRoot  string    `json:"projectRoot"`
-	Tool         string    `json:"tool"`
-	ToolVersion  string    `json:"toolVersion"`
-	Standard     Standard  `json:"standard"`
-	Claims       []Claim   `json:"claims"`
-	TotalClaims  int       `json:"totalClaims"`
-	PassedClaims int       `json:"passedClaims"`
-	Hash         string    `json:"hash"`
+	GeneratedAt  time.Time    `json:"generatedAt"`
+	ProjectRoot  string       `json:"projectRoot"`
+	Tool         string       `json:"tool"`
+	ToolVersion  string       `json:"toolVersion"`
+	Standard     Standard     `json:"standard"`
+	Claims       []Claim      `json:"claims"`
+	TotalClaims  int          `json:"totalClaims"`
+	PassedClaims int          `json:"passedClaims"`
+	Nodes        []GSNNode    `json:"nodes"`
+	Edges        []GSNEdge    `json:"edges"`
+	Completeness Completeness `json:"completeness"`
+	Hash         string       `json:"hash"`
 }
 
 // HasGaps returns true when at least one claim failed due to missing evidence.
 //
 //fusa:req REQ-FO-SC005
 func (s *SafetyCase) HasGaps() bool { return s.PassedClaims < s.TotalClaims }
+
+// buildGSN projects claims into a GSN graph: each claim is a goal node
+// supported by a strategy node, itself supported by one solution node per
+// present evidence item. A claim with any missing evidence counts toward
+// Completeness.Undeveloped rather than fabricating a solution node for
+// evidence that doesn't exist.
+//
+//fusa:req REQ-FO-SC006
+func buildGSN(claims []Claim) ([]GSNNode, []GSNEdge, Completeness) {
+	var nodes []GSNNode
+	var edges []GSNEdge
+	var comp Completeness
+
+	for _, c := range claims {
+		comp.TotalGoals++
+		goalID := c.ID
+		strategyID := c.ID + "-St"
+		nodes = append(nodes, GSNNode{ID: goalID, Type: GSNGoal, Text: c.Title})
+		nodes = append(nodes, GSNNode{ID: strategyID, Type: GSNStrategy, Text: c.Strategy})
+		edges = append(edges, GSNEdge{From: goalID, To: strategyID, Type: GSNSupportedBy})
+
+		hasEvidence := false
+		for i, e := range c.Evidence {
+			if e.Status != StatusPresent {
+				continue
+			}
+			hasEvidence = true
+			solutionID := fmt.Sprintf("%s-Sn%d", c.ID, i+1)
+			nodes = append(nodes, GSNNode{ID: solutionID, Type: GSNSolution, Text: e.Title, Evidence: e.Path})
+			edges = append(edges, GSNEdge{From: strategyID, To: solutionID, Type: GSNSupportedBy})
+		}
+		if hasEvidence {
+			comp.GoalsWithEvidence++
+		} else {
+			comp.Undeveloped++
+		}
+	}
+	return nodes, edges, comp
+}
 
 // evidenceSpec defines one expected evidence file.
 type evidenceSpec struct {
@@ -235,6 +338,8 @@ func Build(root string, std Standard) (*SafetyCase, error) {
 		}
 	}
 
+	sc.Nodes, sc.Edges, sc.Completeness = buildGSN(sc.Claims)
+
 	// Compute integrity hash over JSON representation (without Hash field).
 	sc.Hash = computeHash(sc)
 	return sc, nil
@@ -247,8 +352,12 @@ func computeHash(sc *SafetyCase) string {
 	if err != nil {
 		return ""
 	}
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:])
+	canon, err := fusaops.Canonicalize(data)
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(canon)
+	return fmt.Sprintf("sha256:%x", sum)
 }
 
 // Save writes the safety case to path as indented JSON.

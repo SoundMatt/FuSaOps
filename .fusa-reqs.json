@@ -2950,6 +2950,49 @@
       "description": "FuSaOps shall provide an ada-FuSa adapter (adafusa) that detects .ads/.adb files and delegates check/trace to adafusa via the generic cmdAdapter path. The adafusa binary produces spec v1.11 conformant JSON so no output normalisation is required.",
       "priority": "MUST",
       "rationale": "Extends FuSaOps multi-language orchestration to Ada/SPARK projects using ada-FuSa v0.1.0."
+    },
+    {
+      "id": "REQ-FO-CORE008",
+      "title": "RFC 8785 canonical JSON helper",
+      "description": "FuSaOps shall provide a Canonicalize function producing RFC 8785 (JSON Canonicalization Scheme) sorted-key, whitespace-free JSON, used by every self-integrity hash field per x-FuSa spec section 6/2.7.",
+      "priority": "MUST",
+      "rationale": "A hash computed over Go struct-field-order JSON is deterministic only within one Go binary; genuine RFC 8785 canonicalization is what the spec actually requires and is reusable across every artifact hash."
+    },
+    {
+      "id": "REQ-FO-HARA005",
+      "title": "SafetyGoal.FssrRefs is a MUST, >=1-entry array",
+      "priority": "MUST",
+      "standard": "ISO 26262-8 Clause 6"
+    },
+    {
+      "id": "REQ-FO-FMEA006",
+      "title": "FMEA schema conformance: entries/item/actionPriority/requirementIds/ratingScale/summary per x-FuSa spec 9.2",
+      "priority": "MUST",
+      "standard": "IEC 61508:2010 / ISO 26262:2018 Part 8-7"
+    },
+    {
+      "id": "REQ-FO-TARA006",
+      "title": "TARA schema conformance: threats/threat/attackFeasibility/SFOP impact/summary per x-FuSa spec 9.2",
+      "priority": "MUST",
+      "standard": "ISO 21434:2021 Clause 15"
+    },
+    {
+      "id": "REQ-FO-SC006",
+      "title": "SafetyCase GSN projection: nodes/edges/completeness per the GSN Community Standard v3 and x-FuSa spec 9.2",
+      "priority": "MUST",
+      "standard": "ISO 26262, DO-178C, IEC 61508, ISO 21434"
+    },
+    {
+      "id": "REQ-FO-SAS006",
+      "title": "SAS checklist/summary projection per x-FuSa spec 9.3",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.20"
+    },
+    {
+      "id": "REQ-FO-SCI005",
+      "title": "SCI artifacts[] projection (file/hash/version) per x-FuSa spec 9.3",
+      "priority": "MUST",
+      "standard": "DO-178C \u00a711.16"
     }
   ]
 }
