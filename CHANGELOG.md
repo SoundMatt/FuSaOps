@@ -7,6 +7,32 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.137.0] — 2026-07-28
+
+### docs: x-FuSa spec v1.12.0 — qualified-tool bridge, proof coverage, model-trace, Ada rule prefix (FuSaOps#78)
+
+- Formalizes the spec-design RFC (FuSaOps#78) into `docs/x-fusa-spec.md`.
+  All four additions are additive and draft/SHOULD — no tool implements any
+  of them yet; this is the spec-only "design once" step, matching the
+  pattern used for §1.4.1 the day before.
+- New §4.3 `check --import`/`--import-format` (qualified external tool
+  bridge for LDRA/VectorCAST/Polyspace/Coverity reports into the native
+  `Finding[]` stream).
+- New `coverage --proof` (§9.2), modeled on the existing MC/DC pattern:
+  `proof-report.json` schema + `--proof-file`/`--proof-threshold` CLI
+  convention for formal-verification (proof obligation) evidence.
+- New §1.2.4 `.fusa-model-trace.json` (explicitly draft, pending validation
+  against a real Simulink Requirements Toolbox export) + §5
+  `--model-trace`/`"model"` tag kind for a model-based-design traceability
+  bridge.
+- §1.5.1: adds `ADA-<n>` rule-id prefix (Ada Quality and Style Guide-derived,
+  not a ported MISRA numbering) alongside `MISRA-*`/`AUTOSAR-*`/`CERT-*`.
+- §13 gains schema-status rows for all three new draft schemas.
+- `SpecVersion` bumped `1.11.0` → `1.12.0` (`fusaops.go`).
+- Out of scope (per the RFC): no Coverity/CBMC implementation in any tool,
+  no new Ada/SPARK tool repository — both remain separate, explicitly
+  deferred actions.
+
 ## [1.136.0] — 2026-07-28
 
 ### feat: register ada-FuSa as the 7th adapter
