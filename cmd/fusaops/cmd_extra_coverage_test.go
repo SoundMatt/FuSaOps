@@ -115,6 +115,9 @@ func findEchoBinary() (string, error) {
 //fusa:test REQ-FO-CLI073
 func TestHaraShowOutputFlag(t *testing.T) {
 	dir := t.TempDir()
+	if code, _, errb := runArgs(t, "hara", "--dir", dir, "init"); code != 0 {
+		t.Fatalf("hara init: code=%d err=%q", code, errb)
+	}
 	outFile := filepath.Join(dir, "hara-report.json")
 	code, _, errb := runArgs(t, "hara", "--dir", dir, "show", "--format", "json", "--output", outFile)
 	if code != 0 {
@@ -137,6 +140,36 @@ func TestHaraShowBadFormat(t *testing.T) {
 	code, _, errb := runArgs(t, "hara", "--dir", dir, "show", "--format", "xml")
 	if code != 2 {
 		t.Errorf("hara show --format xml: want 2, got %d (err=%q)", code, errb)
+	}
+}
+
+// TestHaraShowJSONAbsentFileExitsNonZero verifies hara show --format json
+// exits non-zero on a project with no .fusa-hara.json, per x-FuSa spec
+// §1.2.5: a hara command MUST NOT report zero hazards as if analysis were
+// complete.
+//
+//fusa:test REQ-FO-CLI073
+func TestHaraShowJSONAbsentFileExitsNonZero(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "hara", "--dir", dir, "show", "--format", "json")
+	if code == 0 {
+		t.Errorf("hara show --format json on absent file: want non-zero, got 0")
+	}
+	if !strings.Contains(errb, ".fusa-hara.json not found") {
+		t.Errorf("hara show --format json on absent file: stderr=%q, want mention of missing file", errb)
+	}
+}
+
+// TestHaraShowTextAbsentFileStillExitsZero verifies hara show's default
+// text format tolerates an absent .fusa-hara.json (the spec's exit-nonzero
+// requirement is scoped to --format json, not the human-readable default).
+//
+//fusa:test REQ-FO-CLI073
+func TestHaraShowTextAbsentFileStillExitsZero(t *testing.T) {
+	dir := t.TempDir()
+	code, _, errb := runArgs(t, "hara", "--dir", dir, "show")
+	if code != 0 {
+		t.Errorf("hara show text on absent file: want 0, got %d (err=%q)", code, errb)
 	}
 }
 

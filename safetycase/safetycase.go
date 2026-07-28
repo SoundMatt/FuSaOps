@@ -137,19 +137,23 @@ type Completeness struct {
 //
 //fusa:req REQ-FO-SC001
 type SafetyCase struct {
-	GeneratedAt  time.Time            `json:"generatedAt"`
-	ProjectRoot  string               `json:"projectRoot"`
-	Tool         string               `json:"tool"`
-	ToolVersion  string               `json:"toolVersion"`
-	Standard     Standard             `json:"standard"`
-	Claims       []Claim              `json:"claims"`
-	TotalClaims  int                  `json:"totalClaims"`
-	PassedClaims int                  `json:"passedClaims"`
-	Nodes        []GSNNode            `json:"nodes"`
-	Edges        []GSNEdge            `json:"edges"`
-	Completeness Completeness         `json:"completeness"`
-	Attestation  *fusaops.Attestation `json:"attestation,omitempty"`
-	Hash         string               `json:"hash"`
+	// Common header, x-FuSa spec §3.1.
+	SchemaVersion string               `json:"schemaVersion"`
+	Kind          string               `json:"kind"`
+	Language      string               `json:"language"`
+	GeneratedAt   time.Time            `json:"generatedAt"`
+	ProjectRoot   string               `json:"projectRoot"`
+	Tool          string               `json:"tool"`
+	ToolVersion   string               `json:"toolVersion"`
+	Standard      Standard             `json:"standard"`
+	Claims        []Claim              `json:"claims"`
+	TotalClaims   int                  `json:"totalClaims"`
+	PassedClaims  int                  `json:"passedClaims"`
+	Nodes         []GSNNode            `json:"nodes"`
+	Edges         []GSNEdge            `json:"edges"`
+	Completeness  Completeness         `json:"completeness"`
+	Attestation   *fusaops.Attestation `json:"attestation,omitempty"`
+	Hash          string               `json:"hash"`
 }
 
 // HasGaps returns true when at least one claim failed due to missing evidence.
@@ -272,18 +276,20 @@ var commonClaims = []claimSpec{
 }
 
 // resolveEvidence checks whether each evidence file exists and records its
-// SHA-256 hash and size when present.
+// SHA-256 hash and size when present. Path is always project-relative
+// (x-FuSa spec §4/§9.2 MUST) even though the file is stat'd via its full
+// filesystem path.
 func resolveEvidence(root string, specs []evidenceSpec) []EvidenceRef {
 	refs := make([]EvidenceRef, len(specs))
 	for i, s := range specs {
-		path := root + "/" + s.filename
-		info, err := os.Stat(path)
+		fullPath := root + "/" + s.filename
+		info, err := os.Stat(fullPath)
 		if err != nil {
-			refs[i] = EvidenceRef{Title: s.title, Path: path, Status: StatusMissing}
+			refs[i] = EvidenceRef{Title: s.title, Path: s.filename, Status: StatusMissing}
 			continue
 		}
-		sum := hashFile(path)
-		refs[i] = EvidenceRef{Title: s.title, Path: path, Status: StatusPresent, SHA256: sum, Size: info.Size()}
+		sum := hashFile(fullPath)
+		refs[i] = EvidenceRef{Title: s.title, Path: s.filename, Status: StatusPresent, SHA256: sum, Size: info.Size()}
 	}
 	return refs
 }
@@ -316,11 +322,14 @@ func hashFile(path string) string {
 //fusa:req REQ-FO-SC002
 func Build(root string, std Standard) (*SafetyCase, error) {
 	sc := &SafetyCase{
-		GeneratedAt: time.Now().UTC(),
-		ProjectRoot: root,
-		Tool:        "fusaops",
-		ToolVersion: fusaops.Version,
-		Standard:    std,
+		SchemaVersion: fusaops.SpecVersion,
+		Kind:          "safety-case",
+		Language:      "go",
+		GeneratedAt:   time.Now().UTC(),
+		ProjectRoot:   root,
+		Tool:          "fusaops",
+		ToolVersion:   fusaops.Version,
+		Standard:      Standard(fusaops.CanonicalStandardID(string(std))),
 	}
 
 	for _, cs := range commonClaims {

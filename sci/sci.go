@@ -70,15 +70,19 @@ type ArtifactRef struct {
 //
 //fusa:req REQ-FO-SCI001
 type SCI struct {
-	GeneratedAt time.Time     `json:"generatedAt"`
-	ProjectRoot string        `json:"projectRoot"`
-	Tool        string        `json:"tool"`
-	ToolVersion string        `json:"toolVersion"`
-	GoVersion   string        `json:"goVersion"`
-	Items       []ConfigItem  `json:"items"`
-	TotalItems  int           `json:"totalItems"`
-	Artifacts   []ArtifactRef `json:"artifacts"`
-	Hash        string        `json:"hash"`
+	// Common header, x-FuSa spec §3.1.
+	SchemaVersion string        `json:"schemaVersion"`
+	Kind          string        `json:"kind"`
+	Language      string        `json:"language"`
+	GeneratedAt   time.Time     `json:"generatedAt"`
+	ProjectRoot   string        `json:"projectRoot"`
+	Tool          string        `json:"tool"`
+	ToolVersion   string        `json:"toolVersion"`
+	GoVersion     string        `json:"goVersion"`
+	Items         []ConfigItem  `json:"items"`
+	TotalItems    int           `json:"totalItems"`
+	Artifacts     []ArtifactRef `json:"artifacts"`
+	Hash          string        `json:"hash"`
 }
 
 // knownArtefacts lists the standard FuSaOps evidence artefacts.
@@ -119,11 +123,14 @@ func hashFile(path string) (string, int64) {
 //fusa:req REQ-FO-SCI002
 func Build(root string, adapters []adapter.Adapter) (*SCI, error) {
 	s := &SCI{
-		GeneratedAt: time.Now().UTC(),
-		ProjectRoot: root,
-		Tool:        "fusaops",
-		ToolVersion: fusaops.Version,
-		GoVersion:   runtime.Version(),
+		SchemaVersion: fusaops.SpecVersion,
+		Kind:          "sci",
+		Language:      "go",
+		GeneratedAt:   time.Now().UTC(),
+		ProjectRoot:   root,
+		Tool:          "fusaops",
+		ToolVersion:   fusaops.Version,
+		GoVersion:     runtime.Version(),
 	}
 
 	// Orchestration tool itself.
@@ -147,15 +154,16 @@ func Build(root string, adapters []adapter.Adapter) (*SCI, error) {
 		s.Items = append(s.Items, item)
 	}
 
-	// Known evidence artefacts.
+	// Known evidence artefacts. Path is project-relative (x-FuSa spec §4 MUST)
+	// even though hashFile stats the full filesystem path.
 	for _, art := range knownArtefacts {
-		path := root + "/" + art.file
-		sum, size := hashFile(path)
+		fullPath := root + "/" + art.file
+		sum, size := hashFile(fullPath)
 		item := ConfigItem{
 			ID:      art.id,
 			Name:    art.name,
 			Kind:    KindArtefact,
-			Path:    path,
+			Path:    art.file,
 			Present: sum != "",
 			SHA256:  sum,
 			Size:    size,

@@ -343,7 +343,7 @@ func TestSafetyCaseISO21434(t *testing.T) {
 	if code > 1 {
 		t.Fatalf("safety-case ISO 21434: unexpected exit code %d", code)
 	}
-	if !strings.Contains(out, "ISO 21434") {
+	if !strings.Contains(out, "iso21434") {
 		t.Errorf("safety-case output missing standard name: %q", out[:min(len(out), 200)])
 	}
 }
@@ -532,7 +532,7 @@ func TestTARAJSON(t *testing.T) {
 	if code > 1 {
 		t.Fatalf("tara json: unexpected exit code %d", code)
 	}
-	if !strings.Contains(out, `"threats"`) || !strings.Contains(out, `"riskLevel"`) {
+	if !strings.Contains(out, `"threats"`) || !strings.Contains(out, `"risk"`) {
 		t.Errorf("tara json missing expected fields: %q", out[:min(len(out), 200)])
 	}
 }
@@ -810,6 +810,9 @@ func TestHaraUnknownSubcommand(t *testing.T) {
 //fusa:test REQ-FO-CLI073
 func TestHaraShowJSON(t *testing.T) {
 	dir := t.TempDir()
+	if code, _, errb := runArgs(t, "hara", "--dir", dir, "init"); code != 0 {
+		t.Fatalf("hara init: code=%d err=%q", code, errb)
+	}
 	code, out, errb := runArgs(t, "hara", "--dir", dir, "show", "--format", "json")
 	if code != 0 {
 		t.Fatalf("hara show json: code=%d err=%q", code, errb)

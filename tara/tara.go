@@ -96,9 +96,9 @@ type ThreatScenario struct {
 	Threat         string            `json:"threat"`
 	DamageScenario string            `json:"damageScenario"`
 	Impact         ImpactRating      `json:"impact"`
-	AttackPath     string            `json:"attackPath"`
+	AttackPath     string            `json:"attackVector"`
 	Feasibility    Feasibility       `json:"attackFeasibility"`
-	RiskLevel      RiskLevel         `json:"riskLevel"`
+	RiskLevel      RiskLevel         `json:"risk"`
 	Treatment      TreatmentDecision `json:"treatment"`
 	Controls       []string          `json:"mitigations"`
 	// CWE is the applicable CWE id, when the threat maps to one (SHOULD when
@@ -142,15 +142,19 @@ const AssetInventoryMethod = "count of FuSaOps' own sci package's knownArtefacts
 //
 //fusa:req REQ-FO-TARA001
 type TARA struct {
-	GeneratedAt time.Time            `json:"generatedAt"`
-	ProjectRoot string               `json:"projectRoot"`
-	Tool        string               `json:"tool"`
-	ToolVersion string               `json:"toolVersion"`
-	Standard    string               `json:"standard"`
-	Threats     []ThreatScenario     `json:"threats"`
-	Summary     Summary              `json:"summary"`
-	Attestation *fusaops.Attestation `json:"attestation,omitempty"`
-	Hash        string               `json:"hash"`
+	// Common header, x-FuSa spec §3.1.
+	SchemaVersion string               `json:"schemaVersion"`
+	Kind          string               `json:"kind"`
+	Language      string               `json:"language"`
+	GeneratedAt   time.Time            `json:"generatedAt"`
+	ProjectRoot   string               `json:"projectRoot"`
+	Tool          string               `json:"tool"`
+	ToolVersion   string               `json:"toolVersion"`
+	Standard      string               `json:"standard"`
+	Threats       []ThreatScenario     `json:"threats"`
+	Summary       Summary              `json:"summary"`
+	Attestation   *fusaops.Attestation `json:"attestation,omitempty"`
+	Hash          string               `json:"hash"`
 }
 
 // HasCritical returns true when any scenario carries a critical risk level.
@@ -341,11 +345,14 @@ var standardScenarios = []scenarioSpec{
 //fusa:req REQ-FO-TARA002
 func Build(root string) (*TARA, error) {
 	t := &TARA{
-		GeneratedAt: time.Now().UTC(),
-		ProjectRoot: root,
-		Tool:        "fusaops",
-		ToolVersion: fusaops.Version,
-		Standard:    "ISO 21434:2021 Chapter 9",
+		SchemaVersion: fusaops.SpecVersion,
+		Kind:          "tara-report",
+		Language:      "go",
+		GeneratedAt:   time.Now().UTC(),
+		ProjectRoot:   root,
+		Tool:          "fusaops",
+		ToolVersion:   fusaops.Version,
+		Standard:      fusaops.CanonicalStandardID("ISO 21434"), // ISO/SAE 21434:2021 Chapter 9
 	}
 
 	for _, spec := range standardScenarios {
@@ -383,13 +390,19 @@ func Build(root string) (*TARA, error) {
 }
 
 // coveragePct returns 100*analyzed/total rounded to one decimal, or 100 when
-// total is 0 (no denominator means nothing is uncovered).
+// total is 0 (no denominator means nothing is uncovered). x-FuSa spec §9.2:
+// coveragePct MUST NOT exceed 100 — clamped defensively even though analyzed
+// cannot currently exceed total by construction.
 func coveragePct(analyzed, total int) float64 {
 	if total == 0 {
 		return 100
 	}
 	pct := 100 * float64(analyzed) / float64(total)
-	return math.Round(pct*10) / 10
+	pct = math.Round(pct*10) / 10
+	if pct > 100 {
+		return 100
+	}
+	return pct
 }
 
 func computeHash(t *TARA) string {

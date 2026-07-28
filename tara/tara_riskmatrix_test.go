@@ -29,3 +29,13 @@ func TestRiskMatrixUncoveredBranches(t *testing.T) {
 		}
 	}
 }
+
+// TestCoveragePctNeverExceeds100 verifies coveragePct clamps to 100 even when
+// analyzed > total (x-FuSa spec §9.2: "coveragePct MUST NOT exceed 100").
+//
+//fusa:test REQ-FO-TARA008
+func TestCoveragePctNeverExceeds100(t *testing.T) {
+	if got := coveragePct(12, 10); got != 100 {
+		t.Errorf("coveragePct(12, 10) = %v, want 100 (clamped)", got)
+	}
+}

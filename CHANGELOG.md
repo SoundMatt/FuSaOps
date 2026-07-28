@@ -7,6 +7,60 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.144.0] — 2026-07-28
+
+### fix: FuSaOps' own hara/tara/safetycase/sci/fmea artifacts against spec v1.15.0 — 10 bugs from a fresh self-audit
+
+The v1.143.0 changelog claimed FuSaOps' artifact packages already met the
+spec's carry-forward mechanism — true, but a follow-up self-audit (deliberately
+skeptical, same method used against the sibling tools) found 10 other real
+defects that PR1/PR2 had missed, proving self-review has the same blind spots
+found in every other tool this session:
+
+- **hara**: `Validate` never cross-checked a hazard's stated `risk.asil`
+  against `DetermineASIL(S,E,C)` — any ASIL value passed regardless of the
+  actual S/E/C rating. New `ValidateFssrRefs` also cross-checks every safety
+  goal's `fssrRefs` against `.fusa-reqs.json`'s real ids, catching a dangling
+  reference that a non-empty check alone can't see.
+- **hara CLI**: `hara show --format json` on a project with no
+  `.fusa-hara.json` exited 0 and rendered an empty HARA as if the analysis
+  were complete — now exits 1 (§1.2.5). The text/markdown default format is
+  intentionally left tolerant, per the same spec text's scoping.
+- **tara**: `ThreatScenario` JSON emitted `attackPath`/`riskLevel` instead of
+  the spec's `attackVector`/`risk` — the SFOP enum vocabulary and the
+  feasibility×impact combination table were already correct, only these two
+  field names were wrong.
+- **safetycase / sci**: `evidence[].path` / `items[].path` leaked the full
+  filesystem path (`root + "/" + file`) instead of a project-relative one
+  (§4 MUST) — the file is still stat'd via its full path, only the recorded
+  value changed.
+- **standard field canonicalization**: new `fusaops.CanonicalStandardID`
+  helper maps a display string (`"ISO 26262"`) to its §2.4.1 canonical id
+  (`"iso26262"`) — applied in hara (real MUST per §1.2.5), tara, and
+  safetycase. fmea's dual-standard citation (`IEC 61508 / ISO 26262 Part
+  8-7`) has no single canonical id to map to and is left as a display
+  string; fmea/tara/safety-case don't actually carry a spec-mandated
+  `standard` field at all per §9.2's illustrative schemas, so this is a
+  consistency improvement, not a nonconformance fix, for the two that do
+  cleanly map.
+- **fmea**: `FailureMode` had no `file` field at all, despite it being a
+  §9.2 MUST — added, populated with each of the 8 entries' real
+  representative source file.
+- **common header**: `fmea`/`tara`/`safety-case`/`sas`/`sci` were all
+  missing the §3.1 common header (`schemaVersion`/`kind`/`language`) — added
+  to all five (HARA is explicitly an input file like `.fusa-reqs.json`, not
+  subject to the header, per §1.2.5's own text). Spec's §3.1 `kind` enum
+  list extended to include `fmea-report`/`tara-report`/`safety-case`/`sas`/
+  `sci`, which were already used in the spec's own §9.2/§9.3 schema blocks
+  but not in the enum's explicit list.
+- **coveragePct clamp**: `coveragePct` in both fmea and tara now clamps to
+  100 defensively (§9.2 MUST), with a regression test seeding
+  analyzed > total directly at the unexported function, since neither
+  package's real data can currently trigger the bug by construction.
+
+New `.fusa-reqs.json` entries: `REQ-FO-HARA007` (fssrRefs registry
+cross-check), `REQ-FO-CORE008` (`CanonicalStandardID`).
+
 ## [1.143.0] — 2026-07-28
 
 ### docs: x-FuSa spec v1.15.0 — attestation carry-forward MUST + implementer guidance, from a 4-tool deep audit

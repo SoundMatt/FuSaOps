@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/safetycase"
 )
 
@@ -73,8 +74,8 @@ func TestBuildEmptyDir(t *testing.T) {
 	if sc.Tool != "fusaops" {
 		t.Errorf("Tool = %q, want fusaops", sc.Tool)
 	}
-	if sc.Standard != safetycase.StandardISO26262 {
-		t.Errorf("Standard = %q, want ISO 26262", sc.Standard)
+	if sc.Standard != "iso26262" {
+		t.Errorf("Standard = %q, want iso26262", sc.Standard)
 	}
 	if sc.ProjectRoot != dir {
 		t.Errorf("ProjectRoot = %q, want %q", sc.ProjectRoot, dir)
@@ -260,8 +261,9 @@ func TestBuildAllStandards(t *testing.T) {
 			t.Errorf("Build(%s): %v", std, err)
 			continue
 		}
-		if sc.Standard != std {
-			t.Errorf("Standard = %q, want %q", sc.Standard, std)
+		wantID := safetycase.Standard(fusaops.CanonicalStandardID(string(std)))
+		if sc.Standard != wantID {
+			t.Errorf("Standard = %q, want %q", sc.Standard, wantID)
 		}
 	}
 }
@@ -333,7 +335,7 @@ func TestRenderText(t *testing.T) {
 		t.Fatalf("Render text: %v", err)
 	}
 	out := buf.String()
-	for _, want := range []string{"FuSaOps Safety Case", "ISO 26262", "C-001", "GAPS DETECTED"} {
+	for _, want := range []string{"FuSaOps Safety Case", "iso26262", "C-001", "GAPS DETECTED"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("text output missing %q:\n%s", want, out)
 		}
@@ -385,8 +387,8 @@ func TestRenderJSON(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &check); err != nil {
 		t.Fatalf("Unmarshal: %v", err)
 	}
-	if check.Standard != safetycase.StandardDO178C {
-		t.Errorf("Standard = %q, want DO-178C", check.Standard)
+	if check.Standard != "do178c" {
+		t.Errorf("Standard = %q, want do178c", check.Standard)
 	}
 	if check.TotalClaims != sc.TotalClaims {
 		t.Errorf("TotalClaims = %d, want %d", check.TotalClaims, sc.TotalClaims)

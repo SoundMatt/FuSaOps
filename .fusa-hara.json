@@ -1,6 +1,6 @@
 {
   "project": "FuSaOps",
-  "standard": "ISO 26262",
+  "standard": "iso26262",
   "createdAt": "2026-06-09T00:00:00Z",
   "operationalSituations": [
     {

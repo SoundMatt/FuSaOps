@@ -70,6 +70,10 @@ type Summary struct {
 //
 //fusa:req REQ-FO-SAS001
 type SAS struct {
+	// Common header, x-FuSa spec §3.1.
+	SchemaVersion      string               `json:"schemaVersion"`
+	Kind               string               `json:"kind"`
+	Language           string               `json:"language"`
 	GeneratedAt        time.Time            `json:"generatedAt"`
 	ProjectRoot        string               `json:"projectRoot"`
 	Tool               string               `json:"tool"`
@@ -159,6 +163,9 @@ func Build(root, softwareLevel string) (*SAS, error) {
 	}
 
 	s := &SAS{
+		SchemaVersion: fusaops.SpecVersion,
+		Kind:          "sas",
+		Language:      "go",
 		GeneratedAt:   time.Now().UTC(),
 		ProjectRoot:   root,
 		Tool:          "fusaops",

@@ -1,9 +1,12 @@
 {
-  "generatedAt": "2026-07-28T19:19:37.857132Z",
+  "schemaVersion": "1.15.0",
+  "kind": "tara-report",
+  "language": "go",
+  "generatedAt": "2026-07-28T21:17:47.056554Z",
   "projectRoot": ".",
   "tool": "fusaops",
-  "toolVersion": "1.141.0",
-  "standard": "ISO 21434:2021 Chapter 9",
+  "toolVersion": "1.144.0",
+  "standard": "iso21434",
   "threats": [
     {
       "id": "TS-001",
@@ -17,9 +20,9 @@
         "operational": "moderate",
         "privacy": "negligible"
       },
-      "attackPath": "Unauthorized write access to sbom.json or sbom-spdx.json in the release directory.",
+      "attackVector": "Unauthorized write access to sbom.json or sbom-spdx.json in the release directory.",
       "attackFeasibility": "low",
-      "riskLevel": "high",
+      "risk": "high",
       "treatment": "mitigate",
       "mitigations": [
         "fusaops sign — HMAC artifact signing",
@@ -39,9 +42,9 @@
         "operational": "moderate",
         "privacy": "negligible"
       },
-      "attackPath": "Modification of .fusaops-evidence.json before certification review by a developer with repository write access.",
+      "attackVector": "Modification of .fusaops-evidence.json before certification review by a developer with repository write access.",
       "attackFeasibility": "medium",
-      "riskLevel": "critical",
+      "risk": "critical",
       "treatment": "mitigate",
       "mitigations": [
         "HMAC signing (fusaops sign)",
@@ -61,9 +64,9 @@
         "operational": "major",
         "privacy": "negligible"
       },
-      "attackPath": "Compromise of upstream tool registry, tampered container image, or PATH manipulation in CI.",
+      "attackVector": "Compromise of upstream tool registry, tampered container image, or PATH manipulation in CI.",
       "attackFeasibility": "very-low",
-      "riskLevel": "medium",
+      "risk": "medium",
       "treatment": "mitigate",
       "mitigations": [
         "SLSA provenance verification (fusaops slsa)",
@@ -83,9 +86,9 @@
         "operational": "moderate",
         "privacy": "negligible"
       },
-      "attackPath": "Direct file modification of report artefacts before or during review by a developer with local file access.",
+      "attackVector": "Direct file modification of report artefacts before or during review by a developer with local file access.",
       "attackFeasibility": "high",
-      "riskLevel": "high",
+      "risk": "high",
       "treatment": "mitigate",
       "mitigations": [
         "Artifact signing (fusaops sign)",
@@ -105,9 +108,9 @@
         "operational": "moderate",
         "privacy": "negligible"
       },
-      "attackPath": "Compromise of signing key stored in CI/CD secrets, developer workstation, or key management system.",
+      "attackVector": "Compromise of signing key stored in CI/CD secrets, developer workstation, or key management system.",
       "attackFeasibility": "low",
-      "riskLevel": "high",
+      "risk": "high",
       "treatment": "mitigate",
       "mitigations": [
         "Hardware security modules for key storage",
@@ -127,9 +130,9 @@
         "operational": "moderate",
         "privacy": "negligible"
       },
-      "attackPath": "Unauthorized commit to the repository or direct modification of .fusaops-trace.json artefact.",
+      "attackVector": "Unauthorized commit to the repository or direct modification of .fusaops-trace.json artefact.",
       "attackFeasibility": "medium",
-      "riskLevel": "high",
+      "risk": "high",
       "treatment": "mitigate",
       "mitigations": [
         "PR-gated branch protection with mandatory review",
@@ -149,9 +152,9 @@
         "operational": "major",
         "privacy": "negligible"
       },
-      "attackPath": "DoS against CI infrastructure, sabotage of build scripts, or removal of adapter tool binaries.",
+      "attackVector": "DoS against CI infrastructure, sabotage of build scripts, or removal of adapter tool binaries.",
       "attackFeasibility": "medium",
-      "riskLevel": "high",
+      "risk": "high",
       "treatment": "mitigate",
       "mitigations": [
         "Required status checks for all pull requests",
@@ -171,9 +174,9 @@
         "operational": "moderate",
         "privacy": "negligible"
       },
-      "attackPath": "Unauthorized commit modifying .fusaops.json to add scan exclusions or disable adapters.",
+      "attackVector": "Unauthorized commit modifying .fusaops.json to add scan exclusions or disable adapters.",
       "attackFeasibility": "medium",
-      "riskLevel": "critical",
+      "risk": "critical",
       "treatment": "mitigate",
       "mitigations": [
         "PR review gate with code-owner approval",
@@ -191,5 +194,5 @@
     "coveragePct": 80,
     "assetInventoryMethod": "count of FuSaOps' own sci package's knownArtefacts evidence-artefact inventory (10 items, DOC-001..DOC-010); non-file assets (adapter tool binaries, the CI/CD pipeline itself, .fusaops.json config) are analyzed as threat scenarios here but excluded from this file-based denominator"
   },
-  "hash": "sha256:b65ed1d23bb83e0e9cbebd24f76d61e879de66db6944da5d45bf637bffbd228f"
+  "hash": "sha256:e2d37b7d72ff0656f6059a3da49bc5b1097681bc77f80e1b96742be295bb3d59"
 }
