@@ -7,6 +7,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.146.0] — 2026-07-29
+
+### docs: x-FuSa spec v1.15.2 — §1.6.1 Rule A false-positive tradeoff made explicit (SoundMatt/FuSaOps#101)
+
+A same-day ada-FuSa self-review flagged Rule A's deny-list as occasionally
+false-positiving on legitimate prose (`buffer[i]`, `"STBD"`) and asked if
+that was intended. It is — confirmed and made explicit in the spec text with
+both examples, so future audits hit the documented answer instead of
+re-deriving it. Pure documentation addition, no behavior change.
+
 ## [1.145.0] — 2026-07-29
 
 ### docs: x-FuSa spec v1.15.1 — schemaVersion/specVersion clarified as MAJOR.MINOR.PATCH (SoundMatt/FuSaOps#99)

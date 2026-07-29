@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.15.1 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.15.2 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -502,6 +502,15 @@ itself still belongs to the artifact's own command.
   placeholder text real; a legitimate hazard/failure-mode description that
   happens to contain a deny-listed string is rare enough to warrant an
   explicit, individually-justified waiver rather than a blanket pass.
+  **This tradeoff is deliberate, not a bug to fix per-tool** — e.g. ordinary
+  engineering prose like `"buffer[i] causes memory corruption"` or the
+  abbreviation `"STBD"` (containing the `"TBD"` substring) will occasionally
+  false-positive against this canonical, byte-for-byte-identical-across-tools
+  deny-list; the fix for that specific finding is a disposition waiver
+  (`disposition add --reason "..."`), never a tool narrowing its own
+  detector's pattern to be "smarter" than the canonical one — two tools
+  disagreeing on what counts as a Rule A match undermines the "canonical"
+  guarantee this section exists to provide (filed as SoundMatt/FuSaOps#101).
 - **Rule B — blanket qualitative fallback (SHOULD, a WARNING by default).**
   For an artifact with **≥10 entries**, a tool SHOULD compute each
   qualitative field's **distinct-value ratio** (count of distinct values ÷
@@ -1814,6 +1823,24 @@ tool-defined row.
 ---
 
 ## 14. Changelog
+
+### 1.15.2 — 2026-07-29 (§1.6.1 Rule A: explicit false-positive example, filed as SoundMatt/FuSaOps#101)
+
+A same-day ada-FuSa self-review flagged Rule A's bracket/`"TBD"`-substring
+deny-list as producing occasional false positives on legitimate engineering
+prose (`"buffer[i] causes memory corruption"`, the abbreviation `"STBD"`) and
+asked whether this was an intended tradeoff or a spec gap. Re-reading the
+existing text confirmed it's intended — the deny-list is deliberately simple
+and canonical (byte-for-byte identical across tools) rather than
+word-boundary-aware, with occasional false positives meant to be resolved via
+an individual disposition waiver, not per-tool detector narrowing. The
+reviewer correctly did not narrow ada-FuSa's own detector on exactly that
+reasoning. Since the tradeoff was "evidently non-obvious enough that outside
+audit tooling flags it as a bug on first read" (the reviewer's own words),
+Rule A's definition now states the tradeoff explicitly with the same two
+examples, so a future implementer hits the documented answer instead of
+re-deriving it. Pure documentation addition, no behavior change — hence a
+PATCH bump.
 
 ### 1.15.1 — 2026-07-29 (schemaVersion/specVersion format clarified to MAJOR.MINOR.PATCH, filed as SoundMatt/FuSaOps#99)
 
