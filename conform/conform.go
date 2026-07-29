@@ -367,6 +367,8 @@ func (r *runner) writeSourceFiles() error {
 	slashTest := "//" + "fusa:test"
 	hashReq := "#" + "fusa:req"
 	hashTest := "#" + "fusa:test"
+	dashReq := "--" + "fusa:req"
+	dashTest := "--" + "fusa:test"
 	switch lang {
 	case "go":
 		src := fmt.Sprintf("package main\n\n%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n\nfunc main() {}\n",
@@ -402,6 +404,18 @@ edition = "2021"
 		src := fmt.Sprintf("%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n\npublic class Main {\n    public static void main(String[] args) {}\n}\n",
 			slashReq, slashTest, slashReq)
 		return os.WriteFile(filepath.Join(r.dir, "Main.java"), []byte(src), 0o644)
+	case "ada":
+		if err := os.WriteFile(filepath.Join(r.dir, "conform_test.gpr"), []byte(`project Conform_Test is
+   for Main use ("main.adb");
+   for Source_Dirs use (".");
+   for Object_Dir use "obj";
+end Conform_Test;
+`), 0o644); err != nil {
+			return err
+		}
+		src := fmt.Sprintf("%s REQ-TEST-001\n%s REQ-TEST-001\n\n%s REQ-TEST-002\n\nprocedure Main is\nbegin\n   null;\nend Main;\n",
+			dashReq, dashTest, dashReq)
+		return os.WriteFile(filepath.Join(r.dir, "main.adb"), []byte(src), 0o644)
 	default:
 		return nil
 	}
@@ -424,6 +438,8 @@ func langFromBinary(base string) string {
 		return "python"
 	case "jfusa":
 		return "java"
+	case "adafusa":
+		return "ada"
 	default:
 		return ""
 	}

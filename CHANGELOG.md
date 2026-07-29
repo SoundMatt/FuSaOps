@@ -7,6 +7,28 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.147.0] — 2026-07-29
+
+### fix: ada-FuSa ecosystem-integration gaps found by a support-surface audit
+
+A research pass checking whether FuSaOps fully supports ada-FuSa as its 7th
+language adapter found the Dockerfile/tools-monitor/scan/fleet integration was
+already correct, but three real gaps:
+
+- `conform/conform.go`'s `langFromBinary` and `writeSourceFiles` had no `ada`
+  case — `fusaops conform --binary adafusa --scaffold` silently omitted the
+  Ada source stub (no `main.adb`) instead of erroring or working. Added an
+  `ada` case to both, using Ada's `--` comment syntax for the `//fusa:req`
+  equivalent, plus a minimal GNAT project file so the scaffold is buildable.
+- `CLAUDE.md` still said "six languages today," omitting ada-FuSa entirely.
+- `README.md`'s PATH-tools list and bundled-tools paragraph both omitted
+  `adafusa`, inconsistent with the (already correct) supported-languages
+  table further down the same file.
+
+(A fourth gap — ada-FuSa's own release workflow missing the `xfusa-released`
+repository_dispatch step other tools have — lives in ada-FuSa's repo, not
+FuSaOps; noted for a future ada-FuSa-side fix, out of scope here.)
+
 ## [1.146.0] — 2026-07-29
 
 ### docs: x-FuSa spec v1.15.2 — §1.6.1 Rule A false-positive tradeoff made explicit (SoundMatt/FuSaOps#101)
