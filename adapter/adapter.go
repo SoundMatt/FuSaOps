@@ -105,8 +105,11 @@ func (a *cmdAdapter) Detect(root string) (bool, error) {
 //
 // A non-zero exit status from the tool (which the x-FuSa tools use to signal
 // ERROR-severity findings) is not treated as a failure: the report file is
-// parsed regardless. An error is only returned if the report cannot be
-// produced or decoded.
+// parsed regardless. Exit 3 (§2.3 runtime/internal error) is different: the
+// tool could not complete analysis, so Check returns an error (surfacing the
+// report's §3.2 error.message when present) even if a partial findings list
+// was decoded — the caller (orchestrator) already records a Check error as a
+// skipped component, the same treatment an uninstalled tool gets.
 //
 //fusa:req REQ-FO-ADP005
 func (a *cmdAdapter) Check(ctx context.Context, root string) ([]fusaops.Finding, error) {
@@ -118,28 +121,45 @@ func (a *cmdAdapter) Check(ctx context.Context, root string) ([]fusaops.Finding,
 	_ = tmp.Close()
 	defer func() { _ = os.Remove(out) }()
 
-	// The runner intentionally ignores the tool's exit code; we read the file.
-	_, _ = a.run(ctx, root, a.tool, "check", "--format", "json", "--output", out)
+	_, runErr := a.run(ctx, root, a.tool, "check", "--format", "json", "--output", out)
 
-	data, err := os.ReadFile(out)
-	if err != nil {
-		return nil, fmt.Errorf("adapter %s: read report: %w", a.name, err)
+	data, readErr := os.ReadFile(out)
+	if readErr != nil {
+		if runErr != nil {
+			return nil, fmt.Errorf("adapter %s: %w", a.name, runErr)
+		}
+		return nil, fmt.Errorf("adapter %s: read report: %w", a.name, readErr)
 	}
-	findings, err := parseToolReport(data, a.language, a.name)
+	findings, tr, err := parseToolReport(data, a.language, a.name)
 	if err != nil {
 		return nil, fmt.Errorf("adapter %s: %w", a.name, err)
+	}
+	if runErr != nil {
+		if tr.Error != nil {
+			return findings, fmt.Errorf("adapter %s: runtime error (%s): %s", a.name, tr.Error.Code, tr.Error.Message)
+		}
+		return findings, fmt.Errorf("adapter %s: %w", a.name, runErr)
+	}
+	if tr.Error != nil {
+		return findings, fmt.Errorf("adapter %s: runtime error (%s): %s", a.name, tr.Error.Code, tr.Error.Message)
 	}
 	return findings, nil
 }
 
-// defaultRunner executes the command in dir and returns combined output,
-// swallowing a non-zero exit status (treated as "checks found issues").
+// defaultRunner executes the command in dir and returns combined output.
+// A non-zero exit status is swallowed (treated as "checks found issues", the
+// normal §2.3 exit-1 gate-failure case) EXCEPT exit 3, which is a §2.3
+// runtime/internal error — the tool could not complete analysis, so it is
+// surfaced as a real error rather than silently treated as a clean run.
 func defaultRunner(ctx context.Context, dir, name string, args ...string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			if exitErr.ExitCode() == 3 {
+				return out, fmt.Errorf("%s exited 3 (runtime/internal error): %w", name, exitErr)
+			}
 			return out, nil // non-zero exit is expected when findings exist
 		}
 		return out, err
@@ -151,6 +171,14 @@ func defaultRunner(ctx context.Context, dir, name string, args ...string) ([]byt
 // "check --format json". Only the fields FuSaOps needs are decoded.
 type toolReport struct {
 	Findings []toolFinding `json:"findings"`
+	Error    *toolError    `json:"error,omitempty"`
+}
+
+// toolError mirrors the §3.2 structured runtime-error envelope, present only
+// when the tool paired a partial document with exit 3.
+type toolError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 type toolFinding struct {
@@ -163,18 +191,22 @@ type toolFinding struct {
 		Column int    `json:"column"`
 	} `json:"location"`
 	Category    string `json:"category"`
+	Disposition string `json:"disposition"`
+	Standard    string `json:"standard"`
+	Clause      string `json:"clause"`
 	Remediation string `json:"remediation"`
 	Fingerprint string `json:"fingerprint"`
 }
 
 // parseToolReport decodes a tool's JSON report into FuSaOps findings, tagging
-// each with the originating language and tool name.
+// each with the originating language and tool name. It also returns the
+// decoded toolReport itself so the caller can inspect the §3.2 error field.
 //
 //fusa:req REQ-FO-ADP006
-func parseToolReport(data []byte, lang fusaops.Language, tool string) ([]fusaops.Finding, error) {
+func parseToolReport(data []byte, lang fusaops.Language, tool string) ([]fusaops.Finding, toolReport, error) {
 	var tr toolReport
 	if err := json.Unmarshal(data, &tr); err != nil {
-		return nil, fmt.Errorf("parse tool report: %w", err)
+		return nil, tr, fmt.Errorf("parse tool report: %w", err)
 	}
 	findings := make([]fusaops.Finding, 0, len(tr.Findings))
 	for _, f := range tr.Findings {
@@ -185,12 +217,15 @@ func parseToolReport(data []byte, lang fusaops.Language, tool string) ([]fusaops
 			Severity:    normaliseSeverity(f.Severity),
 			Message:     f.Message,
 			Location:    fusaops.Location{File: f.Location.File, Line: f.Location.Line, Column: f.Location.Column},
-			Category:    f.Category,
+			Category:    normaliseCategory(f.Category),
+			Disposition: f.Disposition,
+			Standard:    f.Standard,
+			Clause:      f.Clause,
 			Remediation: f.Remediation,
 			Fingerprint: f.Fingerprint,
 		})
 	}
-	return findings, nil
+	return findings, tr, nil
 }
 
 // normaliseSeverity maps a tool's severity string onto a FuSaOps Severity,
@@ -205,6 +240,23 @@ func normaliseSeverity(s string) fusaops.Severity {
 	default:
 		return fusaops.SeverityInfo
 	}
+}
+
+// validCategories is the x-FuSa spec §4 closed, extensible category enum.
+var validCategories = map[string]bool{
+	"lint": true, "style": true, "safety": true, "security": true,
+	"coverage": true, "requirement": true, "concurrency": true,
+	"supply-chain": true, "config": true, "other": true,
+}
+
+// normaliseCategory maps any category value outside the §4 closed enum to
+// "other", per the spec's consumer MUST — mirroring normaliseSeverity's
+// fail-safe treatment of an unrecognised value.
+func normaliseCategory(c string) string {
+	if validCategories[c] {
+		return c
+	}
+	return "other"
 }
 
 // skipDir reports whether a directory should be skipped during detection.

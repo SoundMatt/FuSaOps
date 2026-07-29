@@ -50,7 +50,7 @@ func csvRow(f fusaops.Finding) []string {
 	return []string{
 		string(f.Language),
 		f.Tool,
-		f.RuleID,
+		f.QualifiedRuleID(),
 		string(f.Severity),
 		f.Message,
 		f.Location.File,

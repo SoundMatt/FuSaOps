@@ -8,7 +8,7 @@ import (
 
 // Status represents the overall check result.
 //
-//fusa:req REQ-FO-BADGE001
+//fusa:req REQ-FO-BADGE004
 type Status int
 
 const (
@@ -19,7 +19,7 @@ const (
 
 // Badge holds the data needed to render a badge.
 //
-//fusa:req REQ-FO-BADGE001
+//fusa:req REQ-FO-BADGE004
 type Badge struct {
 	Status   Status
 	Errors   int
@@ -29,7 +29,7 @@ type Badge struct {
 
 // New returns a Badge derived from finding counts.
 //
-//fusa:req REQ-FO-BADGE001
+//fusa:req REQ-FO-BADGE004
 func New(errors, warnings int, version string) Badge {
 	var s Status
 	switch {
@@ -45,7 +45,7 @@ func New(errors, warnings int, version string) Badge {
 
 // Render writes the badge as a self-contained SVG to w.
 //
-//fusa:req REQ-FO-BADGE002
+//fusa:req REQ-FO-BADGE005
 func Render(w io.Writer, b Badge) error {
 	label := "fusaops"
 	msg, color := statusText(b)

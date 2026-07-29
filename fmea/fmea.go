@@ -329,7 +329,7 @@ func Build(root string) (*FMEA, error) {
 		ProjectRoot:   root,
 		Tool:          "fusaops",
 		ToolVersion:   fusaops.Version,
-		Standard:      "IEC 61508:2010 / ISO 26262:2018 Part 8-7",
+		Standard:      fusaops.CanonicalStandardID("ISO 26262"), // IEC 61508:2010 / ISO 26262:2018 Part 8-7
 		RatingScale:   RatingScale,
 	}
 

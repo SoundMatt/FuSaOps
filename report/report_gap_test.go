@@ -190,9 +190,9 @@ func TestHTMLSevClassInfo(t *testing.T) {
 //
 //fusa:test REQ-FO-RPT013
 func TestJUnitCaseNameFileNoLine(t *testing.T) {
-	f := fusaops.Finding{RuleID: "E001", Location: fusaops.Location{File: "main.go", Line: 0}}
+	f := fusaops.Finding{Language: fusaops.LangGo, RuleID: "E001", Location: fusaops.Location{File: "main.go", Line: 0}}
 	got := junitCaseName(f)
-	want := "E001 (main.go)"
+	want := "go/E001 (main.go)"
 	if got != want {
 		t.Errorf("junitCaseName: got %q, want %q", got, want)
 	}

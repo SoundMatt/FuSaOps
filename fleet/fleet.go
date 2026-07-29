@@ -263,7 +263,7 @@ tfoot td{font-weight:600;border-top:2px solid #e2e8f0;background:#f8fafc}
 
 // renderHTML writes a self-contained HTML fleet report to w.
 //
-//fusa:req REQ-FO-FLT005
+//fusa:req REQ-FO-FLT008
 func renderHTML(w io.Writer, fr *FleetReport) error {
 	return fleetHTMLTmpl.Execute(w, fr)
 }

@@ -23,7 +23,7 @@ const sampleReport = `{
 
 //fusa:test REQ-FO-ADP006
 func TestParseToolReport(t *testing.T) {
-	findings, err := parseToolReport([]byte(sampleReport), fusaops.LangGo, "go-FuSa")
+	findings, _, err := parseToolReport([]byte(sampleReport), fusaops.LangGo, "go-FuSa")
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
@@ -44,7 +44,7 @@ func TestParseToolReport(t *testing.T) {
 }
 
 func TestParseToolReportInvalid(t *testing.T) {
-	if _, err := parseToolReport([]byte("{not json"), fusaops.LangGo, "t"); err == nil {
+	if _, _, err := parseToolReport([]byte("{not json"), fusaops.LangGo, "t"); err == nil {
 		t.Error("expected error on invalid JSON")
 	}
 }
@@ -58,6 +58,61 @@ func TestNormaliseSeverity(t *testing.T) {
 		if got := normaliseSeverity(in); got != want {
 			t.Errorf("normaliseSeverity(%q): got %v, want %v", in, got, want)
 		}
+	}
+}
+
+//fusa:test REQ-FO-ADP006
+func TestNormaliseCategory(t *testing.T) {
+	cases := map[string]string{
+		"lint": "lint", "security": "security", "supply-chain": "supply-chain",
+		"other": "other", "": "other", "bogus": "other",
+	}
+	for in, want := range cases {
+		if got := normaliseCategory(in); got != want {
+			t.Errorf("normaliseCategory(%q): got %q, want %q", in, got, want)
+		}
+	}
+}
+
+//fusa:test REQ-FO-ADP005
+func TestCheckExit3SurfacesAsError(t *testing.T) {
+	reportJSON := `{"findings":[{"ruleId":"X","severity":"ERROR","message":"partial"}],"error":{"code":"internal","message":"crashed mid-scan"}}`
+	a := &cmdAdapter{
+		name: "test-tool", tool: "testtool", language: fusaops.LangGo,
+		run: func(ctx context.Context, dir, name string, args ...string) ([]byte, error) {
+			// Emulate the runner writing a partial report then reporting the
+			// tool's exit 3, mirroring defaultRunner's behavior on exit 3.
+			for i, a := range args {
+				if a == "--output" && i+1 < len(args) {
+					_ = os.WriteFile(args[i+1], []byte(reportJSON), 0o600)
+				}
+			}
+			return nil, errors.New("testtool exited 3 (runtime/internal error)")
+		},
+	}
+	_, err := a.Check(context.Background(), t.TempDir())
+	if err == nil {
+		t.Fatal("Check: want error on exit-3 runtime failure, got nil")
+	}
+}
+
+//fusa:test REQ-FO-ADP005
+func TestCheckErrorFieldWithoutRunError(t *testing.T) {
+	reportJSON := `{"findings":[],"error":{"code":"unsupported","message":"nothing to analyze"}}`
+	a := &cmdAdapter{
+		name: "test-tool", tool: "testtool", language: fusaops.LangGo,
+		run: func(ctx context.Context, dir, name string, args ...string) ([]byte, error) {
+			for i, a := range args {
+				if a == "--output" && i+1 < len(args) {
+					_ = os.WriteFile(args[i+1], []byte(reportJSON), 0o600)
+				}
+			}
+			return nil, nil
+		},
+	}
+	_, err := a.Check(context.Background(), t.TempDir())
+	if err == nil {
+		t.Fatal("Check: want error when report's error field is present even with nil run error")
 	}
 }
 

@@ -249,10 +249,22 @@ func New(root, project string, components []Component) *AggregateReport {
 	return r
 }
 
-// HasErrors reports whether any component produced an ERROR-severity finding.
+// HasErrors reports whether any component produced an ERROR-severity finding
+// that still gates (x-FuSa spec §4.1: a finding an upstream tool already
+// dispositioned "accepted" or "deferred" MUST NOT by itself cause exit 1,
+// even though it remains counted in Summary.Errors for display).
 //
 //fusa:req REQ-FO-RPT006
-func (r *AggregateReport) HasErrors() bool { return r.Summary.Errors > 0 }
+func (r *AggregateReport) HasErrors() bool {
+	for _, c := range r.Components {
+		for _, f := range c.Findings {
+			if f.Severity == fusaops.SeverityError && f.Gates() {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 // Render writes r to w in the requested format.
 //

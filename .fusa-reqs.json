@@ -15,7 +15,7 @@
       "rationale": "Enables tooling and CI to verify which spec version FuSaOps implements without parsing docs."
     },
     {
-      "id": "REQ-FO-CORE008",
+      "id": "REQ-FO-CORE010",
       "title": "CanonicalStandardID helper",
       "description": "FuSaOps shall export a CanonicalStandardID function mapping a human-readable standard display string to its canonical lowercase id per x-FuSa spec §2.4.1, for use wherever an artifact emits a 'standard' field.",
       "priority": "MUST",
@@ -48,6 +48,13 @@
       "description": "FuSaOps shall provide renderers for CSV, DOORS ReqIF XML, Polarion workitems XML, Codebeamer tracker XML, and Jama Connect XML export formats.",
       "priority": "MUST",
       "rationale": "Enables bidirectional synchronisation of the FuSaOps requirement registry with external safety tools."
+    },
+    {
+      "id": "REQ-FO-REQ004",
+      "title": "Duplicate requirement id validation",
+      "description": "req.FindDuplicateIDs shall detect any id appearing more than once in .fusa-reqs.json; fusaops req shall surface each as an ERROR-severity finding (category requirement) and exit non-zero, rather than silently merging or dropping the duplicate.",
+      "priority": "MUST",
+      "rationale": "x-FuSa spec §1.2.2: a requirement id MUST be unique within the file; a tool MUST validate this whenever it reads the file."
     },
     {
       "id": "REQ-FO-CLI052",
@@ -1793,7 +1800,7 @@
       "rationale": "Engineers need a direct path from a finding in a report to the suppress add command without manual fingerprint computation."
     },
     {
-      "id": "REQ-FO-FLT005",
+      "id": "REQ-FO-FLT008",
       "title": "fleet.Render --format html",
       "description": "The fleet.Render function shall support format 'html', producing a self-contained HTML page with a per-repo status table (name, status badge, errors, warnings, infos, total), a fleet-level summary footer, and an overall PASS/WARN/FAIL badge. The page shall use no external CSS or JS. The fleet --output flag shall write the HTML to a file.",
       "priority": "MUST",
@@ -1842,7 +1849,7 @@
       "rationale": "Allows CI to roll the baseline forward from a single check command without a separate save step."
     },
     {
-      "id": "REQ-FO-HST003",
+      "id": "REQ-FO-HST005",
       "title": "history.Prune function",
       "description": "The history package shall export a Prune(dir string, keep int) (int, error) function that loads the .fusaops-history.jsonl in dir, retains only the keep most-recent entries, writes the result back, and returns the number of entries removed. A missing file shall return 0, nil. If keep <= 0, MaxSnapshots shall be used.",
       "priority": "MUST",
@@ -1947,14 +1954,14 @@
       "rationale": "Mirrors gofusa metrics for tracking project safety health KPIs over CI pipeline runs."
     },
     {
-      "id": "REQ-FO-BADGE001",
+      "id": "REQ-FO-BADGE004",
       "title": "SVG badge types and status derivation",
       "description": "FuSaOps shall define Badge and Status types; New(errors, warnings, version) shall return StatusFail when errors > 0, StatusWarn when warnings > 0 and no errors, and StatusPass otherwise.",
       "priority": "MUST",
       "rationale": "Enables CI pipelines and README files to display a single colour-coded health indicator for the aggregated multi-language safety report."
     },
     {
-      "id": "REQ-FO-BADGE002",
+      "id": "REQ-FO-BADGE005",
       "title": "SVG badge rendering",
       "description": "FuSaOps shall provide Render(w, badge) that writes a self-contained Shields.io-style SVG badge with label 'fusaops' and a message reflecting the pass/warn/fail status.",
       "priority": "MUST",
@@ -3069,6 +3076,14 @@
       "priority": "MUST",
       "rationale": "x-FuSa spec §1.2.5: a safety goal's fssrRefs must be real, resolvable requirements, not just present.",
       "standard": "ISO 26262-8 Clause 6"
+    },
+    {
+      "id": "REQ-FO-HARA008",
+      "title": "hara show --format json carries the §3.1 common header",
+      "description": "hara.Render's json format shall wrap the HARA content in a Report struct carrying schemaVersion/kind/tool/toolVersion/language/generatedAt, matching the other five artifact-producing commands (fmea/tara/safety-case/sas/sci); .fusa-hara.json itself (Save/Load) remains header-free, since it is an input file per §1.2.5, not a report document.",
+      "priority": "MUST",
+      "rationale": "x-FuSa spec §3.1/§9.2: every command's JSON output SHOULD carry the common header so a consumer can route generically; hara show was the one artifact command that skipped it.",
+      "standard": "ISO 26262-3 Clause 6"
     },
     {
       "id": "REQ-FO-CLI084",
