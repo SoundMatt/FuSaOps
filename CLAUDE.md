@@ -5,8 +5,8 @@ Guidance for Claude Code (and contributors) working in this repository.
 ## What FuSaOps is
 
 FuSaOps is the **multi-language orchestration layer** over the x-FuSa toolchain
-(go-FuSa, c-FuSa, cpp-FuSa, rust-FuSa, py-FuSa, java-FuSa — six languages today,
-with more addable via the adapter interface). It does **not** implement
+(go-FuSa, c-FuSa, cpp-FuSa, rust-FuSa, py-FuSa, java-FuSa, ada-FuSa — seven
+languages today, with more addable via the adapter interface). It does **not** implement
 language-specific safety rules. It detects the languages in a repo, runs each
 language's x-FuSa tool, normalises the machine-readable output, and aggregates
 everything into one report and one web dashboard.

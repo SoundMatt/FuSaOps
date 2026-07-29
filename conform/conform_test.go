@@ -249,6 +249,7 @@ func TestLangFromBinary(t *testing.T) {
 	cases := map[string]string{
 		"gofusa": "go", "cfusa": "c", "cpfusa": "cpp",
 		"rsfusa": "rust", "pyfusa": "python", "jfusa": "java",
+		"adafusa": "ada",
 		"unknown": "",
 	}
 	for bin, want := range cases {
@@ -686,6 +687,7 @@ func TestWriteSourceFilesLanguages(t *testing.T) {
 		"rust":    filepath.Join("src", "main.rs"),
 		"python":  "main.py",
 		"java":    "Main.java",
+		"ada":     "main.adb",
 		"unknown": "",
 	}
 	for lang, relPath := range cases {

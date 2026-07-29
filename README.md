@@ -63,7 +63,7 @@ go install github.com/SoundMatt/FuSaOps/cmd/fusaops@latest
 ```
 
 The adapter tools must be on `PATH` for the languages you want scanned
-(`gofusa`, `cfusa`, `cpfusa`, `rsfusa`, `pyfusa`, `jfusa`). The Docker image bundles all six.
+(`gofusa`, `cfusa`, `cpfusa`, `rsfusa`, `pyfusa`, `jfusa`, `adafusa`). The Docker image bundles all seven.
 
 ## Usage
 
@@ -545,9 +545,10 @@ tool — **no manual rebuild, and FuSaOps itself does not need a new release**. 
 weekly scheduled rebuild is the safety net. See
 [`docs/extending.md`](docs/extending.md).
 
-**Bundled tools.** The all-in-one image bundles all six x-FuSa tools: go-FuSa v0.33.4,
-cpp-FuSa v0.14.3, c-FuSa v0.5.42, rust-FuSa v0.3.8, py-FuSa v0.2.6, java-FuSa v0.4.5.
-All are spec v1.11 aligned and published to GHCR.
+**Bundled tools.** The all-in-one image bundles all seven x-FuSa tools: go-FuSa v0.33.4,
+cpp-FuSa v0.14.3, c-FuSa v0.5.42, rust-FuSa v0.3.8, py-FuSa v0.2.6, java-FuSa v0.4.5,
+ada-FuSa v0.1.0 (alpha). All are published to GHCR — see each tool's own release
+notes for its current spec version.
 
 > The image is `linux/amd64` (the tool images are amd64). On Apple Silicon it
 > runs under emulation; add `--platform linux/amd64` if your client needs it.
