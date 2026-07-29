@@ -76,14 +76,14 @@ func renderMarkdown(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 				fmt.Fprintf(w, "| Severity | Rule | Message | Location | Fingerprint |\n|---|---|---|---|---|\n")
 				for _, f := range c.Findings {
 					fmt.Fprintf(w, "| %s | `%s` | %s | %s | `%s` |\n",
-						markdownSeverityIcon(f.Severity), markdownEscape(f.RuleID),
+						markdownSeverityIcon(f.Severity), markdownEscape(f.QualifiedRuleID()),
 						markdownEscape(f.Message), markdownLoc(f), markdownEscape(f.Fingerprint))
 				}
 			} else {
 				fmt.Fprintf(w, "| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
 				for _, f := range c.Findings {
 					fmt.Fprintf(w, "| %s | `%s` | %s | %s |\n",
-						markdownSeverityIcon(f.Severity), markdownEscape(f.RuleID),
+						markdownSeverityIcon(f.Severity), markdownEscape(f.QualifiedRuleID()),
 						markdownEscape(f.Message), markdownLoc(f))
 				}
 			}
@@ -98,7 +98,7 @@ func renderMarkdown(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 			fmt.Fprintf(w, "| Severity | Rule | Message | Location |\n|---|---|---|---|\n")
 			for _, f := range c.SuppressedFindings {
 				fmt.Fprintf(w, "| %s | `%s` | %s | %s |\n",
-					markdownSeverityIcon(f.Severity), markdownEscape(f.RuleID),
+					markdownSeverityIcon(f.Severity), markdownEscape(f.QualifiedRuleID()),
 					markdownEscape(f.Message), markdownLoc(f))
 			}
 			fmt.Fprintf(w, "\n</details>\n\n")

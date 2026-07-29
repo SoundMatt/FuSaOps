@@ -200,7 +200,7 @@ const dashboardTemplate = `<!DOCTYPE html>
       <tr data-sev="{{.Severity}}">
         <td><span class="pill {{sevClass .Severity}}">{{.Severity}}</span></td>
         <td>{{$lang}}</td>
-        <td>{{.RuleID}}</td>
+        <td>{{.QualifiedRuleID}}</td>
         <td>{{.Category}}</td>
         <td>{{.Message}}{{if .Remediation}}<br><span class="loc">→ {{.Remediation}}</span>{{end}}{{if and $showFP .Fingerprint}}<br><span class="fp-chip" title="fusaops suppress add --fingerprint {{.Fingerprint}} --reason &quot;&quot;">{{.Fingerprint}}</span>{{end}}</td>
         <td class="loc">{{.Location.File}}{{if .Location.Line}}:{{.Location.Line}}{{end}}</td>
@@ -280,7 +280,7 @@ const dashboardTemplate = `<!DOCTYPE html>
       {{range .SuppressedFindings}}
         <tr>
           <td><span class="pill {{sevClass .Severity}}">{{.Severity}}</span></td>
-          <td>{{.RuleID}}</td>
+          <td>{{.QualifiedRuleID}}</td>
           <td>{{.Message}}</td>
           <td class="loc">{{.Location.File}}{{if .Location.Line}}:{{.Location.Line}}{{end}}</td>
         </tr>

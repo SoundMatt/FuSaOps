@@ -523,6 +523,35 @@ func TestParseDOORSEmptyID(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-REQ004
+func TestFindDuplicateIDs(t *testing.T) {
+	entries := []Entry{
+		{ID: "REQ-A", Title: "one"},
+		{ID: "REQ-B", Title: "two"},
+		{ID: "REQ-A", Title: "three"},
+		{ID: "REQ-C", Title: "four"},
+		{ID: "REQ-B", Title: "five"},
+	}
+	got := FindDuplicateIDs(entries)
+	want := []string{"REQ-A", "REQ-B"}
+	if len(got) != len(want) {
+		t.Fatalf("FindDuplicateIDs = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("FindDuplicateIDs[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+//fusa:test REQ-FO-REQ004
+func TestFindDuplicateIDsNoneFound(t *testing.T) {
+	entries := []Entry{{ID: "REQ-A"}, {ID: "REQ-B"}}
+	if got := FindDuplicateIDs(entries); len(got) != 0 {
+		t.Errorf("FindDuplicateIDs = %v, want none", got)
+	}
+}
+
 // TestParseCSVEmptyIDRow verifies ParseCSV skips rows where the id field is
 // empty, covering the "id == "" → continue" branch.
 //

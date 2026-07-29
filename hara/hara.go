@@ -125,6 +125,38 @@ type HARA struct {
 	Attestation *fusaops.Attestation   `json:"attestation,omitempty"`
 }
 
+// Report is the §3.1-enveloped `hara show --format json` command-output
+// shape — distinct from HARA itself, which Save/Load persist verbatim to
+// .fusa-hara.json. Per §1.2.5, .fusa-hara.json is an input file like
+// .fusa-reqs.json and is NOT subject to the common header; only the
+// command's rendered JSON output is.
+//
+//fusa:req REQ-FO-HARA008
+type Report struct {
+	SchemaVersion string    `json:"schemaVersion"`
+	Kind          string    `json:"kind"`
+	Tool          string    `json:"tool"`
+	ToolVersion   string    `json:"toolVersion"`
+	Language      string    `json:"language"`
+	GeneratedAt   time.Time `json:"generatedAt"`
+	HARA
+}
+
+// BuildReport wraps h in the §3.1 common header for command JSON output.
+//
+//fusa:req REQ-FO-HARA008
+func BuildReport(h *HARA) Report {
+	return Report{
+		SchemaVersion: fusaops.SpecVersion,
+		Kind:          "hara-report",
+		Tool:          "fusaops",
+		ToolVersion:   fusaops.Version,
+		Language:      "go",
+		GeneratedAt:   time.Now().UTC(),
+		HARA:          *h,
+	}
+}
+
 // AttestationContentHash computes the hash a §1.6.2 attestation must match
 // to be considered non-stale: h's substantive content, excluding Attestation
 // itself (CreatedAt is included — unlike the generated-evidence packages,
@@ -377,7 +409,7 @@ func Render(w io.Writer, h *HARA, format string) error {
 	case "json":
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
-		return enc.Encode(h)
+		return enc.Encode(BuildReport(h))
 	case "text", "markdown", "":
 		return renderText(w, h)
 	default:

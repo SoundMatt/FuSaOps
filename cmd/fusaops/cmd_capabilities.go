@@ -102,7 +102,7 @@ func runCapabilities(args []string, stdout, stderr io.Writer) int {
 			"vv":          {"text", "json"},
 		},
 		Standards: []string{
-			"iso26262", "iec61508", "do178c", "iso21434", "unece-r155", "iec62443", "slsa",
+			"iso26262", "iec61508", "do178c", "iso21434", "unece-r155", "iec62443-4-1", "iec62443-4-2", "slsa",
 		},
 	}
 

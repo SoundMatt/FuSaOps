@@ -1,6 +1,6 @@
 # x-FuSa Tool Specification
 
-**Spec version:** 1.15.0 · **Status:** Normative · **Owner:** FuSaOps
+**Spec version:** 1.15.1 · **Status:** Normative · **Owner:** FuSaOps
 
 This is the **master contract** every x-FuSa tool (go-FuSa, c-FuSa, cpp-FuSa, and
 future tools) implements. It defines the CLI surface, the machine-readable output
@@ -793,11 +793,19 @@ components — cross-component identity is the `fingerprint` (§4.2). A tool SHO
 emit the `--dir` value verbatim (resolved to absolute).
 
 **`schemaVersion` semantics (MUST).** It is the **spec** version the document
-conforms to, `MAJOR.MINOR`. A consumer MUST accept any document whose MAJOR
-equals a MAJOR it supports; a MINOR bump is additive and **never** invalidates an
-older document (a `1.0` document stays conformant under a `1.1` reader). A tool
-emits the highest spec MINOR it fully implements. FuSaOps uses `schemaVersion` as
-its parser discriminator.
+conforms to, emitted as the tool's full `MAJOR.MINOR.PATCH` (e.g. `"1.15.0"`) —
+a tool simply emits its own `SpecVersion` constant verbatim, since a PATCH
+release only clarifies existing text and never changes wire shape. A consumer
+MUST compare only the first two dot-separated components (`MAJOR.MINOR`) for
+compatibility: any document whose MAJOR equals a MAJOR the consumer supports is
+accepted regardless of MINOR/PATCH; a MINOR bump is additive and **never**
+invalidates an older document (a `1.0` document stays conformant under a `1.1`
+reader), and a PATCH difference is never itself a compatibility signal. A tool
+emits the highest spec version it fully implements. FuSaOps uses the
+`MAJOR.MINOR` prefix of `schemaVersion` as its parser discriminator. (Two-part
+`"1.9"`-style values elsewhere in this document are historical worked examples
+from when the spec was still MAJOR.MINOR-only — MAJOR.MINOR.PATCH is the
+current, correct form for both `schemaVersion` and `specVersion`.)
 
 ---
 
@@ -1759,13 +1767,15 @@ Previously tracked MUST gaps now closed:
 
 ## 12. Versioning
 
-This spec is semver-versioned. `schemaVersion` in every document is the
-`MAJOR.MINOR` it conforms to (§3). Additive, backward-compatible changes bump
-MINOR and never invalidate existing documents; a breaking change to a MUST bumps
-MAJOR and is coordinated across all tools and FuSaOps in lock-step. Tools and
-FuSaOps MUST accept any equal-MAJOR document. When FuSaOps begins consuming a
-§9.2/§9.3 command (adding its canonical schema, §13), that is an additive MINOR
-bump.
+This spec is semver-versioned. `schemaVersion` in every document is the full
+`MAJOR.MINOR.PATCH` version it conforms to (§3.2), but compatibility is judged
+on the `MAJOR.MINOR` prefix only — a PATCH release is a pure clarification with
+no wire-shape change. Additive, backward-compatible changes bump MINOR and
+never invalidate existing documents; a breaking change to a MUST bumps MAJOR
+and is coordinated across all tools and FuSaOps in lock-step. Tools and FuSaOps
+MUST accept any equal-MAJOR document, regardless of MINOR/PATCH. When FuSaOps
+begins consuming a §9.2/§9.3 command (adding its canonical schema, §13), that
+is an additive MINOR bump.
 
 ---
 
@@ -1804,6 +1814,22 @@ tool-defined row.
 ---
 
 ## 14. Changelog
+
+### 1.15.1 — 2026-07-29 (schemaVersion/specVersion format clarified to MAJOR.MINOR.PATCH, filed as SoundMatt/FuSaOps#99)
+
+§3.2/§12's normative text said `schemaVersion` (and, by extension, `specVersion`)
+was `MAJOR.MINOR` only, but two independently-implemented, already-conformant
+tools (FuSaOps and py-FuSa) both emit the full `MAJOR.MINOR.PATCH` spec version
+verbatim — and have done so since the spec itself started shipping PATCH
+releases (`1.14.0` → `1.14.1` → `1.15.0`). Two independent implementations
+converging on the same spec-text-contradicting behavior is a strong signal the
+*prose*, not the tools, was stale. Resolution: §3.2's "schemaVersion semantics"
+and §12 now bless `MAJOR.MINOR.PATCH` as the documented, correct format for
+both fields — a tool emits its `SpecVersion` constant verbatim, no truncation
+needed — while keeping the compatibility rule itself unchanged: a consumer
+still judges compatibility on the `MAJOR.MINOR` prefix only, never the PATCH
+component. No tool needs to change behavior; this is a pure documentation
+correction, hence a PATCH bump.
 
 ### 1.15.0 — 2026-07-28 (attestation carry-forward MUST + two implementer-guidance additions, from a same-day 4-tool deep audit)
 

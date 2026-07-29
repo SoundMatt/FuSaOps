@@ -62,6 +62,34 @@ func TestNewComputesSummaries(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-RPT006
+func TestHasErrorsRespectsDisposition(t *testing.T) {
+	comps := []Component{
+		{Tool: "gofusa", Findings: []fusaops.Finding{
+			{RuleID: "E1", Severity: fusaops.SeverityError, Disposition: "accepted"},
+		}},
+	}
+	r := New("/root", "demo", comps)
+	if r.HasErrors() {
+		t.Error("HasErrors should be false when the only ERROR finding is dispositioned accepted")
+	}
+	// Summary still counts it for display purposes.
+	if r.Summary.Errors != 1 {
+		t.Errorf("Summary.Errors = %d, want 1 (still counted for display)", r.Summary.Errors)
+	}
+
+	comps2 := []Component{
+		{Tool: "gofusa", Findings: []fusaops.Finding{
+			{RuleID: "E1", Severity: fusaops.SeverityError, Disposition: "deferred"},
+			{RuleID: "E2", Severity: fusaops.SeverityError},
+		}},
+	}
+	r2 := New("/root", "demo", comps2)
+	if !r2.HasErrors() {
+		t.Error("HasErrors should be true when a non-dispositioned ERROR finding remains")
+	}
+}
+
 //fusa:test REQ-FO-RPT002
 func TestStatus(t *testing.T) {
 	cases := []struct {

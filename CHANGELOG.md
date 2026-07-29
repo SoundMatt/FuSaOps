@@ -7,6 +7,61 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.145.0] — 2026-07-29
+
+### docs: x-FuSa spec v1.15.1 — schemaVersion/specVersion clarified as MAJOR.MINOR.PATCH (SoundMatt/FuSaOps#99)
+
+### fix: 8 real bugs from a second FuSaOps self-audit (SoundMatt/FuSaOps#91-98)
+
+A follow-up deep audit of FuSaOps itself (run right after the prior 10-bug
+self-audit fix shipped) found 8 more real defects, plus one genuine spec
+ambiguity (#99, resolved above):
+
+- **#91**: `fmea.json`'s `standard` field was a raw display string
+  (`"IEC 61508:2010 / ISO 26262:2018 Part 8-7"`) instead of going through the
+  existing `CanonicalStandardID` helper every sibling package already used —
+  now emits `"iso26262"`.
+- **#92**: `capabilities.json`'s `standards` array listed the bare command
+  name `"iec62443"` instead of the canonical `"iec62443-4-1"`/`"iec62443-4-2"`
+  ids.
+- **#93**: `hara show --format json` was the one artifact command (of six)
+  that never wrapped its output in the §3.1 common header. New `hara.Report`/
+  `hara.BuildReport` add it — `.fusa-hara.json` itself (Save/Load) is
+  unchanged, since it's an input file per §1.2.5, not a report document.
+- **#94**: 5 duplicate requirement ids in `.fusa-reqs.json` (10 requirements
+  silently sharing an id with an unrelated one), and no code anywhere
+  detected this class of defect. Retagged the 5 newer entries to unique ids;
+  added `req.FindDuplicateIDs`, wired into `fusaops req` as an ERROR-severity
+  finding (category `requirement`) that exits non-zero, per §1.2.2's MUST.
+- **#95**: `adapter.Check()` discarded a tool's exit code entirely and never
+  decoded the §3.2 `error` envelope, so a crashed (exit 3) tool run was
+  silently treated as a clean check. `defaultRunner` now surfaces exit 3
+  distinctly (exit 1's "found issues" semantics are untouched); `Check()`
+  decodes `error` and returns it, which the orchestrator already records as a
+  skipped component — the same treatment an uninstalled tool gets.
+- **#96**: Decoded finding `category` was copied verbatim instead of
+  normalising an unrecognised value to `"other"`, unlike `severity`'s
+  existing fail-safe handling. New `normaliseCategory` closes the gap.
+- **#97**: The aggregate `Finding`/`toolFinding` decoder dropped
+  `disposition`, `standard`, and `clause` entirely. The `disposition` gap was
+  behavioral, not just informational: `report.AggregateReport.HasErrors()`
+  re-gated on ERROR findings an upstream tool had already dispositioned
+  `accepted`/`deferred`, contradicting §4.1's MUST that a dispositioned
+  finding must not by itself cause exit 1. New `Finding.Gates()` plus
+  `HasErrors()` now skip dispositioned findings for gating (still counted in
+  `Summary.Errors` for display).
+- **#98**: The aggregate's renderers (csv/html/junit/markdown/text) emitted
+  the bare, tool-local `ruleId` instead of the §1.5.1-mandated qualified
+  `"<language>/<ruleId>"` form the spec names FuSaOps' aggregate specifically
+  as required to use. New `Finding.QualifiedRuleID()`, used everywhere except
+  `sarif.go` (each SARIF `run` is already scoped to one tool via
+  `tool.driver.name`, so a bare ruleId there is unambiguous the same way a
+  single tool's own document is).
+
+New `.fusa-reqs.json` entries: `REQ-FO-HARA008` (hara common header),
+`REQ-FO-REQ004` (duplicate-id validation), `REQ-FO-CORE011`/`REQ-FO-CORE012`
+(`Gates`/`QualifiedRuleID`).
+
 ## [1.144.0] — 2026-07-28
 
 ### fix: FuSaOps' own hara/tara/safetycase/sci/fmea artifacts against spec v1.15.0 — 10 bugs from a fresh self-audit

@@ -382,6 +382,28 @@ func TestRenderJSON(t *testing.T) {
 	}
 }
 
+//fusa:test REQ-FO-HARA008
+func TestRenderJSONCarriesCommonHeader(t *testing.T) {
+	h := &hara.HARA{Project: "Proj", Standard: "iso26262"}
+	var buf bytes.Buffer
+	if err := hara.Render(&buf, h, "json"); err != nil {
+		t.Fatalf("Render json: %v", err)
+	}
+	var got hara.Report
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("JSON unmarshal: %v", err)
+	}
+	if got.Kind != "hara-report" {
+		t.Errorf("Kind = %q, want hara-report", got.Kind)
+	}
+	if got.SchemaVersion == "" || got.Tool == "" || got.ToolVersion == "" || got.Language == "" {
+		t.Errorf("common header fields incomplete: %+v", got)
+	}
+	if got.Project != "Proj" {
+		t.Errorf("embedded HARA.Project = %q, want Proj", got.Project)
+	}
+}
+
 //fusa:test REQ-FO-HARA003
 func TestRenderDefault(t *testing.T) {
 	h := &hara.HARA{Project: "Proj"}

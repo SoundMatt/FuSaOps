@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -50,6 +51,27 @@ func LoadRegistry(dir string) ([]Entry, error) {
 		return nil, fmt.Errorf("req: parse %s: %w", ReqsFile, err)
 	}
 	return payload.Requirements, nil
+}
+
+// FindDuplicateIDs returns every id that appears more than once in entries,
+// sorted for deterministic output. Per x-FuSa spec §1.2.2, an id MUST be
+// unique within .fusa-reqs.json; a tool MUST validate this whenever it reads
+// the file and MUST NOT silently merge or drop duplicates.
+//
+//fusa:req REQ-FO-REQ004
+func FindDuplicateIDs(entries []Entry) []string {
+	counts := make(map[string]int, len(entries))
+	for _, e := range entries {
+		counts[e.ID]++
+	}
+	var dupes []string
+	for id, n := range counts {
+		if n > 1 {
+			dupes = append(dupes, id)
+		}
+	}
+	sort.Strings(dupes)
+	return dupes
 }
 
 // SaveRegistry writes entries as .fusa-reqs.json in dir.

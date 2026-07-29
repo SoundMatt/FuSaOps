@@ -52,12 +52,12 @@ type junitSkipped struct {
 
 // junitCaseName formats the testcase name for a finding.
 func junitCaseName(f fusaops.Finding) string {
-	name := f.RuleID
+	name := f.QualifiedRuleID()
 	if f.Location.File != "" {
 		if f.Location.Line > 0 {
-			name = fmt.Sprintf("%s (%s:%d)", f.RuleID, f.Location.File, f.Location.Line)
+			name = fmt.Sprintf("%s (%s:%d)", f.QualifiedRuleID(), f.Location.File, f.Location.Line)
 		} else {
-			name = fmt.Sprintf("%s (%s)", f.RuleID, f.Location.File)
+			name = fmt.Sprintf("%s (%s)", f.QualifiedRuleID(), f.Location.File)
 		}
 	}
 	return name

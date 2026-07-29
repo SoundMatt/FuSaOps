@@ -161,3 +161,31 @@ func TestComputeFingerprint(t *testing.T) {
 		t.Error("different file must produce different fingerprint")
 	}
 }
+
+//fusa:test REQ-FO-CORE011
+func TestFindingGates(t *testing.T) {
+	cases := []struct {
+		disposition string
+		want        bool
+	}{
+		{"", true},
+		{"accepted", false},
+		{"deferred", false},
+		{"rejected", true},
+		{"open", true},
+	}
+	for _, c := range cases {
+		f := Finding{Disposition: c.disposition}
+		if got := f.Gates(); got != c.want {
+			t.Errorf("Gates() with disposition %q: got %v, want %v", c.disposition, got, c.want)
+		}
+	}
+}
+
+//fusa:test REQ-FO-CORE012
+func TestFindingQualifiedRuleID(t *testing.T) {
+	f := Finding{Language: LangGo, RuleID: "LINT001"}
+	if got := f.QualifiedRuleID(); got != "go/LINT001" {
+		t.Errorf("QualifiedRuleID() = %q, want %q", got, "go/LINT001")
+	}
+}

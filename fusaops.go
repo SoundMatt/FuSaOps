@@ -20,12 +20,12 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "1.144.0"
+const Version = "1.145.0"
 
 // SpecVersion is the x-FuSa specification version this release targets.
 //
 //fusa:req REQ-FO-CORE007
-const SpecVersion = "1.15.0"
+const SpecVersion = "1.15.1"
 
 // Sentinel errors. Callers should use errors.Is for comparison.
 //
@@ -106,15 +106,42 @@ func (l Language) String() string { return string(l) }
 //
 //fusa:req REQ-FO-CORE004
 type Finding struct {
-	Language    Language `json:"language"`
-	Tool        string   `json:"tool"`
-	RuleID      string   `json:"ruleId"`
-	Severity    Severity `json:"severity"`
-	Message     string   `json:"message"`
-	Location    Location `json:"location"`
-	Category    string   `json:"category,omitempty"`
-	Remediation string   `json:"remediation,omitempty"`
-	Fingerprint string   `json:"fingerprint,omitempty"`
+	Language Language `json:"language"`
+	Tool     string   `json:"tool"`
+	RuleID   string   `json:"ruleId"`
+	Severity Severity `json:"severity"`
+	Message  string   `json:"message"`
+	Location Location `json:"location"`
+	Category string   `json:"category,omitempty"`
+	// Disposition carries an upstream tool's own §4.1 waiver ("accepted" or
+	// "deferred") through the aggregate unchanged. A dispositioned finding
+	// MUST remain in the JSON but MUST NOT by itself gate the aggregate exit
+	// code — see Severity-independent handling in report.Summary.
+	Disposition string `json:"disposition,omitempty"`
+	Standard    string `json:"standard,omitempty"`
+	Clause      string `json:"clause,omitempty"`
+	Remediation string `json:"remediation,omitempty"`
+	Fingerprint string `json:"fingerprint,omitempty"`
+}
+
+// Gates reports whether f should count toward a gate-failure exit code. A
+// finding already dispositioned "accepted" or "deferred" by its originating
+// tool MUST NOT by itself cause exit 1 (x-FuSa spec §4.1).
+//
+//fusa:req REQ-FO-CORE011
+func (f Finding) Gates() bool {
+	return f.Disposition != "accepted" && f.Disposition != "deferred"
+}
+
+// QualifiedRuleID returns the cross-language identity "<language>/<ruleId>"
+// (e.g. "go/LINT001"). Any reference that can span languages — the FuSaOps
+// aggregate by name — MUST use this qualified form rather than the bare,
+// only-tool-local RuleID, since two unrelated tools' rules can share a
+// literal id (x-FuSa spec §1.5.1).
+//
+//fusa:req REQ-FO-CORE012
+func (f Finding) QualifiedRuleID() string {
+	return string(f.Language) + "/" + f.RuleID
 }
 
 var digitRunRE = regexp.MustCompile(`[0-9]+`)
@@ -140,7 +167,7 @@ var canonicalStandardIDs = map[string]string{
 // remains distinct from the format string, unlike some strings. When display
 // is not a known standard, it is returned unchanged.
 //
-//fusa:req REQ-FO-CORE008
+//fusa:req REQ-FO-CORE010
 func CanonicalStandardID(display string) string {
 	if id, ok := canonicalStandardIDs[display]; ok {
 		return id

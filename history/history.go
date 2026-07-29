@@ -144,7 +144,7 @@ func loadAll(path string) ([]Snapshot, error) {
 // most keep entries (newest). Returns the number of entries removed. A missing
 // file is not an error; returns 0, nil. If keep <= 0, MaxSnapshots is used.
 //
-//fusa:req REQ-FO-HST003
+//fusa:req REQ-FO-HST005
 func Prune(dir string, keep int) (int, error) {
 	if keep <= 0 {
 		keep = MaxSnapshots

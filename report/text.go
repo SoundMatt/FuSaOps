@@ -69,7 +69,7 @@ func renderText(w io.Writer, r *AggregateReport, opts RenderOptions) error {
 }
 
 func printTextFindingOpts(w io.Writer, f fusaops.Finding, prefix string, showFP bool) {
-	fmt.Fprintf(w, "  %s[%s] %-10s", prefix, f.Severity, f.RuleID)
+	fmt.Fprintf(w, "  %s[%s] %-10s", prefix, f.Severity, f.QualifiedRuleID())
 	if f.Category != "" {
 		fmt.Fprintf(w, " [%s]", f.Category)
 	}

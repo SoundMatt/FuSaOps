@@ -48,6 +48,13 @@ func runReqShow(ids []string, dir string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "fusaops req: %v\n", err)
 		return 1
 	}
+	exit := 0
+	if dupes := req.FindDuplicateIDs(entries); len(dupes) > 0 {
+		for _, id := range dupes {
+			fmt.Fprintf(stderr, "ERROR [REQ-DUP001] requirement category: id %q appears more than once in %s — ids MUST be unique (x-FuSa spec §1.2.2)\n", id, req.ReqsFile)
+		}
+		exit = 1
+	}
 	filter := make(map[string]bool)
 	for _, id := range ids {
 		filter[id] = true
@@ -82,7 +89,7 @@ func runReqShow(ids []string, dir string, stdout, stderr io.Writer) int {
 		}
 		return 1
 	}
-	return 0
+	return exit
 }
 
 //fusa:req REQ-FO-CLI052
