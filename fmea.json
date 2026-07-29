@@ -1,11 +1,11 @@
 {
-  "schemaVersion": "1.15.1",
+  "schemaVersion": "1.15.2",
   "kind": "fmea-report",
   "language": "go",
-  "generatedAt": "2026-07-29T02:45:59.121719Z",
+  "generatedAt": "2026-07-29T02:58:10.51284Z",
   "projectRoot": ".",
   "tool": "fusaops",
-  "toolVersion": "1.145.0",
+  "toolVersion": "1.146.0",
   "standard": "iso26262",
   "ratingScale": "custom-1-10",
   "entries": [
@@ -210,5 +210,5 @@
     "coveragePct": 19.5,
     "componentInventoryMethod": "count of all packages in CLAUDE.md's core orchestration-pipeline table (11) and layered compliance/evidence/workflow table (30), 41 total; componentsAnalyzed counts distinct FMEA entries, not distinct packages named (some entries span multiple packages, e.g. \"auditpack / sign packages\")"
   },
-  "hash": "sha256:ad57ee1c0abac5b9244b27d3df0301bd9a64f2a0089764fe526bb027a7fb9f31"
+  "hash": "sha256:fe07227fc6654ce31da551365e1fefc10dabd6cba5008e2f072ea5e90cb079f9"
 }
