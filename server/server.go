@@ -1424,7 +1424,7 @@ func fireWebhook(url, prev, current string, errors int) {
 	// and leak a goroutine per status change.
 	client := &http.Client{Timeout: 10 * time.Second}
 	for i := range 2 {
-		req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body))
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, strings.NewReader(body))
 		if err != nil {
 			return
 		}
