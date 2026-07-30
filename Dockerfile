@@ -42,6 +42,14 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 # needed by pyfusa.  Java is added via openjdk21-jre-headless for jfusa.
 FROM python:3.12-alpine
 
+# OCI image metadata (source, description, licensing) for provenance tooling.
+LABEL org.opencontainers.image.title="FuSaOps" \
+      org.opencontainers.image.description="All-in-one multi-language functional-safety orchestration image bundling the x-FuSa toolchain." \
+      org.opencontainers.image.source="https://github.com/SoundMatt/FuSaOps" \
+      org.opencontainers.image.documentation="https://github.com/SoundMatt/FuSaOps/blob/main/README.md" \
+      org.opencontainers.image.vendor="SoundMatt" \
+      org.opencontainers.image.licenses="Apache-2.0"
+
 # git + ca-certificates back the tools' provenance / vulnerability features.
 # libstdc++ is pre-staged so cpp-FuSa drops in without a base change.
 # openjdk21-jre-headless provides the `java` binary required by jfusa.
@@ -65,6 +73,10 @@ COPY --from=jfusa /usr/local/bin/jfusa     /usr/local/bin/jfusa
 
 # ada-FuSa: statically-linked musl binary, no extra runtime packages needed
 COPY --from=adafusa /usr/local/bin/adafusa /usr/local/bin/adafusa
+
+# Run as an unprivileged user; /project is the caller-mounted workspace.
+RUN addgroup -S fusa && adduser -S -G fusa -h /home/fusa fusa
+USER fusa
 
 WORKDIR /project
 EXPOSE 8080

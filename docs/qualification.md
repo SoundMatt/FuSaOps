@@ -37,7 +37,7 @@ posture (see `.fusa.json`, `.fusa-hara.json`).
 |---|---|
 | Faithful aggregation | Unit tests assert every tool finding survives normalisation; unknown severities normalise to INFO, never dropped (SG-001) |
 | Visible coverage gaps | Applicable-but-uninstalled or failed tools are recorded as skipped components, never omitted (SG-002) |
-| Correct gating | `fusaops check` exits non-zero on any ERROR finding; tested for exit-code invariance (SG-003) |
+| Correct gating | `fusaops check` exits non-zero on any ERROR finding (except findings already dispositioned `accepted`/`deferred` upstream — see §4.1); tested for exit-code invariance (SG-003) |
 | Correct attribution | Findings carry originating language + tool through aggregation (SG-004) |
 | Requirement traceability | `gofusa trace` reports every requirement traced **and** tested |
 | Self-check | go-FuSa runs `gofusa check` on FuSaOps's own Go source in CI |
@@ -67,5 +67,8 @@ Record the outputs as qualification evidence alongside the committed
   bundled tool is a false negative in FuSaOps. Qualify each tool separately.
 - A language with no installed adapter is reported as a **skipped** component,
   not a failure — treat skipped components as coverage gaps in your assessment.
-- The bundled image pins tool versions at build time; verify the bundled
-  versions (`fusaops adapters`, each tool's `version`) match your qualified set.
+- The bundled image tracks each tool's `:latest` image and is periodically
+  rebuilt (see `.github/workflows/tools-monitor.yml`), so the tool set is **not**
+  pinned by tag. Resolve and record the concrete image digests and each tool's
+  reported `version` (`fusaops adapters`, each tool's `version`) at build time,
+  and treat any change to the resolved digests as a re-qualification trigger.

@@ -15,6 +15,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"sort"
 	"sync"
 	"time"
 
@@ -294,11 +295,21 @@ func renderText(w io.Writer, r *Report) error {
 	return nil
 }
 
-// computeHash canonicalizes the same fields as before (everything except
-// Hash itself) via fusaops.Canonicalize, so the hash is genuine RFC 8785
-// sorted-key canonical JSON (§6) rather than relying on Go's fixed struct
-// field order to be deterministic.
+// computeHash canonicalizes the same fields as before (everything except Hash
+// itself) via fusaops.Canonicalize, so the hash is genuine RFC 8785 sorted-key
+// canonical JSON (§6). Per x-FuSa spec MUST-145/148 the volatile generatedAt
+// timestamp is blanked before hashing (otherwise the integrity hash changes on
+// every run and cannot anchor tamper/regression detection); per MUST-146 the
+// components are hashed in a name-sorted order independent of registry order.
 func computeHash(r *Report) string {
+	comps := make([]ComponentResult, len(r.Components))
+	copy(comps, r.Components)
+	sort.Slice(comps, func(i, j int) bool {
+		if comps[i].Language != comps[j].Language {
+			return comps[i].Language < comps[j].Language
+		}
+		return comps[i].Tool < comps[j].Tool
+	})
 	data, _ := json.Marshal(struct {
 		GeneratedAt            time.Time         `json:"generatedAt"`
 		QualificationType      string            `json:"qualificationType,omitempty"`
@@ -313,10 +324,11 @@ func computeHash(r *Report) string {
 		Failed                 int               `json:"failed"`
 		Components             []ComponentResult `json:"components"`
 	}{
-		r.GeneratedAt, r.QualificationType, r.QualificationRecordUri,
+		// generatedAt deliberately left as the zero time so the hash is stable.
+		time.Time{}, r.QualificationType, r.QualificationRecordUri,
 		r.QualificationMethod, r.QualifierIdentity,
 		r.ImplementationAuthor, r.IndependentReviewer, r.AchievableASIL,
-		r.Total, r.Passed, r.Failed, r.Components,
+		r.Total, r.Passed, r.Failed, comps,
 	})
 	canon, err := fusaops.Canonicalize(data)
 	if err != nil {

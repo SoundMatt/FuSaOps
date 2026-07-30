@@ -10,6 +10,7 @@ package server
 
 import (
 	"context"
+	"crypto/subtle"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -203,7 +204,7 @@ func (s *Server) compute(ctx context.Context) {
 	s.cached, s.err = rep, err
 	newStatus := ""
 	if err == nil && rep != nil {
-		newStatus = rep.Summary.Status()
+		newStatus = rep.Status()
 		s.prevStatus = newStatus
 	}
 	s.mu.Unlock()
@@ -293,6 +294,17 @@ func (s *Server) Handler() http.Handler {
 // are rejected with 403 Forbidden on these paths.
 var mutatingPaths = map[string]bool{"/refresh": true}
 
+// credEqual compares a supplied username/password pair against the expected
+// values in constant time (crypto/subtle), so neither field's length nor prefix
+// leaks via response timing. Both fields are always compared (no early-out).
+//
+//fusa:req REQ-FO-AUTH001
+func credEqual(gotUser, wantUser, gotPass, wantPass string) bool {
+	uOK := subtle.ConstantTimeCompare([]byte(gotUser), []byte(wantUser)) == 1
+	pOK := subtle.ConstantTimeCompare([]byte(gotPass), []byte(wantPass)) == 1
+	return uOK && pOK
+}
+
 // authMiddleware wraps h with HTTP Basic Auth and optional role gating.
 // Unauthenticated requests receive 401; ro credentials on mutating paths get 403.
 //
@@ -305,9 +317,9 @@ func (s *Server) authMiddleware(h http.Handler) http.Handler {
 		u, p, ok := r.BasicAuth()
 		role := ""
 		if ok {
-			if s.authUser != "" && u == s.authUser && p == s.authPass {
+			if s.authUser != "" && credEqual(u, s.authUser, p, s.authPass) {
 				role = "rw"
-			} else if s.authROUser != "" && u == s.authROUser && p == s.authROPass {
+			} else if s.authROUser != "" && credEqual(u, s.authROUser, p, s.authROPass) {
 				role = "ro"
 			}
 		}
@@ -605,6 +617,28 @@ func exportMIME(format string) (contentType, ext string) {
 	}
 }
 
+// baselineWithinRoot reports whether a user-supplied baseline path resolves to
+// a location inside root. Absolute paths and paths escaping root via ".." are
+// rejected. root is treated as "." when empty.
+func baselineWithinRoot(root, p string) bool {
+	if filepath.IsAbs(p) {
+		return false
+	}
+	if root == "" {
+		root = "."
+	}
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return false
+	}
+	target := filepath.Clean(filepath.Join(absRoot, p))
+	rel, err := filepath.Rel(absRoot, target)
+	if err != nil {
+		return false
+	}
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
 // handleAPIDiff compares the cached report against a baseline and returns the
 // delta. The baseline path is taken from ?baseline= (required unless
 // --baseline was given at startup). ?strict=true causes a 409 response when
@@ -624,12 +658,30 @@ func (s *Server) handleAPIDiff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	baselinePath := r.URL.Query().Get("baseline")
+	fromQuery := baselinePath != ""
 	if baselinePath == "" {
 		baselinePath = s.baselineFile
 	}
 	if baselinePath == "" {
 		http.Error(w, "baseline path required: set ?baseline= or configure --baseline", http.StatusBadRequest)
 		return
+	}
+	// A ?baseline= value is attacker-controlled, so sandbox it to the project
+	// root to prevent arbitrary file reads (e.g. ?baseline=/etc/passwd or
+	// ../../secret). The trusted --baseline value configured at startup is not
+	// subject to this restriction.
+	if fromQuery {
+		if !baselineWithinRoot(s.root, baselinePath) {
+			http.Error(w, "baseline path must be within the project root", http.StatusForbidden)
+			return
+		}
+		// Resolve the (validated) relative path against the project root so it
+		// is loaded from the sandbox, not the server's working directory.
+		root := s.root
+		if root == "" {
+			root = "."
+		}
+		baselinePath = filepath.Join(root, baselinePath)
 	}
 	bl, err := diff.LoadBaseline(baselinePath)
 	if err != nil {
@@ -945,26 +997,35 @@ func (s *Server) Serve(ln net.Listener) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	s.compute(ctx)
 	cancel()
+	stop := make(chan struct{})
 	if s.refreshInterval > 0 {
-		go s.runScheduler()
+		go s.runScheduler(stop)
 	}
 	srv := &http.Server{
 		Handler:           s.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
-	return srv.Serve(ln)
+	err := srv.Serve(ln)
+	close(stop) // signal the scheduler goroutine to exit when serving stops
+	return err
 }
 
-// runScheduler fires periodic rescans on s.refreshInterval until the process exits.
+// runScheduler fires periodic rescans on s.refreshInterval until stop is closed
+// (i.e. until Serve returns / the listener is closed).
 //
 //fusa:req REQ-FO-SCHD001
-func (s *Server) runScheduler() {
+func (s *Server) runScheduler(stop <-chan struct{}) {
 	ticker := time.NewTicker(s.refreshInterval)
 	defer ticker.Stop()
-	for range ticker.C {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-		s.compute(ctx)
-		cancel()
+	for {
+		select {
+		case <-stop:
+			return
+		case <-ticker.C:
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			s.compute(ctx)
+			cancel()
+		}
 	}
 }
 
@@ -980,7 +1041,7 @@ func (s *Server) handleBadge(w http.ResponseWriter, _ *http.Request) {
 	if cErr != nil {
 		status, color = "error", "#e05d44"
 	} else if rep != nil {
-		switch rep.Summary.Status() {
+		switch rep.Status() {
 		case "PASS":
 			status, color = "pass", "#4c1"
 		case "WARN":
@@ -1358,8 +1419,17 @@ func svgBadge(label, message, color string) string {
 //fusa:req REQ-FO-HOOK002
 func fireWebhook(url, prev, current string, errors int) {
 	body := fmt.Sprintf(`{"status":%q,"prev":%q,"errors":%d}`+"\n", current, prev, errors)
+	// Bound every attempt: the default http client has no timeout, so a
+	// slow/black-hole endpoint would otherwise block this goroutine forever
+	// and leak a goroutine per status change.
+	client := &http.Client{Timeout: 10 * time.Second}
 	for i := range 2 {
-		resp, err := http.Post(url, "application/json", strings.NewReader(body)) //nolint:noctx
+		req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body))
+		if err != nil {
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
 		if err == nil {
 			_ = resp.Body.Close()
 			return
@@ -1408,7 +1478,7 @@ func buildMetrics(rep *report.AggregateReport, rErr error, project string, cd *c
 	if rErr != nil {
 		status = "error"
 	} else if rep != nil {
-		status = rep.Summary.Status()
+		status = rep.Status()
 		errors = rep.Summary.Errors
 		warnings = rep.Summary.Warnings
 		infos = rep.Summary.Total - errors - warnings
@@ -1428,12 +1498,13 @@ func buildMetrics(rep *report.AggregateReport, rErr error, project string, cd *c
 
 	plabel := ""
 	if project != "" {
-		plabel = `project="` + project + `",`
+		// Escape the label value per the OpenMetrics text format (backslash,
+		// double-quote, newline) so a project name containing " or \ cannot
+		// produce malformed output.
+		esc := strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`).Replace(project)
+		plabel = `project="` + esc + `",`
 	}
 	plabelTrimmed := strings.TrimSuffix(plabel, ",")
-	if plabelTrimmed == "" {
-		plabelTrimmed = ""
-	}
 
 	var b strings.Builder
 	b.WriteString("# HELP fusaops_findings_total Total findings by severity\n")

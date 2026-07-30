@@ -266,6 +266,24 @@ func (r *AggregateReport) HasErrors() bool {
 	return false
 }
 
+// Status returns the overall PASS/WARN/FAIL verdict for the aggregate report
+// using the *gating* error count (x-FuSa spec §4.1): findings an upstream tool
+// already dispositioned "accepted"/"deferred" are counted in Summary.Errors for
+// display but MUST NOT drive a FAIL verdict. Badge, dashboard, metrics and
+// history status therefore agree with `fusaops check`'s exit code (HasErrors).
+//
+//fusa:req REQ-FO-RPT002
+func (r *AggregateReport) Status() string {
+	switch {
+	case r.HasErrors():
+		return "FAIL"
+	case r.Summary.Warnings > 0:
+		return "WARN"
+	default:
+		return "PASS"
+	}
+}
+
 // Render writes r to w in the requested format.
 //
 //fusa:req REQ-FO-RPT007

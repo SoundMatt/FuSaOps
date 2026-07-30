@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
@@ -25,6 +26,11 @@ const (
 	// MaxSnapshots is the number of entries retained between trims.
 	MaxSnapshots = 100
 )
+
+// storeMu serialises the non-atomic read-modify-write of the history file so
+// concurrent compute paths (startup, scheduler, /refresh) cannot race and lose
+// or corrupt snapshots.
+var storeMu sync.Mutex
 
 // LanguageSummary records per-language finding counts in a snapshot.
 //
@@ -61,7 +67,7 @@ func FromReport(rep *report.AggregateReport) Snapshot {
 		Warnings: rep.Summary.Warnings,
 		Infos:    rep.Summary.Infos,
 	}
-	if rep.Summary.Errors > 0 {
+	if rep.HasErrors() {
 		s.Status = "FAIL"
 	}
 	for _, c := range rep.Components {
@@ -88,6 +94,8 @@ func FromReport(rep *report.AggregateReport) Snapshot {
 //
 //fusa:req REQ-FO-HST002
 func Store(dir string, snap Snapshot) error {
+	storeMu.Lock()
+	defer storeMu.Unlock()
 	path := filepath.Join(dir, Filename)
 
 	existing, _ := loadAll(path)
@@ -146,6 +154,8 @@ func loadAll(path string) ([]Snapshot, error) {
 //
 //fusa:req REQ-FO-HST005
 func Prune(dir string, keep int) (int, error) {
+	storeMu.Lock()
+	defer storeMu.Unlock()
 	if keep <= 0 {
 		keep = MaxSnapshots
 	}
@@ -161,17 +171,34 @@ func Prune(dir string, keep int) (int, error) {
 	return removed, writeAll(path, all[removed:])
 }
 
+// writeAll writes snaps atomically: it encodes to a temp file in the same
+// directory (mode 0640, matching the tool's other state files rather than the
+// world-readable 0644 of os.Create) then renames it over path, so a crash or a
+// concurrent read never observes a truncated history file.
 func writeAll(path string, snaps []Snapshot) error {
-	f, err := os.Create(path)
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".fusaops-history-*.tmp")
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	enc := json.NewEncoder(f)
+	tmpName := tmp.Name()
+	defer func() {
+		tmp.Close()
+		os.Remove(tmpName) // no-op after a successful rename
+	}()
+	if err := tmp.Chmod(0o640); err != nil {
+		return err
+	}
+	enc := json.NewEncoder(tmp)
 	for _, s := range snaps {
 		if err := enc.Encode(s); err != nil {
 			return err
 		}
 	}
-	return nil
+	if err := tmp.Sync(); err != nil {
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpName, path)
 }

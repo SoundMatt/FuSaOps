@@ -76,7 +76,9 @@ func New(root, project string, components []ComponentComp) *Aggregate {
 func (a *Aggregate) HasViolations() bool { return a.Violations > 0 }
 
 // DALThreshold returns the McCabe V(G) threshold for the given DAL string
-// (DAL-A → 4, DAL-B → 10, DAL-C → 15, DAL-D → 20) per DO-178C §6.3.4.
+// (DAL-A → 4, DAL-B → 10, DAL-C → 15, DAL-D → 20). These are a project/McCabe
+// convention, not a normative DO-178C mandate — DO-178C does not prescribe
+// specific cyclomatic-complexity limits.
 // Returns 0 (no threshold) for an unrecognised or empty DAL.
 //
 //fusa:req REQ-FO-COMP001

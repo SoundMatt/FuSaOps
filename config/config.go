@@ -223,7 +223,7 @@ func Validate(cfg *Config) error {
 		return fmt.Errorf("%w: missing project.name", fusaops.ErrInvalidConfig)
 	}
 	switch cfg.Report.Format {
-	case "", "text", "json", "html", "sarif":
+	case "", "text", "json", "html", "sarif", "junit", "csv", "markdown":
 	default:
 		return fmt.Errorf("%w: unsupported report.format %q", fusaops.ErrInvalidConfig, cfg.Report.Format)
 	}

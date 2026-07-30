@@ -156,18 +156,29 @@ func fp(f fusaops.Finding) string {
 	return fusaops.ComputeFingerprint(f)
 }
 
+// matchKey is the cross-language aggregate matching key. The bare §4.2
+// fingerprint is only tool-local (RuleID+File+message), so two findings from
+// different languages that share a ruleId/file/message collide to one
+// fingerprint; qualifying by Language keeps them distinct so a genuinely new
+// finding cannot be masked by a same-fingerprint baseline finding from another
+// language.
+func matchKey(f fusaops.Finding) string {
+	return string(f.Language) + "\x1f" + fp(f)
+}
+
 // Compare returns the diff between baseline and current findings.
-// Findings are matched by fingerprint; if absent, ComputeFingerprint is used.
+// Findings are matched by (language, fingerprint); if the fingerprint is absent,
+// ComputeFingerprint is used.
 //
 //fusa:req REQ-FO-DIF002
 func Compare(baseline *Baseline, current []fusaops.Finding) *Result {
 	baseSet := make(map[string]fusaops.Finding, len(baseline.Findings))
 	for _, f := range baseline.Findings {
-		baseSet[fp(f)] = f
+		baseSet[matchKey(f)] = f
 	}
 	currSet := make(map[string]fusaops.Finding, len(current))
 	for _, f := range current {
-		currSet[fp(f)] = f
+		currSet[matchKey(f)] = f
 	}
 
 	var res Result

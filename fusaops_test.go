@@ -189,3 +189,20 @@ func TestFindingQualifiedRuleID(t *testing.T) {
 		t.Errorf("QualifiedRuleID() = %q, want %q", got, "go/LINT001")
 	}
 }
+
+//fusa:test REQ-FO-CORE010
+func TestCanonicalStandardID(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"ISO 26262", "iso26262"},
+		{"DO-178C", "do178c"},
+		{"IEC 61508", "iec61508"},
+		{"ISO 21434", "iso21434"},
+		{"iso26262", "iso26262"},
+		{"Nonstandard Value", "Nonstandard Value"}, // passthrough
+	}
+	for _, c := range cases {
+		if got := CanonicalStandardID(c.in); got != c.want {
+			t.Errorf("CanonicalStandardID(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}

@@ -1,5 +1,5 @@
 // Package tara generates a Threat Analysis and Risk Assessment (TARA) per
-// ISO 21434:2021 Chapter 9 for the FuSaOps software development toolchain.
+// ISO 21434:2021 Clause 15 for the FuSaOps software development toolchain.
 //
 // Build produces a fixed set of cybersecurity threat scenarios relevant to a
 // multi-language safety-analysis pipeline. Each scenario carries an impact
@@ -61,7 +61,7 @@ const (
 	RiskLow      RiskLevel = "low"
 )
 
-// TreatmentDecision is the recommended risk treatment per ISO 21434 §9.4.
+// TreatmentDecision is the recommended risk treatment per ISO 21434 §15.9.
 //
 //fusa:req REQ-FO-TARA001
 type TreatmentDecision string
@@ -240,7 +240,7 @@ type scenarioSpec struct {
 }
 
 // standardScenarios covers cybersecurity threats to a multi-language
-// safety-analysis toolchain per ISO 21434:2021 Chapter 9.
+// safety-analysis toolchain per ISO 21434:2021 Clause 15.
 var standardScenarios = []scenarioSpec{
 	{
 		id:             "TS-001",
@@ -352,7 +352,7 @@ func Build(root string) (*TARA, error) {
 		ProjectRoot:   root,
 		Tool:          "fusaops",
 		ToolVersion:   fusaops.Version,
-		Standard:      fusaops.CanonicalStandardID("ISO 21434"), // ISO/SAE 21434:2021 Chapter 9
+		Standard:      fusaops.CanonicalStandardID("ISO 21434"), // ISO/SAE 21434:2021 Clause 15
 	}
 
 	for _, spec := range standardScenarios {

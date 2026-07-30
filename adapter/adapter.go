@@ -186,9 +186,11 @@ type toolFinding struct {
 	Severity string `json:"severity"`
 	Message  string `json:"message"`
 	Location struct {
-		File   string `json:"file"`
-		Line   int    `json:"line"`
-		Column int    `json:"column"`
+		File      string `json:"file"`
+		Line      int    `json:"line"`
+		Column    int    `json:"column"`
+		EndLine   int    `json:"endLine"`
+		EndColumn int    `json:"endColumn"`
 	} `json:"location"`
 	Category    string `json:"category"`
 	Disposition string `json:"disposition"`
@@ -216,7 +218,7 @@ func parseToolReport(data []byte, lang fusaops.Language, tool string) ([]fusaops
 			RuleID:      f.RuleID,
 			Severity:    normaliseSeverity(f.Severity),
 			Message:     f.Message,
-			Location:    fusaops.Location{File: f.Location.File, Line: f.Location.Line, Column: f.Location.Column},
+			Location:    fusaops.Location{File: f.Location.File, Line: f.Location.Line, Column: f.Location.Column, EndLine: f.Location.EndLine, EndColumn: f.Location.EndColumn},
 			Category:    normaliseCategory(f.Category),
 			Disposition: f.Disposition,
 			Standard:    f.Standard,
@@ -259,14 +261,22 @@ func normaliseCategory(c string) string {
 	return "other"
 }
 
+// DefaultSkipDirs is the set of directory names skipped during language
+// detection. It is a package-level variable rather than a hard-coded switch so
+// a caller can tailor the skip-list (e.g. remove "out"/"dist"/"target" when a
+// project legitimately keeps sources there, or add project-specific excludes)
+// before running detection.
+//
+//fusa:req REQ-FO-ADP004
+var DefaultSkipDirs = map[string]bool{
+	".git": true, ".hg": true, ".svn": true, "node_modules": true,
+	"vendor": true, "build": true, "dist": true, ".cache": true,
+	"target": true, "out": true, ".idea": true, ".vscode": true,
+}
+
 // skipDir reports whether a directory should be skipped during detection.
 func skipDir(name string) bool {
-	switch name {
-	case ".git", ".hg", ".svn", "node_modules", "vendor", "build", "dist",
-		".cache", "target", "out", ".idea", ".vscode":
-		return true
-	}
-	return false
+	return DefaultSkipDirs[name]
 }
 
 // Registry holds a set of registered adapters keyed by tool name.

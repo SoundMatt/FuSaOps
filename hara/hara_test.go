@@ -73,22 +73,71 @@ func TestDetermineASILE0AlwaysQM(t *testing.T) {
 
 //fusa:test REQ-FO-HARA004
 func TestDetermineASILKnownValues(t *testing.T) {
+	// Corrected against ISO 26262-3:2018 Table 4. C0 (controllable in general)
+	// maps to QM; C1..C3 follow the canonical table.
 	cases := []struct {
 		s    hara.Severity
 		e    hara.Exposure
 		c    hara.Controllability
 		want hara.ASIL
 	}{
-		{hara.SeverityS2, hara.ExposureE3, hara.ControllabilityC2, hara.ASILB},
+		{hara.SeverityS2, hara.ExposureE3, hara.ControllabilityC2, hara.ASILA},
 		{hara.SeverityS3, hara.ExposureE4, hara.ControllabilityC3, hara.ASILD},
 		{hara.SeverityS1, hara.ExposureE1, hara.ControllabilityC0, hara.ASILQM},
-		{hara.SeverityS3, hara.ExposureE1, hara.ControllabilityC3, hara.ASILC},
-		{hara.SeverityS2, hara.ExposureE4, hara.ControllabilityC0, hara.ASILA},
+		{hara.SeverityS3, hara.ExposureE1, hara.ControllabilityC3, hara.ASILA},
+		{hara.SeverityS2, hara.ExposureE4, hara.ControllabilityC0, hara.ASILQM},
 	}
 	for _, tc := range cases {
 		got := hara.DetermineASIL(tc.s, tc.e, tc.c)
 		if got != tc.want {
 			t.Errorf("DetermineASIL(%s,%s,%s)=%s, want %s", tc.s, tc.e, tc.c, got, tc.want)
+		}
+	}
+}
+
+//fusa:test REQ-FO-HARA004
+func TestDetermineASILAll36Cells(t *testing.T) {
+	// Independent oracle for ISO 26262-3:2018 Table 4: for C1..C3 the ASIL is a
+	// function of the additive index S+E+C (S1=1..S3=3, E1=1..E4=4, C1=1..C3=3):
+	// <=6 QM, 7 A, 8 B, 9 C, 10 D. C0 is always QM.
+	sVals := []struct {
+		s hara.Severity
+		n int
+	}{{hara.SeverityS1, 1}, {hara.SeverityS2, 2}, {hara.SeverityS3, 3}}
+	eVals := []struct {
+		e hara.Exposure
+		n int
+	}{{hara.ExposureE1, 1}, {hara.ExposureE2, 2}, {hara.ExposureE3, 3}, {hara.ExposureE4, 4}}
+	cVals := []struct {
+		c hara.Controllability
+		n int
+	}{{hara.ControllabilityC1, 1}, {hara.ControllabilityC2, 2}, {hara.ControllabilityC3, 3}}
+	oracle := func(t int) hara.ASIL {
+		switch {
+		case t >= 10:
+			return hara.ASILD
+		case t == 9:
+			return hara.ASILC
+		case t == 8:
+			return hara.ASILB
+		case t == 7:
+			return hara.ASILA
+		default:
+			return hara.ASILQM
+		}
+	}
+	for _, sv := range sVals {
+		for _, ev := range eVals {
+			for _, cv := range cVals {
+				want := oracle(sv.n + ev.n + cv.n)
+				if got := hara.DetermineASIL(sv.s, ev.e, cv.c); got != want {
+					t.Errorf("DetermineASIL(%s,%s,%s)=%s, want %s", sv.s, ev.e, cv.c, got, want)
+				}
+			}
+			// C0 always QM.
+			if got := hara.DetermineASIL(sv.s, ev.e, hara.ControllabilityC0); got != hara.ASILQM {
+				t.Errorf("DetermineASIL(%s,%s,C0)=%s, want QM", sv.s, ev.e, got)
+			}
 		}
 	}
 }
@@ -125,12 +174,12 @@ func TestValidateComplete(t *testing.T) {
 		Hazards: []hara.Hazard{
 			{
 				ID: "H-001", Description: "test hazard",
-				Risk:        hara.RiskRating{Severity: hara.SeverityS2, Exposure: hara.ExposureE3, Controllability: hara.ControllabilityC2, ASIL: hara.ASILB},
+				Risk:        hara.RiskRating{Severity: hara.SeverityS2, Exposure: hara.ExposureE3, Controllability: hara.ControllabilityC2, ASIL: hara.ASILA},
 				SafetyGoals: []string{"SG-001"},
 			},
 		},
 		SafetyGoals: []hara.SafetyGoal{
-			{ID: "SG-001", Description: "test goal", ASIL: hara.ASILB, FssrRefs: []string{"REQ-FO-HARA001"}},
+			{ID: "SG-001", Description: "test goal", ASIL: hara.ASILA, FssrRefs: []string{"REQ-FO-HARA001"}},
 		},
 	}
 	findings := hara.Validate(h)
@@ -475,5 +524,28 @@ func TestMaxASILUnknownASIL(t *testing.T) {
 	got := hara.MaxASIL(hazards)
 	if got != hara.ASILQM {
 		t.Errorf("MaxASIL with unknown ASIL: got %q, want %q", got, hara.ASILQM)
+	}
+}
+
+//fusa:test REQ-FO-HARA007
+func TestValidateFssrRefs(t *testing.T) {
+	h := &hara.HARA{
+		SafetyGoals: []hara.SafetyGoal{
+			{ID: "SG-01", FssrRefs: []string{"REQ-1", "REQ-2"}},
+			{ID: "SG-02", FssrRefs: []string{"REQ-MISSING"}},
+		},
+	}
+	reqIDs := map[string]bool{"REQ-1": true, "REQ-2": true}
+	got := hara.ValidateFssrRefs(h, reqIDs)
+	if len(got) != 1 {
+		t.Fatalf("expected 1 dangling-ref finding, got %d: %+v", len(got), got)
+	}
+	if got[0].SafetyGoalID != "SG-02" {
+		t.Errorf("dangling ref should be on SG-02, got %q", got[0].SafetyGoalID)
+	}
+	// All-valid case yields no findings.
+	h2 := &hara.HARA{SafetyGoals: []hara.SafetyGoal{{ID: "SG-03", FssrRefs: []string{"REQ-1"}}}}
+	if n := len(hara.ValidateFssrRefs(h2, reqIDs)); n != 0 {
+		t.Errorf("expected no findings for valid refs, got %d", n)
 	}
 }

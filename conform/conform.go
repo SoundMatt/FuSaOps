@@ -1,4 +1,4 @@
-// Package conform runs the x-FuSa spec v1.10 conformance checks against a tool binary.
+// Package conform runs the x-FuSa spec v1.15 conformance checks against a tool binary.
 //
 // It creates a temporary project, invokes each required command, and validates the
 // output shapes and invariants defined in the spec.  No real binary is needed in unit

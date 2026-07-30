@@ -1,11 +1,12 @@
 {
-  "version": "1",
+  "configVersion": "1.0",
   "project": {
     "name": "FuSaOps",
-    "module": "github.com/SoundMatt/FuSaOps",
-    "standard": "ISO26262",
-    "asil": "ASIL-C"
+    "version": "0.1.0",
+    "module": "github.com/SoundMatt/FuSaOps"
   },
+  "standard": "iso26262",
+  "asil": "ASIL-B",
   "rules": {},
   "report": {
     "format": "text"
