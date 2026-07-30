@@ -39,8 +39,23 @@ jobs:
         shell: bash
         run: go test -race -count=1 -coverprofile=coverage.out ./...
 
-      - name: Coverage gate (>= 80%)
-        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.22'
+  # ── Coverage gate (>= 80%) ────────────────────────────────────────────────
+  # Standalone required job so the gate is independent of the OS/Go test matrix:
+  # renaming/skipping a matrix cell can never silently remove the coverage check.
+  coverage:
+    name: Coverage gate (>= 80%)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.22"
+
+      - name: go test (coverage)
+        shell: bash
+        run: go test -count=1 -coverprofile=coverage.out ./...
+
+      - name: Enforce coverage threshold
         shell: bash
         run: |
           pct=$(go tool cover -func=coverage.out | awk '/^total:/{gsub(/%/,"",$3); print $3}')
@@ -48,7 +63,6 @@ jobs:
           awk -v p="$pct" 'BEGIN{ if (p+0 < 80) { print "FAIL: coverage " p "% below 80% threshold"; exit 1 } print "PASS" }'
 
       - name: Upload coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.22'
         uses: actions/upload-artifact@v4
         with:
           name: coverage
@@ -88,7 +102,8 @@ jobs:
         run: gofusa check --format json --output gofusa-check-report.json
 
       - name: gofusa report (evidence)
-        run: gofusa report --format html --output gofusa-report.html || true
+        continue-on-error: true
+        run: gofusa report --format html --output gofusa-report.html
 
       - name: Upload go-FuSa evidence
         if: always()
@@ -116,8 +131,10 @@ jobs:
       - name: Install gofusa
         run: go install github.com/SoundMatt/go-FuSa/cmd/gofusa@latest
       - name: Generate SARIF
-        run: gofusa check --format sarif --output results.sarif || true
+        continue-on-error: true
+        run: gofusa check --format sarif --output results.sarif
       - name: Upload SARIF to GitHub Code Scanning
+        if: hashFiles('results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: results.sarif

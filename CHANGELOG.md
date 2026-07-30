@@ -7,6 +7,54 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.148.0] — 2026-07-30
+
+### fix: independently-verified third-party audit — ISO 26262 Table 4 ASIL bug, unauth arbitrary-file-read, and 13 other findings
+
+An external audit (`FusaOps_Audit.zip`) was checked finding-by-finding against
+this repo's live source before any patch was applied — every claim below was
+independently reconfirmed, not taken on the audit's word.
+
+- **Critical: `hara.DetermineASIL` mis-implemented ISO 26262-3:2018 Table 4.**
+  Every S2/S3 cell (S1 was already correct) was inflated by one to two ASIL
+  levels versus the standard's additive S+E+C derivation — e.g. `S3/E1/C2`
+  returned `ASIL-B` instead of the correct `QM`. `hara_test.go` hard-coded the
+  wrong values as "known-good," so a correct fix would have broken CI. Fixed
+  the lookup table and rewrote the test from the canonical 36-cell truth
+  table. The project's own `.fusa-hara.json` was regenerated: every affected
+  hazard/safety-goal ASIL dropped (max is now **ASIL-B**, not C), and
+  `.fusa.json`'s self-classification was corrected to match plus rewritten
+  into the canonical `configVersion`/top-level `standard`+`asil` shape
+  (was legacy-nested `"ISO26262"` with no `configVersion`).
+- **Medium/security: unauthenticated `serve` + arbitrary file read.**
+  `/api/v1/diff?baseline=<path>` took a filesystem path straight from the
+  query string with no validation, and `serve` runs without auth unless an
+  operator explicitly configures credentials. Sandboxed the baseline path to
+  the project root.
+- **Low/security: non-constant-time Basic Auth comparison.** Credential
+  compare used `==`; switched to a constant-time compare.
+- **Medium: non-reproducible `qualify.hash`.** The §6 integrity hash included
+  the live `generatedAt` timestamp and hashed components in registry order
+  rather than sorted — changed every run. Now blanks the timestamp and sorts
+  before hashing.
+- **Low: `sas` never wrote its `sas.md` companion**, only the JSON — now
+  emitted alongside it.
+- Also fixed: `vv.AchievableASIL` didn't discount reviewer/executor==author
+  self-attestation; history writes weren't atomic; Basic-Auth webhook fires
+  had no timeout; `DecisionNote` mislabeled a block-coverage proxy as true
+  decision coverage; diff fingerprint matching didn't qualify by language;
+  the scheduler's stop channel could leak; `auditpack` ignored
+  `SOURCE_DATE_EPOCH`; dead no-op code and an unescaped Prometheus label;
+  `adapter.DefaultSkipDirs` was hard-coded and unconfigurable; `Location`
+  had no `EndLine`/`EndColumn`; two invented DO-178C/ISO 21434 clause
+  citations (§6.3.4 for cyclomatic complexity; "Chapter 9" for TARA, correct
+  is Clause 15); README requirement-count and spec-version-label drift; CI's
+  self-scan SARIF step and the coverage gate were both non-gating.
+- Deliberately not patched (documented in the audit's own manifest): Unicode
+  NFC normalization in `ComputeFingerprint` would require `golang.org/x/text`,
+  violating this repo's std-lib-only rule; pinning tool base images/GitHub
+  Actions to digests/SHAs needs live registry lookups not derivable offline.
+
 ## [1.147.0] — 2026-07-29
 
 ### fix: ada-FuSa ecosystem-integration gaps found by a support-surface audit

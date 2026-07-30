@@ -152,7 +152,9 @@ func Analyse(blocks []Block, dal DAL) *Report {
 	sort.Slice(rep.Files, func(i, j int) bool { return rep.Files[i].File < rep.Files[j].File })
 	sort.Strings(rep.Gaps)
 
-	// Decision coverage: approximate from block-level hit ratio.
+	// Decision coverage: this is NOT true decision (branch true/false) coverage.
+	// It is the block-hit ratio (an upper-bound proxy), surfaced here only as an
+	// indicator. Real DC/MC-DC evidence requires the --mcdc path below.
 	totalBlocks, coveredBlocks := 0, 0
 	for _, b := range blocks {
 		totalBlocks++
@@ -162,7 +164,7 @@ func Analyse(blocks []Block, dal DAL) *Report {
 	}
 	if totalBlocks > 0 {
 		rep.DecisionPct = float64(coveredBlocks) * 100 / float64(totalBlocks)
-		rep.DecisionNote = "approximated from block coverage — use '-covermode=atomic' for best accuracy"
+		rep.DecisionNote = "block-coverage proxy — NOT true decision coverage; provide MC/DC data for certification-grade DC evidence"
 	}
 
 	if rep.MCDCRequired {

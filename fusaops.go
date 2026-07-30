@@ -20,7 +20,7 @@ import (
 )
 
 // Version is the current release of FuSaOps.
-const Version = "1.147.0"
+const Version = "1.148.0"
 
 // SpecVersion is the x-FuSa specification version this release targets.
 //
@@ -195,4 +195,10 @@ type Location struct {
 	File   string `json:"file"`
 	Line   int    `json:"line,omitempty"`
 	Column int    `json:"column,omitempty"`
+	// EndLine/EndColumn carry the §4 region extent so a multi-line/column
+	// finding round-trips (e.g. into SARIF regions) instead of being collapsed
+	// to a single point on ingest. Both are omitempty (a point finding omits
+	// them entirely).
+	EndLine   int `json:"endLine,omitempty"`
+	EndColumn int `json:"endColumn,omitempty"`
 }

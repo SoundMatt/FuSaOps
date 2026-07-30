@@ -21,7 +21,9 @@ lint:
 
 cover:
 	go test -coverprofile=coverage.out ./...
-	go tool cover -func=coverage.out | tail -1
+	@pct=$$(go tool cover -func=coverage.out | awk '/^total:/{gsub(/%/,"",$$3); print $$3}'); \
+	printf "Coverage: %s%%\n" "$$pct"; \
+	awk -v p="$$pct" 'BEGIN{ if (p+0 < 80) { print "FAIL: coverage " p "% below 80% threshold"; exit 1 } print "PASS: coverage >= 80%" }'
 
 scan: build
 	./$(BINARY) scan

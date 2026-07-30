@@ -49,7 +49,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	}
 
 	// Validate shared flags.
-	rwUser, rwPass, authOK := "", "", true
+	rwUser, rwPass := "", ""
 	if *auth != "" {
 		var ok bool
 		rwUser, rwPass, ok = strings.Cut(*auth, ":")
@@ -57,7 +57,6 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stderr, "fusaops serve: --auth must be in user:pass format")
 			return 1
 		}
-		authOK = true
 	}
 	roUser, roPass := "", ""
 	if *authRO != "" {
@@ -81,11 +80,13 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 			return 1
 		}
 	}
-	_ = authOK
 
 	scheme := "http"
 	if *tlsCert != "" {
 		scheme = "https"
+	}
+	if scheme == "http" && (*auth != "" || *authRO != "") {
+		fmt.Fprintln(stderr, "fusaops serve: warning: --auth enabled without TLS; credentials travel in cleartext (use --tls-cert/--tls-key)")
 	}
 
 	// Multi-project mode.

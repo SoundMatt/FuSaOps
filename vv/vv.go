@@ -43,10 +43,16 @@ type Declaration struct {
 //
 //fusa:req REQ-FO-VV002
 func IndependenceLevel(d Declaration) int {
+	// A reviewer or test executor who is the same person as the implementation
+	// author provides no independence, so they must not raise the level (and,
+	// via AchievableASIL, must not inflate the certified ASIL). This mirrors the
+	// distinctness guard already enforced in attestation.go and Validate.
+	reviewerIndependent := d.IndependentReviewer != "" && d.IndependentReviewer != d.ImplementationAuthor
+	executorIndependent := d.IndependentTestExecutor != "" && d.IndependentTestExecutor != d.ImplementationAuthor
 	switch {
-	case d.IndependentReviewer != "" && d.IndependentTestExecutor != "":
+	case reviewerIndependent && executorIndependent:
 		return 2
-	case d.IndependentReviewer != "":
+	case reviewerIndependent:
 		return 1
 	default:
 		return 0

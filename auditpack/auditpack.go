@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"time"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
@@ -61,10 +62,22 @@ type Manifest struct {
 // deterministic, reproducible bundle. A source whose content cannot be read is a
 // hard error: an audit pack must never silently omit evidence.
 //
+// buildTime returns the timestamp stamped into the manifest and every zip
+// entry. When SOURCE_DATE_EPOCH is set to a valid Unix timestamp it is honoured,
+// so the archive is byte-for-byte reproducible; otherwise the current UTC time
+// is used.
+func buildTime() time.Time {
+	if v := os.Getenv("SOURCE_DATE_EPOCH"); v != "" {
+		if secs, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return time.Unix(secs, 0).UTC()
+		}
+	}
+	return time.Now().UTC()
+}
+
 //fusa:req REQ-FO-PCK004
 func Pack(dest, project string, sources []Source) (*Manifest, error) {
 	sort.Slice(sources, func(i, j int) bool { return sources[i].ArchivePath < sources[j].ArchivePath })
-
 	// Resolve content and hashes first so the manifest is complete before we
 	// start writing the archive.
 	type resolved struct {
@@ -73,7 +86,7 @@ func Pack(dest, project string, sources []Source) (*Manifest, error) {
 	}
 	items := make([]resolved, 0, len(sources))
 	manifest := &Manifest{
-		GeneratedAt: time.Now().UTC(),
+		GeneratedAt: buildTime(),
 		Tool:        "FuSaOps",
 		Version:     fusaops.Version,
 		Project:     project,

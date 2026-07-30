@@ -786,8 +786,8 @@ func TestHaraASIL(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("hara asil: code=%d err=%q", code, errb)
 	}
-	if !strings.Contains(out, "ASIL-B") {
-		t.Errorf("hara asil output: %q, want ASIL-B", out)
+	if !strings.Contains(out, "ASIL-A") {
+		t.Errorf("hara asil output: %q, want ASIL-A", out)
 	}
 }
 

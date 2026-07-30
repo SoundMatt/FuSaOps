@@ -1,7 +1,7 @@
 // Package mcdc decodes and aggregates Modified Condition/Decision Coverage (MC/DC)
 // reports produced by x-FuSa tools per §9.4 of the x-FuSa spec.
 //
-// MC/DC is required for DO-178C Level A software and IS0 26262 ASIL D. Each
+// MC/DC is required for DO-178C Level A software and ISO 26262 ASIL D. Each
 // x-FuSa tool that supports the --mcdc flag emits a structured MC/DC report;
 // FuSaOps collects those per-tool reports and rolls them up into a single
 // cross-language MCDCAggregate.

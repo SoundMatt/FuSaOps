@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	fusaops "github.com/SoundMatt/FuSaOps"
 	"github.com/SoundMatt/FuSaOps/qualitybar"
@@ -80,6 +81,26 @@ func runSAS(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	fmt.Fprintf(stdout, "\nSAS written to %s\n", outPath)
+
+	// MUST-197 (§9.3): also emit the human-readable sas.md companion alongside
+	// the JSON so an assessor gets a readable Software Accomplishment Summary.
+	mdPath := strings.TrimSuffix(outPath, filepath.Ext(outPath)) + ".md"
+	if mdFile, mdErr := os.Create(mdPath); mdErr != nil {
+		fmt.Fprintf(stderr, "fusaops sas: write companion %s: %v\n", mdPath, mdErr)
+		return 1
+	} else {
+		renderErr := sas.Render(mdFile, s, "text")
+		closeErr := mdFile.Close()
+		if renderErr != nil {
+			fmt.Fprintf(stderr, "fusaops sas: render companion: %v\n", renderErr)
+			return 1
+		}
+		if closeErr != nil {
+			fmt.Fprintf(stderr, "fusaops sas: write companion %s: %v\n", mdPath, closeErr)
+			return 1
+		}
+		fmt.Fprintf(stdout, "SAS companion written to %s\n", mdPath)
+	}
 	fmt.Fprintf(stdout, "Integrity hash: %s\n", s.Hash)
 
 	exit := 0

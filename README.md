@@ -132,7 +132,7 @@ fusaops release --output-dir dist/       # cross-language SBOM + provenance + ar
 fusaops safety-case --standard "DO-178C" # assemble a structured safety argument from evidence
 fusaops sci                              # Software Configuration Index (DO-178C §11.16)
 fusaops sas --level DAL-B                # Software Accomplishment Summary (DO-178C §11.20)
-fusaops tara                             # Threat Analysis and Risk Assessment (ISO 21434 Ch. 9)
+fusaops tara                             # Threat Analysis and Risk Assessment (ISO 21434 Clause 15)
 fusaops fmea                             # Design FMEA of the orchestration pipeline
 fusaops vuln                             # scan dependency manifests for known vulnerabilities
 fusaops template --standards "ISO 26262" # generate safety documentation templates
@@ -195,7 +195,7 @@ everything in parallel:
 ### Spec conformance (v0.3 / updated v0.4)
 
 - **`fusaops conform <binary>`** — validates any x-FuSa tool binary against the
-  spec v1.9 schema and behavioural invariants.  Per spec §16 step 7, this is a
+  spec v1.15 schema and behavioural invariants.  Per spec §16 step 7, this is a
   **MUST** gate for onboarding a new language tool.  See
   [`docs/conformance.md`](docs/conformance.md).
 
@@ -656,7 +656,7 @@ go-FuSa-grade evidence set. It aggregates evidence relevant to
 **ISO 26262, IEC 61508, ISO 21434, and DO-178C** across the languages it
 orchestrates.
 
-- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (215 requirements);
+- **Requirements** — [`.fusa-reqs.json`](.fusa-reqs.json) (449 requirements);
   `gofusa trace` reports them all traced **and** tested.
 - **HARA** — [`.fusa-hara.json`](.fusa-hara.json) (tool-failure hazards + safety goals).
 - **Tool Safety Manual** — [docs/tool-safety-manual.md](docs/tool-safety-manual.md)

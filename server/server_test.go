@@ -901,12 +901,12 @@ func TestAPIDiffNoBaseline(t *testing.T) {
 //fusa:test REQ-FO-SRV007
 func TestAPIDiffWithBaseline(t *testing.T) {
 	s := newTestServer(t)
-	bl := filepath.Join(t.TempDir(), "baseline.json")
+	bl := filepath.Join(s.root, "baseline.json")
 	if err := diff.SaveBaseline(bl, []fusaops.Finding{}); err != nil {
 		t.Fatalf("save baseline: %v", err)
 	}
 	rec := httptest.NewRecorder()
-	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline="+bl, nil))
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline=baseline.json", nil))
 	if rec.Code != http.StatusOK {
 		t.Errorf("status: got %d, want 200", rec.Code)
 	}
@@ -926,12 +926,12 @@ func TestAPIDiffStrictConflict(t *testing.T) {
 	}})
 	s := New(t.TempDir(), orchestrator.New(reg), orchestrator.Options{})
 	s.compute(context.Background())
-	bl := filepath.Join(t.TempDir(), "baseline.json")
+	bl := filepath.Join(s.root, "baseline.json")
 	if err := diff.SaveBaseline(bl, []fusaops.Finding{}); err != nil {
 		t.Fatalf("save baseline: %v", err)
 	}
 	rec := httptest.NewRecorder()
-	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline="+bl+"&strict=true", nil))
+	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/v1/diff?baseline=baseline.json&strict=true", nil))
 	if rec.Code != http.StatusConflict {
 		t.Errorf("status: got %d, want 409", rec.Code)
 	}

@@ -22,7 +22,7 @@
       "description": "Dropped finding — FuSaOps loses or hides a finding produced by a bundled x-FuSa tool during normalisation",
       "source": "Parser error swallowing findings, or an unknown severity being discarded instead of normalised",
       "situations": ["OS-001", "OS-002", "OS-003"],
-      "risk": { "severity": "S2", "exposure": "E4", "controllability": "C2", "asil": "ASIL-C" },
+      "risk": { "severity": "S2", "exposure": "E4", "controllability": "C2", "asil": "ASIL-B" },
       "safetyGoals": ["SG-001"]
     },
     {
@@ -30,7 +30,7 @@
       "description": "Masked coverage gap — an applicable language tool does not run and FuSaOps reports PASS without surfacing that the language was unchecked",
       "source": "Adapter silently skipped, tool not installed, or detection miss treated as success",
       "situations": ["OS-002", "OS-003"],
-      "risk": { "severity": "S2", "exposure": "E4", "controllability": "C2", "asil": "ASIL-C" },
+      "risk": { "severity": "S2", "exposure": "E4", "controllability": "C2", "asil": "ASIL-B" },
       "safetyGoals": ["SG-002"]
     },
     {
@@ -38,7 +38,7 @@
       "description": "Silent failure — fusaops check exits 0 when the aggregate contains ERROR-severity findings",
       "source": "Summary mis-count or exit-code logic returning success despite errors",
       "situations": ["OS-002"],
-      "risk": { "severity": "S2", "exposure": "E3", "controllability": "C1", "asil": "ASIL-A" },
+      "risk": { "severity": "S2", "exposure": "E3", "controllability": "C1", "asil": "QM" },
       "safetyGoals": ["SG-003"]
     },
     {
@@ -54,7 +54,7 @@
       "description": "Stale evidence — the served dashboard or cached aggregate report no longer reflects the current source under review",
       "source": "Cache not refreshed before an audit or gating decision",
       "situations": ["OS-002", "OS-003"],
-      "risk": { "severity": "S2", "exposure": "E3", "controllability": "C2", "asil": "ASIL-B" },
+      "risk": { "severity": "S2", "exposure": "E3", "controllability": "C2", "asil": "ASIL-A" },
       "safetyGoals": ["SG-005"]
     }
   ],
@@ -63,7 +63,7 @@
       "id": "SG-001",
       "description": "FuSaOps shall preserve every finding emitted by a bundled tool, normalising unknown severities to INFO rather than dropping them",
       "hazards": ["H-001"],
-      "asil": "ASIL-C",
+      "asil": "ASIL-B",
       "safeState": "Surface a decode error as a failed/skipped component rather than an empty pass",
       "fssrRefs": ["REQ-FO-ADP006", "REQ-FO-ADP005"]
     },
@@ -71,7 +71,7 @@
       "id": "SG-002",
       "description": "FuSaOps shall record every applicable-but-uninstalled or failed tool as an explicit skipped component so coverage gaps are visible",
       "hazards": ["H-002"],
-      "asil": "ASIL-C",
+      "asil": "ASIL-B",
       "safeState": "Emit a skipped component with reason; never omit an applicable language silently",
       "fssrRefs": ["REQ-FO-ORC003", "REQ-FO-RPT003"]
     },
@@ -79,7 +79,7 @@
       "id": "SG-003",
       "description": "FuSaOps shall exit non-zero whenever any component produces an ERROR-severity finding, or a WARNING under --strict",
       "hazards": ["H-003"],
-      "asil": "ASIL-A",
+      "asil": "QM",
       "safeState": "Exit code 1",
       "fssrRefs": ["REQ-FO-CLI008", "REQ-FO-RPT006", "REQ-FO-ERR005"]
     },
@@ -95,7 +95,7 @@
       "id": "SG-005",
       "description": "FuSaOps shall recompute the aggregate report on demand so a gating or audit decision can be made against current source",
       "hazards": ["H-005"],
-      "asil": "ASIL-B",
+      "asil": "ASIL-A",
       "safeState": "Provide an explicit refresh that recomputes before serving",
       "fssrRefs": ["REQ-FO-SRV003", "REQ-FO-SRV004"]
     }
